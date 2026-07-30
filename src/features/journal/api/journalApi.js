@@ -5,7 +5,9 @@ export async function getJournals() {
 }
 
 export async function getJournalById(journalId) {
-  return journalData.journals.find((j) => j.journalId === Number(journalId)) || journalData.journals[0]
+  return (
+    journalData.journals.find((j) => j.journalId === Number(journalId)) || journalData.journals[0]
+  )
 }
 
 export async function createJournal(payload) {

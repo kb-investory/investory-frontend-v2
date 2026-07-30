@@ -25,11 +25,22 @@ onMounted(() => homeStore.fetchSummary())
         description="수익률보다 당시의 생각과 원칙을 먼저 확인하세요."
       />
 
-      <BaseCard v-if="homeStore.summary" :title="homeStore.summary.title" :description="homeStore.summary.description">
+      <BaseCard
+        v-if="homeStore.summary"
+        :title="homeStore.summary.title"
+        :description="homeStore.summary.description"
+      >
         <MetricStrip
           :metrics="[
-            { label: '총 자산', value: `${(homeStore.summary.totalMarketValue || 0).toLocaleString()}원` },
-            { label: '평가 손익', value: `+${(homeStore.summary.totalUnrealizedPnl || 0).toLocaleString()}원`, tone: 'danger' }
+            {
+              label: '총 자산',
+              value: `${(homeStore.summary.totalMarketValue || 0).toLocaleString()}원`,
+            },
+            {
+              label: '평가 손익',
+              value: `+${(homeStore.summary.totalUnrealizedPnl || 0).toLocaleString()}원`,
+              tone: 'danger',
+            },
           ]"
         />
       </BaseCard>

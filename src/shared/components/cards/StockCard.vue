@@ -33,7 +33,9 @@ defineProps({
       <h3 class="stock-card__name">{{ name }}</h3>
       <p class="stock-card__meta">
         {{ quantity }} · 평단 {{ avgPrice }}
-        <span class="stock-card__valuation">평가금액 <strong>{{ valuation }}</strong></span>
+        <span class="stock-card__valuation"
+          >평가금액 <strong>{{ valuation }}</strong></span
+        >
       </p>
     </div>
   </div>

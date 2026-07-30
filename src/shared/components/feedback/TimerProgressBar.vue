@@ -23,10 +23,7 @@ defineProps({
     </div>
 
     <div class="timer-progress-bar__track">
-      <div
-        class="timer-progress-bar__fill"
-        :style="{ width: `${percentage}%` }"
-      />
+      <div class="timer-progress-bar__fill" :style="{ width: `${percentage}%` }" />
     </div>
   </div>
 </template>

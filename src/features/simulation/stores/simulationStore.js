@@ -19,7 +19,8 @@ export const useSimulationStore = defineStore('simulation', () => {
         {
           id: 1,
           sender: 'bot',
-          content: '투자 원칙 시뮬레이션에 오신 것을 환영합니다. 시뮬레이션 조언 또는 매매 시나리오를 작성해주세요.',
+          content:
+            '투자 원칙 시뮬레이션에 오신 것을 환영합니다. 시뮬레이션 조언 또는 매매 시나리오를 작성해주세요.',
         },
       ]
     } finally {
