@@ -54,15 +54,15 @@ Investory 프론트엔드는 **도메인 기반 모듈화 구조(Feature-based A
 
 ---
 
-## 3. 전체 디렉터리 구조
+## 3. 전체 디렉터리 구조 (100% 실제 파일시스템 매핑)
 
 ```text
 investory-frontend/
-├─ public/                         # 빌드 과정 없이 그대로 배포되는 정적 리소스
-│  └─ assets/                     # 파비콘, 로고, 정적 이미지 리소스
+├─ public/                         # 정적 이미지 및 에셋 리소스
+│  └─ assets/                     # 파비콘, 로고, 이미지 에셋
 │
 ├─ docs/                           # 프로젝트 설계 및 참조 문서
-│  ├─ coding-convention.md        # 개발, 커밋 규칙 및 파트별 담당자 명세
+│  ├─ coding-convention.md        # 개발 규칙, 커밋 수칙 및 파트별 담당자 명세
 │  ├─ directory-structure.md      # 디렉터리 구조 설명 문서
 │  ├─ API-reference/               # 백엔드 OpenAPI 명세서 모음
 │  ├─ architecture/
@@ -72,12 +72,13 @@ investory-frontend/
 │     └─ design-system.md         # UI 디자인 규격 및 토큰 시스템
 │
 ├─ src/                            # Vue 3 애플리케이션 소스 코드
-│  ├─ app/                         # 애플리케이션 코어 설정 및 진입점
+│  ├─ app/                         # 코어 진입점 및 앱 전역 구성 요소
 │  │  ├─ layouts/                 # 전역 페이지 레이아웃 (DefaultLayout.vue 등)
 │  │  ├─ router/                  # Vue Router 설정 및 라우트 네임 정의
-│  │  └─ views/                   # 시스템 페이지 (UIKitView.vue, NotFoundView.vue 등)
+│  │  ├─ views/                   # 시스템 전용 페이지 (UIKitView.vue, NotFoundView.vue)
+│  │  └─ App.vue                  # Vue 최상위 루트 컴포넌트
 │  │
-│  ├─ features/                    # 비즈니스 도메인별 기능 모듈 (Feature Modules)
+│  ├─ features/                    # 도메인 기반 모듈 (Feature Modules)
 │  │  ├─ auth/                     # [동호] 로그인 및 인증 관련 모듈
 │  │  ├─ home/                     # [동호] 총 자산 요약 및 홈 메인 모듈
 │  │  ├─ journal/                  # [동호] 투자일지 작성 및 목록 모듈
@@ -85,8 +86,11 @@ investory-frontend/
 │  │  ├─ simulation/               # [상우] AI 투자 시뮬레이션 대화 모듈
 │  │  └─ mypage/                   # [은솔] 내 정보 및 증권사 계좌 연동 모듈
 │  │
-│  ├─ shared/                      # 앱 전체에서 사용하는 전역 공용 자원
-│  │  ├─ components/              # Investory Core V3 공용 UI 컴포넌트
+│  ├─ mocks/                       # 백엔드 API 대응 JSON 목데이터
+│  │  └─ data/                    # auth.json, home.json, journal.json, tendency.json 등
+│  │
+│  ├─ shared/                      # 애플리케이션 전역 공용 모듈
+│  │  ├─ components/              # Investory Core V3 공용 UI 컴포넌트 (20종)
 │  │  │  ├─ navigation/           # AppBar, BottomTabBar, SegmentedControl
 │  │  │  ├─ buttons/              # BaseButton, IconButton
 │  │  │  ├─ inputs/               # SearchInput, BaseTextField, BaseTextarea, BaseToggle
@@ -101,12 +105,11 @@ investory-frontend/
 │  │  │  └─ utilities/            # 헬퍼 스타일 유틸리티
 │  │  └─ utils/                   # 포맷터 및 공통 유틸리티 함수
 │  │
-│  ├─ App.vue                      # Vue 최상위 루트 컴포넌트
-│  └─ main.js                      # 앱 엔트리 파일 (Pinia 및 Router 플러그인 연결)
+│  └─ main.js                      # 애플리케이션 엔트리 파일 (Pinia & Router 마운트)
 │
 ├─ index.html                      # HTML 메인 템플릿
 ├─ package.json                    # 의존성 패키지 및 NPM 스크립트 설정
-├─ vite.config.js                  # Vite 빌드 설정 (`@` 별칭 설정 포함)
+├─ vite.config.js                  # Vite 빌드 및 경로 별칭(`@`) 설정
 └─ eslint.config.js                # 코드 품질 및 포맷팅 검사 규칙 설정
 ```
 
@@ -115,7 +118,7 @@ investory-frontend/
 ## 4. 레이어별 역할 상세
 
 ### 1) `src/app/` (애플리케이션 코어)
-- 앱 전체의 뼈대를 형성하는 영역으로, 라우터, 전체 레이아웃, 공통 시스템 페이지를 관리합니다.
+- 앱 전체의 뼈대를 형성하는 영역으로, 최상위 `App.vue`, 라우터, 전체 레이아웃, 공통 시스템 페이지를 관리합니다.
 - `app/router/`: `routes.js`와 `route-names.js`로 라우팅 경로와 이름을 모듈화 관리합니다.
 - `app/layouts/`: GNB, LNB, 헤더/푸터가 포함된 공통 `DefaultLayout.vue`를 제공합니다.
 - `app/views/`: UI 디자인 시스템 카탈로그인 `UIKitView.vue` 및 404 페이지 `NotFoundView.vue`를 포함합니다.
@@ -128,9 +131,12 @@ investory-frontend/
   - `stores/`: Pinia 기반 상태 관리 스토어 (`authStore.js`, `journalStore.js` 등)
   - `api/`: 백엔드 API 호출 전용 모듈 (`authApi.js`, `journalApi.js` 등)
 
-### 3) `src/shared/` (전역 공용 모듈)
+### 3) `src/mocks/data/` (JSON 목데이터)
+- 백엔드 서버를 대신하여 OpenAPI 명세와 100% 동일한 구조의 목데이터(`.json`)를 제공합니다.
+
+### 4) `src/shared/` (전역 공용 모듈)
 - 특정 도메인에 종속되지 않는 재사용 가능한 자원을 모아둔 영역입니다.
-- `shared/components/`: Investory Core V3 디자인 시스템의 4개 분류(`01 / NAVIGATION`, `02 / ACTIONS`, `03 / INPUTS`, `04 / DATA & FEEDBACK`)별 공용 UI 컴포넌트입니다.
+- `shared/components/`: Investory Core V3 디자인 시스템의 4개 분류별 공용 UI 컴포넌트입니다.
 - `shared/styles/`: CSS 변수 기반 전역 스타일 토큰 및 유틸리티입니다.
 
 ---
@@ -141,6 +147,7 @@ investory-frontend/
 - `@/` $\rightarrow$ `src/`
 - `@/app/` $\rightarrow$ `src/app/`
 - `@/features/` $\rightarrow$ `src/features/`
+- `@/mocks/` $\rightarrow$ `src/mocks/`
 - `@/shared/` $\rightarrow$ `src/shared/`
 
 ---
