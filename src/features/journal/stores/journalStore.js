@@ -59,7 +59,7 @@ export const useJournalStore = defineStore('journal', () => {
     loading.value = true
     try {
       await deleteJournalApi(journalId)
-      entries.value = entries.value.filter(e => e.journalId !== journalId)
+      entries.value = entries.value.filter((e) => e.journalId !== journalId)
     } finally {
       loading.value = false
     }
