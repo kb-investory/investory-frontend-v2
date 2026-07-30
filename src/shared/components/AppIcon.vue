@@ -2,6 +2,7 @@
 import {
   ArrowRight,
   ArrowUpRight,
+  BookOpen,
   ChartPie,
   Check,
   ChevronDown,
@@ -12,15 +13,21 @@ import {
   House,
   Lock,
   Notebook,
+  Pencil,
+  Play,
   Plus,
+  Radar,
   Search,
   Settings,
   Sparkles,
+  User,
+  X,
 } from '@lucide/vue'
 
 const iconComponents = {
   'arrow-right': ArrowRight,
   'arrow-up-right': ArrowUpRight,
+  'book-open': BookOpen,
   'chart-pie': ChartPie,
   check: Check,
   'chevron-down': ChevronDown,
@@ -29,12 +36,18 @@ const iconComponents = {
   ellipsis: Ellipsis,
   history: History,
   home: House,
+  house: House,
   lock: Lock,
   notebook: Notebook,
+  pencil: Pencil,
+  play: Play,
   plus: Plus,
+  radar: Radar,
   search: Search,
   settings: Settings,
   sparkles: Sparkles,
+  user: User,
+  x: X,
 }
 
 defineProps({

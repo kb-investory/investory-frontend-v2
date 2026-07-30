@@ -1,11 +1,13 @@
-export const ROUTE_NAMES = Object.freeze({
-  HOME: 'home',
-  LOGIN: 'login',
-  PORTFOLIO: 'portfolio',
-  MYPAGE: 'mypage',
-  JOURNAL: 'journal',
-  JOURNAL_CREATE: 'journal-create',
-  AI_CONVERSATION: 'ai-conversation',
-  UI_KIT: 'ui-kit',
-  NOT_FOUND: 'not-found',
-})
+export const ROUTE_NAMES = {
+  HOME: 'Home',
+  LOGIN: 'Login',
+  JOURNAL: 'Journal',
+  JOURNAL_CREATE: 'JournalCreate',
+  PORTFOLIO: 'Portfolio',
+  TENDENCY: 'Tendency',
+  AI_CONVERSATION: 'AiConversation',
+  SIMULATION: 'Simulation',
+  MYPAGE: 'Mypage',
+  UI_KIT: 'UIKit',
+  NOT_FOUND: 'NotFound',
+}

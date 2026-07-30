@@ -1,0 +1,56 @@
+:root {
+  /* Brand Colors */
+  --brand-teal: #0b8f8b;
+  --brand-teal-deep: #087f7c;
+  --teal-deep: #075f5a;
+  --brand-teal-soft: #e8f7f6;
+  --brand-mist: #f5fbfb;
+  --slate-strong: #263a43;
+  --slate-primary: #384f59;
+
+  /* Neutral Colors */
+  --color-surface: #ffffff;
+  --bg-primary: #f6f4ef;
+  --text-primary: #181817;
+  --text-secondary: #666662;
+  --text-tertiary: #94948e;
+  --border-default: #e5e5e0;
+  --border-subtle: #eeeeea;
+  --slate-border: #c9d6da;
+  --slate-soft: #f0f4f5;
+
+  /* Investment Data Colors */
+  --brand-red: #f20d35;
+  --brand-red-soft: #fff0f2;
+  --brand-blue: #0b63ce;
+  --brand-blue-soft: #edf5ff;
+  --amber-500: #e8b931;
+
+  /* Semantic Aliases */
+  --color-background: var(--bg-primary);
+  --color-heading: var(--text-primary);
+  --color-text: var(--text-primary);
+  --color-text-muted: var(--text-secondary);
+  --color-text-subtle: var(--text-tertiary);
+  --color-primary: var(--brand-teal-deep);
+  --color-primary-dark: var(--slate-strong);
+  --color-primary-soft: var(--brand-teal-soft);
+  --color-border: var(--border-default);
+  --color-border-subtle: var(--border-subtle);
+
+  /* Typography */
+  --font-sans: Inter, system-ui, sans-serif;
+  --font-heading: 'Funnel Sans', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', 'IBM Plex Mono', monospace;
+
+  /* Radii */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 14px;
+  --radius-2xl: 16px;
+  --radius-3xl: 18px;
+  --radius-modal: 24px;
+  --radius-pill: 9999px;
+}
