@@ -1,0 +1,44 @@
+{
+  "profile": {
+    "userId": 1,
+    "name": "홍길동",
+    "nickname": "지혜로운투자자",
+    "email": "user@investory.kr",
+    "profileImageUrl": "https://picsum.photos/100/100?random=1",
+    "tier": "GOLD",
+    "connectedBrokerageCount": 2,
+    "totalJournalsCount": 24
+  },
+  "brokerages": [
+    {
+      "brokerageId": 1,
+      "brokerageName": "KB증권",
+      "accountNumber": "284-****-9102",
+      "isConnected": true,
+      "lastSyncedAt": "2026-07-30T09:30:00Z"
+    },
+    {
+      "brokerageId": 2,
+      "brokerageName": "키움증권",
+      "accountNumber": "512-****-3310",
+      "isConnected": true,
+      "lastSyncedAt": "2026-07-30T08:15:00Z"
+    }
+  ],
+  "notifications": [
+    {
+      "id": 1,
+      "title": "오늘 일지 작성 마감 알림",
+      "content": "오늘 장이 마감되었습니다. 당일 매매 판단을 일지로 작성해 보세요.",
+      "isRead": false,
+      "createdAt": "2026-07-30T15:40:00Z"
+    },
+    {
+      "id": 2,
+      "title": "투자 성향 리포트 도착",
+      "content": "최근 30일간의 매매 기록 분석이 완료되었습니다.",
+      "isRead": true,
+      "createdAt": "2026-07-29T18:00:00Z"
+    }
+  ]
+}

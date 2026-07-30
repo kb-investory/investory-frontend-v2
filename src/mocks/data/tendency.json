@@ -1,0 +1,67 @@
+{
+  "summary": {
+    "combinationSummary": "원칙을 지키는 안정성장형 투자자",
+    "strengthSummary": "최근 30일간 작성률 92.5%, 원칙 준수율 88% 기록",
+    "analyzedDate": "2026-07-30"
+  },
+  "tendencies": [
+    {
+      "id": 1,
+      "name": "원칙 지킴이",
+      "category": "STABILITY",
+      "score": 92,
+      "description": "감정적 매매를 배제하고 사전에 정한 가이드라인을 철저히 준수합니다."
+    },
+    {
+      "id": 2,
+      "name": "분할 매매 전문가",
+      "category": "GROWTH",
+      "score": 85,
+      "description": "한 번에 올인하지 않고 분할 매수와 분할 매도로 리스크를 관리합니다."
+    },
+    {
+      "id": 3,
+      "name": "기록 회고가",
+      "category": "ANALYTICAL",
+      "score": 90,
+      "description": "매매 후 일지를 작성하여 당일 판단 근거를 복기합니다."
+    }
+  ],
+  "principles": [
+    {
+      "principleId": 1,
+      "title": "손절매 기준 준수",
+      "content": "매수가 대비 -5% 도달 시 조건 없이 50% 분할 손절",
+      "category": "RISK_MANAGEMENT",
+      "isActive": true
+    },
+    {
+      "principleId": 2,
+      "title": "분할 매수 3단계",
+      "content": "1차 30%, 2차 30%, 3차 40% 비율로 진입",
+      "category": "BUY_STRATEGY",
+      "isActive": true
+    },
+    {
+      "principleId": 3,
+      "title": "감정 매매 방지 쿨다운",
+      "content": "손실 발생 직후 1시간 동안 추가 매수하지 않기",
+      "category": "PSYCHOLOGY",
+      "isActive": true
+    }
+  ],
+  "suggestedPrinciples": [
+    {
+      "id": 101,
+      "title": "목표 수익률 분할 익절",
+      "content": "+15% 도달 시 보유 수량의 30% 익절하여 수익 확정하기",
+      "tag": "추천원칙"
+    },
+    {
+      "id": 102,
+      "title": "장 시작 15분 관망",
+      "content": "개장 직후 변동성이 큰 15분 동안은 신규 진입 자제하기",
+      "tag": "추천원칙"
+    }
+  ]
+}

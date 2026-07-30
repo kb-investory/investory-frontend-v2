@@ -1,23 +1,31 @@
-export async function getSimulationSessions() {
-  return [
-    {
-      sessionId: 1001,
-      botName: '원칙 수호 AI 봇',
-      strategyType: 'DISCIPLINED_TRADING',
-      initialBalance: 10000000,
-      currentBalance: 10850000,
-      returnRate: 8.5,
-      status: 'RUNNING',
-    },
-  ]
+import simulationData from '@/mocks/data/simulation.json'
+
+export async function getSimulationMessages() {
+  return simulationData.messages
 }
 
-export async function sendSimulationPrompt(sessionId, prompt) {
-  return {
-    messageId: Date.now(),
-    sessionId,
-    sender: 'BOT',
-    content: `'${prompt}'에 기반하여 과거 3년 데이터 시뮬레이션을 수행했습니다. 원칙 준수 시 기대 수익률 +12.4%로 계산됩니다.`,
-    createdAt: new Date().toISOString(),
+export async function sendSimulationMessage(text) {
+  const userMessage = {
+    id: Date.now(),
+    sender: 'USER',
+    text,
+    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
   }
+  simulationData.messages.push(userMessage)
+
+  const botReply = {
+    id: Date.now() + 1,
+    sender: 'BOT',
+    text: `'${text}' 의견을 반영했습니다. 원칙 준수율 기반으로 보조 분석 시뮬레이션을 진행합니다.`,
+    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+  }
+  simulationData.messages.push(botReply)
+
+  return [userMessage, botReply]
 }
+
+// Store compatibility aliases
+export const getConversationMessages = getSimulationMessages
+export const getSimulationSessions = getSimulationMessages
+export const sendUserMessage = sendSimulationMessage
+export const sendSimulationPrompt = sendSimulationMessage
