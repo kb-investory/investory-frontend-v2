@@ -1,0 +1,35 @@
+﻿도메인,기능명,Method,URL,상세 설명
+인증,OAuth 인증 요청,GET,/auth/oauth/{provider}/authorization,OAuth 제공자의 인증 화면으로 리다이렉트
+인증,OAuth 인증 완료,GET,/auth/oauth/{provider}/callback,OAuth 제공자가 전달한 인증 코드를 이용해 로그인·회원가입을 처리한다.
+인증,인증 토큰 갱신,POST,/auth/token/refresh,유효한 Refresh Token을 이용해 새로운 Access Token을 발급한다.
+인증,로그아웃,POST,/auth/logout,Refresh Token 폐기 및 쿠키 삭제
+인증,회원정보 조회,GET,/auth/me,
+계좌,지원 증권사 목록,GET,/broker/providers,Investory에서 지원하는 증권사 목록
+계좌,연동된 증권사 목록 조회,GET,/broker/connections,로그인 사용자의 증권사 연결 목록
+계좌,증권사 연동 요청,POST,/broker/connections,목 증권사 인증 후 연결 생성 및 최초 데이터 적재
+계좌,증권사 연동 상태 조회,GET,/broker/connections/{connectionId},특정 증권사 연결 상태 조회
+계좌,특정 연결의 계좌 목록 조회,GET,/broker/connections/{connectionId}/accounts,해당 증권사 연결에서 가져온 계좌 목록
+계좌,증권사 데이터 동기화 요청,POST,/broker/connections/{connectionId}/sync,거래내역과 보유현황 재동기화 요청 (account_sync_batches 신규 생성)
+계좌,전체 계좌 목록 조회,GET,/broker/accounts,연결과 무관하게 로그인 사용자의 전체 증권계좌 조회 (계좌 선택 드롭다운 등)
+계좌,단일 계좌 상세 조회,GET,/broker/accounts/{accountId},특정 계좌의 기본 정보와 보유현황 조회
+계좌,계좌 프로필 변경,PATCH,/broker/accounts/{accountId},Investory 내부 계좌 별칭 변경
+주식,주식 목록 조회,GET,/market/securities,
+주식,단일 주식 상세 조회,GET,/market/securities/{securityId},
+투자일지,투자일지 목록 조회,GET,/journal/entries,
+투자일지,일자별 투자일지 조회,GET,/journal/entries/on/{date},
+투자일지,투자일지 저장,POST,/journal/entries,
+투자일지,투자일지 상세 조회,GET,/journal/entries/{journalId},
+투자일지,투자일지 수정,PUT,/journal/entries/{journalId},
+투자일지,투자일지 삭제,DELETE,/journal/entries/{journalId},
+투자일지,종목별 거래 타임라인 조회,GET,/journal/trades,
+알림,알림 목록 조회,GET,/notifications,
+알림,알림 상세 조회,GET,/notifications/{notificationId},
+알림,알림 읽음 처리,PATCH,/notifications/{notificationId}/read,
+거래원장,거래내역 목록 조회,GET,/ledger/trades,순수 거래내역을 조건별로 조회
+거래원장,거래내역 상세 조회,GET,/ledger/trades/{tradeId},특정 거래의 체결·계좌·종목 정보를 조회
+거래원장,날짜별 거래 회수 조회,GET,/ledger/activity/calendar,날짜별 거래 건수(홈화면 잔디용)
+거래원장,보유 종목 목록 조회,GET,/ledger/holdings,최신 보유종목과 평가정보 조회
+분석,사용자 투자 성형 분석 결과 및 근거 조회,GET,/tendency/analysis/latest,
+원칙,사용자의 투자 원칙 조회,GET,/principles,
+원칙,사용자의 투자 원칙 저장,PUT,/principles,
+원칙,제안된 투자 원칙,GET,/principles/recommendations,
