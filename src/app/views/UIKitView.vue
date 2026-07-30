@@ -62,10 +62,7 @@ const navTabs = [
                 <div class="ui-kit__sheet-placeholder" />
               </BottomSheet>
 
-              <SegmentedControl
-                v-model="segmentedTab"
-                :options="['투자성향', '투자원칙']"
-              />
+              <SegmentedControl v-model="segmentedTab" :options="['투자성향', '투자원칙']" />
             </div>
           </article>
 
@@ -77,22 +74,14 @@ const navTabs = [
             </header>
 
             <div class="ui-kit__card-body">
-              <BaseButton variant="primary" full-width>
-                확인하고 계속하기 →
-              </BaseButton>
+              <BaseButton variant="primary" full-width> 확인하고 계속하기 → </BaseButton>
 
-              <BaseButton variant="secondary" full-width>
-                ✨ 성향 기반 추천 보기
-              </BaseButton>
+              <BaseButton variant="secondary" full-width> ✨ 성향 기반 추천 보기 </BaseButton>
 
               <div class="ui-kit__action-row">
-                <IconButton label="추가">
-                  +
-                </IconButton>
+                <IconButton label="추가"> + </IconButton>
 
-                <BaseButton variant="ghost">
-                  ✏️ 수정
-                </BaseButton>
+                <BaseButton variant="ghost"> ✏️ 수정 </BaseButton>
               </div>
             </div>
           </article>
@@ -108,10 +97,7 @@ const navTabs = [
             </header>
 
             <div class="ui-kit__card-body">
-              <SearchInput
-                v-model="search"
-                placeholder="종목명 또는 종목코드 검색"
-              />
+              <SearchInput v-model="search" placeholder="종목명 또는 종목코드 검색" />
 
               <BaseTextarea
                 v-model="textarea"
@@ -166,11 +152,7 @@ const navTabs = [
                 description="새로운 기록을 바탕으로 성향을 다시 분석했습니다."
               />
 
-              <TimerProgressBar
-                label="오늘 일지 마감까지"
-                timer-text="03:42:18"
-                :percentage="45"
-              />
+              <TimerProgressBar label="오늘 일지 마감까지" timer-text="03:42:18" :percentage="45" />
             </div>
           </article>
         </div>

@@ -27,11 +27,7 @@ onMounted(() => mypageStore.fetchProfile())
         <ListRow title="원칙 관리 및 내역" icon="file-text" />
       </div>
 
-      <TimerProgressBar
-        label="오늘 일지 마감까지"
-        timer-text="03:42:18"
-        :percentage="45"
-      />
+      <TimerProgressBar label="오늘 일지 마감까지" timer-text="03:42:18" :percentage="45" />
     </div>
   </div>
 </template>

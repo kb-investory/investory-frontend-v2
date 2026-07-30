@@ -13,8 +13,8 @@ URL: /auth/oauth/{provider}/authorization
 
 ## URL 파라미터
 
-| 속성 | 자료형 | 필수 | 설명 |
-| --- | --- | --- | --- |
+| 속성       | 자료형   | 필수 | 설명                                   |
+| ---------- | -------- | ---- | -------------------------------------- |
 | `provider` | `string` | 필수 | OAuth 서비스 제공자(KAKAO, GOOGLE,,..) |
 
 예시 URL:
@@ -27,8 +27,8 @@ GET /auth/oauth/KAKAO/authorization
 
 - 없음.
 
-| 속성 | 자료형 | 필수 | 설명 |
-| --- | --- | --- | --- |
+| 속성       | 자료형   | 필수 | 설명                                   |
+| ---------- | -------- | ---- | -------------------------------------- |
 | `returnTo` | `string` | 선택 | 로그인 완료 후 이동할 프론트 내부 경로 |
 
 예:
@@ -95,8 +95,8 @@ Content-Type: application/json
 
 ```json
 {
-  "code":"AUTH_PROVIDER_NOT_SUPPORTED",
-  "message":"지원하지 않는 OAuth 제공자입니다."
+  "code": "AUTH_PROVIDER_NOT_SUPPORTED",
+  "message": "지원하지 않는 OAuth 제공자입니다."
 }
 ```
 
@@ -104,16 +104,15 @@ Content-Type: application/json
 
 ```json
 {
-  "type":"object",
+  "type": "object",
   "properties": {
     "code": {
-      "type":"string"
+      "type": "string"
     },
     "message": {
-      "type":"string"
+      "type": "string"
     }
   },
-  "required": ["code","message"
-  ]
+  "required": ["code", "message"]
 }
 ```

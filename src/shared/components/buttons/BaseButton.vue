@@ -19,10 +19,7 @@ defineProps({
   <button
     type="button"
     class="base-button"
-    :class="[
-      `base-button--${variant}`,
-      { 'base-button--full-width': fullWidth },
-    ]"
+    :class="[`base-button--${variant}`, { 'base-button--full-width': fullWidth }]"
     :disabled="disabled"
   >
     <span v-if="$slots.iconLeft" class="base-button__icon base-button__icon--left">

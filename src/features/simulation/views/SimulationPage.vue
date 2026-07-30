@@ -25,18 +25,12 @@ async function handleSubmit() {
 
     <div class="mobile-page__content">
       <div class="chat-container">
-        <SimulationMessage
-          v-for="msg in simulationStore.messages"
-          :key="msg.id"
-          :message="msg"
-        />
+        <SimulationMessage v-for="msg in simulationStore.messages" :key="msg.id" :message="msg" />
       </div>
 
       <form class="chat-form" @submit.prevent="handleSubmit">
         <SearchInput v-model="message" placeholder="시뮬레이션 의견을 입력하세요..." />
-        <BaseButton variant="primary" type="submit">
-          전송
-        </BaseButton>
+        <BaseButton variant="primary" type="submit"> 전송 </BaseButton>
       </form>
     </div>
   </div>
