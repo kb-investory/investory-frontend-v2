@@ -3,7 +3,7 @@
 
 ### Git 저장소
 
-- **프론트엔드** - https://github.com/KB7-FinanceTylenol/financetylenol-frontend
+- **프론트엔드** - https://github.com/kb-investory/investory-frontend-v2.git
 - **백엔드** - https://github.com/KB7-FinanceTylenol/financetylenol-backend
 
 ### GitHub 아이디 & 프론트엔드 파트 담당자 (Frontend Team Roles)
