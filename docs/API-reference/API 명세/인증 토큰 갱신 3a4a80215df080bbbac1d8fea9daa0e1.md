@@ -55,41 +55,39 @@ Set-Cookie: refreshToken=새로운값; HttpOnly; Secure; SameSite=Lax; Path=/aut
 
 ```json
 {
-  "accessToken":"eyJhbGciOiJIUzI1NiJ9...",
-  "tokenType":"Bearer",
-  "expiresIn":1800
+  "accessToken": "eyJhbGciOiJIUzI1NiJ9...",
+  "tokenType": "Bearer",
+  "expiresIn": 1800
 }
 ```
 
 ### 속성
 
-| 속성 | 자료형 | 필수 | 설명 |
-| --- | --- | --- | --- |
-| `accessToken` | `string` | 필수 | 새로 발급된 Access Token |
-| `tokenType` | `string` | 필수 | 토큰 유형. 일반적으로 `Bearer` |
-| `expiresIn` | `integer` | 필수 | Access Token 만료까지 남은 시간, 단위는 초 |
+| 속성          | 자료형    | 필수 | 설명                                       |
+| ------------- | --------- | ---- | ------------------------------------------ |
+| `accessToken` | `string`  | 필수 | 새로 발급된 Access Token                   |
+| `tokenType`   | `string`  | 필수 | 토큰 유형. 일반적으로 `Bearer`             |
+| `expiresIn`   | `integer` | 필수 | Access Token 만료까지 남은 시간, 단위는 초 |
 
 ### JSON Schema
 
 ```json
 {
-  "type":"object",
+  "type": "object",
   "properties": {
     "accessToken": {
-      "type":"string"
+      "type": "string"
     },
     "tokenType": {
-      "type":"string",
-      "enum": ["Bearer"
-      ]
+      "type": "string",
+      "enum": ["Bearer"]
     },
     "expiresIn": {
-      "type":"integer",
-      "minimum":1
+      "type": "integer",
+      "minimum": 1
     }
   },
-  "required": ["accessToken","tokenType","expiresIn"
-  ]
+  "required": ["accessToken", "tokenType", "expiresIn"]
 }
 ```
 
@@ -104,8 +102,8 @@ Content-Type: application/json
 
 ```json
 {
-  "code":"AUTH_REFRESH_TOKEN_MISSING",
-  "message":"Refresh Token이 존재하지 않습니다."
+  "code": "AUTH_REFRESH_TOKEN_MISSING",
+  "message": "Refresh Token이 존재하지 않습니다."
 }
 ```
 
@@ -117,8 +115,8 @@ Content-Type: application/json
 
 ```json
 {
-  "code":"AUTH_REFRESH_TOKEN_INVALID",
-  "message":"유효하지 않거나 만료된 Refresh Token입니다."
+  "code": "AUTH_REFRESH_TOKEN_INVALID",
+  "message": "유효하지 않거나 만료된 Refresh Token입니다."
 }
 ```
 
@@ -130,7 +128,7 @@ Content-Type: application/json
 
 ```json
 {
-  "code":"AUTH_REFRESH_TOKEN_REVOKED",
-  "message":"이미 폐기된 Refresh Token입니다."
+  "code": "AUTH_REFRESH_TOKEN_REVOKED",
+  "message": "이미 폐기된 Refresh Token입니다."
 }
 ```

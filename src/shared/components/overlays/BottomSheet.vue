@@ -26,12 +26,7 @@ defineEmits(['close'])
         <h3 class="bottom-sheet__title">{{ title }}</h3>
         <p class="bottom-sheet__description">{{ description }}</p>
       </div>
-      <button
-        type="button"
-        class="bottom-sheet__close"
-        aria-label="닫기"
-        @click="$emit('close')"
-      >
+      <button type="button" class="bottom-sheet__close" aria-label="닫기" @click="$emit('close')">
         <AppIcon name="x" :size="18" />
       </button>
     </header>

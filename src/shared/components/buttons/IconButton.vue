@@ -8,11 +8,7 @@ defineProps({
 </script>
 
 <template>
-  <button
-    type="button"
-    class="icon-button"
-    :aria-label="label"
-  >
+  <button type="button" class="icon-button" :aria-label="label">
     <slot />
   </button>
 </template>
