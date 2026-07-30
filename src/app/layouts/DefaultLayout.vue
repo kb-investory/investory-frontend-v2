@@ -9,6 +9,7 @@ const route = useRoute()
 
 // UI Kit 화면은 카탈로그 전체 너비로 표시
 const isUIKit = computed(() => route.name === ROUTE_NAMES.UI_KIT)
+const isBlankLayout = computed(() => route.meta.layout === 'blank')
 
 const tabItems = [
   { label: '홈', icon: 'house', to: { name: ROUTE_NAMES.HOME } },
@@ -21,6 +22,10 @@ const tabItems = [
 
 <template>
   <div v-if="isUIKit" class="full-view-layout">
+    <RouterView />
+  </div>
+
+  <div v-else-if="isBlankLayout" class="full-view-layout">
     <RouterView />
   </div>
 

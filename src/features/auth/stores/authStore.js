@@ -1,12 +1,15 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-import { getMe, logout as logoutApi } from '@/features/auth/api/authApi'
+import { getMe, loginWithOAuth, logout as logoutApi } from '@/features/auth/api/authApi'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const isAuthenticated = ref(false)
   const loading = ref(false)
+  const activeProvider = ref(null)
+  const oauthStatus = ref('idle')
+  const oauthMessage = ref('')
 
   async function fetchUser() {
     loading.value = true
@@ -21,30 +24,59 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function signIn(credentials) {
-    user.value = {
-      userId: 1,
-      oauthProvider: 'KAKAO',
-      email: credentials?.email || 'investor@investory.com',
-      nickname: '성공투자자',
-      userStatus: 'ACTIVE',
-      createdAt: new Date().toISOString(),
+  async function startOauthLogin(provider) {
+    if (loading.value) {
+      return null
     }
-    isAuthenticated.value = true
+
+    const providerNames = {
+      naver: '네이버',
+      kakao: '카카오',
+      google: 'Google',
+    }
+    const providerName = providerNames[provider] ?? '소셜 서비스'
+
+    loading.value = true
+    activeProvider.value = provider
+    oauthStatus.value = 'loading'
+    oauthMessage.value = `${providerName} 로그인을 진행하고 있어요.`
+
+    try {
+      const response = await loginWithOAuth(provider)
+      user.value = response.user
+      isAuthenticated.value = true
+      oauthStatus.value = 'success'
+      oauthMessage.value = `${providerName} 로그인이 완료되었습니다.`
+      return response
+    } catch {
+      user.value = null
+      isAuthenticated.value = false
+      oauthStatus.value = 'error'
+      oauthMessage.value = `${providerName} 로그인에 실패했습니다. 다시 시도해 주세요.`
+      return null
+    } finally {
+      loading.value = false
+    }
   }
 
   async function signOut() {
     await logoutApi()
     user.value = null
     isAuthenticated.value = false
+    activeProvider.value = null
+    oauthStatus.value = 'idle'
+    oauthMessage.value = ''
   }
 
   return {
     user,
     isAuthenticated,
     loading,
+    activeProvider,
+    oauthStatus,
+    oauthMessage,
     fetchUser,
-    signIn,
+    startOauthLogin,
     signOut,
   }
 })

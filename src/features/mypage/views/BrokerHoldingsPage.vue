@@ -1,0 +1,228 @@
+<script setup>
+import { computed, onMounted, ref } from 'vue'
+import { ArrowRight, TriangleAlert } from '@lucide/vue'
+import { useRoute, useRouter } from 'vue-router'
+
+import { ROUTE_NAMES } from '@/app/router/route-names'
+import ConnectedAccountSummary from '@/features/mypage/components/ConnectedAccountSummary.vue'
+import OnboardingHeader from '@/features/mypage/components/OnboardingHeader.vue'
+import OnboardingHoldingCard from '@/features/mypage/components/OnboardingHoldingCard.vue'
+import OnboardingStatusBar from '@/features/mypage/components/OnboardingStatusBar.vue'
+import { useBrokerConnectionStore } from '@/features/mypage/stores/brokerConnectionStore'
+import BaseButton from '@/shared/components/buttons/BaseButton.vue'
+import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
+
+const route = useRoute()
+const router = useRouter()
+const brokerStore = useBrokerConnectionStore()
+const pageError = ref('')
+const routeBrokerId = computed(() => Number(route.query.brokerId))
+
+onMounted(loadHoldings)
+
+async function loadHoldings() {
+  pageError.value = ''
+
+  try {
+    if (!brokerStore.providers.length) {
+      await brokerStore.fetchProviders()
+    }
+
+    if (Number.isFinite(routeBrokerId.value)) {
+      const routeBroker = brokerStore.providers.find(
+        (provider) => provider.brokerId === routeBrokerId.value,
+      )
+
+      if (routeBroker) {
+        brokerStore.selectBroker(routeBroker)
+      }
+    }
+
+    await brokerStore.fetchHoldings()
+  } catch (error) {
+    pageError.value = error instanceof Error ? error.message : '보유 종목을 불러오지 못했습니다.'
+  }
+}
+
+function goBack() {
+  router.push({
+    name: ROUTE_NAMES.BROKER_LOGIN,
+    query: { brokerId: brokerStore.selectedBroker?.brokerId },
+  })
+}
+
+function goNext() {
+  router.push({
+    name: ROUTE_NAMES.BROKER_COMPLETE,
+    query: { brokerId: brokerStore.selectedBroker?.brokerId },
+  })
+}
+</script>
+
+<template>
+  <section class="onboarding-page">
+    <div class="onboarding-shell">
+      <OnboardingStatusBar />
+      <OnboardingHeader title="보유 종목 확인" :step="3" @back="goBack" />
+
+      <main class="holdings-content">
+        <BaseLoading v-if="brokerStore.holdingsLoading" />
+
+        <div v-else-if="pageError" class="holdings-state" role="alert">
+          <TriangleAlert :size="24" />
+          <strong>보유 종목을 불러오지 못했습니다.</strong>
+          <p>{{ pageError }}</p>
+          <BaseButton variant="secondary" full-width @click="loadHoldings"> 다시 시도 </BaseButton>
+        </div>
+
+        <template v-else-if="brokerStore.account">
+          <ConnectedAccountSummary
+            :broker-name="brokerStore.account.brokerName"
+            :account-count="brokerStore.account.accountCount"
+            :holdings-count="brokerStore.holdings.length"
+            :total-valuation="brokerStore.totalValuation"
+          />
+
+          <header class="holdings-intro">
+            <h2>연결된 보유 종목</h2>
+            <p>계좌에서 불러온 종목과 보유 정보를 확인해 주세요.</p>
+          </header>
+
+          <section class="holdings-list" aria-label="연결된 보유 종목 목록">
+            <OnboardingHoldingCard
+              v-for="holding in brokerStore.holdings"
+              :key="holding.securityId"
+              :holding="holding"
+            />
+            <p v-if="!brokerStore.holdings.length" class="holdings-empty">
+              연결된 보유 종목이 없습니다.
+            </p>
+          </section>
+
+          <footer class="holdings-action">
+            <div>
+              <strong>보유 종목 확인</strong>
+              <span>총 {{ brokerStore.holdings.length }}개</span>
+            </div>
+            <BaseButton full-width :disabled="!brokerStore.holdings.length" @click="goNext">
+              확인하고 계속하기
+              <template #icon><ArrowRight :size="16" /></template>
+            </BaseButton>
+          </footer>
+        </template>
+      </main>
+    </div>
+  </section>
+</template>
+
+<style scoped>
+.onboarding-page {
+  display: grid;
+  min-height: 100svh;
+  place-items: center;
+  background: var(--color-border-subtle);
+}
+
+.onboarding-shell {
+  width: min(100%, 390px);
+  min-height: min(844px, 100svh);
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.holdings-content {
+  display: grid;
+  gap: 10px;
+  padding: 10px 20px 14px;
+}
+
+.holdings-intro {
+  display: grid;
+  gap: 3px;
+}
+
+.holdings-intro h2,
+.holdings-intro p,
+.holdings-state p,
+.holdings-empty {
+  margin: 0;
+}
+
+.holdings-intro h2 {
+  color: var(--color-heading);
+  font-family: var(--font-heading);
+  font-size: 15px;
+  letter-spacing: -0.2px;
+}
+
+.holdings-intro p {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+
+.holdings-list {
+  display: grid;
+  gap: 6px;
+}
+
+.holdings-action {
+  display: grid;
+  gap: 10px;
+  padding-top: 9px;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.holdings-action > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.holdings-action strong {
+  font-size: 12px;
+}
+
+.holdings-action span {
+  color: var(--brand-teal-deep);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.holdings-action :deep(.base-button--primary) {
+  min-height: 46px;
+  border-radius: 8px;
+  background: var(--slate-strong);
+}
+
+.holdings-state {
+  display: grid;
+  min-height: 520px;
+  align-content: center;
+  justify-items: center;
+  gap: 10px;
+  color: var(--brand-red);
+  text-align: center;
+}
+
+.holdings-state p,
+.holdings-empty {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.holdings-empty {
+  padding: 32px 0;
+  text-align: center;
+}
+
+@media (min-width: 600px) {
+  .onboarding-shell {
+    border: 1px solid var(--color-border);
+    border-radius: 24px;
+    box-shadow: 0 24px 70px rgb(24 24 23 / 9%);
+  }
+}
+</style>

@@ -14,6 +14,30 @@ export const routes = [
     meta: { title: '로그인', layout: 'blank' },
   },
   {
+    path: '/broker-connect',
+    name: ROUTE_NAMES.BROKER_CONNECT,
+    component: () => import('@/features/mypage/views/BrokerConnectPage.vue'),
+    meta: { title: '증권사 선택', layout: 'blank' },
+  },
+  {
+    path: '/broker-connect/login',
+    name: ROUTE_NAMES.BROKER_LOGIN,
+    component: () => import('@/features/mypage/views/BrokerLoginPage.vue'),
+    meta: { title: '증권사 로그인', layout: 'blank' },
+  },
+  {
+    path: '/broker-connect/holdings',
+    name: ROUTE_NAMES.BROKER_HOLDINGS,
+    component: () => import('@/features/mypage/views/BrokerHoldingsPage.vue'),
+    meta: { title: '보유 종목 확인', layout: 'blank' },
+  },
+  {
+    path: '/broker-connect/complete',
+    name: ROUTE_NAMES.BROKER_COMPLETE,
+    component: () => import('@/features/mypage/views/BrokerConnectionCompletePage.vue'),
+    meta: { title: '계좌 연결 완료', layout: 'blank' },
+  },
+  {
     path: '/journal',
     name: ROUTE_NAMES.JOURNAL,
     component: () => import('@/features/journal/views/JournalListPage.vue'),

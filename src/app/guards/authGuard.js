@@ -1,9 +1,8 @@
 export function setupRouterGuards(router) {
-  router.beforeEach((to, from, next) => {
+  router.beforeEach((to) => {
     const title = to.meta?.title
     if (title) {
       document.title = `${title} | Investory`
     }
-    next()
   })
 }
