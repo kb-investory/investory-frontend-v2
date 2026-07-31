@@ -8,5 +8,9 @@ export async function getHoldings() {
   return homeData.holdings
 }
 
-// Store compatibility aliases
-export const getAccountsSummary = getSummary
+export async function getAccountsSummary() {
+  return {
+    summary: homeData.summary,
+    accounts: homeData.accounts ?? [],
+  }
+}

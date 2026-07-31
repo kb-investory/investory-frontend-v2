@@ -5,9 +5,14 @@ export async function getMe() {
 }
 
 export async function loginWithOAuth(provider) {
+  await new Promise((resolve) => globalThis.setTimeout(resolve, 650))
+
   return {
     authorizationUrl: `/auth/oauth/${provider}/authorization`,
-    user: authData.user,
+    user: {
+      ...authData.user,
+      oauthProvider: provider.toUpperCase(),
+    },
     tokens: authData.tokens,
   }
 }
