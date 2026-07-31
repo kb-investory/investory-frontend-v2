@@ -70,6 +70,24 @@ export const routes = [
     meta: { title: '투자 성향' },
   },
   {
+    path: '/tendency/history/:analysisRunId',
+    name: ROUTE_NAMES.TENDENCY_HISTORY_DETAIL,
+    component: () => import('@/features/tendency/views/TendencyHistoryDetailPage.vue'),
+    meta: { title: '성향 변화 상세' },
+  },
+  {
+    path: '/tendency/principles/recommendations',
+    name: ROUTE_NAMES.TENDENCY_RECOMMENDATIONS,
+    component: () => import('@/features/tendency/views/PrincipleRecommendationPage.vue'),
+    meta: { title: '추천 원칙 선택' },
+  },
+  {
+    path: '/tendency/principles/edit',
+    name: ROUTE_NAMES.TENDENCY_PRINCIPLES_EDIT,
+    component: () => import('@/features/tendency/views/PrincipleEditPage.vue'),
+    meta: { title: '투자원칙 수정', hideBottomNav: true },
+  },
+  {
     path: '/simulation',
     name: ROUTE_NAMES.SIMULATION,
     component: () => import('@/features/simulation/views/SimulationPage.vue'),
