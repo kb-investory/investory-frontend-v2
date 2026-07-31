@@ -20,6 +20,9 @@ const brokerStore = useBrokerConnectionStore()
 const journalRoute = { name: ROUTE_NAMES.JOURNAL_CREATE }
 const tendencyRoute = { name: ROUTE_NAMES.TENDENCY }
 const simulationRoute = { name: ROUTE_NAMES.SIMULATION }
+const weekdays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
+const today = new Date()
+const currentDateLabel = `${today.getFullYear()}. ${String(today.getMonth() + 1).padStart(2, '0')}. ${String(today.getDate()).padStart(2, '0')} · ${weekdays[today.getDay()]}`
 
 onMounted(() => homeStore.fetchDashboard())
 
@@ -37,7 +40,7 @@ function openSearch() {
     <div v-if="homeStore.dashboard" class="home-page__content">
       <HomeHeader
         logo-src="/assets/logos/investory-logo.png"
-        :date-label="homeStore.dashboard.dateLabel"
+        :date-label="currentDateLabel"
         @search="openSearch"
       />
 
