@@ -6,7 +6,6 @@ import { useRouter } from 'vue-router'
 import { ROUTE_NAMES } from '@/app/router/route-names'
 import BrokerCard from '@/features/mypage/components/BrokerCard.vue'
 import OnboardingHeader from '@/features/mypage/components/OnboardingHeader.vue'
-import OnboardingStatusBar from '@/features/mypage/components/OnboardingStatusBar.vue'
 import { useBrokerConnectionStore } from '@/features/mypage/stores/brokerConnectionStore'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
@@ -44,7 +43,6 @@ watch(searchQuery, (query) => loadBrokers(query), { immediate: true })
 <template>
   <section class="onboarding-page">
     <div class="onboarding-shell">
-      <OnboardingStatusBar />
       <OnboardingHeader title="계좌 연결" :step="1" @back="goBack" />
 
       <main class="broker-content">

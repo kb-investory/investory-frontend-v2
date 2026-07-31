@@ -6,7 +6,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { ROUTE_NAMES } from '@/app/router/route-names'
 import BrokerLoginForm from '@/features/mypage/components/BrokerLoginForm.vue'
 import OnboardingHeader from '@/features/mypage/components/OnboardingHeader.vue'
-import OnboardingStatusBar from '@/features/mypage/components/OnboardingStatusBar.vue'
 import { useBrokerConnectionStore } from '@/features/mypage/stores/brokerConnectionStore'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
@@ -89,7 +88,6 @@ function goToHoldings() {
 <template>
   <section class="onboarding-page">
     <div class="onboarding-shell">
-      <OnboardingStatusBar />
       <OnboardingHeader title="계좌 연결" :step="2" @back="goBack" />
 
       <main class="broker-login-content">

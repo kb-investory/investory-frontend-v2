@@ -13,11 +13,16 @@ export const useHomeStore = defineStore('home', () => {
     loading.value = true
     try {
       const data = await getAccountsSummary()
+      const accountSummary = data.summary
+      const accountCount = accountSummary.accountCount ?? data.accounts?.length ?? 0
+
       summary.value = {
-        title: data.title,
-        description: data.description,
-        totalMarketValue: data.totalMarketValue,
-        totalUnrealizedPnl: data.totalUnrealizedPnl,
+        title: accountSummary.title ?? '총 자산 요약',
+        description:
+          accountSummary.description ??
+          `총 ${accountCount}개 계좌에서 ${accountSummary.totalMarketValue.toLocaleString()}원 운용 중입니다.`,
+        totalMarketValue: accountSummary.totalMarketValue,
+        totalUnrealizedPnl: accountSummary.totalUnrealizedPnl,
       }
       accounts.value = data.accounts ?? []
       holdings.value = await getHoldings()

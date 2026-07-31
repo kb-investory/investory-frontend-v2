@@ -3,7 +3,6 @@ import { ArrowRight, Check, House } from '@lucide/vue'
 import { useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
-import OnboardingStatusBar from '@/features/mypage/components/OnboardingStatusBar.vue'
 import { useBrokerConnectionStore } from '@/features/mypage/stores/brokerConnectionStore'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
 
@@ -19,8 +18,6 @@ function goHome() {
 <template>
   <section class="complete-page">
     <div class="complete-shell">
-      <OnboardingStatusBar />
-
       <header class="complete-header">
         <h1>계좌 연결</h1>
         <span>완료</span>

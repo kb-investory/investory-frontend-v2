@@ -7,7 +7,6 @@ import { ROUTE_NAMES } from '@/app/router/route-names'
 import ConnectedAccountSummary from '@/features/mypage/components/ConnectedAccountSummary.vue'
 import OnboardingHeader from '@/features/mypage/components/OnboardingHeader.vue'
 import OnboardingHoldingCard from '@/features/mypage/components/OnboardingHoldingCard.vue'
-import OnboardingStatusBar from '@/features/mypage/components/OnboardingStatusBar.vue'
 import { useBrokerConnectionStore } from '@/features/mypage/stores/brokerConnectionStore'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
@@ -24,18 +23,15 @@ async function loadHoldings() {
   pageError.value = ''
 
   try {
-    if (!brokerStore.providers.length) {
-      await brokerStore.fetchProviders()
+    if (!brokerStore.hasVerifiedConnection) {
+      throw new Error('증권사 로그인을 완료한 후 보유 종목을 확인해 주세요.')
     }
 
-    if (Number.isFinite(routeBrokerId.value)) {
-      const routeBroker = brokerStore.providers.find(
-        (provider) => provider.brokerId === routeBrokerId.value,
-      )
-
-      if (routeBroker) {
-        brokerStore.selectBroker(routeBroker)
-      }
+    if (
+      Number.isFinite(routeBrokerId.value) &&
+      routeBrokerId.value !== brokerStore.selectedBroker?.brokerId
+    ) {
+      throw new Error('로그인한 증권사와 요청한 증권사가 일치하지 않습니다.')
     }
 
     await brokerStore.fetchHoldings()
@@ -62,7 +58,6 @@ function goNext() {
 <template>
   <section class="onboarding-page">
     <div class="onboarding-shell">
-      <OnboardingStatusBar />
       <OnboardingHeader title="보유 종목 확인" :step="3" @back="goBack" />
 
       <main class="holdings-content">

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 import { getMe, loginWithOAuth, logout as logoutApi } from '@/features/auth/api/authApi'
+import { useBrokerConnectionStore } from '@/features/mypage/stores/brokerConnectionStore'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
@@ -60,12 +61,18 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function signOut() {
-    await logoutApi()
-    user.value = null
-    isAuthenticated.value = false
-    activeProvider.value = null
-    oauthStatus.value = 'idle'
-    oauthMessage.value = ''
+    try {
+      await logoutApi()
+    } finally {
+      const brokerStore = useBrokerConnectionStore()
+
+      brokerStore.reset()
+      user.value = null
+      isAuthenticated.value = false
+      activeProvider.value = null
+      oauthStatus.value = 'idle'
+      oauthMessage.value = ''
+    }
   }
 
   return {

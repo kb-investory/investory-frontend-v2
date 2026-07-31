@@ -5,7 +5,6 @@ import { useRouter } from 'vue-router'
 import { ROUTE_NAMES } from '@/app/router/route-names'
 import LoginForm from '@/features/auth/components/LoginForm.vue'
 import { useAuthStore } from '@/features/auth/stores/authStore'
-import OnboardingStatusBar from '@/features/mypage/components/OnboardingStatusBar.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -22,8 +21,6 @@ async function handleSocialLogin(provider) {
 <template>
   <section class="login-page">
     <div class="login-shell">
-      <OnboardingStatusBar />
-
       <main class="login-content">
         <div class="brand-intro">
           <div class="brand-logo" aria-label="Investory">

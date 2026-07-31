@@ -29,13 +29,22 @@ export const routes = [
     path: '/broker-connect/holdings',
     name: ROUTE_NAMES.BROKER_HOLDINGS,
     component: () => import('@/features/mypage/views/BrokerHoldingsPage.vue'),
-    meta: { title: '보유 종목 확인', layout: 'blank' },
+    meta: {
+      title: '보유 종목 확인',
+      layout: 'blank',
+      requiresBrokerConnection: true,
+    },
   },
   {
     path: '/broker-connect/complete',
     name: ROUTE_NAMES.BROKER_COMPLETE,
     component: () => import('@/features/mypage/views/BrokerConnectionCompletePage.vue'),
-    meta: { title: '계좌 연결 완료', layout: 'blank' },
+    meta: {
+      title: '계좌 연결 완료',
+      layout: 'blank',
+      requiresBrokerConnection: true,
+      requiresBrokerHoldings: true,
+    },
   },
   {
     path: '/journal',

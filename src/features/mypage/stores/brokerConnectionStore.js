@@ -32,7 +32,16 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
   const connectionError = ref('')
   const holdingsLoading = ref(false)
   const holdingsError = ref(null)
-  const connectionCompleted = ref(Boolean(savedConnection))
+  const connectionCompleted = ref(
+    savedConnection?.connection?.status === 'CONNECTED' && Boolean(savedConnection?.account),
+  )
+
+  const hasVerifiedConnection = computed(
+    () =>
+      connection.value?.status === 'CONNECTED' &&
+      connection.value.brokerId === selectedBroker.value?.brokerId,
+  )
+  const hasLoadedHoldings = computed(() => hasVerifiedConnection.value && Boolean(account.value))
 
   const totalValuation = computed(() =>
     holdings.value.reduce((total, holding) => total + holding.valuationAmount, 0),
@@ -98,8 +107,8 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
   }
 
   async function fetchHoldings() {
-    if (!selectedBroker.value) {
-      throw new Error('연결된 증권사 정보를 확인할 수 없습니다.')
+    if (!hasVerifiedConnection.value) {
+      throw new Error('증권사 로그인을 완료한 후 보유 종목을 확인해 주세요.')
     }
 
     holdingsLoading.value = true
@@ -128,6 +137,10 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
   }
 
   function completeConnection() {
+    if (!hasLoadedHoldings.value) {
+      throw new Error('보유 종목 확인을 완료한 후 계좌 연결을 마쳐 주세요.')
+    }
+
     connectionCompleted.value = true
 
     try {
@@ -145,6 +158,28 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
     }
   }
 
+  function reset() {
+    providers.value = []
+    selectedBroker.value = null
+    connection.value = null
+    account.value = null
+    holdings.value = []
+    reasonCount.value = 0
+    loading.value = false
+    error.value = null
+    connectionStatus.value = 'idle'
+    connectionError.value = ''
+    holdingsLoading.value = false
+    holdingsError.value = null
+    connectionCompleted.value = false
+
+    try {
+      sessionStorage.removeItem(CONNECTION_SESSION_KEY)
+    } catch {
+      // 저장소를 사용할 수 없는 환경에서도 메모리 상태는 초기화합니다.
+    }
+  }
+
   return {
     providers,
     selectedBroker,
@@ -159,6 +194,8 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
     holdingsLoading,
     holdingsError,
     connectionCompleted,
+    hasVerifiedConnection,
+    hasLoadedHoldings,
     totalValuation,
     fetchProviders,
     selectBroker,
@@ -166,5 +203,6 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
     fetchHoldings,
     resetConnectionRequest,
     completeConnection,
+    reset,
   }
 })
