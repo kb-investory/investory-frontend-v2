@@ -17,13 +17,30 @@ export const routes = [
     path: '/journal',
     name: ROUTE_NAMES.JOURNAL,
     component: () => import('@/features/journal/views/JournalListPage.vue'),
-    meta: { title: '투자 일지' },
+    meta: {
+      title: '투자 일지',
+      layout: 'full-bleed',
+      frameHeight: 912,
+      mainBottomPadding: 80,
+    },
+  },
+  {
+    path: '/journal/search',
+    name: ROUTE_NAMES.JOURNAL_SEARCH,
+    component: () => import('@/features/journal/views/JournalSearchPlaceholderPage.vue'),
+    meta: { title: '종목별 일지 검색' },
   },
   {
     path: '/journal/create',
     name: ROUTE_NAMES.JOURNAL_CREATE,
     component: () => import('@/features/journal/views/JournalCreatePage.vue'),
     meta: { title: '일지 작성' },
+  },
+  {
+    path: '/journal/:date',
+    name: ROUTE_NAMES.JOURNAL_DATE,
+    component: () => import('@/features/journal/views/JournalDatePlaceholderPage.vue'),
+    meta: { title: '투자 일지 상세' },
   },
   {
     path: '/tendency',

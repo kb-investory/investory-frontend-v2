@@ -2,6 +2,7 @@
 import { RouterLink } from 'vue-router'
 
 import AppIcon from '@/shared/components/AppIcon.vue'
+import MonkeyImage from '@/shared/components/MonkeyImage.vue'
 
 defineProps({
   items: {
@@ -20,8 +21,11 @@ defineProps({
       :class="{ 'bottom-tab-bar__item--active': item.active }"
       :to="item.to || '#'"
     >
-      <div class="bottom-tab-bar__icon-wrapper">
-        <span v-if="item.isMonkey" class="bottom-tab-bar__monkey-emoji">🐒</span>
+      <div
+        class="bottom-tab-bar__icon-wrapper"
+        :class="{ 'bottom-tab-bar__icon-wrapper--monkey': item.isMonkey }"
+      >
+        <MonkeyImage v-if="item.isMonkey" :size="22" />
         <AppIcon v-else :name="item.icon" :size="18" />
       </div>
       <span class="bottom-tab-bar__label">{{ item.label }}</span>
@@ -72,14 +76,14 @@ defineProps({
   height: 18px;
 }
 
-.bottom-tab-bar__monkey-emoji {
-  font-size: 16px;
-  line-height: 1;
+.bottom-tab-bar__icon-wrapper--monkey {
+  width: 22px;
+  height: 22px;
 }
 
 .bottom-tab-bar__label {
   font-family: var(--font-sans);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 500;
   white-space: nowrap;
 }

@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
 import { useJournalStore } from '@/features/journal/stores/journalStore'
@@ -11,6 +11,7 @@ import SearchInput from '@/shared/components/inputs/SearchInput.vue'
 import AppBar from '@/shared/components/navigation/AppBar.vue'
 
 const router = useRouter()
+const route = useRoute()
 const journalStore = useJournalStore()
 
 const searchKeyword = ref('')
@@ -23,7 +24,7 @@ function handleBack() {
 
 async function handleSubmit() {
   await journalStore.addJournal({
-    journalDate: new Date().toISOString().split('T')[0],
+    journalDate: route.query.date || new Date().toISOString().split('T')[0],
     marketThought: marketThought.value || '오늘의 매매 기록 및 생각',
     marketMood: 'CONFIDENT',
   })
