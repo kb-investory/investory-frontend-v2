@@ -1,4 +1,35 @@
 {
+  "dashboard": {
+    "dateLabel": "2026. 08. 23 · FRI",
+    "today": {
+      "title": "오늘의 선택을 기록으로 이어가요",
+      "totalTrades": 12,
+      "buyTrades": 4,
+      "sellTrades": 8,
+      "stockCount": 7,
+      "missingReasons": 8,
+      "currentTime": "09:41",
+      "remainingTime": "14:19:00",
+      "dayProgressPercent": 40.6
+    },
+    "quickActions": {
+      "journalStatus": "작성 전",
+      "tendencyProgress": "6 / 10"
+    },
+    "weekly": {
+      "streakDays": 6,
+      "days": [
+        { "label": "월", "completed": true, "tone": "teal" },
+        { "label": "화", "completed": true, "tone": "blue" },
+        { "label": "수", "completed": true, "tone": "teal" },
+        { "label": "목", "completed": true, "tone": "blue" },
+        { "label": "금", "completed": true, "tone": "teal" },
+        { "label": "토", "completed": true, "tone": "blue" },
+        { "label": "일", "completed": false, "tone": "empty" }
+      ],
+      "insight": "매도한 날에도 근거를 남기는 습관이 이어졌어요"
+    }
+  },
   "summary": {
     "title": "오늘의 투자 요약",
     "description": "원칙 준수율 88%로 차분한 투자를 유지하고 있습니다.",
