@@ -3,16 +3,19 @@ import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
+import HomeConnectionSummary from '@/features/home/components/HomeConnectionSummary.vue'
 import HomeHeader from '@/features/home/components/HomeHeader.vue'
 import HomeQuickActions from '@/features/home/components/HomeQuickActions.vue'
 import HomeSimulationCard from '@/features/home/components/HomeSimulationCard.vue'
 import TodayRecordHero from '@/features/home/components/TodayRecordHero.vue'
 import WeeklyRecordRhythm from '@/features/home/components/WeeklyRecordRhythm.vue'
 import { useHomeStore } from '@/features/home/stores/homeStore'
+import { useBrokerConnectionStore } from '@/features/mypage/stores/brokerConnectionStore'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
 
 const router = useRouter()
 const homeStore = useHomeStore()
+const brokerStore = useBrokerConnectionStore()
 
 const journalRoute = { name: ROUTE_NAMES.JOURNAL_CREATE }
 const tendencyRoute = { name: ROUTE_NAMES.TENDENCY }
@@ -36,6 +39,14 @@ function openSearch() {
         logo-src="/assets/logos/investory-logo.png"
         :date-label="homeStore.dashboard.dateLabel"
         @search="openSearch"
+      />
+
+      <HomeConnectionSummary
+        v-if="brokerStore.connectionCompleted && brokerStore.account"
+        :broker-name="brokerStore.account.brokerName"
+        :account-count="brokerStore.account.accountCount"
+        :holding-count="brokerStore.holdings.length"
+        :total-valuation="brokerStore.totalValuation"
       />
 
       <TodayRecordHero :today="homeStore.dashboard.today" @open-transactions="openTransactions" />
