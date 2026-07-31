@@ -6,7 +6,6 @@ import { ROUTE_NAMES } from '@/app/router/route-names'
 import HomeHeader from '@/features/home/components/HomeHeader.vue'
 import HomeQuickActions from '@/features/home/components/HomeQuickActions.vue'
 import HomeSimulationCard from '@/features/home/components/HomeSimulationCard.vue'
-import HomeStatusBar from '@/features/home/components/HomeStatusBar.vue'
 import TodayRecordHero from '@/features/home/components/TodayRecordHero.vue'
 import WeeklyRecordRhythm from '@/features/home/components/WeeklyRecordRhythm.vue'
 import { useHomeStore } from '@/features/home/stores/homeStore'
@@ -32,8 +31,6 @@ function openSearch() {
 
 <template>
   <div class="home-page">
-    <HomeStatusBar :time="homeStore.dashboard?.today.currentTime" />
-
     <div v-if="homeStore.dashboard" class="home-page__content">
       <HomeHeader
         logo-src="/assets/logos/investory-logo.png"
