@@ -69,6 +69,8 @@ const tabItems = [
 }
 
 .mobile-frame {
+  --mobile-frame-edge-offset: max(16px, calc((100dvh - 844px) / 2));
+
   position: relative;
   display: flex;
   width: 100%;
@@ -121,6 +123,8 @@ const tabItems = [
   }
 
   .mobile-frame {
+    --mobile-frame-edge-offset: 0px;
+
     max-width: 100%;
     height: 100dvh;
     max-height: 100dvh;
