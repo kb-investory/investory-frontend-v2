@@ -8,7 +8,6 @@ import JournalMonthNavigator from '@/features/journal/components/JournalMonthNav
 import { useJournalStore } from '@/features/journal/stores/journalStore'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
-import MobileStatusBar from '@/shared/components/navigation/MobileStatusBar.vue'
 
 const router = useRouter()
 const journalStore = useJournalStore()
@@ -64,8 +63,6 @@ function writeTodayJournal() {
 
 <template>
   <div class="journal-calendar-page">
-    <MobileStatusBar compact />
-
     <main class="journal-calendar-page__content">
       <header class="journal-calendar-page__header">
         <div>
@@ -133,8 +130,8 @@ function writeTodayJournal() {
 
 .journal-calendar-page__content {
   display: flex;
-  height: 706px;
-  flex: 0 0 706px;
+  height: 768px;
+  flex: 0 0 768px;
   flex-direction: column;
   gap: 12px;
   padding: 0 20px 10px;
