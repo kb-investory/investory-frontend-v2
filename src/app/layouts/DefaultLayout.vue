@@ -10,12 +10,13 @@ const route = useRoute()
 // UI Kit 화면은 카탈로그 전체 너비로 표시
 const isUIKit = computed(() => route.name === ROUTE_NAMES.UI_KIT)
 const isBlankLayout = computed(() => route.meta.layout === 'blank')
+const hideBottomNav = computed(() => route.meta.hideBottomNav === true)
 
 const tabItems = [
   { label: '홈', icon: 'house', to: { name: ROUTE_NAMES.HOME } },
   { label: '일지', icon: 'book-open', to: { name: ROUTE_NAMES.JOURNAL } },
-  { label: '시뮬레이션', isMonkey: true, to: { name: ROUTE_NAMES.SIMULATION } },
   { label: '투자 성향', icon: 'radar', to: { name: ROUTE_NAMES.TENDENCY } },
+  { label: '시뮬레이션', isMonkey: true, to: { name: ROUTE_NAMES.SIMULATION } },
   { label: '마이', icon: 'user', to: { name: ROUTE_NAMES.MYPAGE } },
 ]
 </script>
@@ -32,12 +33,12 @@ const tabItems = [
   <div v-else class="mobile-viewport-shell">
     <div class="mobile-frame">
       <!-- 동적 세로 스크롤 영역 -->
-      <main class="mobile-main">
+      <main class="mobile-main" :class="{ 'mobile-main--without-nav': hideBottomNav }">
         <RouterView />
       </main>
 
       <!-- 뷰포트 하단 고정 내비게이션 -->
-      <footer class="mobile-footer">
+      <footer v-if="!hideBottomNav" class="mobile-footer">
         <BottomTabBar :items="tabItems" />
       </footer>
     </div>
@@ -60,6 +61,8 @@ const tabItems = [
 }
 
 .mobile-frame {
+  --mobile-frame-edge-offset: max(16px, calc((100dvh - 844px) / 2));
+
   position: relative;
   display: flex;
   width: 100%;
@@ -82,6 +85,10 @@ const tabItems = [
   scrollbar-width: thin;
 }
 
+.mobile-main--without-nav {
+  padding-bottom: 20px;
+}
+
 .mobile-footer {
   position: absolute;
   bottom: 0;
@@ -100,6 +107,8 @@ const tabItems = [
   }
 
   .mobile-frame {
+    --mobile-frame-edge-offset: 0px;
+
     max-width: 100%;
     height: 100dvh;
     max-height: 100dvh;
