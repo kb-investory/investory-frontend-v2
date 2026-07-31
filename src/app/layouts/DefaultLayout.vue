@@ -10,7 +10,11 @@ const route = useRoute()
 // UI Kit 화면은 카탈로그 전체 너비로 표시
 const isUIKit = computed(() => route.name === ROUTE_NAMES.UI_KIT)
 const isBlankLayout = computed(() => route.meta.layout === 'blank')
-const hideBottomNav = computed(() => route.meta.hideBottomNav === true)
+const isFullBleedLayout = computed(() => route.meta.layout === 'full-bleed')
+const frameStyle = computed(() => ({
+  '--mobile-frame-max-height': `${route.meta.frameHeight ?? 844}px`,
+  '--mobile-main-bottom-padding': `${route.meta.mainBottomPadding ?? 84}px`,
+}))
 
 const tabItems = [
   { label: '홈', icon: 'house', to: { name: ROUTE_NAMES.HOME } },
@@ -31,14 +35,18 @@ const tabItems = [
   </div>
 
   <div v-else class="mobile-viewport-shell">
-    <div class="mobile-frame">
+    <div
+      class="mobile-frame"
+      :class="{ 'mobile-frame--full-bleed': isFullBleedLayout }"
+      :style="frameStyle"
+    >
       <!-- 동적 세로 스크롤 영역 -->
-      <main class="mobile-main" :class="{ 'mobile-main--without-nav': hideBottomNav }">
+      <main class="mobile-main" :class="{ 'mobile-main--full-bleed': isFullBleedLayout }">
         <RouterView />
       </main>
 
       <!-- 뷰포트 하단 고정 내비게이션 -->
-      <footer v-if="!hideBottomNav" class="mobile-footer">
+      <footer class="mobile-footer" :class="{ 'mobile-footer--full-bleed': isFullBleedLayout }">
         <BottomTabBar :items="tabItems" />
       </footer>
     </div>
@@ -68,13 +76,17 @@ const tabItems = [
   width: 100%;
   max-width: 390px;
   height: 100dvh;
-  max-height: 844px;
+  max-height: var(--mobile-frame-max-height);
   flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--border-default, #e5e5e0);
   border-radius: 24px;
   background: var(--bg-primary, #f6f4ef);
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12);
+}
+
+.mobile-frame--full-bleed {
+  background: #ffffff;
 }
 
 .mobile-main {
@@ -85,8 +97,8 @@ const tabItems = [
   scrollbar-width: thin;
 }
 
-.mobile-main--without-nav {
-  padding-bottom: 20px;
+.mobile-main--full-bleed {
+  padding: 0 0 var(--mobile-main-bottom-padding);
 }
 
 .mobile-footer {
@@ -98,6 +110,10 @@ const tabItems = [
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(10px);
   z-index: 100;
+}
+
+.mobile-footer--full-bleed {
+  padding-bottom: 16px;
 }
 
 @media (max-width: 440px) {

@@ -56,7 +56,12 @@ export const routes = [
     path: '/journal/create',
     name: ROUTE_NAMES.JOURNAL_CREATE,
     component: () => import('@/features/journal/views/JournalCreatePage.vue'),
-    meta: { title: '일지 작성' },
+    meta: {
+      title: '오늘의 투자 일기',
+      layout: 'full-bleed',
+      frameHeight: 960,
+      mainBottomPadding: 80,
+    },
   },
   {
     path: '/tendency',
