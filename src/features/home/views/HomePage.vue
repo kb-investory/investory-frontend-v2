@@ -1,7 +1,9 @@
 <script setup>
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 
+import HomeConnectionSummary from '@/features/home/components/HomeConnectionSummary.vue'
 import { useHomeStore } from '@/features/home/stores/homeStore'
+import { useBrokerConnectionStore } from '@/features/mypage/stores/brokerConnectionStore'
 import BaseCard from '@/shared/components/cards/BaseCard.vue'
 import MetricStrip from '@/shared/components/cards/MetricStrip.vue'
 import QuoteCard from '@/shared/components/cards/QuoteCard.vue'
@@ -10,6 +12,15 @@ import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
 import AppBar from '@/shared/components/navigation/AppBar.vue'
 
 const homeStore = useHomeStore()
+const brokerStore = useBrokerConnectionStore()
+
+const visibleHoldings = computed(() => {
+  if (brokerStore.connectionCompleted && brokerStore.holdings.length) {
+    return brokerStore.holdings
+  }
+
+  return homeStore.holdings
+})
 
 onMounted(() => homeStore.fetchSummary())
 </script>
@@ -23,6 +34,14 @@ onMounted(() => homeStore.fetchSummary())
         badge="오늘의 기록"
         title="판단을 남기면 다음 선택의 근거가 됩니다"
         description="수익률보다 당시의 생각과 원칙을 먼저 확인하세요."
+      />
+
+      <HomeConnectionSummary
+        v-if="brokerStore.connectionCompleted && brokerStore.account"
+        :broker-name="brokerStore.account.brokerName"
+        :account-count="brokerStore.account.accountCount"
+        :holding-count="brokerStore.holdings.length"
+        :total-valuation="brokerStore.totalValuation"
       />
 
       <BaseCard
@@ -50,7 +69,7 @@ onMounted(() => homeStore.fetchSummary())
         <h3 class="section-title">보유 종목</h3>
         <div class="holdings-list">
           <StockCard
-            v-for="holding in homeStore.holdings"
+            v-for="holding in visibleHoldings"
             :key="holding.securityId"
             symbol="S"
             :name="holding.securityName"

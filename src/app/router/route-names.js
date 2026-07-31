@@ -1,6 +1,10 @@
 export const ROUTE_NAMES = {
   HOME: 'Home',
   LOGIN: 'Login',
+  BROKER_CONNECT: 'BrokerConnect',
+  BROKER_LOGIN: 'BrokerLogin',
+  BROKER_HOLDINGS: 'BrokerHoldings',
+  BROKER_COMPLETE: 'BrokerComplete',
   JOURNAL: 'Journal',
   JOURNAL_CREATE: 'JournalCreate',
   PORTFOLIO: 'Portfolio',

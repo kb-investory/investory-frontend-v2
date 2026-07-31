@@ -1,29 +1,51 @@
 <script setup>
-import { reactive } from 'vue'
+import SocialLoginButton from '@/features/auth/components/SocialLoginButton.vue'
 
-import BaseButton from '@/shared/components/buttons/BaseButton.vue'
-import BaseTextField from '@/shared/components/inputs/BaseTextField.vue'
+const providers = ['naver', 'kakao', 'google']
 
-const emit = defineEmits(['submit'])
-const form = reactive({ email: '', password: '' })
+const props = defineProps({
+  activeProvider: {
+    type: String,
+    default: null,
+  },
+  status: {
+    type: String,
+    default: 'idle',
+  },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
+})
 
-function handleSubmit() {
-  emit('submit', { ...form })
+const emit = defineEmits(['select'])
+
+function getButtonState(provider) {
+  if (props.activeProvider !== provider) {
+    return 'idle'
+  }
+
+  return props.status
 }
 </script>
 
 <template>
-  <form class="login-form" @submit.prevent="handleSubmit">
-    <BaseTextField v-model="form.email" label="이메일" type="email" required />
-    <BaseTextField v-model="form.password" label="비밀번호" type="password" required />
-    <BaseButton type="submit" full-width>로그인</BaseButton>
-  </form>
+  <div class="login-form" aria-label="소셜 로그인 선택">
+    <SocialLoginButton
+      v-for="provider in providers"
+      :key="provider"
+      :provider="provider"
+      :state="getButtonState(provider)"
+      :disabled="disabled"
+      @select="emit('select', provider)"
+    />
+  </div>
 </template>
 
 <style scoped>
 .login-form {
   display: grid;
-  width: min(100%, 420px);
-  gap: 16px;
+  width: 100%;
+  gap: 10px;
 }
 </style>
