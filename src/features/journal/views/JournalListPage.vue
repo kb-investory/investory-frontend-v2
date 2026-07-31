@@ -130,8 +130,7 @@ function writeTodayJournal() {
 
 .journal-calendar-page__content {
   display: flex;
-  height: 768px;
-  flex: 0 0 768px;
+  flex: 0 0 auto;
   flex-direction: column;
   gap: 12px;
   padding: 0 20px 10px;
@@ -255,11 +254,5 @@ function writeTodayJournal() {
 .journal-calendar-page__cta button:focus-visible {
   outline: 2px solid var(--brand-teal, #0b8f8b);
   outline-offset: 2px;
-}
-
-@media (max-height: 860px) {
-  .journal-calendar-page {
-    min-height: 832px;
-  }
 }
 </style>
