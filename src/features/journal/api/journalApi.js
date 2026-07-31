@@ -62,21 +62,31 @@ export async function getJournalEntryOnDate(journalDate = getDefaultJournalDate(
 }
 
 export async function createJournal(payload) {
-  const dailyEntry = journalData.dailyEntries?.find(
-    (entry) => entry.journalDate === payload.journalDate,
-  )
+  const journalDate = payload.journalDate || new Date().toISOString().split('T')[0]
+  let dailyEntry = journalData.dailyEntries?.find((entry) => entry.journalDate === journalDate)
 
   if (dailyEntry?.journal) {
     throw new Error('해당 날짜의 투자일지가 이미 존재합니다.')
   }
 
+  if (!dailyEntry) {
+    dailyEntry = {
+      journalDate,
+      canCreate: true,
+      journal: null,
+      trades: [],
+    }
+    journalData.dailyEntries ??= []
+    journalData.dailyEntries.push(dailyEntry)
+  }
+
   const now = new Date().toISOString()
   const newJournal = {
     journalId: Date.now(),
-    journalDate: payload.journalDate || new Date().toISOString().split('T')[0],
+    journalDate,
     marketThought: payload.marketThought || '',
     marketMood: payload.marketMood || 'CALM',
-    tradeCount: dailyEntry?.trades.length ?? 0,
+    tradeCount: dailyEntry.trades.length,
     complianceRate: 100,
     createdAt: now,
     updatedAt: now,
@@ -85,11 +95,9 @@ export async function createJournal(payload) {
     isEditable: true,
   }
 
-  if (dailyEntry) {
-    dailyEntry.journal = { ...newJournal }
-    dailyEntry.canCreate = false
-    applyTradeNotes(dailyEntry, payload.tradeNotes)
-  }
+  dailyEntry.journal = { ...newJournal }
+  dailyEntry.canCreate = false
+  applyTradeNotes(dailyEntry, payload.tradeNotes)
 
   journalData.journals.unshift(newJournal)
   return clone(newJournal)

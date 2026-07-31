@@ -121,7 +121,7 @@ function scheduleAutoSave() {
 }
 
 function handleBack() {
-  router.back()
+  router.push({ name: ROUTE_NAMES.JOURNAL })
 }
 
 function handleClose() {
