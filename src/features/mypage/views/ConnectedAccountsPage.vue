@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
+import AccountDetailModal from '@/features/mypage/components/AccountDetailModal.vue'
 import { useMypageStore } from '@/features/mypage/stores/mypageStore'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
@@ -11,6 +12,8 @@ import MobileStatusBar from '@/shared/components/MobileStatusBar.vue'
 const router = useRouter()
 const mypageStore = useMypageStore()
 const notice = ref('')
+const detailOpen = ref(false)
+const disconnecting = ref(false)
 
 const overallStatus = computed(() => {
   if (!mypageStore.accounts.length) return '미연결'
@@ -35,11 +38,35 @@ function formatSyncTime(value, { includeDate = false } = {}) {
   }).format(date)
 }
 
-function openAccount(account) {
-  router.push({
-    name: ROUTE_NAMES.MYPAGE_ACCOUNT_DETAIL,
-    params: { accountId: account.accountId },
-  })
+async function openAccount(account) {
+  detailOpen.value = true
+  mypageStore.accountDetail = null
+  await mypageStore.fetchAccountDetail(account.accountId)
+}
+
+function closeAccountDetail() {
+  if (disconnecting.value) return
+  detailOpen.value = false
+}
+
+async function syncAccountDetail() {
+  const accountId = mypageStore.accountDetail?.accountId
+  if (!accountId) return
+  const result = await mypageStore.syncAccountDetail(accountId)
+  if (result) notice.value = `${result.brokerName} 계좌를 최신 상태로 동기화했어요.`
+}
+
+async function disconnectSelectedBroker() {
+  const account = mypageStore.accountDetail
+  if (!account || disconnecting.value) return
+  disconnecting.value = true
+  try {
+    await mypageStore.disconnectBroker(account.brokerId)
+    detailOpen.value = false
+    notice.value = `${account.brokerName} 연결을 해제했어요. 기존 투자 일지는 보존됩니다.`
+  } finally {
+    disconnecting.value = false
+  }
 }
 
 async function retryAccount(account) {
@@ -197,6 +224,17 @@ onMounted(async () => {
 
       <p v-if="notice" class="account-notice" role="status">{{ notice }}</p>
     </main>
+
+    <AccountDetailModal
+      v-if="detailOpen"
+      :account="mypageStore.accountDetail"
+      :loading="mypageStore.loadingAccountDetail"
+      :syncing="mypageStore.syncingAccountDetail"
+      :disconnecting="disconnecting"
+      @close="closeAccountDetail"
+      @sync="syncAccountDetail"
+      @disconnect="disconnectSelectedBroker"
+    />
   </div>
 </template>
 

@@ -31,6 +31,7 @@ export const useMypageStore = defineStore('mypage', () => {
   const loading = ref(false)
   const savingProfile = ref(false)
   const syncing = ref(false)
+  const loadingAccountDetail = ref(false)
   const syncingAccountDetail = ref(false)
   const retryingAccountId = ref(null)
   const lastSyncResult = ref(null)
@@ -110,7 +111,7 @@ export const useMypageStore = defineStore('mypage', () => {
   }
 
   async function fetchAccountDetail(accountId) {
-    loading.value = true
+    loadingAccountDetail.value = true
     error.value = null
     try {
       accountDetail.value = await getConnectedAccountDetail(accountId)
@@ -119,7 +120,7 @@ export const useMypageStore = defineStore('mypage', () => {
       error.value = requestError
       return null
     } finally {
-      loading.value = false
+      loadingAccountDetail.value = false
     }
   }
 
@@ -182,6 +183,7 @@ export const useMypageStore = defineStore('mypage', () => {
     loading,
     savingProfile,
     syncing,
+    loadingAccountDetail,
     syncingAccountDetail,
     retryingAccountId,
     lastSyncResult,
