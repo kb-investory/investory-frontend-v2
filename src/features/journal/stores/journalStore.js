@@ -3,6 +3,7 @@ import { ref } from 'vue'
 
 import {
   deleteJournal as deleteJournalApi,
+  getCalendarActivity,
   getJournalEntryOnDate,
   getJournalDetail,
   getJournalEntries,
@@ -12,20 +13,46 @@ import {
 
 export const useJournalStore = defineStore('journal', () => {
   const entries = ref([])
+  const calendarActivities = ref([])
   const selectedDetail = ref(null)
   const dailyEntry = ref(null)
   const loading = ref(false)
   const error = ref('')
 
-  async function fetchJournals() {
+  async function fetchJournals(params) {
     loading.value = true
     error.value = ''
     try {
-      const response = await getJournalEntries()
+      const response = await getJournalEntries(params)
       entries.value = response.entries
     } catch (requestError) {
       error.value = requestError.message
       throw requestError
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function fetchMonthlyCalendar(year, month) {
+    loading.value = true
+    error.value = ''
+
+    const lastDay = new Date(year, month, 0).getDate()
+    const monthKey = `${year}-${String(month).padStart(2, '0')}`
+
+    try {
+      const [journalResponse, activityResponse] = await Promise.all([
+        getJournalEntries({
+          startDate: `${monthKey}-01`,
+          endDate: `${monthKey}-${String(lastDay).padStart(2, '0')}`,
+        }),
+        getCalendarActivity({ year, month }),
+      ])
+
+      entries.value = journalResponse.entries
+      calendarActivities.value = activityResponse
+    } catch (requestError) {
+      error.value = requestError.message
     } finally {
       loading.value = false
     }
@@ -130,11 +157,13 @@ export const useJournalStore = defineStore('journal', () => {
   return {
     entries,
     journals: entries, // Alias for backward compatibility
+    calendarActivities,
     selectedDetail,
     dailyEntry,
     loading,
     error,
     fetchJournals,
+    fetchMonthlyCalendar,
     fetchJournalDetail,
     fetchDailyEntry,
     addJournal,
