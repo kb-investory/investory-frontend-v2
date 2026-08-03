@@ -3,7 +3,7 @@ import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
-import JournalStockLogo from '@/features/journal/components/JournalStockLogo.vue'
+import StockLogo from '@/shared/components/StockLogo.vue'
 import { useJournalStockSearchStore } from '@/features/journal/stores/journalStockSearchStore'
 import AppIcon from '@/shared/components/AppIcon.vue'
 
@@ -48,7 +48,7 @@ function goToSearch() {
 
     <main v-if="stock" class="stock-journal-page__content">
       <section class="stock-journal-page__profile">
-        <JournalStockLogo :stock="stock" :size="64" />
+        <StockLogo :stock="stock" :size="64" />
         <div>
           <span>STOCK JOURNEY</span>
           <h2>{{ stock.securityName }}</h2>
