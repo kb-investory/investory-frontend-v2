@@ -107,8 +107,8 @@ const tabItems = [
   left: 0;
   width: 100%;
   padding: 8px 16px 12px 16px;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(10px);
+  background: transparent;
+  pointer-events: none;
   z-index: 100;
 }
 
