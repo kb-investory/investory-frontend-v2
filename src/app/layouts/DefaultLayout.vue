@@ -1,136 +1,135 @@
 <script setup>
 import { computed } from 'vue'
-import { RouterLink, RouterView, useRoute } from 'vue-router'
+import { RouterView, useRoute } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
+import BottomTabBar from '@/shared/components/navigation/BottomTabBar.vue'
 
 const route = useRoute()
-const isAuthLayout = computed(() => route.meta.layout === 'auth')
+
+// UI Kit 화면은 카탈로그 전체 너비로 표시
+const isUIKit = computed(() => route.name === ROUTE_NAMES.UI_KIT)
+const isBlankLayout = computed(() => route.meta.layout === 'blank')
+const isFullBleedLayout = computed(() => route.meta.layout === 'full-bleed')
+const frameStyle = computed(() => ({
+  '--mobile-frame-max-height': `${route.meta.frameHeight ?? 844}px`,
+  '--mobile-main-bottom-padding': `${route.meta.mainBottomPadding ?? 84}px`,
+}))
+
+const tabItems = [
+  { label: '홈', icon: 'house', to: { name: ROUTE_NAMES.HOME } },
+  { label: '일지', icon: 'book-open', to: { name: ROUTE_NAMES.JOURNAL } },
+  { label: '투자 성향', icon: 'radar', to: { name: ROUTE_NAMES.TENDENCY } },
+  { label: '시뮬레이션', isMonkey: true, to: { name: ROUTE_NAMES.SIMULATION } },
+  { label: '마이', icon: 'user', to: { name: ROUTE_NAMES.MYPAGE } },
+]
 </script>
 
 <template>
-  <div class="app-layout" :class="{ 'app-layout--auth': isAuthLayout }">
-    <div class="mobile-container" :class="{ 'mobile-container--auth': isAuthLayout }">
-      <header v-if="!isAuthLayout" class="app-header">
-        <div class="header-brand-row">
-          <RouterLink class="brand" :to="{ name: ROUTE_NAMES.HOME }">Investory</RouterLink>
-        </div>
+  <div v-if="isUIKit" class="full-view-layout">
+    <RouterView />
+  </div>
 
-        <nav class="navigation" aria-label="주요 메뉴">
-          <RouterLink :to="{ name: ROUTE_NAMES.PORTFOLIO }">포트폴리오</RouterLink>
-          <RouterLink :to="{ name: ROUTE_NAMES.JOURNAL }">투자일지</RouterLink>
-          <RouterLink :to="{ name: ROUTE_NAMES.AI_CONVERSATION }">AI 대화</RouterLink>
-          <RouterLink :to="{ name: ROUTE_NAMES.MYPAGE }">마이페이지</RouterLink>
-        </nav>
-      </header>
+  <div v-else-if="isBlankLayout" class="full-view-layout">
+    <RouterView />
+  </div>
 
-      <main class="app-main" :class="{ 'app-main--auth': isAuthLayout }">
+  <div v-else class="mobile-viewport-shell">
+    <div
+      class="mobile-frame"
+      :class="{ 'mobile-frame--full-bleed': isFullBleedLayout }"
+      :style="frameStyle"
+    >
+      <!-- 동적 세로 스크롤 영역 -->
+      <main class="mobile-main" :class="{ 'mobile-main--full-bleed': isFullBleedLayout }">
         <RouterView />
       </main>
+
+      <!-- 뷰포트 하단 고정 내비게이션 -->
+      <footer class="mobile-footer" :class="{ 'mobile-footer--full-bleed': isFullBleedLayout }">
+        <BottomTabBar :items="tabItems" />
+      </footer>
     </div>
   </div>
 </template>
 
 <style scoped>
-.app-layout {
-  min-height: 100vh;
-  background-color: #f2f2f5;
-  display: flex;
-  justify-content: center;
-}
-
-.mobile-container {
+.full-view-layout {
   width: 100%;
-  max-width: 480px;
-  min-height: 100vh;
-  background-color: #ffffff;
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.06);
-  display: flex;
-  flex-direction: column;
+  min-height: 100dvh;
 }
 
-.app-header {
+.mobile-viewport-shell {
   display: flex;
+  min-height: 100dvh;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 0;
+  background: #eef2f3;
+}
+
+.mobile-frame {
+  --mobile-frame-edge-offset: max(16px, calc((100dvh - 844px) / 2));
+
+  position: relative;
+  display: flex;
+  width: 100%;
+  max-width: 390px;
+  height: 100dvh;
+  max-height: var(--mobile-frame-max-height);
   flex-direction: column;
-  gap: 12px;
-  padding: 16px 20px 12px;
-  border-bottom: 1px solid var(--color-border);
+  overflow: hidden;
+  border: 1px solid var(--border-default, #e5e5e0);
+  border-radius: 24px;
+  background: var(--bg-primary, #f6f4ef);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12);
+}
+
+.mobile-frame--full-bleed {
   background: #ffffff;
-  position: sticky;
-  top: 0;
+}
+
+.mobile-main {
+  width: 100%;
+  flex: 1 1 0;
+  padding: 20px 20px 84px 20px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.mobile-main--full-bleed {
+  padding: 0 0 var(--mobile-main-bottom-padding);
+}
+
+.mobile-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 8px 16px 12px 16px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
   z-index: 100;
 }
 
-.header-brand-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.mobile-footer--full-bleed {
+  padding-bottom: 16px;
 }
 
-.brand {
-  color: var(--color-heading);
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-}
-
-.navigation {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  overflow-x: auto;
-  padding-bottom: 2px;
-  -webkit-overflow-scrolling: touch;
-}
-
-.navigation a {
-  color: var(--color-text-muted);
-  font-size: 14px;
-  font-weight: 500;
-  white-space: nowrap;
-  padding: 6px 10px;
-  border-radius: 8px;
-  transition: all 0.15s ease;
-}
-
-.navigation a.router-link-active {
-  color: #111111;
-  font-weight: 700;
-  background-color: #f4f4f1;
-}
-
-.app-main {
-  flex: 1;
-  width: 100%;
-  padding: 20px 16px 32px;
-}
-
-.app-layout--auth,
-.mobile-container--auth,
-.app-main--auth {
-  min-height: 100svh;
-}
-
-.app-layout--auth {
-  background-color: #ffffff;
-}
-
-.mobile-container--auth {
-  max-width: none;
-  box-shadow: none;
-}
-
-.app-main--auth {
-  padding: 0;
-}
-
-@media (max-width: 480px) {
-  .app-layout {
-    background-color: #ffffff;
+@media (max-width: 440px) {
+  .mobile-viewport-shell {
+    padding: 0;
+    background: var(--bg-primary, #f6f4ef);
   }
 
-  .mobile-container {
+  .mobile-frame {
+    --mobile-frame-edge-offset: 0px;
+
+    max-width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    border: none;
+    border-radius: 0;
     box-shadow: none;
   }
 }
