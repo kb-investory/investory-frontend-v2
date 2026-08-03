@@ -20,6 +20,11 @@ export const ROUTE_NAMES = {
   AI_CONVERSATION: 'AiConversation',
   SIMULATION: 'Simulation',
   MYPAGE: 'Mypage',
+  MYPAGE_PROFILE_EDIT: 'MypageProfileEdit',
+  MYPAGE_ACCOUNTS: 'MypageAccounts',
+  MYPAGE_ACCOUNT_DETAIL: 'MypageAccountDetail',
+  MYPAGE_SIMULATION_DETAIL: 'MypageSimulationDetail',
+  MYPAGE_PLACEHOLDER: 'MypagePlaceholder',
   UI_KIT: 'UIKit',
   NOT_FOUND: 'NotFound',
 }
