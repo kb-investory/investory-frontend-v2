@@ -1,194 +1,305 @@
 <script setup>
 import { ref } from 'vue'
 
-import { ROUTE_NAMES } from '@/app/router/route-names'
-import JournalCard from '@/modules/journal/components/JournalCard.vue'
-import ReviewCta from '@/modules/journal/components/ReviewCta.vue'
-import TradeSummary from '@/modules/journal/components/TradeSummary.vue'
-import AppBar from '@/shared/components/AppBar.vue'
-import AppIcon from '@/shared/components/AppIcon.vue'
-import BaseBadge from '@/shared/components/BaseBadge.vue'
-import BaseButton from '@/shared/components/BaseButton.vue'
-import BaseCard from '@/shared/components/BaseCard.vue'
-import BaseTextField from '@/shared/components/BaseTextField.vue'
-import BaseTextarea from '@/shared/components/BaseTextarea.vue'
-import BaseToggle from '@/shared/components/BaseToggle.vue'
-import BottomTabBar from '@/shared/components/BottomTabBar.vue'
-import FloatingActionButton from '@/shared/components/FloatingActionButton.vue'
-import IconButton from '@/shared/components/IconButton.vue'
-import MetricStrip from '@/shared/components/MetricStrip.vue'
-import MobileStatusBar from '@/shared/components/MobileStatusBar.vue'
-import NavigationRow from '@/shared/components/NavigationRow.vue'
-import SearchInput from '@/shared/components/SearchInput.vue'
-import StepRow from '@/shared/components/StepRow.vue'
+import StatusBadge from '@/shared/components/badges/StatusBadge.vue'
+import BaseButton from '@/shared/components/buttons/BaseButton.vue'
+import IconButton from '@/shared/components/buttons/IconButton.vue'
+import QuoteCard from '@/shared/components/cards/QuoteCard.vue'
+import StockCard from '@/shared/components/cards/StockCard.vue'
+import TendencyCard from '@/shared/components/cards/TendencyCard.vue'
+import InfoBanner from '@/shared/components/feedback/InfoBanner.vue'
+import TimerProgressBar from '@/shared/components/feedback/TimerProgressBar.vue'
+import BaseTextarea from '@/shared/components/inputs/BaseTextarea.vue'
+import BaseToggle from '@/shared/components/inputs/BaseToggle.vue'
+import SearchInput from '@/shared/components/inputs/SearchInput.vue'
+import ListRow from '@/shared/components/lists/ListRow.vue'
+import AppBar from '@/shared/components/navigation/AppBar.vue'
+import BottomTabBar from '@/shared/components/navigation/BottomTabBar.vue'
+import SegmentedControl from '@/shared/components/navigation/SegmentedControl.vue'
+import BottomSheet from '@/shared/components/overlays/BottomSheet.vue'
 
-const textField = ref('')
 const search = ref('')
 const textarea = ref('')
-const toggle = ref(true)
+const notifyToggle = ref(true)
+const segmentedTab = ref('투자성향')
 
-const tabItems = [
-  { label: '홈', icon: 'home', to: { name: ROUTE_NAMES.HOME } },
-  { label: '자산', icon: 'chart-pie', to: { name: ROUTE_NAMES.PORTFOLIO } },
-  { label: 'AI', icon: 'sparkles', to: { name: ROUTE_NAMES.AI_CONVERSATION } },
-  { label: '일지', icon: 'notebook', to: { name: ROUTE_NAMES.JOURNAL } },
-  { label: '설정', icon: 'settings', to: { name: ROUTE_NAMES.MYPAGE } },
+const navTabs = [
+  { label: '홈', icon: 'house', active: true },
+  { label: '일지', icon: 'book-open' },
+  { label: '투자 성향', icon: 'radar' },
+  { label: '시뮬레이션', isMonkey: true },
+  { label: '마이', icon: 'user' },
 ]
-
-const metrics = [
-  { label: '기록 수', value: '12개' },
-  { label: '현재 수익', value: '+8.24%', tone: 'danger' },
-  { label: '추가 의견', value: '4개' },
-]
-
-const journal = {
-  type: '매수',
-  title: '조정 구간에서 1차 분할 매수',
-  judgment: '실적 기대는 유효하지만 단기 변동성을 고려해 분할 진입하기로 했다.',
-  reasons: ['영업이익 개선 가능성', '최근 고점 대비 7% 조정', '목표 비중의 절반만 우선 매수'],
-  reviewCondition: '84,000원 이탈 또는 가이던스 하향',
-  createdAt: '2026. 07. 18 · 14:32',
-}
 </script>
 
 <template>
-  <section class="ui-kit">
-    <header class="ui-kit__header">
-      <h1>Investory UI Kit</h1>
-      <p>모바일 화면 공통 요소 · 390px 기준 · Noto Sans KR / Geist Mono</p>
-    </header>
+  <div class="ui-kit-wrapper">
+    <section class="ui-kit">
+      <header class="ui-kit__header">
+        <div class="ui-kit__header-title-group">
+          <h1 class="ui-kit__title">INVESTORY / CORE UI</h1>
+          <p class="ui-kit__subtitle">기록 · 분석 · 원칙을 위한 모바일 공용 컴포넌트</p>
+        </div>
+        <div class="ui-kit__version">V3.0 · 390 MOBILE</div>
+      </header>
 
-    <div class="ui-kit__catalog">
-      <div class="ui-kit__column">
-        <article class="ui-kit__section">
-          <h2>Navigation</h2>
-          <MobileStatusBar />
-          <AppBar title="화면 제목" />
-          <BottomTabBar :items="tabItems" />
-        </article>
+      <div class="ui-kit__grid">
+        <!-- LEFT COLUMN -->
+        <div class="ui-kit__column">
+          <!-- 01 / NAVIGATION -->
+          <article class="ui-kit__card">
+            <header class="ui-kit__card-header">
+              <span class="ui-kit__section-category">01 / NAVIGATION</span>
+              <h2 class="ui-kit__section-title">앱 구조와 현재 위치</h2>
+            </header>
 
-        <article class="ui-kit__section">
-          <h2>Actions</h2>
-          <BaseButton full-width>
-            계속하기
-            <template #icon><AppIcon name="arrow-right" :size="18" /></template>
-          </BaseButton>
-          <BaseButton variant="secondary" full-width>이전</BaseButton>
-          <div class="ui-kit__inline">
-            <IconButton label="더보기"><AppIcon name="ellipsis" /></IconButton>
-            <FloatingActionButton label="추가"
-              ><AppIcon name="plus" :size="24"
-            /></FloatingActionButton>
-          </div>
-        </article>
+            <div class="ui-kit__card-body">
+              <AppBar title="화면 제목" />
+
+              <BottomTabBar :items="navTabs" />
+
+              <BottomSheet title="상세 정보" description="선택한 항목을 확인하세요">
+                <div class="ui-kit__sheet-placeholder" />
+              </BottomSheet>
+
+              <SegmentedControl v-model="segmentedTab" :options="['투자성향', '투자원칙']" />
+            </div>
+          </article>
+
+          <!-- 02 / ACTIONS -->
+          <article class="ui-kit__card">
+            <header class="ui-kit__card-header">
+              <span class="ui-kit__section-category">02 / ACTIONS</span>
+              <h2 class="ui-kit__section-title">명확한 행동 위계</h2>
+            </header>
+
+            <div class="ui-kit__card-body">
+              <BaseButton variant="primary" full-width> 확인하고 계속하기 → </BaseButton>
+
+              <BaseButton variant="secondary" full-width> ✨ 성향 기반 추천 보기 </BaseButton>
+
+              <div class="ui-kit__action-row">
+                <IconButton label="추가"> + </IconButton>
+
+                <BaseButton variant="ghost"> ✏️ 수정 </BaseButton>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="ui-kit__column">
+          <!-- 03 / INPUTS -->
+          <article class="ui-kit__card">
+            <header class="ui-kit__card-header">
+              <span class="ui-kit__section-category">03 / INPUTS</span>
+              <h2 class="ui-kit__section-title">기록을 위한 입력</h2>
+            </header>
+
+            <div class="ui-kit__card-body">
+              <SearchInput v-model="search" placeholder="종목명 또는 종목코드 검색" />
+
+              <BaseTextarea
+                v-model="textarea"
+                label="오늘 시장을 보며 든 생각"
+                :required="true"
+                placeholder="오늘 시장을 어떻게 바라봤는지, 어떤 감정을 느꼈는지 자유롭게 적어주세요."
+                :max-length="500"
+              />
+
+              <BaseToggle
+                v-model="notifyToggle"
+                label="알림 받기"
+                description="오늘의 일지 마감 전에 알려드려요"
+              />
+            </div>
+          </article>
+
+          <!-- 04 / DATA & FEEDBACK -->
+          <article class="ui-kit__card">
+            <header class="ui-kit__card-header">
+              <span class="ui-kit__section-category">04 / DATA & FEEDBACK</span>
+              <h2 class="ui-kit__section-title">근거와 상태 표현</h2>
+            </header>
+
+            <div class="ui-kit__card-body">
+              <QuoteCard
+                badge="오늘의 기록"
+                title="판단을 남기면 다음 선택의 근거가 됩니다"
+                description="수익률보다 당시의 생각과 원칙을 먼저 확인하세요."
+              />
+
+              <StockCard
+                symbol="S"
+                name="삼성전자"
+                quantity="10주"
+                avg-price="105,500원"
+                valuation="10,172,889원"
+              />
+
+              <TendencyCard
+                title="추천에 반영된 나의 성향"
+                description="8가지 성향을 모두 확인할 수 있어요"
+                count-text="8개"
+              />
+
+              <StatusBadge status-text="기록 완료" step-text="2 / 6" />
+
+              <ListRow title="연결 계좌 관리" icon="landmark" />
+
+              <InfoBanner
+                title="분석 결과가 업데이트됐어요"
+                description="새로운 기록을 바탕으로 성향을 다시 분석했습니다."
+              />
+
+              <TimerProgressBar label="오늘 일지 마감까지" timer-text="03:42:18" :percentage="45" />
+            </div>
+          </article>
+        </div>
       </div>
-
-      <div class="ui-kit__column">
-        <article class="ui-kit__section">
-          <h2>Inputs</h2>
-          <BaseTextField v-model="textField" label="입력 항목" />
-          <SearchInput v-model="search" />
-          <BaseTextarea v-model="textarea" />
-        </article>
-
-        <article class="ui-kit__section">
-          <h2>States</h2>
-          <BaseToggle v-model="toggle" label="알림 받기" />
-          <BaseBadge label="매수" />
-          <StepRow number="03" label="나의 핵심 판단" status="locked" />
-        </article>
-      </div>
-
-      <div class="ui-kit__column">
-        <article class="ui-kit__section">
-          <h2>Cards</h2>
-          <BaseCard title="카드 제목" description="카드의 핵심 정보를 설명하는 영역입니다." />
-          <MetricStrip :metrics="metrics" />
-          <NavigationRow title="목록 항목" description="항목에 대한 간단한 설명" />
-        </article>
-
-        <article class="ui-kit__section">
-          <h2>Journal Domain</h2>
-          <TradeSummary type="매수" summary="삼성전자 · 20주 · 평단 78,500원" />
-          <ReviewCta />
-          <StepRow number="01" label="제목" status="completed" result="작성 완료" />
-          <JournalCard :journal="journal" />
-        </article>
-      </div>
-    </div>
-  </section>
+    </section>
+  </div>
 </template>
 
 <style scoped>
-.ui-kit {
-  display: grid;
-  gap: 28px;
+.ui-kit-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
   padding: 40px;
-  border-radius: 24px;
-  background: var(--color-background);
+  background: #f3f6f6;
+}
+
+.ui-kit {
+  display: flex;
+  width: 100%;
+  max-width: 1360px;
+  flex-direction: column;
+  gap: 24px;
 }
 
 .ui-kit__header {
-  display: grid;
-  gap: 8px;
-  padding-bottom: 28px;
-  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  height: 92px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: #263a43;
 }
 
-.ui-kit__header h1,
-.ui-kit__header p,
-.ui-kit__section h2 {
+.ui-kit__header-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ui-kit__title {
   margin: 0;
+  color: #ffffff;
+  font-family: var(--font-heading);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: normal;
 }
 
-.ui-kit__header h1 {
-  font-size: 32px;
+.ui-kit__subtitle {
+  margin: 0;
+  color: #dce6e9;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: normal;
 }
 
-.ui-kit__header p {
-  color: var(--color-text-muted);
-  font-size: 13px;
+.ui-kit__version {
+  color: #7fe0d9;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: normal;
 }
 
-.ui-kit__catalog {
+.ui-kit__grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
   gap: 24px;
   align-items: start;
 }
 
-.ui-kit__column,
-.ui-kit__section {
-  display: grid;
-  gap: 18px;
+.ui-kit__column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
-.ui-kit__section {
-  gap: 14px;
-  padding: 18px;
+.ui-kit__card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid #dce6e9;
   border-radius: 16px;
-  background: var(--color-surface-subtle);
+  background: #ffffff;
 }
 
-.ui-kit__section h2 {
-  font-size: 16px;
+.ui-kit__card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
-.ui-kit__inline {
+.ui-kit__section-category {
+  color: #087f7c;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: normal;
+}
+
+.ui-kit__section-title {
+  margin: 0;
+  color: #18272d;
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: normal;
+}
+
+.ui-kit__card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ui-kit__action-row {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-@media (max-width: 1100px) {
-  .ui-kit__catalog {
-    grid-template-columns: 1fr;
-  }
+.ui-kit__sheet-placeholder {
+  width: 100%;
+  height: 90px;
+  border-radius: 12px;
+  background: #f9faf9;
 }
 
-@media (max-width: 600px) {
-  .ui-kit {
-    padding: 20px 0;
+@media (max-width: 768px) {
+  .ui-kit-wrapper {
+    padding: 16px;
+  }
+
+  .ui-kit__header {
+    height: auto;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 20px;
+  }
+
+  .ui-kit__grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

@@ -1,0 +1,375 @@
+{
+  "analysisRunId": 43,
+  "analyzedDate": "2026-07-30",
+  "period": {
+    "startDate": "2026-05-02",
+    "endDate": "2026-07-30",
+    "days": 90
+  },
+  "summary": {
+    "combinationSummary": "반복된 선택과 매매 행동을 분석했어요",
+    "strengthSummary": "분석 결과를 2개 영역, 6가지 성향으로 정리했어요",
+    "cautionSummary": "집중 투자 비중이 높아질 때에는 미리 정한 분산 원칙을 확인해 보세요."
+  },
+  "groupSummaries": {
+    "selection": "기업을 분석해 확신 있는 종목에 오래 투자해요",
+    "behavior": "손실에는 보유하고 수익은 실현하며 원칙을 지켜요"
+  },
+  "analysisResults": [
+    {
+      "dimension": {
+        "code": "PORTFOLIO_RISK_ALLOCATION",
+        "name": "포트폴리오 위험배분",
+        "description": "어떤 변동성의 종목에 얼마나 집중하거나 분산하는지 분석해요.",
+        "group": "SELECTION",
+        "tone": "amber"
+      },
+      "type": {
+        "code": "HIGH_VOLATILITY_CONCENTRATED",
+        "name": "고변동 집중형",
+        "description": "변동성이 높은 소수 종목에 투자 비중을 집중하는 편이에요.",
+        "rationale": {
+          "summary": "상위 3개 종목의 비중이 높고, 해당 종목들의 가격 변동성도 크게 나타났어요.",
+          "items": [
+            {
+              "type": "PERCENT",
+              "label": "상위 3종목 비중",
+              "value": "68",
+              "unit": "%",
+              "description": "평가 금액 기준 상위 3개 종목이 차지하는 비율이에요."
+            },
+            {
+              "type": "PERCENT",
+              "label": "고변동 종목 비중",
+              "value": "64",
+              "unit": "%",
+              "description": "보유 종목 중 시장 평균보다 변동성이 높은 종목의 비중이에요."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "dimension": {
+        "code": "BUY_JUDGMENT_BASIS",
+        "name": "매수 판단 근거",
+        "description": "무엇을 근거로 종목을 매수하는지 분석해요.",
+        "group": "SELECTION",
+        "tone": "blue"
+      },
+      "type": {
+        "code": "COMPANY_ANALYSIS",
+        "name": "기업분석형",
+        "description": "기업의 실적과 재무 지표를 확인한 뒤 매수를 결정해요.",
+        "rationale": {
+          "summary": "투자 일지에서 매출 증가율, 영업이익과 같은 정량 지표를 판단 근거로 꾸준히 기록했어요.",
+          "items": [
+            {
+              "type": "COUNT",
+              "label": "재무 지표 확인",
+              "value": "14",
+              "unit": "회",
+              "description": "매수 전 재무 지표를 근거로 남긴 기록 수예요."
+            },
+            {
+              "type": "PERCENT",
+              "label": "근거 일지 작성률",
+              "value": "91",
+              "unit": "%",
+              "description": "거래가 발생한 날 투자 근거를 작성한 비율이에요."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "dimension": {
+        "code": "INVESTMENT_HORIZON",
+        "name": "투자 기간",
+        "description": "종목을 보유하는 평균 기간과 매매 주기를 분석해요.",
+        "group": "SELECTION",
+        "tone": "green"
+      },
+      "type": {
+        "code": "LONG_TERM_INVESTMENT",
+        "name": "장기투자형",
+        "description": "매수한 종목을 장기 관점으로 보유하는 편이에요.",
+        "rationale": {
+          "summary": "짧은 가격 변동에는 매도하지 않고, 장기 관점의 투자 근거가 유지되는 동안 보유했어요.",
+          "items": [
+            {
+              "type": "DAYS",
+              "label": "평균 보유 기간",
+              "value": "64",
+              "unit": "일",
+              "description": "최근 90일 내 매도 완료 종목의 평균 보유 기간이에요."
+            },
+            {
+              "type": "PERCENT",
+              "label": "30일 이상 보유",
+              "value": "78",
+              "unit": "%",
+              "description": "보유 종목 중 30일 이상 유지한 종목의 비중이에요."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "dimension": {
+        "code": "LOSS_RESPONSE",
+        "name": "손실 대응",
+        "description": "보유 종목이 손실 구간에 들어갔을 때의 행동을 분석해요.",
+        "group": "BEHAVIOR",
+        "tone": "red"
+      },
+      "type": {
+        "code": "HOLD",
+        "name": "보유형",
+        "description": "투자 근거가 유지되면 손실 상태에서도 보유를 이어가는 편이에요.",
+        "rationale": {
+          "summary": "일시적인 손실 구간에서도 충동 매도가 적었고, 기존 투자 근거를 다시 확인했어요.",
+          "items": [
+            {
+              "type": "COUNT",
+              "label": "충동 손절",
+              "value": "1",
+              "unit": "회",
+              "description": "사전에 기록한 손절 기준 전에 매도한 횟수예요."
+            },
+            {
+              "type": "PERCENT",
+              "label": "손실 후 근거 점검",
+              "value": "83",
+              "unit": "%",
+              "description": "손실 발생 뒤 투자 일지에서 근거를 다시 확인한 비율이에요."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "dimension": {
+        "code": "PROFIT_RESPONSE",
+        "name": "수익 대응",
+        "description": "수익 구간에서 보유 수량을 어떻게 조절하는지 분석해요.",
+        "group": "BEHAVIOR",
+        "tone": "emerald"
+      },
+      "type": {
+        "code": "PROFIT_REALIZATION",
+        "name": "차익실현형",
+        "description": "목표 수익에 도달하면 매도해 차익을 실현하는 편이에요.",
+        "rationale": {
+          "summary": "한 번에 전량 매도하기보다 목표 가격에 따라 2~3회 나누어 수익을 실현했어요.",
+          "items": [
+            {
+              "type": "COUNT",
+              "label": "평균 분할 매도",
+              "value": "2.4",
+              "unit": "회",
+              "description": "수익 종목 하나를 나누어 매도한 평균 횟수예요."
+            },
+            {
+              "type": "PERCENT",
+              "label": "목표가 매도 비중",
+              "value": "76",
+              "unit": "%",
+              "description": "기록한 목표가 부근에서 매도한 거래의 비율이에요."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "dimension": {
+        "code": "PRINCIPLE_FULFILLMENT",
+        "name": "원칙 이행",
+        "description": "작성한 투자원칙과 실제 행동이 일치하는지 분석해요.",
+        "group": "BEHAVIOR",
+        "tone": "indigo"
+      },
+      "type": {
+        "code": "PRINCIPLE_MATCHED",
+        "name": "원칙일치형",
+        "description": "작성한 투자원칙과 실제 매매 행동이 일관되게 일치해요.",
+        "rationale": {
+          "summary": "최근 거래 대부분이 기록한 진입·손절·익절 기준 안에서 실행되었어요.",
+          "items": [
+            {
+              "type": "PERCENT",
+              "label": "투자 원칙 준수율",
+              "value": "88",
+              "unit": "%",
+              "description": "저장한 투자 원칙에 맞게 실행된 거래의 비율이에요."
+            },
+            {
+              "type": "COUNT",
+              "label": "원칙 위반 거래",
+              "value": "2",
+              "unit": "회",
+              "description": "사전에 정한 기준을 벗어나 실행한 거래 수예요."
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "history": [
+    {
+      "analysisRunId": 43,
+      "analyzedDate": "2026-07-30",
+      "label": "최신 분석",
+      "description": "6가지 성향 결과 · 2개 변화",
+      "changedCount": 2,
+      "changes": [
+        {
+          "dimension": "매수 판단 근거",
+          "previousType": "가격흐름형",
+          "currentType": "기업분석형",
+          "reason": "재무 지표를 근거로 남긴 투자 일지가 늘었어요."
+        },
+        {
+          "dimension": "투자 기간",
+          "previousType": "단기매매형",
+          "currentType": "장기투자형",
+          "reason": "30일 이상 보유한 종목 비중이 78%로 증가했어요."
+        }
+      ]
+    },
+    {
+      "analysisRunId": 42,
+      "analyzedDate": "2026-04-30",
+      "label": "정기 분석",
+      "description": "2개 성향 변화",
+      "changedCount": 2,
+      "changes": [
+        {
+          "dimension": "포트폴리오 위험배분",
+          "previousType": "균형배분형",
+          "currentType": "고변동 집중형",
+          "reason": "상위 종목과 고변동 종목의 투자 비중이 높아졌어요."
+        },
+        {
+          "dimension": "수익 대응",
+          "previousType": "목표실현형",
+          "currentType": "차익실현형",
+          "reason": "두 번 이상 나누어 매도한 거래가 늘었어요."
+        }
+      ]
+    },
+    {
+      "analysisRunId": 41,
+      "analyzedDate": "2026-01-30",
+      "label": "첫 분석",
+      "description": "6가지 성향 결과 생성",
+      "changedCount": 0,
+      "changes": []
+    }
+  ],
+  "principles": [
+    {
+      "principleId": 1,
+      "title": "손절매 기준 준수",
+      "content": "매수가 대비 -5% 도달 시 투자 근거를 확인하고 50% 분할 손절하기",
+      "category": "RISK_MANAGEMENT",
+      "isActive": true
+    },
+    {
+      "principleId": 2,
+      "title": "분할 매수 3단계",
+      "content": "1차 30%, 2차 30%, 3차 40% 비율로 나누어 진입하기",
+      "category": "BUY_STRATEGY",
+      "isActive": true
+    },
+    {
+      "principleId": 3,
+      "title": "감정 매매 방지 쿨다운",
+      "content": "손실 발생 직후 1시간 동안 추가 매수하지 않기",
+      "category": "PSYCHOLOGY",
+      "isActive": true
+    }
+  ],
+  "suggestedPrinciples": [
+    {
+      "recommendationId": 101,
+      "recommendationText": "한 종목의 투자 비중은 전체 자산의 30%를 넘지 않기",
+      "recommendationReason": "고변동 집중형 성향의 변동 위험을 낮추는 데 도움이 돼요.",
+      "analysisType": {
+        "code": "HIGH_VOLATILITY_CONCENTRATED",
+        "name": "고변동 집중형"
+      },
+      "recommendationStatus": "NEW"
+    },
+    {
+      "recommendationId": 102,
+      "recommendationText": "목표 수익률에 도달하면 보유 수량의 30%씩 분할 익절하기",
+      "recommendationReason": "차익실현형 매매 행동을 일관된 원칙으로 만들 수 있어요.",
+      "analysisType": {
+        "code": "PROFIT_REALIZATION",
+        "name": "차익실현형"
+      },
+      "recommendationStatus": "NEW"
+    },
+    {
+      "recommendationId": 103,
+      "recommendationText": "매수 전 성장 근거와 목표 보유 기간을 투자 일지에 작성하기",
+      "recommendationReason": "기업분석형 판단을 기록으로 남기면 변화 여부를 확인하기 쉬워요.",
+      "analysisType": {
+        "code": "COMPANY_ANALYSIS",
+        "name": "기업분석형"
+      },
+      "recommendationStatus": "NEW"
+    },
+    {
+      "recommendationId": 104,
+      "recommendationText": "손실 구간에서는 최초 투자 근거가 유지되는지 먼저 확인하기",
+      "recommendationReason": "보유형 대응이 감정적인 버티기가 되지 않도록 판단 기준을 만들 수 있어요.",
+      "analysisType": {
+        "code": "HOLD",
+        "name": "보유형"
+      },
+      "recommendationStatus": "NEW"
+    },
+    {
+      "recommendationId": 105,
+      "recommendationText": "장기 보유 종목은 분기마다 성장 근거와 목표를 다시 점검하기",
+      "recommendationReason": "장기투자형 성향을 정기적인 점검 습관과 연결할 수 있어요.",
+      "analysisType": {
+        "code": "LONG_TERM_INVESTMENT",
+        "name": "장기투자형"
+      },
+      "recommendationStatus": "NEW"
+    },
+    {
+      "recommendationId": 106,
+      "recommendationText": "매매 전 원칙을 확인하고 거래 후 지킨 항목을 투자 일지에 표시하기",
+      "recommendationReason": "원칙일치형 행동을 꾸준히 유지하고 이탈 원인을 확인할 수 있어요.",
+      "analysisType": {
+        "code": "PRINCIPLE_MATCHED",
+        "name": "원칙일치형"
+      },
+      "recommendationStatus": "NEW"
+    },
+    {
+      "recommendationId": 107,
+      "recommendationText": "집중 투자 전 감당할 수 있는 최대 손실 금액을 먼저 기록하기",
+      "recommendationReason": "고변동 집중형 투자에서 발생할 수 있는 손실 범위를 미리 관리할 수 있어요.",
+      "analysisType": {
+        "code": "HIGH_VOLATILITY_CONCENTRATED",
+        "name": "고변동 집중형"
+      },
+      "recommendationStatus": "NEW"
+    },
+    {
+      "recommendationId": 108,
+      "recommendationText": "분할 매도 후 남은 수량의 다음 목표 가격을 바로 기록하기",
+      "recommendationReason": "차익실현형 행동을 다음 매매 계획과 자연스럽게 연결할 수 있어요.",
+      "analysisType": {
+        "code": "PROFIT_REALIZATION",
+        "name": "차익실현형"
+      },
+      "recommendationStatus": "NEW"
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "providers": [
+    { "brokerId": 5, "brokerCode": "KIWOOM", "brokerName": "키움증권", "active": true },
+    { "brokerId": 4, "brokerCode": "MIRAE_ASSET", "brokerName": "미래에셋증권", "active": true },
+    { "brokerId": 2, "brokerCode": "KIS", "brokerName": "한국투자증권", "active": true },
+    { "brokerId": 3, "brokerCode": "NH_SEC", "brokerName": "NH투자증권", "active": true },
+    { "brokerId": 6, "brokerCode": "SAMSUNG_SEC", "brokerName": "삼성증권", "active": true },
+    { "brokerId": 1, "brokerCode": "KB_SEC", "brokerName": "KB증권", "active": true },
+    { "brokerId": 7, "brokerCode": "SHINHAN_SEC", "brokerName": "신한투자증권", "active": true },
+    { "brokerId": 8, "brokerCode": "HANA_SEC", "brokerName": "하나증권", "active": true },
+    { "brokerId": 9, "brokerCode": "TOSS_SEC", "brokerName": "토스증권", "active": true },
+    {
+      "brokerId": 10,
+      "brokerCode": "KAKAOPAY_SEC",
+      "brokerName": "카카오페이증권",
+      "active": true
+    },
+    { "brokerId": 11, "brokerCode": "DAISHIN_SEC", "brokerName": "대신증권", "active": true },
+    { "brokerId": 12, "brokerCode": "YUANTA_SEC", "brokerName": "유안타증권", "active": true }
+  ],
+  "account": {
+    "accountCount": 1,
+    "reasonCount": 3
+  },
+  "holdings": [
+    {
+      "securityId": 1,
+      "securityCode": "005930",
+      "securityName": "삼성전자",
+      "mark": "S",
+      "markVariant": "samsung",
+      "quantity": 10,
+      "avgCost": 906900,
+      "valuationAmount": 10172000
+    },
+    {
+      "securityId": 3,
+      "securityCode": "000660",
+      "securityName": "SK하이닉스",
+      "mark": "SK",
+      "markVariant": "sk",
+      "quantity": 5,
+      "avgCost": 1383100,
+      "valuationAmount": 6357500
+    },
+    {
+      "securityId": 5,
+      "securityCode": "360750",
+      "securityName": "TIGER 미국S&P500",
+      "mark": "T",
+      "markVariant": "tiger",
+      "quantity": 8,
+      "avgCost": 435400,
+      "valuationAmount": 3702000
+    },
+    {
+      "securityId": 6,
+      "securityCode": "035720",
+      "securityName": "카카오",
+      "mark": "K",
+      "markVariant": "kakao",
+      "quantity": 15,
+      "avgCost": 362000,
+      "valuationAmount": 5207000
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "journals": [
+    {
+      "journalId": 1,
+      "journalDate": "2026-07-30",
+      "marketThought": "반도체 섹터 강세 지속으로 분할 분할매도 고려. 감정적 추격 매수 자제함.",
+      "marketMood": "CONFIDENT",
+      "tradeCount": 2,
+      "complianceRate": 100,
+      "createdAt": "2026-07-30T10:15:00Z",
+      "trades": [
+        {
+          "tradeId": 501,
+          "securityName": "SK하이닉스",
+          "tradeType": "SELL",
+          "quantity": 10,
+          "price": 165000,
+          "tradeTime": "10:14:22"
+        }
+      ]
+    },
+    {
+      "journalId": 2,
+      "journalDate": "2026-07-29",
+      "marketThought": "조정 장세 진입으로 관망 유지. 분할 매수 타점 대기.",
+      "marketMood": "CAUTIOUS",
+      "tradeCount": 0,
+      "complianceRate": 85,
+      "createdAt": "2026-07-29T16:30:00Z",
+      "trades": []
+    },
+    {
+      "journalId": 3,
+      "journalDate": "2026-07-28",
+      "marketThought": "삼성전자 주가 눌림목에서 분할 매수 20주 진행. 원칙 기반 진입.",
+      "marketMood": "CALM",
+      "tradeCount": 1,
+      "complianceRate": 90,
+      "createdAt": "2026-07-28T14:20:00Z",
+      "trades": [
+        {
+          "tradeId": 498,
+          "securityName": "삼성전자",
+          "tradeType": "BUY",
+          "quantity": 20,
+          "price": 77800,
+          "tradeTime": "14:18:05"
+        }
+      ]
+    }
+  ],
+  "dailyEntries": [
+    {
+      "journalDate": "2026-08-23",
+      "canCreate": true,
+      "journal": null,
+      "trades": [
+        {
+          "tradeId": 801,
+          "securityId": 101,
+          "securityCode": "006400",
+          "securityName": "삼성SDI",
+          "tradeSide": "BUY",
+          "quantity": 6,
+          "unitPrice": 342000,
+          "tradedAt": "2026-08-23T15:18:00+09:00",
+          "note": {
+            "journalTradeNoteId": 901,
+            "rationaleText": "목표 가격 구간 진입",
+            "createdAt": "2026-08-23T15:20:00+09:00",
+            "updatedAt": "2026-08-23T15:20:00+09:00"
+          }
+        },
+        {
+          "tradeId": 802,
+          "securityId": 102,
+          "securityCode": "000660",
+          "securityName": "SK하이닉스",
+          "tradeSide": "SELL",
+          "quantity": 5,
+          "unitPrice": 191500,
+          "tradedAt": "2026-08-23T14:36:00+09:00",
+          "note": {
+            "journalTradeNoteId": 902,
+            "rationaleText": "목표 비중 초과분 정리",
+            "createdAt": "2026-08-23T14:40:00+09:00",
+            "updatedAt": "2026-08-23T14:40:00+09:00"
+          }
+        },
+        {
+          "tradeId": 803,
+          "securityId": 103,
+          "securityCode": "035720",
+          "securityName": "카카오",
+          "tradeSide": "SELL",
+          "quantity": 12,
+          "unitPrice": 48900,
+          "tradedAt": "2026-08-23T13:20:00+09:00",
+          "note": {
+            "journalTradeNoteId": 903,
+            "rationaleText": "비중 조정 원칙 실행",
+            "createdAt": "2026-08-23T13:24:00+09:00",
+            "updatedAt": "2026-08-23T13:24:00+09:00"
+          }
+        },
+        {
+          "tradeId": 804,
+          "securityId": 104,
+          "securityCode": "035420",
+          "securityName": "NAVER",
+          "tradeSide": "BUY",
+          "quantity": 8,
+          "unitPrice": 214500,
+          "tradedAt": "2026-08-23T11:05:00+09:00",
+          "note": null
+        },
+        {
+          "tradeId": 805,
+          "securityId": 105,
+          "securityCode": "005930",
+          "securityName": "삼성전자",
+          "tradeSide": "BUY",
+          "quantity": 10,
+          "unitPrice": 84200,
+          "tradedAt": "2026-08-23T10:12:00+09:00",
+          "note": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "dashboard": {
+    "today": {
+      "title": "오늘의 선택을 기록으로 이어가요",
+      "totalTrades": 12,
+      "buyTrades": 4,
+      "sellTrades": 8,
+      "stockCount": 7,
+      "missingReasons": 8,
+      "currentTime": "09:41",
+      "remainingTime": "14:19:00",
+      "dayProgressPercent": 40.6
+    },
+    "quickActions": {
+      "journalStatus": "작성 전",
+      "tendencyProgress": "6 / 10"
+    },
+    "weekly": {
+      "streakDays": 6,
+      "days": [
+        { "label": "월", "completed": true, "tone": "teal" },
+        { "label": "화", "completed": true, "tone": "blue" },
+        { "label": "수", "completed": true, "tone": "teal" },
+        { "label": "목", "completed": true, "tone": "blue" },
+        { "label": "금", "completed": true, "tone": "teal" },
+        { "label": "토", "completed": true, "tone": "blue" },
+        { "label": "일", "completed": false, "tone": "empty" }
+      ],
+      "insight": "매도한 날에도 근거를 남기는 습관이 이어졌어요"
+    }
+  },
+  "summary": {
+    "title": "오늘의 투자 요약",
+    "description": "원칙 준수율 88%로 차분한 투자를 유지하고 있습니다.",
+    "totalMarketValue": 45800000,
+    "totalPurchaseAmount": 42000000,
+    "totalUnrealizedPnl": 3800000,
+    "totalUnrealizedReturn": 9.04,
+    "dailyPnl": 125000,
+    "journalCompletionRate": 92.5
+  },
+  "holdings": [
+    {
+      "securityId": 101,
+      "securityName": "삼성전자",
+      "symbol": "005930",
+      "quantity": 150,
+      "avgCost": 72000,
+      "currentPrice": 78500,
+      "valuationAmount": 11775000,
+      "unrealizedPnl": 975000,
+      "returnRate": 9.03,
+      "holdingRatio": 25.7
+    },
+    {
+      "securityId": 102,
+      "securityName": "SK하이닉스",
+      "symbol": "000660",
+      "quantity": 80,
+      "avgCost": 140000,
+      "currentPrice": 165000,
+      "valuationAmount": 13200000,
+      "unrealizedPnl": 2000000,
+      "returnRate": 14.28,
+      "holdingRatio": 28.8
+    },
+    {
+      "securityId": 103,
+      "securityName": "NAVER",
+      "symbol": "035420",
+      "quantity": 40,
+      "avgCost": 210000,
+      "currentPrice": 195000,
+      "valuationAmount": 7800000,
+      "unrealizedPnl": -600000,
+      "returnRate": -7.14,
+      "holdingRatio": 17.0
+    },
+    {
+      "securityId": 104,
+      "securityName": "카카오",
+      "symbol": "035720",
+      "quantity": 100,
+      "avgCost": 55000,
+      "currentPrice": 52000,
+      "valuationAmount": 5200000,
+      "unrealizedPnl": -300000,
+      "returnRate": -5.45,
+      "holdingRatio": 11.3
+    }
+  ]
+}
