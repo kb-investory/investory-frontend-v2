@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
-  <title id="title">SK하이닉스</title>
-  <rect width="64" height="64" rx="16" fill="#fff7f2"/>
-  <path d="M15 20c7-7 16-6 21 0-8-1-13 3-16 10-4-2-7-5-5-10Z" fill="#f26a21"/>
-  <path d="M20 30c5-4 11-5 17-2-5 2-8 6-9 12-5-2-8-5-8-10Z" fill="#e83232"/>
-  <text x="39" y="39" fill="#252525" font-family="Arial, sans-serif" font-size="14" font-weight="800" text-anchor="middle">SK</text>
-</svg>

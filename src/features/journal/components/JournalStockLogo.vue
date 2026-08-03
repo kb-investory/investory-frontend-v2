@@ -1,7 +1,7 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
-defineProps({
+const props = defineProps({
   stock: {
     type: Object,
     required: true,
@@ -13,6 +13,17 @@ defineProps({
 })
 
 const hasImageError = ref(false)
+const logoUrl = computed(
+  () =>
+    `https://ssl.pstatic.net/imgstock/fn/real/logo/stock/Stock${props.stock.securityCode}.svg`,
+)
+
+watch(
+  () => props.stock.securityCode,
+  () => {
+    hasImageError.value = false
+  },
+)
 </script>
 
 <template>
@@ -22,8 +33,8 @@ const hasImageError = ref(false)
     :style="{ width: `${size}px`, height: `${size}px` }"
   >
     <img
-      v-if="stock.logoUrl && !hasImageError"
-      :src="stock.logoUrl"
+      v-if="!hasImageError"
+      :src="logoUrl"
       :alt="`${stock.securityName} 로고`"
       @error="hasImageError = true"
     />

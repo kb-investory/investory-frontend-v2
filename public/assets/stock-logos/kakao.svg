@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
-  <title id="title">카카오</title>
-  <rect width="64" height="64" rx="16" fill="#fee500"/>
-  <path d="M32 17c-10.5 0-19 6.7-19 15 0 5.2 3.4 9.8 8.6 12.5l-2.2 7.2c-.2.6.5 1.1 1 .7l8.6-5.5c1 .1 2 .2 3 .2 10.5 0 19-6.7 19-15S42.5 17 32 17Z" fill="#191919"/>
-  <text x="32" y="36" fill="#fee500" font-family="Arial, sans-serif" font-size="9" font-weight="700" text-anchor="middle">KAKAO</text>
-</svg>
