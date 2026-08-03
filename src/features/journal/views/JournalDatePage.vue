@@ -19,6 +19,7 @@ const journalStore = useJournalStore()
 const entry = ref(null)
 const isLoading = ref(true)
 const loadError = ref('')
+let latestLoadRequestId = 0
 
 const selectedDate = computed(() => normalizeDateKey(String(route.params.date ?? '')))
 
@@ -41,6 +42,8 @@ function normalizeDateKey(dateKey) {
 }
 
 async function loadDate(dateKey) {
+  const requestId = ++latestLoadRequestId
+
   isLoading.value = true
   loadError.value = ''
   entry.value = null
@@ -52,11 +55,22 @@ async function loadDate(dateKey) {
       journalStore.fetchDailyEntry(dateKey),
       journalStore.fetchMonthlyCalendar(date.getFullYear(), date.getMonth() + 1),
     ])
+
+    if (requestId !== latestLoadRequestId) {
+      return
+    }
+
     entry.value = dailyEntry
   } catch {
+    if (requestId !== latestLoadRequestId) {
+      return
+    }
+
     loadError.value = '선택한 날짜의 투자 일지를 불러오지 못했어요.'
   } finally {
-    isLoading.value = false
+    if (requestId === latestLoadRequestId) {
+      isLoading.value = false
+    }
   }
 }
 

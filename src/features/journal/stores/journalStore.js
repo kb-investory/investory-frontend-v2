@@ -18,6 +18,8 @@ export const useJournalStore = defineStore('journal', () => {
   const dailyEntry = ref(null)
   const loading = ref(false)
   const error = ref('')
+  let latestCalendarRequestId = 0
+  let latestDailyEntryRequestId = 0
 
   async function fetchJournals(params) {
     loading.value = true
@@ -34,6 +36,8 @@ export const useJournalStore = defineStore('journal', () => {
   }
 
   async function fetchMonthlyCalendar(year, month) {
+    const requestId = ++latestCalendarRequestId
+
     loading.value = true
     error.value = ''
 
@@ -49,12 +53,18 @@ export const useJournalStore = defineStore('journal', () => {
         getCalendarActivity({ year, month }),
       ])
 
-      entries.value = journalResponse.entries
-      calendarActivities.value = activityResponse
+      if (requestId === latestCalendarRequestId) {
+        entries.value = journalResponse.entries
+        calendarActivities.value = activityResponse
+      }
     } catch (requestError) {
-      error.value = requestError.message
+      if (requestId === latestCalendarRequestId) {
+        error.value = requestError.message
+      }
     } finally {
-      loading.value = false
+      if (requestId === latestCalendarRequestId) {
+        loading.value = false
+      }
     }
   }
 
@@ -72,16 +82,27 @@ export const useJournalStore = defineStore('journal', () => {
   }
 
   async function fetchDailyEntry(journalDate) {
+    const requestId = ++latestDailyEntryRequestId
+
     loading.value = true
     error.value = ''
     try {
-      dailyEntry.value = await getJournalEntryOnDate(journalDate)
-      return dailyEntry.value
+      const response = await getJournalEntryOnDate(journalDate)
+
+      if (requestId === latestDailyEntryRequestId) {
+        dailyEntry.value = response
+      }
+
+      return response
     } catch (requestError) {
-      error.value = requestError.message
+      if (requestId === latestDailyEntryRequestId) {
+        error.value = requestError.message
+      }
       throw requestError
     } finally {
-      loading.value = false
+      if (requestId === latestDailyEntryRequestId) {
+        loading.value = false
+      }
     }
   }
 
