@@ -5,7 +5,12 @@ export const routes = [
     path: '/',
     name: ROUTE_NAMES.HOME,
     component: () => import('@/features/home/views/HomePage.vue'),
-    meta: { title: '홈' },
+    meta: {
+      title: '홈',
+      layout: 'full-bleed',
+      frameHeight: 956,
+      mainBottomPadding: 84,
+    },
   },
   {
     path: '/login',
