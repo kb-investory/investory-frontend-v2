@@ -80,6 +80,10 @@ export const routes = [
     },
   },
   {
+    path: '/journal/new',
+    redirect: '/journal/create',
+  },
+  {
     path: '/journal/:date',
     name: ROUTE_NAMES.JOURNAL_DATE,
     component: () => import('@/features/journal/views/JournalDatePage.vue'),

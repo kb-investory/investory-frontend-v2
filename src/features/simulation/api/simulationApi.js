@@ -1,5 +1,17 @@
 import simulationData from '@/mocks/data/simulation.json'
 
+export async function getSimulationOverview() {
+  return simulationData.overview
+}
+
+export async function getLatestSimulationResult() {
+  return simulationData.latest
+}
+
+export async function getSimulationComparators() {
+  return simulationData.latest.participantSummary
+}
+
 export async function getSimulationMessages() {
   return simulationData.messages
 }

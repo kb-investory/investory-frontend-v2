@@ -1,4 +1,71 @@
 {
+  "overview": {
+    "isReady": true,
+    "eligiblePeriod": {
+      "startDate": "2026-03-01",
+      "endDate": "2026-07-29",
+      "totalDays": 150
+    },
+    "recommendedInitialCapital": 5000000,
+    "connectedAccountsCount": 1,
+    "recentSimulationCount": 3
+  },
+  "latest": {
+    "simulationRun": {
+      "simulationRunId": 101,
+      "periodStart": "2026-03-01",
+      "periodEnd": "2026-07-29",
+      "initialCapital": 5000000,
+      "runStatus": "COMPLETED"
+    },
+    "participantSummary": [
+      {
+        "variantId": 1,
+        "variantType": "ACTUAL_USER",
+        "variantName": "실제 나",
+        "totalEquity": 5250000,
+        "cumulativeReturnPercent": 5.0,
+        "mddPercent": -3.2
+      },
+      {
+        "variantId": 2,
+        "variantType": "PERSONAL_BOT",
+        "variantName": "나의 투자봇 v1",
+        "totalEquity": 5850000,
+        "cumulativeReturnPercent": 17.0,
+        "mddPercent": -1.8
+      },
+      {
+        "variantId": 3,
+        "variantType": "FAMOUS_STRATEGY",
+        "variantName": "우량 가치·품질 퀀트 봇",
+        "totalEquity": 5400000,
+        "cumulativeReturnPercent": 8.0,
+        "mddPercent": -4.5
+      },
+      {
+        "variantId": 4,
+        "variantType": "RANDOM_BOT",
+        "variantName": "원숭이 봇",
+        "totalEquity": 4900000,
+        "cumulativeReturnPercent": -2.0,
+        "mddPercent": -8.1
+      }
+    ],
+    "totalTradesCount": 12,
+    "simulatedTrades": [
+      {
+        "simulatedTradeId": 1001,
+        "simulationVariantId": 2,
+        "securityId": 101,
+        "tradeSide": "BUY",
+        "tradedAt": "2026-03-05T09:00:00",
+        "quantity": 10,
+        "unitPrice": 70000,
+        "decisionReason": "[AI 팩터 통과] 팩터 점수 78.5점으로 최소 기준 초과 및 상승 추세 감지"
+      }
+    ]
+  },
   "messages": [
     {
       "id": 1,
