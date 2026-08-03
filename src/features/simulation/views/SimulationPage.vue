@@ -17,8 +17,8 @@ import AppBar from '@/shared/components/navigation/AppBar.vue'
 
 const simulationStore = useSimulationStore()
 const message = ref('')
-const activeTab = ref('flow') // 'flow' | 'dashboard' | 'chat'
-const currentStep = ref('ready') // 'ready' | 'comparator_select' | 'condition_setup' | 'live' | 'result'
+const activeTab = ref('flow') // 'flow' | 'chat'
+const currentStep = ref('home') // 'home' (Screen 1: 원칙 중심) | 'bot_ready' | 'comparator_select' | 'condition_setup' | 'live' | 'result'
 const selectedComparators = ref(['FAMOUS_STRATEGY'])
 
 onMounted(async () => {
@@ -33,6 +33,10 @@ async function handleSubmit() {
 }
 
 // Flow step control functions
+function startBotCreation() {
+  currentStep.value = 'bot_ready'
+}
+
 function goToComparatorSelect() {
   currentStep.value = 'comparator_select'
 }
@@ -51,7 +55,7 @@ function finishLiveSimulation() {
 }
 
 function restartFlow() {
-  currentStep.value = 'ready'
+  currentStep.value = 'home'
 }
 
 // State toggle helper for manual verification
@@ -62,7 +66,7 @@ function toggleDataState(days) {
 
 <template>
   <div class="mobile-page">
-    <AppBar title="투자 시뮬레이션" :show-back="false" :show-close="false" />
+    <AppBar title="시뮬레이션" :show-back="false" :show-close="false" />
 
     <div class="mobile-page__content">
       <!-- Demo Data State Controller (For Verification Requirements) -->
@@ -92,14 +96,14 @@ function toggleDataState(days) {
         <span>시뮬레이션 개요 및 기록을 불러오는 중...</span>
       </div>
 
-      <!-- Insufficient Data Guidance State (WYSMi Screen 1A) -->
+      <!-- Insufficient Data Guidance State (WYSMi Screen 1A: 데이터 준비 중) -->
       <SimulationWysmiGuide
         v-else-if="!simulationStore.isReady"
         :eligible-days="simulationStore.eligibleDays"
         :min-required-days="simulationStore.MIN_REQUIRED_DAYS"
       />
 
-      <!-- Ready State: Interactive Step-by-Step Flow & Tabs -->
+      <!-- Ready State: Simulation Main Entry Screen & Flow -->
       <template v-else>
         <!-- Sub Navigation Tabs -->
         <div class="tab-subnav">
@@ -108,14 +112,7 @@ function toggleDataState(days) {
             :class="{ active: activeTab === 'flow' }"
             @click="activeTab = 'flow'"
           >
-            시뮬레이션 진행
-          </button>
-          <button
-            class="tab-subnav__item"
-            :class="{ active: activeTab === 'dashboard' }"
-            @click="activeTab = 'dashboard'"
-          >
-            개요 & 성과
+            시뮬레이션
           </button>
           <button
             class="tab-subnav__item"
@@ -126,18 +123,26 @@ function toggleDataState(days) {
           </button>
         </div>
 
-        <!-- Tab 1: Interactive Simulation Flow (Matching investory222_lucide.html) -->
+        <!-- Main Flow -->
         <div v-if="activeTab === 'flow'" class="flow-container">
+          <!-- Step 0 (Default Entry): Screen 1 (원칙 중심) - Simulation Dashboard -->
+          <SimulationDashboard
+            v-if="currentStep === 'home'"
+            :overview="simulationStore.overview"
+            :latest-result="simulationStore.latestResult"
+            @start-simulation="startBotCreation"
+          />
+
           <!-- Step 1C: Bot Ready Card -->
           <SimulationBotReadyCard
-            v-if="currentStep === 'ready'"
+            v-else-if="currentStep === 'bot_ready'"
             @next="goToComparatorSelect"
           />
 
           <!-- Step 1C-2: Comparator Bot Selection -->
           <SimulationComparatorSelect
             v-else-if="currentStep === 'comparator_select'"
-            @back="currentStep = 'ready'"
+            @back="currentStep = 'bot_ready'"
             @confirm="handleConfirmComparators"
           />
 
@@ -168,16 +173,7 @@ function toggleDataState(days) {
           />
         </div>
 
-        <!-- Tab 2: Dashboard Overview -->
-        <div v-else-if="activeTab === 'dashboard'">
-          <SimulationDashboard
-            :overview="simulationStore.overview"
-            :latest-result="simulationStore.latestResult"
-            @start-simulation="activeTab = 'flow'"
-          />
-        </div>
-
-        <!-- Tab 3: Chat Simulator -->
+        <!-- Tab 2: Chat Simulator -->
         <div v-else class="chat-section">
           <div class="chat-container">
             <SimulationMessage
