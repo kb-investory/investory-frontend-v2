@@ -60,12 +60,21 @@ export async function getJournalEntries({ startDate, endDate } = {}) {
   return { entries: clone(entries) }
 }
 
-export async function getCalendarActivity({ year, month }) {
-  const monthKey = `${year}-${String(month).padStart(2, '0')}`
+export async function getCalendarActivity({ year, month, startDate, endDate } = {}) {
+  const monthKey = year && month ? `${year}-${String(month).padStart(2, '0')}` : null
+
   return clone(
-    (journalData.calendarActivity ?? []).filter((activity) =>
-      activity.activityDate.startsWith(monthKey),
-    ),
+    (journalData.calendarActivity ?? []).filter((activity) => {
+      if (startDate && activity.activityDate < startDate) {
+        return false
+      }
+
+      if (endDate && activity.activityDate > endDate) {
+        return false
+      }
+
+      return !monthKey || activity.activityDate.startsWith(monthKey)
+    }),
   )
 }
 
@@ -86,10 +95,11 @@ export async function getJournalById(journalId) {
 export async function getJournalEntryOnDate(journalDate = getDefaultJournalDate()) {
   const entry = journalData.dailyEntries?.find((item) => item.journalDate === journalDate)
   const journal = entry?.journal ?? findJournalByDate(journalDate) ?? null
+  const isFutureDate = journalDate > getDefaultJournalDate()
 
   return clone({
     journalDate,
-    canCreate: !journal && entry?.canCreate !== false,
+    canCreate: !journal && !isFutureDate && entry?.canCreate !== false,
     journal,
     trades: entry?.trades ?? journal?.trades ?? [],
   })

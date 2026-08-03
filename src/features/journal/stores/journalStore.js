@@ -18,6 +18,8 @@ export const useJournalStore = defineStore('journal', () => {
   const dailyEntry = ref(null)
   const loading = ref(false)
   const error = ref('')
+  let latestCalendarRequestId = 0
+  let latestDailyEntryRequestId = 0
 
   async function fetchJournals(params) {
     loading.value = true
@@ -33,29 +35,41 @@ export const useJournalStore = defineStore('journal', () => {
     }
   }
 
-  async function fetchMonthlyCalendar(year, month) {
+  async function fetchCalendarRange(startDate, endDate) {
+    const requestId = ++latestCalendarRequestId
+
     loading.value = true
     error.value = ''
 
+    try {
+      const [journalResponse, activityResponse] = await Promise.all([
+        getJournalEntries({ startDate, endDate }),
+        getCalendarActivity({ startDate, endDate }),
+      ])
+
+      if (requestId === latestCalendarRequestId) {
+        entries.value = journalResponse.entries
+        calendarActivities.value = activityResponse
+      }
+    } catch (requestError) {
+      if (requestId === latestCalendarRequestId) {
+        error.value = requestError.message
+      }
+    } finally {
+      if (requestId === latestCalendarRequestId) {
+        loading.value = false
+      }
+    }
+  }
+
+  async function fetchMonthlyCalendar(year, month) {
     const lastDay = new Date(year, month, 0).getDate()
     const monthKey = `${year}-${String(month).padStart(2, '0')}`
 
-    try {
-      const [journalResponse, activityResponse] = await Promise.all([
-        getJournalEntries({
-          startDate: `${monthKey}-01`,
-          endDate: `${monthKey}-${String(lastDay).padStart(2, '0')}`,
-        }),
-        getCalendarActivity({ year, month }),
-      ])
-
-      entries.value = journalResponse.entries
-      calendarActivities.value = activityResponse
-    } catch (requestError) {
-      error.value = requestError.message
-    } finally {
-      loading.value = false
-    }
+    await fetchCalendarRange(
+      `${monthKey}-01`,
+      `${monthKey}-${String(lastDay).padStart(2, '0')}`,
+    )
   }
 
   async function fetchJournalDetail(journalId) {
@@ -72,16 +86,27 @@ export const useJournalStore = defineStore('journal', () => {
   }
 
   async function fetchDailyEntry(journalDate) {
+    const requestId = ++latestDailyEntryRequestId
+
     loading.value = true
     error.value = ''
     try {
-      dailyEntry.value = await getJournalEntryOnDate(journalDate)
-      return dailyEntry.value
+      const response = await getJournalEntryOnDate(journalDate)
+
+      if (requestId === latestDailyEntryRequestId) {
+        dailyEntry.value = response
+      }
+
+      return response
     } catch (requestError) {
-      error.value = requestError.message
+      if (requestId === latestDailyEntryRequestId) {
+        error.value = requestError.message
+      }
       throw requestError
     } finally {
-      loading.value = false
+      if (requestId === latestDailyEntryRequestId) {
+        loading.value = false
+      }
     }
   }
 
@@ -163,6 +188,7 @@ export const useJournalStore = defineStore('journal', () => {
     loading,
     error,
     fetchJournals,
+    fetchCalendarRange,
     fetchMonthlyCalendar,
     fetchJournalDetail,
     fetchDailyEntry,
