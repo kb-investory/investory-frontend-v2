@@ -1,5 +1,6 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 import SimulationBotReadyCard from '@/features/simulation/components/SimulationBotReadyCard.vue'
 import SimulationComparatorSelect from '@/features/simulation/components/SimulationComparatorSelect.vue'
@@ -12,13 +13,35 @@ import { useSimulationStore } from '@/features/simulation/stores/simulationStore
 import AppIcon from '@/shared/components/AppIcon.vue'
 import AppBar from '@/shared/components/navigation/AppBar.vue'
 
+const route = useRoute()
+const router = useRouter()
 const simulationStore = useSimulationStore()
-const currentStep = ref('home') // 'home' (Screen 1 / 1A) | 'bot_ready' | 'comparator_select' | 'condition_setup' | 'live' | 'result'
+const currentStep = ref('home') // 'home' | 'bot_ready' | 'comparator_select' | 'condition_setup' | 'live' | 'result'
 const selectedComparators = ref(['FAMOUS_STRATEGY'])
+
+// Compute effective view mode based on route path / query or store readiness
+const effectiveMode = computed(() => {
+  if (route.path.includes('/wysmi') || route.query.state === 'wysmi') {
+    return 'wysmi'
+  }
+  if (route.path.includes('/dashboard') || route.query.state === 'dashboard') {
+    return 'dashboard'
+  }
+  return simulationStore.isReady ? 'dashboard' : 'wysmi'
+})
 
 onMounted(async () => {
   await simulationStore.fetchOverview()
 })
+
+// Navigation helpers to switch routes
+function navigateToDashboard() {
+  router.push('/simulation/dashboard')
+}
+
+function navigateToWysmi() {
+  router.push('/simulation/wysmi')
+}
 
 // Flow step control functions
 function startBotCreation() {
@@ -59,20 +82,41 @@ function restartFlow() {
     />
 
     <div class="mobile-page__content">
+      <!-- Quick Route Switcher Bar for direct URL verification -->
+      <div v-if="currentStep === 'home'" class="url-switcher-bar">
+        <span class="switcher-label">화면 바로보기 주소:</span>
+        <div class="switcher-buttons">
+          <button
+            class="switcher-btn"
+            :class="{ active: effectiveMode === 'dashboard' }"
+            @click="navigateToDashboard"
+          >
+            /simulation/dashboard
+          </button>
+          <button
+            class="switcher-btn"
+            :class="{ active: effectiveMode === 'wysmi' }"
+            @click="navigateToWysmi"
+          >
+            /simulation/wysmi
+          </button>
+        </div>
+      </div>
+
       <!-- Loading State -->
       <div v-if="simulationStore.loading && !simulationStore.overview" class="loading-state">
         <AppIcon name="loader-circle" :size="24" class="spin" />
         <span>시뮬레이션 데이터를 불러오는 중...</span>
       </div>
 
-      <!-- Insufficient Data Guidance State (Screen 1A: 데이터 준비 중) -->
+      <!-- Screen 1A: Insufficient Data Guidance State (/simulation/wysmi) -->
       <SimulationWysmiGuide
-        v-else-if="!simulationStore.isReady"
+        v-else-if="effectiveMode === 'wysmi'"
         :eligible-days="simulationStore.eligibleDays"
         :min-required-days="simulationStore.MIN_REQUIRED_DAYS"
       />
 
-      <!-- Ready State: Main Entry Screen (Screen 1: 원칙 중심) & Interactive Flow -->
+      <!-- Screen 1: Ready State / Main Entry Screen (/simulation/dashboard) & Interactive Flow -->
       <div v-else class="flow-container">
         <!-- Step 0 (Default Entry): Screen 1 (원칙 중심) -->
         <SimulationDashboard
@@ -138,6 +182,48 @@ function restartFlow() {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.url-switcher-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin: 12px 20px 0 20px;
+  font-size: 11px;
+}
+
+.switcher-label {
+  font-weight: 700;
+  color: #475569;
+}
+
+.switcher-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.switcher-btn {
+  padding: 4px 8px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.switcher-btn.active {
+  background: #263a43;
+  color: #ffffff;
+  border-color: #263a43;
+  font-weight: 700;
 }
 
 .loading-state {

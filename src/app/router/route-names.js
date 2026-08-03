@@ -18,6 +18,8 @@ export const ROUTE_NAMES = {
   TENDENCY_PRINCIPLES_EDIT: 'TendencyPrinciplesEdit',
   AI_CONVERSATION: 'AiConversation',
   SIMULATION: 'Simulation',
+  SIMULATION_DASHBOARD: 'SimulationDashboard',
+  SIMULATION_WYSMI: 'SimulationWysmi',
   MYPAGE: 'Mypage',
   UI_KIT: 'UIKit',
   NOT_FOUND: 'NotFound',

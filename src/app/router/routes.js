@@ -130,6 +130,28 @@ export const routes = [
     },
   },
   {
+    path: '/simulation/dashboard',
+    name: ROUTE_NAMES.SIMULATION_DASHBOARD,
+    component: () => import('@/features/simulation/views/SimulationPage.vue'),
+    meta: {
+      title: '시뮬레이션 - 원칙 중심',
+      layout: 'full-bleed',
+      frameHeight: 980,
+      mainBottomPadding: 84,
+    },
+  },
+  {
+    path: '/simulation/wysmi',
+    name: ROUTE_NAMES.SIMULATION_WYSMI,
+    component: () => import('@/features/simulation/views/SimulationPage.vue'),
+    meta: {
+      title: '시뮬레이션 - 데이터 준비 중',
+      layout: 'full-bleed',
+      frameHeight: 980,
+      mainBottomPadding: 84,
+    },
+  },
+  {
     path: '/mypage',
     name: ROUTE_NAMES.MYPAGE,
     component: () => import('@/features/mypage/views/MypagePage.vue'),
