@@ -104,9 +104,7 @@ export const useTendencyStore = defineStore('tendency', () => {
 
   const shouldShowRecommendation = computed(
     () =>
-      Boolean(analysis.value) &&
-      recommendations.value.length > 0 &&
-      principles.value.length === 0,
+      Boolean(analysis.value) && recommendations.value.length > 0 && principles.value.length === 0,
   )
 
   const shouldShowReanalysis = computed(() => {
@@ -118,9 +116,7 @@ export const useTendencyStore = defineStore('tendency', () => {
   })
   const analysisAvailableTimestamp = computed(() => {
     if (!analysisAccess.value?.analysisAvailableDate) return null
-    return new Date(
-      `${analysisAccess.value.analysisAvailableDate}T00:00:00`,
-    ).getTime()
+    return new Date(`${analysisAccess.value.analysisAvailableDate}T00:00:00`).getTime()
   })
   const isAnalysisLocked = computed(
     () =>
@@ -129,15 +125,10 @@ export const useTendencyStore = defineStore('tendency', () => {
   )
   const daysUntilAnalysis = computed(() => {
     if (!isAnalysisLocked.value) return 0
-    return Math.ceil(
-      (analysisAvailableTimestamp.value - todayTimestamp.value) / DAY_IN_MS,
-    )
+    return Math.ceil((analysisAvailableTimestamp.value - todayTimestamp.value) / DAY_IN_MS)
   })
   const recordedDays = computed(() =>
-    Math.max(
-      0,
-      (analysisAccess.value?.minimumRecordDays || 90) - daysUntilAnalysis.value,
-    ),
+    Math.max(0, (analysisAccess.value?.minimumRecordDays || 90) - daysUntilAnalysis.value),
   )
 
   function updateAnalysis(analysisData) {
@@ -154,13 +145,12 @@ export const useTendencyStore = defineStore('tendency', () => {
     error.value = null
 
     try {
-      const [analysisData, principleData, recommendationData, accessData] =
-        await Promise.all([
-          getLatestTendencyAnalysis(),
-          getUserPrinciples(),
-          getRecommendedPrinciples(),
-          getTendencyAccessStatus(),
-        ])
+      const [analysisData, principleData, recommendationData, accessData] = await Promise.all([
+        getLatestTendencyAnalysis(),
+        getUserPrinciples(),
+        getRecommendedPrinciples(),
+        getTendencyAccessStatus(),
+      ])
 
       updateAnalysis(analysisData)
       recommendations.value = recommendationData.recommendations || []
@@ -236,8 +226,7 @@ export const useTendencyStore = defineStore('tendency', () => {
     const normalizedPrinciples = nextPrinciples.map((principle, index) => {
       const originalContent = principle.originalContent ?? principle.content
       const isUserCreated = principle.recommendationSource?.type === 'USER_CREATED'
-      const isUserModified =
-        isUserCreated || principle.content.trim() !== originalContent.trim()
+      const isUserModified = isUserCreated || principle.content.trim() !== originalContent.trim()
 
       return {
         ...principle,
@@ -257,8 +246,7 @@ export const useTendencyStore = defineStore('tendency', () => {
       .filter((recommendation) =>
         normalizedPrinciples.some(
           (principle) =>
-            String(principle.principleId) ===
-            `recommendation-${recommendation.recommendationId}`,
+            String(principle.principleId) === `recommendation-${recommendation.recommendationId}`,
         ),
       )
       .map((recommendation) => recommendation.recommendationId)

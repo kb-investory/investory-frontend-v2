@@ -31,11 +31,7 @@ defineEmits(['analyze', 'toggle'])
       <span class="reanalysis-floating__icon">
         <AppIcon name="rotate-ccw" :size="20" />
       </span>
-      <button
-        type="button"
-        class="reanalysis-floating__body"
-        @click="$emit('analyze')"
-      >
+      <button type="button" class="reanalysis-floating__body" @click="$emit('analyze')">
         <span>새 분석 필요</span>
         <strong>최근 분석 후 90일이 지났어요</strong>
         <small>투자성향 다시 분석하기 <AppIcon name="arrow-right" :size="12" /></small>

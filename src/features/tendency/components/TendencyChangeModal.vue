@@ -25,9 +25,7 @@ const modalTitle = computed(() => {
   if (!props.historyItem.changedCount) return '첫 성향 분석 상세'
   return isCurrentAnalysis.value ? '현재 성향 변화 상세' : '과거 성향 변화 상세'
 })
-const resultPointLabel = computed(() =>
-  isCurrentAnalysis.value ? '현재' : '당시 결과',
-)
+const resultPointLabel = computed(() => (isCurrentAnalysis.value ? '현재' : '당시 결과'))
 const changedDimensions = computed(
   () => new Set(props.historyItem.changes.map((change) => change.dimension)),
 )
@@ -130,10 +128,7 @@ onBeforeUnmount(() => {
           </article>
         </section>
 
-        <section
-          v-if="isCurrentAnalysis && historyItem.changedCount"
-          class="current-types"
-        >
+        <section v-if="isCurrentAnalysis && historyItem.changedCount" class="current-types">
           <div class="section-heading">
             <h3>현재 6가지 성향</h3>
             <span>변경된 항목은 색으로 표시했어요</span>
