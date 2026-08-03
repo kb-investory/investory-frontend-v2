@@ -108,6 +108,7 @@ function getAriaLabel(cell) {
           'journal-calendar__day--saturday': cell.dayOfWeek === 6,
           'journal-calendar__day--selected': cell.dateKey === selectedDate,
           'journal-calendar__day--has-journal': cell.journal,
+          'journal-calendar__day--has-activity': cell.activity,
         }"
         type="button"
         :aria-label="getAriaLabel(cell)"
@@ -116,7 +117,10 @@ function getAriaLabel(cell) {
         @click="selectDate(cell)"
       >
         <span class="journal-calendar__date">{{ cell.day }}</span>
-        <span v-if="cell.journal" class="journal-calendar__mark" aria-hidden="true" />
+        <span class="journal-calendar__markers" aria-hidden="true">
+          <span v-if="cell.journal" class="journal-calendar__mark" />
+          <span v-if="cell.activity" class="journal-calendar__activity-mark" />
+        </span>
       </button>
     </div>
 
@@ -124,6 +128,8 @@ function getAriaLabel(cell) {
       <span>밑줄</span>
       <span class="journal-calendar__legend-mark" aria-hidden="true" />
       <span>일지 작성됨</span>
+      <span class="journal-calendar__legend-dot" aria-hidden="true" />
+      <span>거래 있음</span>
     </div>
   </section>
 </template>
@@ -223,12 +229,27 @@ function getAriaLabel(cell) {
   background: #c8f3ee;
 }
 
+.journal-calendar__markers {
+  display: flex;
+  min-height: 5px;
+  align-items: center;
+  gap: 3px;
+  margin-top: 5px;
+}
+
 .journal-calendar__mark {
   width: 10px;
   height: 2px;
-  margin-top: 5px;
   border-radius: 9999px;
   background: var(--brand-teal-deep, #087f7c);
+}
+
+.journal-calendar__activity-mark,
+.journal-calendar__legend-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #e58b2d;
 }
 
 .journal-calendar__legend {
@@ -248,5 +269,9 @@ function getAriaLabel(cell) {
   height: 2px;
   border-radius: 9999px;
   background: var(--brand-teal-deep, #087f7c);
+}
+
+.journal-calendar__legend-dot {
+  margin-left: 5px;
 }
 </style>

@@ -4,6 +4,18 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value))
 }
 
+function formatLocalDate(date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
+function findJournalByDate(journalDate) {
+  return journalData.journals.find((journal) => journal.journalDate === journalDate)
+}
+
 function findDailyEntryByJournalId(journalId) {
   return journalData.dailyEntries?.find((entry) => entry.journal?.journalId === Number(journalId))
 }
@@ -25,7 +37,7 @@ function applyTradeNotes(entry, tradeNotes = []) {
 }
 
 export function getDefaultJournalDate() {
-  return journalData.dailyEntries?.[0]?.journalDate ?? new Date().toISOString().split('T')[0]
+  return formatLocalDate(new Date())
 }
 
 export async function getJournals() {
@@ -73,21 +85,18 @@ export async function getJournalById(journalId) {
 
 export async function getJournalEntryOnDate(journalDate = getDefaultJournalDate()) {
   const entry = journalData.dailyEntries?.find((item) => item.journalDate === journalDate)
+  const journal = entry?.journal ?? findJournalByDate(journalDate) ?? null
 
-  if (entry) {
-    return clone(entry)
-  }
-
-  return {
+  return clone({
     journalDate,
-    canCreate: true,
-    journal: null,
-    trades: [],
-  }
+    canCreate: !journal && entry?.canCreate !== false,
+    journal,
+    trades: entry?.trades ?? journal?.trades ?? [],
+  })
 }
 
 export async function createJournal(payload) {
-  const journalDate = payload.journalDate || new Date().toISOString().split('T')[0]
+  const journalDate = payload.journalDate || getDefaultJournalDate()
   let dailyEntry = journalData.dailyEntries?.find((entry) => entry.journalDate === journalDate)
 
   if (dailyEntry?.journal) {

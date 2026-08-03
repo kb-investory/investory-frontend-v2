@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
+import { getDefaultJournalDate } from '@/features/journal/api/journalApi'
 import JournalCalendar from '@/features/journal/components/JournalCalendar.vue'
 import JournalMonthNavigator from '@/features/journal/components/JournalMonthNavigator.vue'
 import { useJournalStore } from '@/features/journal/stores/journalStore'
@@ -12,10 +13,11 @@ import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
 const router = useRouter()
 const journalStore = useJournalStore()
 
-const visibleYear = ref(2026)
-const visibleMonth = ref(8)
-const selectedDate = ref('2026-08-23')
-const todayDate = '2026-08-23'
+const todayDate = getDefaultJournalDate()
+const [todayYear, todayMonth] = todayDate.split('-').map(Number)
+const visibleYear = ref(todayYear)
+const visibleMonth = ref(todayMonth)
+const selectedDate = ref(null)
 
 onMounted(loadMonth)
 
