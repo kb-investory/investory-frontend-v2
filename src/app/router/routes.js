@@ -65,8 +65,26 @@ export const routes = [
   {
     path: '/journal/search',
     name: ROUTE_NAMES.JOURNAL_SEARCH,
-    component: () => import('@/features/journal/views/JournalSearchPlaceholderPage.vue'),
-    meta: { title: '종목별 일지 검색' },
+    component: () => import('@/features/journal/views/JournalStockSearchPage.vue'),
+    meta: {
+      title: '종목별 일지 검색',
+      layout: 'full-bleed',
+      frameHeight: 944,
+      mainBottomPadding: 0,
+      hideBottomNav: true,
+    },
+  },
+  {
+    path: '/journal/stocks/:securityCode',
+    name: ROUTE_NAMES.JOURNAL_STOCK,
+    component: () => import('@/features/journal/views/JournalStockPage.vue'),
+    meta: {
+      title: '종목 거래 일지',
+      layout: 'full-bleed',
+      frameHeight: 944,
+      mainBottomPadding: 0,
+      hideBottomNav: true,
+    },
   },
   {
     path: '/journal/create',

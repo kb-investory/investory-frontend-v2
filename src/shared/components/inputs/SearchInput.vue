@@ -10,6 +10,14 @@ defineProps({
     type: String,
     default: '종목명 또는 종목코드 검색',
   },
+  ariaLabel: {
+    type: String,
+    default: '검색',
+  },
+  autofocus: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 defineEmits(['update:modelValue'])
@@ -23,6 +31,10 @@ defineEmits(['update:modelValue'])
       class="search-input__field"
       :value="modelValue"
       :placeholder="placeholder"
+      :aria-label="ariaLabel"
+      :autofocus="autofocus"
+      autocomplete="off"
+      enterkeyhint="search"
       @input="$emit('update:modelValue', $event.target.value)"
     />
   </div>
