@@ -22,14 +22,10 @@ const recommendations = computed(() =>
 )
 const selectedCount = computed(() => selectedIds.value.length)
 const allSelected = computed(
-  () =>
-    recommendations.value.length > 0 &&
-    selectedCount.value === recommendations.value.length,
+  () => recommendations.value.length > 0 && selectedCount.value === recommendations.value.length,
 )
 const hasUnsavedChanges = computed(
-  () =>
-    [...selectedIds.value].sort().join(',') !==
-    [...initialSelectedIds.value].sort().join(','),
+  () => [...selectedIds.value].sort().join(',') !== [...initialSelectedIds.value].sort().join(','),
 )
 const selectionButtonText = computed(() => {
   if (applying.value) return '적용하는 중...'
@@ -53,9 +49,7 @@ function toggleRecommendation(recommendationId) {
 function toggleAll() {
   selectedIds.value = allSelected.value
     ? []
-    : recommendations.value.map(
-        (recommendation) => recommendation.recommendationId,
-      )
+    : recommendations.value.map((recommendation) => recommendation.recommendationId)
 }
 
 async function applySelectedRecommendations() {
@@ -135,10 +129,7 @@ onBeforeUnmount(() => {
       <span class="selection-count">{{ selectedCount }}개 선택</span>
     </header>
 
-    <div
-      v-if="tendencyStore.loading || tendencyStore.isAnalysisLocked"
-      class="loading-wrapper"
-    >
+    <div v-if="tendencyStore.loading || tendencyStore.isAnalysisLocked" class="loading-wrapper">
       <BaseLoading />
     </div>
 
@@ -201,9 +192,7 @@ onBeforeUnmount(() => {
             :key="recommendation.recommendationId"
             class="recommendation-card"
             :class="{
-              'recommendation-card--selected': isSelected(
-                recommendation.recommendationId,
-              ),
+              'recommendation-card--selected': isSelected(recommendation.recommendationId),
             }"
           >
             <span class="recommendation-card__index">
@@ -231,9 +220,7 @@ onBeforeUnmount(() => {
               @click="toggleRecommendation(recommendation.recommendationId)"
             >
               <AppIcon
-                :name="
-                  isSelected(recommendation.recommendationId) ? 'check' : 'plus'
-                "
+                :name="isSelected(recommendation.recommendationId) ? 'check' : 'plus'"
                 :size="15"
               />
             </button>

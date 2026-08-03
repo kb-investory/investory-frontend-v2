@@ -38,10 +38,7 @@ const analysisPeriod = computed(() => {
 })
 const analysisProgressPercent = computed(() => {
   const minimumDays = tendencyStore.analysisAccess?.minimumRecordDays || 90
-  return Math.min(
-    100,
-    Math.max(0, (tendencyStore.recordedDays / minimumDays) * 100),
-  )
+  return Math.min(100, Math.max(0, (tendencyStore.recordedDays / minimumDays) * 100))
 })
 const analysisMarkerPercent = computed(() =>
   Math.min(96, Math.max(4, analysisProgressPercent.value)),
@@ -66,8 +63,7 @@ function getLocalDateKey(date = new Date()) {
 
 function formatPrincipleMeta(principle) {
   const isUserPrinciple =
-    principle.isUserModified ||
-    principle.recommendationSource?.type === 'USER_CREATED'
+    principle.isUserModified || principle.recommendationSource?.type === 'USER_CREATED'
 
   if (!isUserPrinciple) return '기본원칙'
 
@@ -137,9 +133,8 @@ watch(
   () => tendencyStore.analysis?.analysisRunId,
   (analysisRunId) => {
     reanalysisNoticeCollapsed.value = analysisRunId
-      ? window.localStorage.getItem(
-          `${REANALYSIS_NOTICE_COLLAPSED_KEY}:${analysisRunId}`,
-        ) === 'true'
+      ? window.localStorage.getItem(`${REANALYSIS_NOTICE_COLLAPSED_KEY}:${analysisRunId}`) ===
+        'true'
       : false
   },
   { immediate: true },
@@ -172,10 +167,7 @@ onBeforeUnmount(() => {
       </BaseButton>
     </section>
 
-    <section
-      v-else-if="tendencyStore.isAnalysisLocked"
-      class="analysis-locked"
-    >
+    <section v-else-if="tendencyStore.isAnalysisLocked" class="analysis-locked">
       <header class="analysis-locked__header">
         <h1>{{ activeTab === '투자성향' ? '나의 투자 성향' : '투자원칙' }}</h1>
         <p>
@@ -213,19 +205,14 @@ onBeforeUnmount(() => {
           </div>
           <footer>
             <span>현재 {{ tendencyStore.recordedDays }}일째</span>
-            <span>
-              {{ tendencyStore.analysisAccess?.minimumRecordDays || 90 }}일 ·
-              분석 가능
-            </span>
+            <span> {{ tendencyStore.analysisAccess?.minimumRecordDays || 90 }}일 · 분석 가능 </span>
           </footer>
         </div>
 
         <div class="analysis-locked__available-date">
           <AppIcon name="calendar-range" :size="14" />
           <span>
-            {{
-              formatDate(tendencyStore.analysisAccess?.analysisAvailableDate)
-            }}부터 분석 가능
+            {{ formatDate(tendencyStore.analysisAccess?.analysisAvailableDate) }}부터 분석 가능
           </span>
         </div>
       </div>
@@ -382,11 +369,7 @@ onBeforeUnmount(() => {
         </div>
       </section>
 
-      <BaseButton
-        full-width
-        :disabled="tendencyStore.analyzing"
-        @click="startTendencyAnalysis"
-      >
+      <BaseButton full-width :disabled="tendencyStore.analyzing" @click="startTendencyAnalysis">
         내 투자성향 분석하기
         <template #iconRight><AppIcon name="arrow-right" :size="16" /></template>
       </BaseButton>
@@ -410,9 +393,7 @@ onBeforeUnmount(() => {
           <span>오늘의 적용 상태</span>
           <strong>{{ tendencyStore.principles.length }}개 적용 중</strong>
         </header>
-        <h2>
-          {{ tendencyStore.principles.length }}개의 투자원칙을 실천 중입니다.
-        </h2>
+        <h2>{{ tendencyStore.principles.length }}개의 투자원칙을 실천 중입니다.</h2>
         <p>원칙과 체크에서 선택한 기준을 자동으로 확인해드려요.</p>
       </section>
 
@@ -465,24 +446,14 @@ onBeforeUnmount(() => {
           full-width
           :disabled="
             tendencyStore.analyzing ||
-            (Boolean(tendencyStore.analysis) &&
-              !tendencyStore.activeRecommendations.length)
+            (Boolean(tendencyStore.analysis) && !tendencyStore.activeRecommendations.length)
           "
-          @click="
-            tendencyStore.analysis
-              ? openRecommendations()
-              : startTendencyAnalysis()
-          "
+          @click="tendencyStore.analysis ? openRecommendations() : startTendencyAnalysis()"
         >
-          {{
-            tendencyStore.analysis
-              ? '추천 원칙 선택하기'
-              : '투자성향 먼저 분석하기'
-          }}
+          {{ tendencyStore.analysis ? '추천 원칙 선택하기' : '투자성향 먼저 분석하기' }}
           <template #iconRight><AppIcon name="arrow-right" :size="16" /></template>
         </BaseButton>
       </section>
-
     </main>
 
     <TendencyDetailModal
@@ -502,8 +473,7 @@ onBeforeUnmount(() => {
       v-if="
         activeTab === '투자성향' &&
         !tendencyStore.analyzing &&
-        (tendencyStore.shouldShowReanalysis ||
-          tendencyStore.shouldShowRecommendation)
+        (tendencyStore.shouldShowReanalysis || tendencyStore.shouldShowRecommendation)
       "
       class="tendency-floating-stack"
     >
@@ -515,10 +485,7 @@ onBeforeUnmount(() => {
       />
       <RecommendationFloating
         v-if="tendencyStore.shouldShowRecommendation"
-        :count="
-          tendencyStore.activeRecommendations.length ||
-          tendencyStore.recommendations.length
-        "
+        :count="tendencyStore.activeRecommendations.length || tendencyStore.recommendations.length"
         :collapsed="recommendationNoticeCollapsed"
         @navigate="openRecommendations"
         @toggle="toggleRecommendationNotice"
@@ -1314,10 +1281,7 @@ onBeforeUnmount(() => {
   height: 7px;
   border-radius: 50%;
   background: #abdcd9;
-  transform:
-    translate(-50%, -50%)
-    rotate(calc(var(--index) * 60deg))
-    translateY(-48px);
+  transform: translate(-50%, -50%) rotate(calc(var(--index) * 60deg)) translateY(-48px);
   transform-origin: center;
 }
 

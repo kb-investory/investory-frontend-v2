@@ -1,7 +1,9 @@
 export const ROUTE_NAMES = {
   HOME: 'Home',
   LOGIN: 'Login',
+  OAUTH_CALLBACK: 'OAuthCallback',
   BROKER_CONNECT: 'BrokerConnect',
+  BROKER_VERIFY: 'BrokerVerify',
   BROKER_LOGIN: 'BrokerLogin',
   BROKER_HOLDINGS: 'BrokerHoldings',
   BROKER_COMPLETE: 'BrokerComplete',
