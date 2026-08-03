@@ -35,8 +35,7 @@ const availableRecommendations = computed(() =>
     (recommendation) =>
       !draftPrinciples.value.some(
         (principle) =>
-          String(principle.principleId) ===
-          `recommendation-${recommendation.recommendationId}`,
+          String(principle.principleId) === `recommendation-${recommendation.recommendationId}`,
       ),
   ),
 )
@@ -56,11 +55,7 @@ function clonePrinciples(principles) {
 }
 
 function getSourceLabel(principle) {
-  return (
-    principle.recommendationSource?.tendency?.name ??
-    principle.title ??
-    '직접 작성'
-  )
+  return principle.recommendationSource?.tendency?.name ?? principle.title ?? '직접 작성'
 }
 
 function getLocalDateKey(date = new Date()) {
@@ -202,11 +197,7 @@ onBeforeUnmount(() => {
     </header>
 
     <div
-      v-if="
-        tendencyStore.loading ||
-        tendencyStore.isAnalysisLocked ||
-        !initialized
-      "
+      v-if="tendencyStore.loading || tendencyStore.isAnalysisLocked || !initialized"
       class="loading-wrapper"
     >
       <BaseLoading />
@@ -257,8 +248,7 @@ onBeforeUnmount(() => {
                   : `${principle.content} 수정`
               "
               @click="
-                editingId =
-                  editingId === principle.principleId ? null : principle.principleId
+                editingId = editingId === principle.principleId ? null : principle.principleId
               "
             >
               <AppIcon
@@ -305,11 +295,7 @@ onBeforeUnmount(() => {
       </section>
 
       <section class="custom-principle">
-        <button
-          v-if="!customFormOpen"
-          type="button"
-          @click="customFormOpen = true"
-        >
+        <button v-if="!customFormOpen" type="button" @click="customFormOpen = true">
           <AppIcon name="plus" :size="16" />
           직접 작성해서 추가
         </button>
@@ -332,11 +318,7 @@ onBeforeUnmount(() => {
       <p v-if="saveError" class="save-error" role="alert">{{ saveError }}</p>
 
       <footer class="save-bar">
-        <BaseButton
-          full-width
-          :disabled="saving"
-          @click="saveChanges"
-        >
+        <BaseButton full-width :disabled="saving" @click="saveChanges">
           <template #iconLeft><AppIcon name="check" :size="15" /></template>
           {{ saving ? '저장하는 중...' : `변경한 원칙 ${draftPrinciples.length}개 저장하기` }}
         </BaseButton>

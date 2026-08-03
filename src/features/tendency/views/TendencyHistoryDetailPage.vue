@@ -41,9 +41,7 @@ onMounted(() => tendencyStore.fetchTendencies())
     <main v-else-if="historyItem" class="detail-content">
       <section class="detail-hero">
         <span>{{
-          isCurrentAnalysis && !isFirstAnalysis
-            ? '현재 투자성향'
-            : historyItem.label
+          isCurrentAnalysis && !isFirstAnalysis ? '현재 투자성향' : historyItem.label
         }}</span>
         <h1>{{ formatDate(historyItem.analyzedDate) }} 분석</h1>
         <p v-if="isCurrentAnalysis && tendencyStore.analysis?.period">
