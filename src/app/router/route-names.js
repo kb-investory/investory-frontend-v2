@@ -9,6 +9,7 @@ export const ROUTE_NAMES = {
   BROKER_COMPLETE: 'BrokerComplete',
   JOURNAL: 'Journal',
   JOURNAL_SEARCH: 'JournalSearch',
+  JOURNAL_STOCK: 'JournalStock',
   JOURNAL_CREATE: 'JournalCreate',
   JOURNAL_DATE: 'JournalDate',
   PORTFOLIO: 'Portfolio',
