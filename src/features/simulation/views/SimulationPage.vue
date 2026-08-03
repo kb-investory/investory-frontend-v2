@@ -13,7 +13,7 @@ import AppIcon from '@/shared/components/AppIcon.vue'
 import AppBar from '@/shared/components/navigation/AppBar.vue'
 
 const simulationStore = useSimulationStore()
-const currentStep = ref('home') // 'home' (1. 원칙 중심) | 'bot_ready' | 'comparator_select' | 'condition_setup' | 'live' | 'result'
+const currentStep = ref('home') // 'home' (Screen 1 / 1A) | 'bot_ready' | 'comparator_select' | 'condition_setup' | 'live' | 'result'
 const selectedComparators = ref(['FAMOUS_STRATEGY'])
 
 onMounted(async () => {
@@ -49,7 +49,34 @@ function restartFlow() {
 
 <template>
   <div class="mobile-page">
-    <AppBar title="시뮬레이션" :show-back="currentStep !== 'home'" :show-close="false" @back="currentStep = 'home'" />
+    <!-- Sub-step AppBar (Shown only when in a sub-flow step) -->
+    <AppBar
+      v-if="currentStep !== 'home'"
+      title="시뮬레이션"
+      :show-back="true"
+      :show-close="false"
+      @back="currentStep = 'home'"
+    />
+
+    <!-- Main Entry Header (Matching investory222_lucide.html Screen 1 & 1A) -->
+    <header v-else class="simulation-custom-header">
+      <div class="header-top-row">
+        <h1 class="header-title">시뮬레이션</h1>
+        <img
+          src="/assets/logos/investory-logo.png"
+          alt="Investory"
+          class="header-logo"
+        />
+      </div>
+      <p class="header-subtitle">
+        <template v-if="simulationStore.isReady">
+          나의 선택을 과거 시장에서 다시 확인해요.
+        </template>
+        <template v-else>
+          최소 {{ simulationStore.MIN_REQUIRED_DAYS }}일의 실제 투자 데이터가 쌓이면 열려요.
+        </template>
+      </p>
+    </header>
 
     <div class="mobile-page__content">
       <!-- Loading State -->
@@ -123,6 +150,43 @@ function restartFlow() {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.simulation-custom-header {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px 0 0 0;
+  background: #ffffff;
+}
+
+.header-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.header-title {
+  margin: 0;
+  font-family: 'Funnel Sans', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  color: #181817;
+}
+
+.header-logo {
+  width: 100px;
+  height: 35px;
+  object-fit: contain;
+}
+
+.header-subtitle {
+  margin: 0;
+  font-size: 12px;
+  color: #666662;
+  font-weight: 500;
 }
 
 .mobile-page__content {

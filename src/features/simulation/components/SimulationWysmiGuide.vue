@@ -24,10 +24,7 @@ function goToJournalNew() {
 
 <template>
   <div class="wysmi-page-container">
-    <!-- Header Subtitle -->
-    <div class="page-subtitle">
-      최소 {{ minRequiredDays }}일의 실제 투자 데이터가 쌓이면 열려요.
-    </div>
+    <!-- Hero Card: 실제 투자 데이터를 모으고 있어요 -->
 
     <!-- Hero Card: 실제 투자 데이터를 모으고 있어요 -->
     <div class="wysmi-hero-card">

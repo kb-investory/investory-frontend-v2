@@ -33,10 +33,7 @@ function formatPercent(val) {
 
 <template>
   <div class="dashboard-page-container">
-    <!-- Header Subtitle -->
-    <div class="page-subtitle">
-      나의 선택을 과거 시장에서 다시 확인해요.
-    </div>
+    <!-- Hero Card: 같은 날, 같은 돈으로 다시 투자해 본다면? -->
 
     <!-- Hero Card: 같은 날, 같은 돈으로 다시 투자해 본다면? -->
     <div class="hero-card">
