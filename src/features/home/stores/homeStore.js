@@ -1,13 +1,28 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-import { getAccountsSummary, getHoldings } from '@/features/home/api/homeApi'
+import { getAccountsSummary, getHoldings, getHomeDashboard } from '@/features/home/api/homeApi'
 
 export const useHomeStore = defineStore('home', () => {
+  const dashboard = ref(null)
   const summary = ref(null)
   const accounts = ref([])
   const holdings = ref([])
   const loading = ref(false)
+  const error = ref(null)
+
+  async function fetchDashboard() {
+    loading.value = true
+    error.value = null
+
+    try {
+      dashboard.value = await getHomeDashboard()
+    } catch (requestError) {
+      error.value = requestError
+    } finally {
+      loading.value = false
+    }
+  }
 
   async function fetchSummary() {
     loading.value = true
@@ -32,10 +47,13 @@ export const useHomeStore = defineStore('home', () => {
   }
 
   return {
+    dashboard,
     summary,
     accounts,
     holdings,
     loading,
+    error,
+    fetchDashboard,
     fetchSummary,
   }
 })

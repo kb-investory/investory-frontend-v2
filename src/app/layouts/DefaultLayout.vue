@@ -11,7 +11,6 @@ const route = useRoute()
 const isUIKit = computed(() => route.name === ROUTE_NAMES.UI_KIT)
 const isBlankLayout = computed(() => route.meta.layout === 'blank')
 const isFullBleedLayout = computed(() => route.meta.layout === 'full-bleed')
-
 const frameStyle = computed(() => ({
   '--mobile-frame-max-height': `${route.meta.frameHeight ?? 844}px`,
   '--mobile-main-bottom-padding': `${route.meta.mainBottomPadding ?? 84}px`,
@@ -70,6 +69,8 @@ const tabItems = [
 }
 
 .mobile-frame {
+  --mobile-frame-edge-offset: max(16px, calc((100dvh - 844px) / 2));
+
   position: relative;
   display: flex;
   width: 100%;
@@ -122,6 +123,8 @@ const tabItems = [
   }
 
   .mobile-frame {
+    --mobile-frame-edge-offset: 0px;
+
     max-width: 100%;
     height: 100dvh;
     max-height: 100dvh;
