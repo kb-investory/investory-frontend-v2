@@ -11,6 +11,7 @@ const route = useRoute()
 const isUIKit = computed(() => route.name === ROUTE_NAMES.UI_KIT)
 const isBlankLayout = computed(() => route.meta.layout === 'blank')
 const isFullBleedLayout = computed(() => route.meta.layout === 'full-bleed')
+const hideBottomNav = computed(() => route.meta.hideBottomNav === true)
 const frameStyle = computed(() => ({
   '--mobile-frame-max-height': `${route.meta.frameHeight ?? 844}px`,
   '--mobile-main-bottom-padding': `${route.meta.mainBottomPadding ?? 84}px`,
@@ -46,7 +47,11 @@ const tabItems = [
       </main>
 
       <!-- 뷰포트 하단 고정 내비게이션 -->
-      <footer class="mobile-footer" :class="{ 'mobile-footer--full-bleed': isFullBleedLayout }">
+      <footer
+        v-if="!hideBottomNav"
+        class="mobile-footer"
+        :class="{ 'mobile-footer--full-bleed': isFullBleedLayout }"
+      >
         <BottomTabBar :items="tabItems" />
       </footer>
     </div>
