@@ -6,10 +6,7 @@
       "buyTrades": 4,
       "sellTrades": 8,
       "stockCount": 7,
-      "missingReasons": 8,
-      "currentTime": "09:41",
-      "remainingTime": "14:19:00",
-      "dayProgressPercent": 40.6
+      "missingReasons": 8
     },
     "quickActions": {
       "journalStatus": "작성 전",
