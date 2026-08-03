@@ -86,10 +86,11 @@ export async function getJournalById(journalId) {
 export async function getJournalEntryOnDate(journalDate = getDefaultJournalDate()) {
   const entry = journalData.dailyEntries?.find((item) => item.journalDate === journalDate)
   const journal = entry?.journal ?? findJournalByDate(journalDate) ?? null
+  const isFutureDate = journalDate > getDefaultJournalDate()
 
   return clone({
     journalDate,
-    canCreate: !journal && entry?.canCreate !== false,
+    canCreate: !journal && !isFutureDate && entry?.canCreate !== false,
     journal,
     trades: entry?.trades ?? journal?.trades ?? [],
   })

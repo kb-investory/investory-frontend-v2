@@ -82,10 +82,13 @@ export const routes = [
   {
     path: '/journal/:date',
     name: ROUTE_NAMES.JOURNAL_DATE,
-    redirect: (to) => ({
-      name: ROUTE_NAMES.JOURNAL_CREATE,
-      query: { date: to.params.date },
-    }),
+    component: () => import('@/features/journal/views/JournalDatePage.vue'),
+    meta: {
+      title: '선택 날짜 투자 일지',
+      layout: 'full-bleed',
+      frameHeight: 956,
+      mainBottomPadding: 80,
+    },
   },
   {
     path: '/tendency',
