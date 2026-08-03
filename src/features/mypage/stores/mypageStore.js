@@ -2,7 +2,7 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 
 import {
-  disconnectAccount as disconnectAccountApi,
+  disconnectBroker as disconnectBrokerApi,
   getConnectedAccounts,
   getConnectedAccountDetail,
   getMypageOverview,
@@ -11,7 +11,14 @@ import {
   syncConnectedAccount,
   updateUserProfile,
 } from '@/features/mypage/api/mypageApi'
+import { getJournalEntries } from '@/features/journal/api/journalApi'
 import { getLatestTendencyAnalysis } from '@/features/tendency/api/tendencyApi'
+
+const OAUTH_PROVIDER_LABELS = Object.freeze({
+  KAKAO: '카카오',
+  NAVER: '네이버',
+  GOOGLE: 'Google',
+})
 
 export const useMypageStore = defineStore('mypage', () => {
   const profile = ref(null)
@@ -42,17 +49,31 @@ export const useMypageStore = defineStore('mypage', () => {
     return dates.length ? new Date(Math.max(...dates)).toISOString() : null
   })
 
-  async function fetchOverview({ force = false } = {}) {
+  async function fetchOverview({ force = false, authUser = null } = {}) {
     if (profile.value && !force) return
     loading.value = true
     error.value = null
 
     try {
-      const [overview, analysis] = await Promise.all([
+      const [overview, analysis, journalResponse] = await Promise.all([
         getMypageOverview(),
         getLatestTendencyAnalysis(),
+        getJournalEntries(),
       ])
-      profile.value = overview.profile
+      const oauthProvider = String(
+        authUser?.oauthProvider || authUser?.socialType || overview.profile.oauthProvider || '',
+      ).toUpperCase()
+      profile.value = {
+        ...overview.profile,
+        ...(authUser
+          ? {
+              email: authUser.email || overview.profile.email,
+            }
+          : {}),
+        oauthProvider,
+        oauthProviderLabel: OAUTH_PROVIDER_LABELS[oauthProvider] || '소셜',
+        totalJournalsCount: journalResponse.entries.length,
+      }
       tendencyBadges.value = (analysis?.analysisResults || []).map((result) => ({
         code: result.dimension.code,
         label: result.type.name,
@@ -144,8 +165,8 @@ export const useMypageStore = defineStore('mypage', () => {
     }
   }
 
-  async function disconnectAccount(accountId) {
-    const response = await disconnectAccountApi(accountId)
+  async function disconnectBroker(brokerId) {
+    const response = await disconnectBrokerApi(brokerId)
     accounts.value = response.accounts
     return response
   }
@@ -176,6 +197,6 @@ export const useMypageStore = defineStore('mypage', () => {
     syncAccountDetail,
     syncAllAccounts,
     retryAccount,
-    disconnectAccount,
+    disconnectBroker,
   }
 })

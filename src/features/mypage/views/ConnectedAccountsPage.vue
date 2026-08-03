@@ -10,8 +10,6 @@ import MobileStatusBar from '@/shared/components/MobileStatusBar.vue'
 
 const router = useRouter()
 const mypageStore = useMypageStore()
-const disconnectTarget = ref(null)
-const disconnecting = ref(false)
 const notice = ref('')
 
 const overallStatus = computed(() => {
@@ -48,22 +46,6 @@ async function retryAccount(account) {
   notice.value = ''
   await mypageStore.retryAccount(account.accountId)
   notice.value = `${account.brokerName} 계좌 동기화를 완료했어요.`
-}
-
-function reauthenticate(account) {
-  router.push({ name: ROUTE_NAMES.BROKER_LOGIN, query: { brokerId: account.brokerId } })
-}
-
-async function confirmDisconnect() {
-  if (!disconnectTarget.value || disconnecting.value) return
-  disconnecting.value = true
-  try {
-    await mypageStore.disconnectAccount(disconnectTarget.value.accountId)
-    notice.value = '계좌 연결을 해제했어요. 기존 투자 일지는 그대로 보존됩니다.'
-    disconnectTarget.value = null
-  } finally {
-    disconnecting.value = false
-  }
 }
 
 onMounted(async () => {
@@ -166,9 +148,8 @@ onMounted(async () => {
                   >업데이트 {{ formatSyncTime(account.lastSyncedAt, { includeDate: true }) }}</small
                 >
                 <em v-if="account.syncErrorReason">{{ account.syncErrorReason }}</em>
-                <div v-if="account.status !== 'CONNECTED'" class="account-card__actions">
+                <div v-if="account.status === 'SYNC_ERROR'" class="account-card__actions">
                   <button
-                    v-if="account.status === 'SYNC_ERROR'"
                     type="button"
                     :disabled="mypageStore.retryingAccountId === account.accountId"
                     @click.stop="retryAccount(account)"
@@ -179,18 +160,10 @@ onMounted(async () => {
                         : '다시 시도'
                     }}
                   </button>
-                  <button v-else type="button" @click.stop="reauthenticate(account)">재인증</button>
                 </div>
               </div>
               <div class="account-card__right">
                 <AppIcon name="chevron-right" :size="14" />
-                <button
-                  type="button"
-                  aria-label="계좌 연결 해제"
-                  @click.stop="disconnectTarget = account"
-                >
-                  <AppIcon name="link-2-off" :size="13" />
-                </button>
               </div>
             </article>
           </div>
@@ -224,23 +197,6 @@ onMounted(async () => {
 
       <p v-if="notice" class="account-notice" role="status">{{ notice }}</p>
     </main>
-
-    <div v-if="disconnectTarget" class="disconnect-overlay" @click.self="disconnectTarget = null">
-      <section class="disconnect-dialog" role="dialog" aria-modal="true">
-        <span><AppIcon name="link-2-off" :size="22" /></span>
-        <h2>계좌 연결을 해제할까요?</h2>
-        <p>
-          {{ disconnectTarget.brokerName }} {{ disconnectTarget.accountNumber }}의 연결이
-          해제됩니다. 기존에 작성한 투자 일지는 보존돼요.
-        </p>
-        <div>
-          <button type="button" @click="disconnectTarget = null">취소</button>
-          <button type="button" :disabled="disconnecting" @click="confirmDisconnect">
-            {{ disconnecting ? '해제 중...' : '연결 해제' }}
-          </button>
-        </div>
-      </section>
-    </div>
   </div>
 </template>
 
@@ -461,22 +417,9 @@ onMounted(async () => {
   font-size: 7px;
 }
 .account-card__right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: space-between;
-  color: #839194;
-}
-.account-card__right button {
   display: grid;
-  width: 24px;
-  height: 24px;
   place-items: center;
-  border: 0;
-  border-radius: 7px;
-  background: #fff2f0;
-  color: #d85a53;
-  cursor: pointer;
+  color: #839194;
 }
 .add-account-button {
   display: flex;
@@ -560,56 +503,5 @@ onMounted(async () => {
   color: #078d88;
   font-size: 8px;
   text-align: center;
-}
-.disconnect-overlay {
-  position: fixed;
-  z-index: 300;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 22px;
-  background: rgba(20, 32, 35, 0.55);
-}
-.disconnect-dialog {
-  width: min(100%, 340px);
-  padding: 20px;
-  border-radius: 17px;
-  background: #fff;
-}
-.disconnect-dialog > span {
-  display: grid;
-  width: 42px;
-  height: 42px;
-  place-items: center;
-  border-radius: 12px;
-  background: #fff0ee;
-  color: #df514e;
-}
-.disconnect-dialog h2 {
-  margin: 12px 0 6px;
-  font-size: 16px;
-}
-.disconnect-dialog p {
-  color: #718083;
-  font-size: 9px;
-  line-height: 1.6;
-}
-.disconnect-dialog > div {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 15px;
-}
-.disconnect-dialog button {
-  min-height: 40px;
-  border: 0;
-  border-radius: 9px;
-  background: #edf1f1;
-  cursor: pointer;
-}
-.disconnect-dialog button:last-child {
-  background: #e45354;
-  color: #fff;
 }
 </style>

@@ -1,6 +1,6 @@
 import mypageData from '@/mocks/data/mypage.json'
 
-const MYPAGE_STORAGE_KEY = 'investory:mock:mypage:v2'
+const MYPAGE_STORAGE_KEY = 'investory:mock:mypage:v4'
 const MOCK_DELAY = 450
 
 function clone(value) {
@@ -159,10 +159,10 @@ export async function retryAccountSync(accountId) {
   return { accounts: clone(state.accounts) }
 }
 
-export async function disconnectAccount(accountId) {
+export async function disconnectBroker(brokerId) {
   await wait()
   const state = readState()
-  state.accounts = state.accounts.filter((account) => account.accountId !== accountId)
+  state.accounts = state.accounts.filter((account) => account.brokerId !== Number(brokerId))
   writeState(state)
   return { accounts: clone(state.accounts), journalsPreserved: true }
 }

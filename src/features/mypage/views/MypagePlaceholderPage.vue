@@ -33,7 +33,15 @@ const sectionContent = Object.freeze({
   help: {
     title: '마이페이지 도움말',
     icon: 'circle-help',
-    description: '마이페이지 이용 안내를 준비하고 있어요.',
+    description: '현재 마이페이지에서 사용할 수 있는 기능이에요.',
+    items: [
+      '프로필 이미지와 이름을 수정할 수 있어요.',
+      '작성한 투자 일지 수와 로그인한 소셜 계정을 확인할 수 있어요.',
+      '나의 6가지 투자성향과 최근 시뮬레이션 결과로 이동할 수 있어요.',
+      '연결 계좌를 동기화하고 계좌별 자산·거래 요약을 확인할 수 있어요.',
+      '증권사 단위로 연결된 계좌를 해제할 수 있어요.',
+      '로그아웃과 회원 탈퇴를 진행할 수 있어요.',
+    ],
   },
 })
 
@@ -74,6 +82,12 @@ const content = computed(() => {
       <span><AppIcon :name="content.icon" :size="28" /></span>
       <h1>{{ content.title }}</h1>
       <p>{{ content.description }}</p>
+      <ul v-if="content.items" class="help-list">
+        <li v-for="item in content.items" :key="item">
+          <AppIcon name="circle-check" :size="15" />
+          <span>{{ item }}</span>
+        </li>
+      </ul>
       <button type="button" @click="router.push({ name: ROUTE_NAMES.MYPAGE })">
         마이페이지로 돌아가기
       </button>
@@ -139,6 +153,32 @@ const content = computed(() => {
   margin: 0;
   color: #7b898c;
   font-size: 10px;
+}
+.help-list {
+  display: grid;
+  width: min(100%, 340px);
+  gap: 8px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+.help-list li {
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  align-items: start;
+  gap: 7px;
+  padding: 11px 12px;
+  border: 1px solid #dce8e8;
+  border-radius: 10px;
+  background: #f8fbfb;
+  color: #536568;
+  font-size: 9px;
+  line-height: 1.5;
+}
+.help-list svg {
+  margin-top: 1px;
+  color: #078d88;
 }
 .placeholder-page main button {
   min-height: 42px;

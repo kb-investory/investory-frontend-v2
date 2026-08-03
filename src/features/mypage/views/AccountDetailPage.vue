@@ -61,18 +61,11 @@ async function syncAccount() {
   if (result) syncNotice.value = '계좌 데이터를 최신 상태로 반영했어요.'
 }
 
-function reconnectBroker() {
-  router.push({
-    name: ROUTE_NAMES.BROKER_LOGIN,
-    query: { brokerId: account.value.brokerId, reconnect: 'true' },
-  })
-}
-
 async function disconnectBroker() {
   if (!account.value || disconnecting.value) return
   disconnecting.value = true
   try {
-    await mypageStore.disconnectAccount(account.value.accountId)
+    await mypageStore.disconnectBroker(account.value.brokerId)
     await router.replace({ name: ROUTE_NAMES.MYPAGE_ACCOUNTS })
   } finally {
     disconnecting.value = false
@@ -178,11 +171,6 @@ onMounted(() => mypageStore.fetchAccountDetail(accountId.value))
       <section class="connection-section">
         <h2>증권사 연결 관리</h2>
         <div class="connection-actions">
-          <button type="button" @click="reconnectBroker">
-            <AppIcon name="link" :size="17" />
-            <span>{{ account.brokerName }} 재연결</span>
-            <AppIcon name="chevron-right" :size="15" />
-          </button>
           <button type="button" class="danger" @click="disconnectOpen = true">
             <AppIcon name="link-2-off" :size="17" />
             <span>{{ account.brokerName }} 연결 해제</span>

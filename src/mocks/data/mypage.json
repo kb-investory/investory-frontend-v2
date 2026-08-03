@@ -11,8 +11,9 @@
   },
   "recentSimulation": {
     "simulationId": 301,
+    "botName": "나의 투자봇 v3",
     "returnRate": 16.8,
-    "rank": 19,
+    "rank": 1,
     "totalParticipants": 186,
     "differenceFromActual": 10.4,
     "status": "완료"
@@ -49,10 +50,10 @@
       "brokerName": "KB증권",
       "accountType": "위탁종합",
       "accountNumber": "9912-****-3150",
-      "status": "AUTH_EXPIRED",
-      "statusLabel": "인증 만료",
+      "status": "CONNECTED",
+      "statusLabel": "연결됨",
       "lastSyncedAt": "2026-08-02T09:37:00+09:00",
-      "syncErrorReason": "로그인 인증 기간이 만료되었어요."
+      "syncErrorReason": ""
     }
   ],
   "accountDetails": {

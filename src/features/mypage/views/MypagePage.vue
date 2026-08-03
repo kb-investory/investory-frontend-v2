@@ -18,11 +18,6 @@ const withdrawalEmail = ref('')
 const processing = ref(false)
 const actionError = ref('')
 
-const simulationRate = computed(() => {
-  const rate = mypageStore.recentSimulation?.returnRate ?? 0
-  return `${rate >= 0 ? '+' : ''}${rate.toFixed(1)}%`
-})
-
 const withdrawalVerified = computed(
   () => withdrawalEmail.value.trim() === mypageStore.profile?.email,
 )
@@ -40,9 +35,13 @@ function clearAuthStorage({ allMemberData = false } = {}) {
     return
   }
 
-  ;['accessToken', 'refreshToken', 'investory:auth', 'investory:oauth-session'].forEach((key) =>
-    window.localStorage.removeItem(key),
-  )
+  ;[
+    'accessToken',
+    'refreshToken',
+    'investory:auth',
+    'investory:oauth-session',
+    'investory:mock:oauth-provider',
+  ].forEach((key) => window.localStorage.removeItem(key))
 }
 
 async function confirmLogout() {
@@ -67,8 +66,9 @@ async function confirmWithdrawal() {
 
   try {
     await disconnectSocialAccount()
-    for (const account of [...mypageStore.accounts]) {
-      await mypageStore.disconnectAccount(account.accountId)
+    const brokerIds = [...new Set(mypageStore.accounts.map((account) => account.brokerId))]
+    for (const brokerId of brokerIds) {
+      await mypageStore.disconnectBroker(brokerId)
     }
     await withdrawMember()
     await authStore.signOut()
@@ -88,7 +88,10 @@ function closeModal() {
   actionError.value = ''
 }
 
-onMounted(() => mypageStore.fetchOverview())
+onMounted(async () => {
+  if (!authStore.user) await authStore.fetchUser()
+  await mypageStore.fetchOverview({ force: true, authUser: authStore.user })
+})
 </script>
 
 <template>
@@ -100,7 +103,7 @@ onMounted(() => mypageStore.fetchOverview())
         <img src="/assets/icons/monkey.png" alt="Investory" />
         <h1>마이페이지</h1>
       </div>
-      <button type="button" aria-label="마이페이지 도움말" @click="goToSection('help')">
+      <button type="button" aria-label="마이페이지 도움말" @click="modal = 'help'">
         <AppIcon name="circle-help" :size="18" />
       </button>
     </header>
@@ -121,7 +124,12 @@ onMounted(() => mypageStore.fetchOverview())
           </div>
           <p>{{ mypageStore.profile.email }}</p>
           <small>
-            <span class="provider-dot">K</span>
+            <span
+              class="provider-dot"
+              :class="`provider-dot--${mypageStore.profile.oauthProvider.toLowerCase()}`"
+            >
+              {{ mypageStore.profile.oauthProvider.slice(0, 1) }}
+            </span>
             {{ mypageStore.profile.oauthProviderLabel }} 계정으로 로그인
           </small>
         </div>
@@ -150,8 +158,10 @@ onMounted(() => mypageStore.fetchOverview())
           </div>
           <p v-else class="tendency-summary-card__empty">분석 후 6가지 성향 결과가 표시돼요</p>
         </div>
-        <strong>{{ mypageStore.hasTendencyAnalysis ? '분석 리포트' : '분석 시작' }}</strong>
-        <AppIcon name="chevron-right" :size="14" />
+        <span class="summary-card__action">
+          투자성향으로 바로가기
+          <AppIcon name="arrow-right" :size="12" />
+        </span>
       </button>
 
       <button
@@ -170,15 +180,12 @@ onMounted(() => mypageStore.fetchOverview())
         </span>
         <div>
           <small>최근 시뮬레이션</small>
-          <strong>{{ simulationRate }}</strong>
-          <p>
-            전체 {{ mypageStore.recentSimulation.rank }}위 · 실제 대비 +{{
-              mypageStore.recentSimulation.differenceFromActual.toFixed(1)
-            }}%p
-          </p>
+          <p class="simulation-summary-card__headline">나의 투자봇 v3가 1위예요</p>
         </div>
-        <span>{{ mypageStore.recentSimulation.status }}</span>
-        <AppIcon name="chevron-right" :size="14" />
+        <span class="summary-card__action summary-card__action--simulation">
+          시뮬레이션 결과로 바로가기
+          <AppIcon name="arrow-right" :size="12" />
+        </span>
       </button>
 
       <section class="menu-section">
@@ -233,8 +240,31 @@ onMounted(() => mypageStore.fetchOverview())
     </main>
 
     <div v-if="modal" class="confirm-overlay" role="presentation" @click.self="closeModal">
-      <section class="confirm-dialog" role="dialog" aria-modal="true">
-        <template v-if="modal === 'logout'">
+      <section
+        class="confirm-dialog"
+        :class="{ 'confirm-dialog--help': modal === 'help' }"
+        role="dialog"
+        aria-modal="true"
+      >
+        <template v-if="modal === 'help'">
+          <div class="help-dialog__header">
+            <span class="confirm-dialog__icon"><AppIcon name="circle-help" :size="22" /></span>
+            <button type="button" aria-label="도움말 닫기" @click="closeModal">
+              <AppIcon name="x" :size="17" />
+            </button>
+          </div>
+          <h2>마이페이지 도움말</h2>
+          <p>현재 사용할 수 있는 기능이에요.</p>
+          <ul class="help-dialog__list">
+            <li>프로필 이미지와 이름을 수정할 수 있어요.</li>
+            <li>투자 일지 수와 로그인한 소셜 계정을 확인할 수 있어요.</li>
+            <li>투자성향과 최근 시뮬레이션 결과로 이동할 수 있어요.</li>
+            <li>연결 계좌를 동기화하고 계좌별 자산·거래 요약을 볼 수 있어요.</li>
+            <li>증권사 연결 해제, 로그아웃, 회원 탈퇴를 진행할 수 있어요.</li>
+          </ul>
+        </template>
+
+        <template v-else-if="modal === 'logout'">
           <span class="confirm-dialog__icon"><AppIcon name="log-out" :size="22" /></span>
           <h2>로그아웃할까요?</h2>
           <p>현재 기기의 인증 토큰과 로그인 세션이 삭제됩니다.</p>
@@ -397,6 +427,14 @@ onMounted(() => mypageStore.fetchOverview())
   color: #332d00;
   font-weight: 900;
 }
+.provider-dot--naver {
+  background: #03c75a;
+  color: #fff;
+}
+.provider-dot--google {
+  background: #fff;
+  color: #4285f4;
+}
 .profile-summary__edit {
   display: grid;
   width: 34px;
@@ -412,7 +450,7 @@ onMounted(() => mypageStore.fetchOverview())
 .simulation-summary-card {
   display: grid;
   width: 100%;
-  grid-template-columns: 32px minmax(0, 1fr) auto 14px;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
   align-items: center;
   gap: 9px;
   padding: 11px;
@@ -443,10 +481,26 @@ onMounted(() => mypageStore.fetchOverview())
   color: #78888b;
   font-size: 7px;
 }
-.tendency-summary-card > strong {
-  align-self: start;
-  color: #078d88;
+.summary-card__action {
+  display: inline-flex;
+  min-height: 27px;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #e6f7f5;
+  color: #087f7b;
   font-size: 7px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.summary-card__action--simulation {
+  max-width: none !important;
+  background: #fff3df;
+  color: #bc7013 !important;
+  line-height: 1;
+  text-align: center !important;
 }
 .tendency-badges {
   display: flex;
@@ -481,18 +535,14 @@ onMounted(() => mypageStore.fetchOverview())
   color: #7d8b8e;
   font-size: 7px;
 }
-.simulation-summary-card > div > strong {
-  color: #078d88;
-  font-size: 13px;
+.simulation-summary-card__headline {
+  margin: 0;
+  color: #35484c;
+  font-size: 10px;
+  font-weight: 800;
 }
-.simulation-summary-card p {
-  display: inline;
-  margin: 0 0 0 5px;
+.simulation-summary-card p:not(.simulation-summary-card__headline) {
   color: #68777a;
-  font-size: 7px;
-}
-.simulation-summary-card > span {
-  color: #ce7c12;
   font-size: 7px;
 }
 
@@ -570,6 +620,9 @@ onMounted(() => mypageStore.fetchOverview())
   background: #fff;
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.2);
 }
+.confirm-dialog--help {
+  width: min(100%, 310px);
+}
 .confirm-dialog__icon {
   display: grid;
   width: 42px;
@@ -583,6 +636,46 @@ onMounted(() => mypageStore.fetchOverview())
 .confirm-dialog__icon--danger {
   background: #fff0ee;
   color: #e24e52;
+}
+.help-dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.help-dialog__header > button {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: #f2f5f5;
+  color: #657477;
+  cursor: pointer;
+}
+.help-dialog__list {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.help-dialog__list li {
+  position: relative;
+  padding: 9px 10px 9px 27px;
+  border-radius: 9px;
+  background: #f5f9f9;
+  color: #526467;
+  font-size: 9px;
+  line-height: 1.45;
+}
+.help-dialog__list li::before {
+  position: absolute;
+  top: 11px;
+  left: 10px;
+  color: #078d88;
+  content: '✓';
+  font-weight: 900;
 }
 .confirm-dialog h2 {
   margin: 0;
