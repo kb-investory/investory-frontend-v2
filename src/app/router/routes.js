@@ -141,6 +141,61 @@ export const routes = [
     },
   },
   {
+    path: '/simulation/bot-ready',
+    name: ROUTE_NAMES.SIMULATION_BOT_READY,
+    component: () => import('@/features/simulation/views/SimulationPage.vue'),
+    meta: {
+      title: '시뮬레이션 - 원칙 봇 준비',
+      layout: 'full-bleed',
+      frameHeight: 980,
+      mainBottomPadding: 84,
+    },
+  },
+  {
+    path: '/simulation/comparators',
+    name: ROUTE_NAMES.SIMULATION_COMPARATORS,
+    component: () => import('@/features/simulation/views/SimulationPage.vue'),
+    meta: {
+      title: '시뮬레이션 - 비교 봇 선택',
+      layout: 'full-bleed',
+      frameHeight: 980,
+      mainBottomPadding: 84,
+    },
+  },
+  {
+    path: '/simulation/setup',
+    name: ROUTE_NAMES.SIMULATION_SETUP,
+    component: () => import('@/features/simulation/views/SimulationPage.vue'),
+    meta: {
+      title: '시뮬레이션 - 조건 설정',
+      layout: 'full-bleed',
+      frameHeight: 980,
+      mainBottomPadding: 84,
+    },
+  },
+  {
+    path: '/simulation/live',
+    name: ROUTE_NAMES.SIMULATION_LIVE,
+    component: () => import('@/features/simulation/views/SimulationPage.vue'),
+    meta: {
+      title: '시뮬레이션 - 실행 중',
+      layout: 'full-bleed',
+      frameHeight: 980,
+      mainBottomPadding: 84,
+    },
+  },
+  {
+    path: '/simulation/result',
+    name: ROUTE_NAMES.SIMULATION_RESULT,
+    component: () => import('@/features/simulation/views/SimulationPage.vue'),
+    meta: {
+      title: '시뮬레이션 - 결과',
+      layout: 'full-bleed',
+      frameHeight: 980,
+      mainBottomPadding: 84,
+    },
+  },
+  {
     path: '/simulation/wysmi',
     name: ROUTE_NAMES.SIMULATION_WYSMI,
     component: () => import('@/features/simulation/views/SimulationPage.vue'),

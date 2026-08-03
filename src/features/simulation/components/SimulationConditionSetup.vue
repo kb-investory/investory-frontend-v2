@@ -1,8 +1,10 @@
 <script setup>
+import { computed } from 'vue'
+
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
 
-defineProps({
+const props = defineProps({
   periodStart: {
     type: String,
     default: '2026-03-01',
@@ -26,6 +28,7 @@ defineProps({
 })
 
 const emit = defineEmits(['start'])
+const participantCount = computed(() => 2 + props.selectedBotTypes.length)
 
 function formatCurrency(val) {
   return new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(val)
@@ -48,7 +51,7 @@ function formatCurrency(val) {
     <!-- Participants Summary Card -->
     <div class="participants-box">
       <div class="box-header">
-        <span class="box-tag">PARTICIPANTS · 4</span>
+        <span class="box-tag">PARTICIPANTS · {{ participantCount }}</span>
         <span class="status-tag">구성 완료</span>
       </div>
 
@@ -63,7 +66,7 @@ function formatCurrency(val) {
         </div>
         <div v-if="selectedBotTypes.includes('FAMOUS_STRATEGY')" class="p-chip blue">
           <AppIcon name="landmark" :size="12" />
-          <span>가치·품질 퀀트 봇</span>
+          <span>가치·품질 봇</span>
         </div>
         <div v-if="selectedBotTypes.includes('RANDOM_BOT')" class="p-chip orange">
           <span>원숭이 랜덤 봇</span>
@@ -98,7 +101,7 @@ function formatCurrency(val) {
 
     <!-- Action Footer -->
     <div class="action-footer">
-      <BaseButton variant="primary" block size="large" @click="emit('start')">
+      <BaseButton variant="primary" full-width @click="emit('start')">
         <AppIcon name="play" :size="18" />
         <span>백테스트 연산 실행하기</span>
       </BaseButton>
@@ -268,20 +271,22 @@ function formatCurrency(val) {
 
 .setting-label {
   font-size: 11px;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .setting-value {
+  font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 .primary-color {
-  color: #2563eb;
+  color: var(--brand-teal-deep);
 }
 
 .action-footer {
+  width: 100%;
   margin-top: 8px;
 }
 </style>

@@ -40,7 +40,13 @@ function formatPercent(val) {
     <!-- Hero Card: 같은 날, 같은 돈으로 다시 투자해 본다면? -->
     <div class="hero-card">
       <!-- Help Icon (top right) -->
-      <button class="help-btn" type="button" @click="showHelpModal = !showHelpModal">
+      <button
+        class="help-btn"
+        type="button"
+        aria-label="시뮬레이션 도움말"
+        :aria-expanded="showHelpModal"
+        @click="showHelpModal = !showHelpModal"
+      >
         <AppIcon name="circle-check" :size="18" class="help-icon" />
       </button>
 
@@ -57,6 +63,10 @@ function formatPercent(val) {
       <p class="hero-description">
         최신 원칙으로 만든 나의 투자봇과 비교 기준 봇이 같은 조건에서 선택을 다시 실행해요.
       </p>
+
+      <div v-if="showHelpModal" class="help-panel">
+        실제 거래는 바뀌지 않아요. 같은 기간과 자금으로 각 전략의 결과만 비교합니다.
+      </div>
 
       <!-- Participants Pill Row -->
       <div class="participants-row">
@@ -79,7 +89,7 @@ function formatPercent(val) {
       </div>
 
       <!-- Main CTA Button -->
-      <BaseButton variant="primary" block size="large" class="dark-cta" @click="emit('startSimulation')">
+      <BaseButton variant="primary" full-width class="dark-cta" @click="emit('startSimulation')">
         <span>최신 원칙 봇 만들기</span>
         <AppIcon name="arrow-right" :size="18" />
       </BaseButton>
@@ -124,8 +134,8 @@ function formatPercent(val) {
   flex-direction: column;
   gap: 16px;
   width: 100%;
-  padding: 0 20px 20px 20px;
-  background: #ffffff;
+  padding: 8px 20px 32px;
+  background: var(--bg-primary);
   box-sizing: border-box;
 }
 
@@ -134,8 +144,9 @@ function formatPercent(val) {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 20px;
-  background: #f5fbfb;
+  padding: 22px 20px 20px;
+  background:
+    radial-gradient(circle at 95% 5%, rgba(11, 143, 139, 0.12), transparent 38%), var(--brand-mist);
   border: 1px solid #cdedea;
   border-radius: 18px;
 }
@@ -185,6 +196,16 @@ function formatPercent(val) {
   color: #666662;
 }
 
+.help-panel {
+  padding: 10px 12px;
+  border: 1px solid #d7ecea;
+  border-radius: 10px;
+  background: rgb(255 255 255 / 80%);
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
 .participants-row {
   display: flex;
   gap: 6px;
@@ -228,7 +249,7 @@ function formatPercent(val) {
 
 .history-title {
   margin: 0;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   color: #181817;
 }
@@ -245,15 +266,17 @@ function formatPercent(val) {
 .history-list {
   display: flex;
   flex-direction: column;
-  border-top: 1px solid #e4e9ea;
-  border-bottom: 1px solid #e4e9ea;
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: 14px;
+  background: var(--color-surface);
 }
 
 .history-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 0;
+  padding: 14px;
   border-bottom: 1px solid #eeeeea;
   cursor: pointer;
   transition: background 0.15s ease;
@@ -310,7 +333,7 @@ function formatPercent(val) {
 }
 
 .return-text.positive {
-  color: #dc2626;
+  color: var(--brand-red);
 }
 
 .arrow-icon {

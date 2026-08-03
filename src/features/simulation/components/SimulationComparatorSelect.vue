@@ -49,7 +49,7 @@ function toggleSelect(type) {
     <div class="select-header">
       <div class="select-header__title-row">
         <h2 class="select-header__title">누구와 비교해볼까요?</h2>
-        <span class="step-pill">2 / 2</span>
+        <span class="step-pill">1 / 2</span>
       </div>
       <p class="select-header__description">
         실제 나와 최신 원칙 봇은 자동으로 참가해요.<br />
@@ -99,11 +99,13 @@ function toggleSelect(type) {
       </div>
 
       <div class="comparators-list">
-        <div
+        <button
           v-for="bot in availableComparators"
           :key="bot.type"
+          type="button"
           class="comparator-card"
           :class="{ selected: selectedComparators.includes(bot.type) }"
+          :aria-pressed="selectedComparators.includes(bot.type)"
           @click="toggleSelect(bot.type)"
         >
           <div class="comparator-card__icon">
@@ -121,17 +123,10 @@ function toggleSelect(type) {
             <span class="bot-desc">{{ bot.description }}</span>
           </div>
 
-          <button
-            class="check-btn"
-            :class="{ active: selectedComparators.includes(bot.type) }"
-            type="button"
-          >
-            <AppIcon
-              :name="selectedComparators.includes(bot.type) ? 'check' : 'plus'"
-              :size="16"
-            />
-          </button>
-        </div>
+          <span class="check-btn" :class="{ active: selectedComparators.includes(bot.type) }">
+            <AppIcon :name="selectedComparators.includes(bot.type) ? 'check' : 'plus'" :size="16" />
+          </span>
+        </button>
       </div>
     </div>
 
@@ -142,12 +137,7 @@ function toggleSelect(type) {
 
     <!-- Action Button -->
     <div class="action-footer">
-      <BaseButton
-        variant="primary"
-        block
-        size="large"
-        @click="emit('confirm', selectedComparators)"
-      >
+      <BaseButton variant="primary" full-width @click="emit('confirm', selectedComparators)">
         <span>{{ totalParticipantsCount }}명으로 시작 조건 설정하기</span>
         <AppIcon name="arrow-right" :size="18" />
       </BaseButton>
@@ -332,6 +322,7 @@ function toggleSelect(type) {
 }
 
 .comparator-card {
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -339,6 +330,9 @@ function toggleSelect(type) {
   background: #ffffff;
   border: 1.5px solid #dce6e9;
   border-radius: 14px;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -346,6 +340,11 @@ function toggleSelect(type) {
 .comparator-card.selected {
   border-color: #0b8f8b;
   background: #ffffff;
+}
+
+.comparator-card:focus-visible {
+  outline: 3px solid rgba(11, 143, 139, 0.2);
+  outline-offset: 2px;
 }
 
 .comparator-card__icon {
@@ -430,6 +429,7 @@ function toggleSelect(type) {
 }
 
 .action-footer {
+  width: 100%;
   margin-top: 4px;
 }
 </style>

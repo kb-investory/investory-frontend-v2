@@ -12,11 +12,7 @@ defineProps({
     <div class="header-top">
       <h1 class="header-title">시뮬레이션</h1>
       <div class="logo-wrapper">
-        <img
-          src="/assets/logos/investory-logo.png"
-          alt="Investory"
-          class="header-logo"
-        />
+        <img src="/assets/logos/investory-logo.png" alt="Investory" class="header-logo" />
       </div>
     </div>
     <p class="header-subtitle">{{ subtitle }}</p>
@@ -29,8 +25,8 @@ defineProps({
   flex-direction: column;
   gap: 5px;
   width: 100%;
-  padding: 12px 20px;
-  background: #ffffff;
+  padding: 12px 0 4px;
+  background: transparent;
   box-sizing: border-box;
 }
 
@@ -44,7 +40,7 @@ defineProps({
 .header-title {
   margin: 0;
   font-family: 'Funnel Sans', system-ui, sans-serif;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 800;
   letter-spacing: -0.4px;
   color: #181817;
@@ -52,8 +48,8 @@ defineProps({
 }
 
 .logo-wrapper {
-  width: 100px;
-  height: 35px;
+  width: 88px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: flex-end;

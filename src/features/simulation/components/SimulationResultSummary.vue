@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 import AppIcon from '@/shared/components/AppIcon.vue'
@@ -13,6 +14,17 @@ const props = defineProps({
 
 const emit = defineEmits(['restart'])
 const router = useRouter()
+
+const rankedParticipants = computed(() =>
+  [...(props.latestResult?.participantSummary ?? [])].sort(
+    (a, b) => b.cumulativeReturnPercent - a.cumulativeReturnPercent,
+  ),
+)
+const winner = computed(() => rankedParticipants.value[0] ?? null)
+const resultPeriod = computed(() => {
+  const run = props.latestResult?.simulationRun
+  return run ? `${run.periodStart} — ${run.periodEnd}` : ''
+})
 
 function goToPrinciplesEdit() {
   router.push('/tendency/principles/edit')
@@ -49,7 +61,7 @@ function getVariantBadge(type) {
     <!-- Top Status Header -->
     <div class="result-header">
       <span class="race-complete-badge">RACE COMPLETE</span>
-      <span class="period-text">2026.03.01 — 2026.07.29</span>
+      <span class="period-text">{{ resultPeriod }}</span>
     </div>
 
     <!-- Winner Hero Card (Screen 1G) -->
@@ -59,9 +71,10 @@ function getVariantBadge(type) {
       </div>
 
       <div class="winner-hero__content">
-        <h2 class="winner-title">나의 투자봇 v1이 1위예요</h2>
+        <h2 class="winner-title">{{ winner?.variantName ?? '시뮬레이션' }}이 1위예요</h2>
         <p class="winner-sub">
-          최종 자산 <strong>₩5,850,000</strong> (+17.0%)
+          최종 자산 <strong>{{ formatCurrency(winner?.totalEquity ?? 0) }}</strong>
+          {{ formatPercent(winner?.cumulativeReturnPercent) }}
         </p>
       </div>
     </div>
@@ -72,13 +85,15 @@ function getVariantBadge(type) {
 
       <div v-if="latestResult" class="rankings-list">
         <div
-          v-for="(bot, index) in latestResult.participantSummary"
+          v-for="(bot, index) in rankedParticipants"
           :key="bot.variantId"
           class="bot-rank-card"
           :class="{ 'bot-rank-card--first': index === 0 }"
         >
           <div class="bot-rank-card__left">
-            <span class="rank-num" :class="{ 'rank-num--first': index === 0 }">{{ index + 1 }}</span>
+            <span class="rank-num" :class="{ 'rank-num--first': index === 0 }">{{
+              index + 1
+            }}</span>
             <div class="bot-info">
               <div class="name-row">
                 <span class="bot-name">{{ bot.variantName }}</span>
@@ -91,7 +106,10 @@ function getVariantBadge(type) {
           <div class="bot-rank-card__right">
             <span
               class="return-value"
-              :class="{ positive: bot.cumulativeReturnPercent > 0, negative: bot.cumulativeReturnPercent < 0 }"
+              :class="{
+                positive: bot.cumulativeReturnPercent > 0,
+                negative: bot.cumulativeReturnPercent < 0,
+              }"
             >
               {{ formatPercent(bot.cumulativeReturnPercent) }}
             </span>
@@ -125,12 +143,12 @@ function getVariantBadge(type) {
 
     <!-- Bottom Actions -->
     <div class="action-buttons">
-      <BaseButton variant="primary" block size="large" @click="emit('restart')">
+      <BaseButton variant="primary" full-width @click="emit('restart')">
         <AppIcon name="rotate-ccw" :size="18" />
         <span>다시 시뮬레이션하기</span>
       </BaseButton>
 
-      <BaseButton variant="secondary" block size="large" @click="goToPrinciplesEdit">
+      <BaseButton variant="secondary" full-width @click="goToPrinciplesEdit">
         <AppIcon name="pencil" :size="18" />
         <span>투자 원칙 수정하러 가기</span>
       </BaseButton>
@@ -318,8 +336,12 @@ function getVariantBadge(type) {
   font-weight: 700;
 }
 
-.return-value.positive { color: #dc2626; }
-.return-value.negative { color: #2563eb; }
+.return-value.positive {
+  color: var(--brand-red);
+}
+.return-value.negative {
+  color: var(--brand-blue);
+}
 
 .mdd-text {
   font-size: 10px;
@@ -355,13 +377,13 @@ function getVariantBadge(type) {
 }
 
 .trade-badge.buy {
-  background: #fee2e2;
-  color: #dc2626;
+  background: var(--brand-red-soft);
+  color: var(--brand-red);
 }
 
 .trade-badge.sell {
-  background: #dbeafe;
-  color: #2563eb;
+  background: var(--brand-blue-soft);
+  color: var(--brand-blue);
 }
 
 .trade-date {

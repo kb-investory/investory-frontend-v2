@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import AppIcon from '@/shared/components/AppIcon.vue'
 import StatusBadge from '@/shared/components/badges/StatusBadge.vue'
@@ -8,17 +8,55 @@ const props = defineProps({
   participants: {
     type: Array,
     default: () => [
-      { variantId: 1, variantName: '실제 나', variantType: 'ACTUAL_USER', totalEquity: 5250000, cumulativeReturnPercent: 5.0 },
-      { variantId: 2, variantName: '나의 투자봇 v1', variantType: 'PERSONAL_BOT', totalEquity: 5850000, cumulativeReturnPercent: 17.0 },
-      { variantId: 3, variantName: '우량 가치·품질 퀀트 봇', variantType: 'FAMOUS_STRATEGY', totalEquity: 5400000, cumulativeReturnPercent: 8.0 },
-      { variantId: 4, variantName: '원숭이 봇', variantType: 'RANDOM_BOT', totalEquity: 4900000, cumulativeReturnPercent: -2.0 },
+      {
+        variantId: 1,
+        variantName: '실제 나',
+        variantType: 'ACTUAL_USER',
+        totalEquity: 5250000,
+        cumulativeReturnPercent: 5.0,
+      },
+      {
+        variantId: 2,
+        variantName: '나의 투자봇 v1',
+        variantType: 'PERSONAL_BOT',
+        totalEquity: 5850000,
+        cumulativeReturnPercent: 17.0,
+      },
+      {
+        variantId: 3,
+        variantName: '우량 가치·품질 퀀트 봇',
+        variantType: 'FAMOUS_STRATEGY',
+        totalEquity: 5400000,
+        cumulativeReturnPercent: 8.0,
+      },
+      {
+        variantId: 4,
+        variantName: '원숭이 봇',
+        variantType: 'RANDOM_BOT',
+        totalEquity: 4900000,
+        cumulativeReturnPercent: -2.0,
+      },
     ],
   },
   simulatedTrades: {
     type: Array,
     default: () => [
-      { simulatedTradeId: 1001, tradeSide: 'BUY', tradedAt: '2026-03-05', unitPrice: 70000, quantity: 10, decisionReason: '[AI 팩터 통과] 팩터 점수 78.5점으로 최소 기준 초과 및 상승 추세 감지' },
-      { simulatedTradeId: 1002, tradeSide: 'SELL', tradedAt: '2026-04-12', unitPrice: 82000, quantity: 5, decisionReason: '[원칙 익절 실행] 목표 수익률 +15% 달성에 따른 50% 분할 익절 매도' },
+      {
+        simulatedTradeId: 1001,
+        tradeSide: 'BUY',
+        tradedAt: '2026-03-05',
+        unitPrice: 70000,
+        quantity: 10,
+        decisionReason: '[AI 팩터 통과] 팩터 점수 78.5점으로 최소 기준 초과 및 상승 추세 감지',
+      },
+      {
+        simulatedTradeId: 1002,
+        tradeSide: 'SELL',
+        tradedAt: '2026-04-12',
+        unitPrice: 82000,
+        quantity: 5,
+        decisionReason: '[원칙 익절 실행] 목표 수익률 +15% 달성에 따른 50% 분할 익절 매도',
+      },
     ],
   },
 })
@@ -29,6 +67,12 @@ const progress = ref(0)
 const speed = ref(1)
 const isPlaying = ref(true)
 let timer = null
+
+const rankedParticipants = computed(() =>
+  [...(props.participants ?? [])].sort(
+    (a, b) => b.cumulativeReturnPercent - a.cumulativeReturnPercent,
+  ),
+)
 
 function startSimulation() {
   if (timer) clearInterval(timer)
@@ -118,10 +162,10 @@ function formatPercent(val) {
 
       <div class="rankings-list">
         <div
-          v-for="(bot, index) in participants"
+          v-for="(bot, index) in rankedParticipants"
           :key="bot.variantId"
           class="rank-card"
-          :class="{ 'rank-card--top': bot.variantType === 'PERSONAL_BOT' }"
+          :class="{ 'rank-card--top': index === 0 }"
         >
           <div class="rank-badge">{{ index + 1 }}위</div>
 
@@ -132,7 +176,10 @@ function formatPercent(val) {
 
           <span
             class="rank-return"
-            :class="{ positive: bot.cumulativeReturnPercent > 0, negative: bot.cumulativeReturnPercent < 0 }"
+            :class="{
+              positive: bot.cumulativeReturnPercent > 0,
+              negative: bot.cumulativeReturnPercent < 0,
+            }"
           >
             {{ formatPercent(bot.cumulativeReturnPercent) }}
           </span>
@@ -201,9 +248,18 @@ function formatPercent(val) {
 }
 
 @keyframes pulse {
-  0% { transform: scale(0.95); opacity: 0.7; }
-  50% { transform: scale(1.3); opacity: 1; }
-  100% { transform: scale(0.95); opacity: 0.7; }
+  0% {
+    transform: scale(0.95);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0.7;
+  }
 }
 
 .speed-controls {
@@ -264,7 +320,7 @@ function formatPercent(val) {
 }
 
 .progress-percent {
-  color: #0b8f8b;
+  color: #73ddd7;
   font-weight: 700;
 }
 
@@ -278,7 +334,7 @@ function formatPercent(val) {
 
 .progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #0b8f8b 0%, #3b82f6 100%);
+  background: var(--brand-teal);
   border-radius: 4px;
   transition: width 0.1s linear;
 }
@@ -357,8 +413,12 @@ function formatPercent(val) {
   font-weight: 700;
 }
 
-.rank-return.positive { color: #dc2626; }
-.rank-return.negative { color: #2563eb; }
+.rank-return.positive {
+  color: var(--brand-red);
+}
+.rank-return.negative {
+  color: var(--brand-blue);
+}
 
 .trades-feed {
   display: flex;
@@ -405,13 +465,13 @@ function formatPercent(val) {
 }
 
 .trade-side.buy {
-  background: #fee2e2;
-  color: #dc2626;
+  background: var(--brand-red-soft);
+  color: var(--brand-red);
 }
 
 .trade-side.sell {
-  background: #dbeafe;
-  color: #2563eb;
+  background: var(--brand-blue-soft);
+  color: var(--brand-blue);
 }
 
 .trade-time {

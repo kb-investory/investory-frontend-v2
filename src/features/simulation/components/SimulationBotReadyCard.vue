@@ -74,7 +74,7 @@ const emit = defineEmits(['next'])
 
     <!-- Bottom Action -->
     <div class="action-footer">
-      <BaseButton variant="primary" block size="large" @click="emit('next')">
+      <BaseButton variant="primary" full-width @click="emit('next')">
         <span>비교 봇 선택하기</span>
         <AppIcon name="arrow-right" :size="18" />
       </BaseButton>
@@ -209,6 +209,7 @@ const emit = defineEmits(['next'])
 }
 
 .action-footer {
+  width: 100%;
   margin-top: 8px;
 }
 </style>

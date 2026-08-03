@@ -5,7 +5,7 @@ import SimulationHeader from '@/features/simulation/components/SimulationHeader.
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
 
-const props = defineProps({
+defineProps({
   eligibleDays: {
     type: Number,
     default: 3,
@@ -47,7 +47,9 @@ function goToJournalNew() {
       <div class="progress-card__header">
         <div class="header-titles">
           <h3 class="card-title">데이터 수집 {{ eligibleDays }}일째</h3>
-          <span class="card-subtitle">최소 {{ minRequiredDays }}일 중 {{ eligibleDays }}일이 쌓였어요</span>
+          <span class="card-subtitle"
+            >최소 {{ minRequiredDays }}일 중 {{ eligibleDays }}일이 쌓였어요</span
+          >
         </div>
         <span class="progress-count">{{ eligibleDays }} / {{ minRequiredDays }}</span>
       </div>
@@ -96,7 +98,9 @@ function goToJournalNew() {
         <div class="checklist-item pending">
           <div class="item-left">
             <AppIcon name="history" :size="18" class="icon-pending" />
-            <span class="item-text pending-text">앞으로 {{ minRequiredDays - eligibleDays }}일 더 수집</span>
+            <span class="item-text pending-text"
+              >앞으로 {{ minRequiredDays - eligibleDays }}일 더 수집</span
+            >
           </div>
           <span class="item-status pending">대기</span>
         </div>
@@ -125,7 +129,7 @@ function goToJournalNew() {
 
     <!-- Bottom CTA Button -->
     <div class="cta-container">
-      <BaseButton variant="primary" block size="large" class="dark-cta" @click="goToJournalNew">
+      <BaseButton variant="primary" full-width class="dark-cta" @click="goToJournalNew">
         <span>오늘의 투자 기록 남기기</span>
         <AppIcon name="pencil" :size="18" />
       </BaseButton>
@@ -139,8 +143,8 @@ function goToJournalNew() {
   flex-direction: column;
   gap: 14px;
   width: 100%;
-  padding: 0 20px 20px 20px;
-  background: #ffffff;
+  padding: 8px 20px 32px;
+  background: var(--bg-primary);
   box-sizing: border-box;
 }
 
@@ -363,7 +367,11 @@ function goToJournalNew() {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

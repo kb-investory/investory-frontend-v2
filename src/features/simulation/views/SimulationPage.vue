@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import SimulationBotReadyCard from '@/features/simulation/components/SimulationBotReadyCard.vue'
@@ -16,15 +16,34 @@ import AppBar from '@/shared/components/navigation/AppBar.vue'
 const route = useRoute()
 const router = useRouter()
 const simulationStore = useSimulationStore()
-const currentStep = ref('home') // 'home' | 'bot_ready' | 'comparator_select' | 'condition_setup' | 'live' | 'result'
+const pageRoot = ref(null)
 const selectedComparators = ref(['FAMOUS_STRATEGY'])
+
+const STEP_PATHS = {
+  home: '/simulation/dashboard',
+  bot_ready: '/simulation/bot-ready',
+  comparator_select: '/simulation/comparators',
+  condition_setup: '/simulation/setup',
+  live: '/simulation/live',
+  result: '/simulation/result',
+}
+
+const STEP_BY_PATH = Object.fromEntries(
+  Object.entries(STEP_PATHS).map(([step, path]) => [path, step]),
+)
+
+const currentStep = computed(() => STEP_BY_PATH[route.path] ?? 'home')
 
 // Compute effective view mode based on route path / query or store readiness
 const effectiveMode = computed(() => {
   if (route.path.includes('/wysmi') || route.query.state === 'wysmi') {
     return 'wysmi'
   }
-  if (route.path.includes('/dashboard') || route.query.state === 'dashboard') {
+  if (
+    route.path.includes('/dashboard') ||
+    currentStep.value !== 'home' ||
+    route.query.state === 'dashboard'
+  ) {
     return 'dashboard'
   }
   return simulationStore.isReady ? 'dashboard' : 'wysmi'
@@ -34,75 +53,62 @@ onMounted(async () => {
   await simulationStore.fetchOverview()
 })
 
-// Navigation helpers to switch routes
-function navigateToDashboard() {
-  router.push('/simulation/dashboard')
-}
-
-function navigateToWysmi() {
-  router.push('/simulation/wysmi')
-}
+watch(currentStep, async () => {
+  await nextTick()
+  pageRoot.value?.closest('.mobile-main')?.scrollTo({ top: 0 })
+})
 
 // Flow step control functions
 function startBotCreation() {
-  currentStep.value = 'bot_ready'
+  router.push(STEP_PATHS.bot_ready)
 }
 
 function goToComparatorSelect() {
-  currentStep.value = 'comparator_select'
+  router.push(STEP_PATHS.comparator_select)
 }
 
 function handleConfirmComparators(botTypes) {
   selectedComparators.value = botTypes
-  currentStep.value = 'condition_setup'
+  router.push(STEP_PATHS.condition_setup)
 }
 
 function startLiveSimulation() {
-  currentStep.value = 'live'
+  router.push(STEP_PATHS.live)
 }
 
 function finishLiveSimulation() {
-  currentStep.value = 'result'
+  router.push(STEP_PATHS.result)
 }
 
 function restartFlow() {
-  currentStep.value = 'home'
+  router.push(STEP_PATHS.home)
+}
+
+function goBack() {
+  const previousSteps = {
+    bot_ready: 'home',
+    comparator_select: 'bot_ready',
+    condition_setup: 'comparator_select',
+    live: 'condition_setup',
+    result: 'home',
+  }
+
+  router.push(STEP_PATHS[previousSteps[currentStep.value] ?? 'home'])
 }
 </script>
 
 <template>
-  <div class="mobile-page">
+  <div ref="pageRoot" class="mobile-page">
     <!-- Sub-step AppBar (Shown only when in a sub-flow step) -->
     <AppBar
       v-if="currentStep !== 'home'"
       title="시뮬레이션"
       :show-back="true"
       :show-close="false"
-      @back="currentStep = 'home'"
+      @back="goBack"
     />
 
     <div class="mobile-page__content">
-      <!-- Quick Route Switcher Bar for direct URL verification -->
-      <div v-if="currentStep === 'home'" class="url-switcher-bar">
-        <span class="switcher-label">화면 바로보기 주소:</span>
-        <div class="switcher-buttons">
-          <button
-            class="switcher-btn"
-            :class="{ active: effectiveMode === 'dashboard' }"
-            @click="navigateToDashboard"
-          >
-            /simulation/dashboard
-          </button>
-          <button
-            class="switcher-btn"
-            :class="{ active: effectiveMode === 'wysmi' }"
-            @click="navigateToWysmi"
-          >
-            /simulation/wysmi
-          </button>
-        </div>
-      </div>
-
       <!-- Loading State -->
       <div v-if="simulationStore.loading && !simulationStore.overview" class="loading-state">
         <AppIcon name="loader-circle" :size="24" class="spin" />
@@ -117,7 +123,11 @@ function restartFlow() {
       />
 
       <!-- Screen 1: Ready State / Main Entry Screen (/simulation/dashboard) & Interactive Flow -->
-      <div v-else class="flow-container">
+      <div
+        v-else
+        class="flow-container"
+        :class="{ 'flow-container--subflow': currentStep !== 'home' }"
+      >
         <!-- Step 0 (Default Entry): Screen 1 (원칙 중심) -->
         <SimulationDashboard
           v-if="currentStep === 'home'"
@@ -135,7 +145,6 @@ function restartFlow() {
         <!-- Step 1C-2: Comparator Bot Selection -->
         <SimulationComparatorSelect
           v-else-if="currentStep === 'comparator_select'"
-          @back="currentStep = 'bot_ready'"
           @confirm="handleConfirmComparators"
         />
 
@@ -173,57 +182,14 @@ function restartFlow() {
 .mobile-page {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  background: #ffffff;
+  background: var(--bg-primary);
   min-height: 100%;
 }
 
 .mobile-page__content {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-}
-
-.url-switcher-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  margin: 12px 20px 0 20px;
-  font-size: 11px;
-}
-
-.switcher-label {
-  font-weight: 700;
-  color: #475569;
-}
-
-.switcher-buttons {
-  display: flex;
-  gap: 6px;
-}
-
-.switcher-btn {
-  padding: 4px 8px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px;
-  font-weight: 600;
-  color: #64748b;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.switcher-btn.active {
-  background: #263a43;
-  color: #ffffff;
-  border-color: #263a43;
-  font-weight: 700;
+  flex: 1;
 }
 
 .loading-state {
@@ -231,8 +197,8 @@ function restartFlow() {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 40px 0;
-  color: #64748b;
+  padding: 64px 20px;
+  color: var(--text-secondary);
   font-size: 13px;
 }
 
@@ -241,13 +207,21 @@ function restartFlow() {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .flow-container {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.flow-container--subflow {
+  padding: 20px 20px 32px;
 }
 </style>
