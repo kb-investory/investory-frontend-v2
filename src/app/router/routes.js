@@ -122,7 +122,12 @@ export const routes = [
     path: '/simulation',
     name: ROUTE_NAMES.SIMULATION,
     component: () => import('@/features/simulation/views/SimulationPage.vue'),
-    meta: { title: '시뮬레이션' },
+    meta: {
+      title: '시뮬레이션',
+      layout: 'full-bleed',
+      frameHeight: 980,
+      mainBottomPadding: 84,
+    },
   },
   {
     path: '/mypage',

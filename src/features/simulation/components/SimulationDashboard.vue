@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 
+import SimulationHeader from '@/features/simulation/components/SimulationHeader.vue'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
 
@@ -33,7 +34,8 @@ function formatPercent(val) {
 
 <template>
   <div class="dashboard-page-container">
-    <!-- Hero Card: 같은 날, 같은 돈으로 다시 투자해 본다면? -->
+    <!-- Header (Screen 1: 원칙 중심) -->
+    <SimulationHeader subtitle="나의 선택을 과거 시장에서 다시 확인해요." />
 
     <!-- Hero Card: 같은 날, 같은 돈으로 다시 투자해 본다면? -->
     <div class="hero-card">
@@ -122,12 +124,8 @@ function formatPercent(val) {
   flex-direction: column;
   gap: 16px;
   width: 100%;
-}
-
-.page-subtitle {
-  font-size: 12px;
-  color: #666662;
-  margin-top: -6px;
+  padding: 0 20px 20px 20px;
+  box-sizing: border-box;
 }
 
 .hero-card {

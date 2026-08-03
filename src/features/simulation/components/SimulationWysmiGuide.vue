@@ -1,6 +1,7 @@
 <script setup>
 import { useRouter } from 'vue-router'
 
+import SimulationHeader from '@/features/simulation/components/SimulationHeader.vue'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
 
@@ -24,7 +25,8 @@ function goToJournalNew() {
 
 <template>
   <div class="wysmi-page-container">
-    <!-- Hero Card: 실제 투자 데이터를 모으고 있어요 -->
+    <!-- Header (Screen 1A: 데이터 준비 중) -->
+    <SimulationHeader :subtitle="`최소 ${minRequiredDays}일의 실제 투자 데이터가 쌓이면 열려요.`" />
 
     <!-- Hero Card: 실제 투자 데이터를 모으고 있어요 -->
     <div class="wysmi-hero-card">
@@ -137,12 +139,8 @@ function goToJournalNew() {
   flex-direction: column;
   gap: 14px;
   width: 100%;
-}
-
-.page-subtitle {
-  font-size: 12px;
-  color: #666662;
-  margin-top: -6px;
+  padding: 0 20px 20px 20px;
+  box-sizing: border-box;
 }
 
 .wysmi-hero-card {
