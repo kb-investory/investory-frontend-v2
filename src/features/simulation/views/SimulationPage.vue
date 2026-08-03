@@ -130,6 +130,8 @@ function restartFlow() {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  background: #ffffff;
+  min-height: 100%;
 }
 
 .mobile-page__content {

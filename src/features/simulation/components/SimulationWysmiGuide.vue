@@ -140,6 +140,7 @@ function goToJournalNew() {
   gap: 14px;
   width: 100%;
   padding: 0 20px 20px 20px;
+  background: #ffffff;
   box-sizing: border-box;
 }
 

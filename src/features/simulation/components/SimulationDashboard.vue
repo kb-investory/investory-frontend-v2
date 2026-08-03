@@ -125,6 +125,7 @@ function formatPercent(val) {
   gap: 16px;
   width: 100%;
   padding: 0 20px 20px 20px;
+  background: #ffffff;
   box-sizing: border-box;
 }
 
