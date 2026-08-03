@@ -35,22 +35,16 @@ export const useJournalStore = defineStore('journal', () => {
     }
   }
 
-  async function fetchMonthlyCalendar(year, month) {
+  async function fetchCalendarRange(startDate, endDate) {
     const requestId = ++latestCalendarRequestId
 
     loading.value = true
     error.value = ''
 
-    const lastDay = new Date(year, month, 0).getDate()
-    const monthKey = `${year}-${String(month).padStart(2, '0')}`
-
     try {
       const [journalResponse, activityResponse] = await Promise.all([
-        getJournalEntries({
-          startDate: `${monthKey}-01`,
-          endDate: `${monthKey}-${String(lastDay).padStart(2, '0')}`,
-        }),
-        getCalendarActivity({ year, month }),
+        getJournalEntries({ startDate, endDate }),
+        getCalendarActivity({ startDate, endDate }),
       ])
 
       if (requestId === latestCalendarRequestId) {
@@ -66,6 +60,16 @@ export const useJournalStore = defineStore('journal', () => {
         loading.value = false
       }
     }
+  }
+
+  async function fetchMonthlyCalendar(year, month) {
+    const lastDay = new Date(year, month, 0).getDate()
+    const monthKey = `${year}-${String(month).padStart(2, '0')}`
+
+    await fetchCalendarRange(
+      `${monthKey}-01`,
+      `${monthKey}-${String(lastDay).padStart(2, '0')}`,
+    )
   }
 
   async function fetchJournalDetail(journalId) {
@@ -184,6 +188,7 @@ export const useJournalStore = defineStore('journal', () => {
     loading,
     error,
     fetchJournals,
+    fetchCalendarRange,
     fetchMonthlyCalendar,
     fetchJournalDetail,
     fetchDailyEntry,

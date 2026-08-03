@@ -41,6 +41,19 @@ function normalizeDateKey(dateKey) {
     : dateKey
 }
 
+function getWeekRange(dateKey) {
+  const startDate = new Date(`${dateKey}T00:00:00`)
+  startDate.setDate(startDate.getDate() - startDate.getDay())
+
+  const endDate = new Date(startDate)
+  endDate.setDate(endDate.getDate() + 6)
+
+  return {
+    startDate: formatDateKey(startDate),
+    endDate: formatDateKey(endDate),
+  }
+}
+
 async function loadDate(dateKey) {
   const requestId = ++latestLoadRequestId
 
@@ -48,12 +61,12 @@ async function loadDate(dateKey) {
   loadError.value = ''
   entry.value = null
 
-  const date = new Date(`${dateKey}T00:00:00`)
+  const weekRange = getWeekRange(dateKey)
 
   try {
     const [dailyEntry] = await Promise.all([
       journalStore.fetchDailyEntry(dateKey),
-      journalStore.fetchMonthlyCalendar(date.getFullYear(), date.getMonth() + 1),
+      journalStore.fetchCalendarRange(weekRange.startDate, weekRange.endDate),
     ])
 
     if (requestId !== latestLoadRequestId) {
