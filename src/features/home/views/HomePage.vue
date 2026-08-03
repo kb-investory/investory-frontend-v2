@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
@@ -9,6 +9,7 @@ import HomeQuickActions from '@/features/home/components/HomeQuickActions.vue'
 import HomeSimulationCard from '@/features/home/components/HomeSimulationCard.vue'
 import TodayRecordHero from '@/features/home/components/TodayRecordHero.vue'
 import WeeklyRecordRhythm from '@/features/home/components/WeeklyRecordRhythm.vue'
+import { useHomeClock } from '@/features/home/composables/useHomeClock'
 import { useHomeStore } from '@/features/home/stores/homeStore'
 import { useBrokerConnectionStore } from '@/features/mypage/stores/brokerConnectionStore'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
@@ -20,9 +21,14 @@ const brokerStore = useBrokerConnectionStore()
 const journalRoute = { name: ROUTE_NAMES.JOURNAL_CREATE }
 const tendencyRoute = { name: ROUTE_NAMES.TENDENCY }
 const simulationRoute = { name: ROUTE_NAMES.SIMULATION }
-const weekdays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
-const today = new Date()
-const currentDateLabel = `${today.getFullYear()}. ${String(today.getMonth() + 1).padStart(2, '0')}. ${String(today.getDate()).padStart(2, '0')} · ${weekdays[today.getDay()]}`
+const { dateLabel, currentTime, remainingTime, dayProgressPercent } = useHomeClock()
+
+const liveToday = computed(() => ({
+  ...homeStore.dashboard?.today,
+  currentTime: currentTime.value,
+  remainingTime: remainingTime.value,
+  dayProgressPercent: dayProgressPercent.value,
+}))
 
 onMounted(() => homeStore.fetchDashboard())
 
@@ -40,7 +46,7 @@ function openSearch() {
     <div v-if="homeStore.dashboard" class="home-page__content">
       <HomeHeader
         logo-src="/assets/logos/investory-logo.png"
-        :date-label="currentDateLabel"
+        :date-label="dateLabel"
         @search="openSearch"
       />
 
@@ -52,7 +58,7 @@ function openSearch() {
         :total-valuation="brokerStore.totalValuation"
       />
 
-      <TodayRecordHero :today="homeStore.dashboard.today" @open-transactions="openTransactions" />
+      <TodayRecordHero :today="liveToday" @open-transactions="openTransactions" />
 
       <HomeQuickActions
         :journal-to="journalRoute"
