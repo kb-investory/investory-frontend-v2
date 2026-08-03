@@ -30,10 +30,10 @@ function goHome() {
           </span>
 
           <div class="complete-copy">
-            <h2>Investory에 오신 것을 환영해요</h2>
+            <h2>계좌 연결이 완료됐어요</h2>
             <p>
-              계좌와 보유 종목 연결이 완료됐어요.<br />
-              이제 투자 판단과 기록을 한곳에서 이어갈 수 있어요.
+              연결한 계좌와 보유 종목을 확인할 수 있어요.<br />
+              투자 기록과 자산 관리를 이어가보세요.
             </p>
           </div>
 
@@ -58,18 +58,18 @@ function goHome() {
           <aside class="complete-guide">
             <span><House :size="17" /></span>
             <div>
-              <strong>홈에서 바로 확인할 수 있어요</strong>
-              <p>연결된 계좌와 보유 종목 정보를 한눈에 확인하세요.</p>
+              <strong>연결한 자산을 확인해보세요</strong>
+              <p>홈에서 계좌와 보유 종목 정보를 한눈에 볼 수 있어요.</p>
             </div>
           </aside>
         </div>
 
         <footer class="complete-action">
           <BaseButton full-width @click="goHome">
-            Investory 홈으로 가기
+            홈에서 자산 확인하기
             <template #icon><ArrowRight :size="18" /></template>
           </BaseButton>
-          <p>연결된 계좌 정보는 설정에서 언제든 관리할 수 있어요.</p>
+          <p>연결된 계좌는 마이페이지에서 언제든 관리할 수 있어요.</p>
         </footer>
       </main>
     </div>

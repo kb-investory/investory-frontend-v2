@@ -124,7 +124,47 @@ export const routes = [
     path: '/mypage',
     name: ROUTE_NAMES.MYPAGE,
     component: () => import('@/features/mypage/views/MypagePage.vue'),
-    meta: { title: '내 정보' },
+    meta: { title: '마이페이지', layout: 'full-bleed', frameHeight: 920, mainBottomPadding: 82 },
+  },
+  {
+    path: '/mypage/profile/edit',
+    name: ROUTE_NAMES.MYPAGE_PROFILE_EDIT,
+    component: () => import('@/features/mypage/views/ProfileEditPage.vue'),
+    meta: { title: '프로필 수정', layout: 'full-bleed', hideBottomNav: true, frameHeight: 920 },
+  },
+  {
+    path: '/mypage/accounts',
+    name: ROUTE_NAMES.MYPAGE_ACCOUNTS,
+    component: () => import('@/features/mypage/views/ConnectedAccountsPage.vue'),
+    meta: {
+      title: '연결 계좌 관리',
+      layout: 'full-bleed',
+      frameHeight: 920,
+      mainBottomPadding: 82,
+    },
+  },
+  {
+    path: '/mypage/accounts/:accountId',
+    name: ROUTE_NAMES.MYPAGE_ACCOUNT_DETAIL,
+    component: () => import('@/features/mypage/views/AccountDetailPage.vue'),
+    meta: {
+      title: '계좌 상세',
+      layout: 'full-bleed',
+      frameHeight: 920,
+      mainBottomPadding: 82,
+    },
+  },
+  {
+    path: '/mypage/simulations/:simulationId',
+    name: ROUTE_NAMES.MYPAGE_SIMULATION_DETAIL,
+    component: () => import('@/features/mypage/views/MypagePlaceholderPage.vue'),
+    meta: { title: '시뮬레이션 결과', layout: 'full-bleed', hideBottomNav: true },
+  },
+  {
+    path: '/mypage/support/:section',
+    name: ROUTE_NAMES.MYPAGE_PLACEHOLDER,
+    component: () => import('@/features/mypage/views/MypagePlaceholderPage.vue'),
+    meta: { title: '마이페이지 안내', layout: 'full-bleed', hideBottomNav: true },
   },
   {
     path: '/ui-kit',
