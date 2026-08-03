@@ -530,8 +530,11 @@ onBeforeUnmount(() => {
 <style scoped>
 .tendency-page {
   display: flex;
+  min-height: 100%;
   flex-direction: column;
   gap: 13px;
+  background: #ffffff;
+  box-shadow: 0 0 0 20px #ffffff;
 }
 
 .tendency-floating-stack {

@@ -110,8 +110,11 @@ onMounted(() => tendencyStore.fetchTendencies())
 <style scoped>
 .history-detail-page {
   display: flex;
+  min-height: 100%;
   flex-direction: column;
   gap: 17px;
+  background: #ffffff;
+  box-shadow: 0 0 0 20px #ffffff;
 }
 
 .detail-app-bar {

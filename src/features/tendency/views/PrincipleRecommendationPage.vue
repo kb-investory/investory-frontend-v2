@@ -282,6 +282,8 @@ onBeforeUnmount(() => {
   min-height: 100%;
   flex-direction: column;
   gap: 13px;
+  background: #ffffff;
+  box-shadow: 0 0 0 20px #ffffff;
 }
 
 .detail-app-bar {
@@ -296,7 +298,7 @@ onBeforeUnmount(() => {
   margin: -20px -20px 0;
   padding: 10px 20px 7px;
   border-bottom: 1px solid rgba(222, 229, 229, 0.78);
-  background: rgba(246, 244, 239, 0.94);
+  background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(10px);
 }
 
