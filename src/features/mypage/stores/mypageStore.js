@@ -88,13 +88,14 @@ export const useMypageStore = defineStore('mypage', () => {
         (participant) => participant.variantType === 'PERSONAL_BOT',
       )
       const personalBot = rankedParticipants[personalBotIndex]
-      recentSimulation.value = personalBot
-        ? {
-            simulationId: simulationResult.simulationRun?.simulationRunId,
-            botName: personalBot.variantName,
-            rank: personalBotIndex + 1,
-          }
-        : overview.recentSimulation
+      recentSimulation.value =
+        overview.recentSimulation && personalBot
+          ? {
+              simulationId: simulationResult.simulationRun?.simulationRunId,
+              botName: personalBot.variantName,
+              rank: personalBotIndex + 1,
+            }
+          : overview.recentSimulation
       accounts.value = overview.accounts
       appInfo.value = overview.appInfo
       hasTendencyAnalysis.value = Boolean(analysis)

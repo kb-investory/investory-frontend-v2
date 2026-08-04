@@ -1,6 +1,6 @@
 import tendencyData from '@/mocks/data/tendency.json'
 
-const FLOW_STORAGE_KEY = 'investory:mock:tendency-flow:v2'
+const FLOW_STORAGE_KEY = 'investory:mock:tendency-flow:v3'
 const MINIMUM_RECORD_DAYS = 90
 
 function formatDateKey(date) {

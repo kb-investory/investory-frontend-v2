@@ -1,6 +1,6 @@
 import mypageData from '@/mocks/data/mypage.json'
 
-const MYPAGE_STORAGE_KEY = 'investory:mock:mypage:v4'
+const MYPAGE_STORAGE_KEY = 'investory:mock:mypage:v5'
 const MOCK_DELAY = 450
 
 function clone(value) {
