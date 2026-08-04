@@ -1,4 +1,5 @@
 import stockSearchData from '@/mocks/data/journal-stock-search.json'
+import stockTimelineData from '@/mocks/data/journal-stock-timeline.json'
 
 const RECENT_STOCKS_KEY = 'investory-journal-recent-stocks'
 
@@ -64,4 +65,58 @@ export async function saveRecentJournalStock(securityCode) {
   }
 
   return clone(nextCodes)
+}
+
+export async function getJournalStockTimeline({
+  securityCode,
+  startDate,
+  endDate,
+  page = 0,
+  size = 20,
+}) {
+  const stock = stockSearchData.stocks.find((item) => item.securityCode === securityCode)
+  const timeline = stockTimelineData.stockTimelines[securityCode]
+
+  if (!stock || !timeline) {
+    throw new Error('종목 거래 일지를 찾을 수 없습니다.')
+  }
+
+  const filteredTrades = timeline.trades
+    .filter((trade) => {
+      const tradeDate = trade.tradedAt.slice(0, 10)
+
+      if (startDate && tradeDate < startDate) {
+        return false
+      }
+
+      if (endDate && tradeDate > endDate) {
+        return false
+      }
+
+      return true
+    })
+    .sort((a, b) => b.tradedAt.localeCompare(a.tradedAt))
+
+  const startIndex = page * size
+  const pagedTrades = filteredTrades.slice(startIndex, startIndex + size)
+
+  return clone({
+    security: {
+      securityId: stock.securityId,
+      securityCode: stock.securityCode,
+      securityName: stock.securityName,
+      marketType: stock.marketType ?? 'KOSPI',
+      brandKey: stock.brandKey,
+    },
+    holding: {
+      firstPurchasedAt: timeline.firstPurchasedAt,
+      currentQuantity: timeline.currentQuantity,
+      cumulativeProfitAmount: timeline.cumulativeProfitAmount,
+    },
+    trades: pagedTrades,
+    page,
+    size,
+    totalElements: filteredTrades.length,
+    totalPages: Math.ceil(filteredTrades.length / size),
+  })
 }
