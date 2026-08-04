@@ -83,11 +83,51 @@ const emit = defineEmits(['complete'])
 const progress = ref(0)
 const speed = ref(1)
 const isPlaying = ref(true)
+const liveChart = ref(null)
 let timer = null
 let lastFrameTime = null
 
+const securityNameById = {
+  101: 'SK하이닉스',
+  202: '삼성전자',
+  303: 'NAVER',
+  404: '카카오',
+  505: '현대차',
+  606: '셀트리온',
+}
+
 const timelineDates = computed(() =>
   [...new Set(props.dailyPerformance.map((snapshot) => snapshot.snapshotDate))].sort(),
+)
+
+const currentSimulationTimestamp = computed(() => {
+  if (timelineDates.value.length < 2) return null
+
+  const start = new Date(`${timelineDates.value[0]}T00:00:00`).getTime()
+  const end = new Date(`${timelineDates.value.at(-1)}T23:59:59`).getTime()
+  return start + (end - start) * (progress.value / 100)
+})
+
+const completedTrades = computed(() =>
+  props.simulatedTrades
+    .filter((trade) => {
+      const timestamp = new Date(trade.tradedAt).getTime()
+      return (
+        Number.isFinite(timestamp) &&
+        currentSimulationTimestamp.value &&
+        timestamp <= currentSimulationTimestamp.value
+      )
+    })
+    .sort((a, b) => new Date(a.tradedAt).getTime() - new Date(b.tradedAt).getTime()),
+)
+
+const latestTrade = computed(() => completedTrades.value.at(-1) ?? null)
+
+const latestTradeParticipant = computed(() =>
+  props.participants.find(
+    (participant) =>
+      String(participant.variantId) === String(latestTrade.value?.simulationVariantId),
+  ),
 )
 
 const performanceByVariant = computed(() => {
@@ -207,6 +247,14 @@ function goToNextStep() {
   emit('complete')
 }
 
+function openLatestTrade() {
+  if (!latestTrade.value) return
+  liveChart.value?.openTradeView(
+    latestTrade.value.simulationVariantId,
+    latestTrade.value.simulatedTradeId,
+  )
+}
+
 onMounted(() => {
   startSimulation()
 })
@@ -260,6 +308,58 @@ function formatPeriodDate(date) {
       </div>
     </div>
 
+    <button
+      :key="latestTrade?.simulatedTradeId ?? 'waiting'"
+      type="button"
+      class="live-trade-alert"
+      :class="{ 'is-waiting': !latestTrade }"
+      :disabled="!latestTrade"
+      @click="openLatestTrade"
+    >
+      <span class="live-trade-alert__avatar">
+        <SimulationParticipantAvatar
+          v-if="latestTradeParticipant"
+          :variant-type="latestTradeParticipant.variantType"
+          :size="40"
+        />
+        <span v-else class="live-trade-alert__waiting-icon">
+          <AppIcon name="activity" :size="17" />
+        </span>
+      </span>
+      <span class="live-trade-alert__content">
+        <small v-if="latestTrade">
+          <b :class="`is-${latestTrade.tradeSide.toLowerCase()}`">
+            {{ latestTrade.tradeSide === 'BUY' ? '매수' : '매도' }}
+          </b>
+          {{ latestTradeParticipant?.variantName ?? '참가자' }}
+        </small>
+        <small v-else>거래 신호를 기다리고 있어요</small>
+        <strong v-if="latestTrade">
+          {{ securityNameById[latestTrade.securityId] ?? `종목 ${latestTrade.securityId}` }}
+          {{ latestTrade.quantity }}주
+        </strong>
+        <strong v-else>매수·매도가 발생하면 바로 알려드릴게요</strong>
+        <span v-if="latestTrade">
+          주당 {{ formatCurrency(latestTrade.unitPrice) }}
+        </span>
+        <p v-if="latestTrade" class="live-trade-alert__reason">
+          <b>판단 근거</b>
+          {{ latestTrade.decisionReason }}
+        </p>
+      </span>
+    </button>
+
+    <SimulationLiveReturnChart
+      ref="liveChart"
+      :participants="participants"
+      :daily-performance="dailyPerformance"
+      :simulated-trades="simulatedTrades"
+      :initial-capital="initialCapital"
+      :progress="progress"
+      :speed="speed"
+      :total-days="150"
+    />
+
     <section class="simulation-conditions" aria-label="시뮬레이션 조건">
       <div class="simulation-condition">
         <AppIcon name="calendar-range" :size="16" />
@@ -279,16 +379,6 @@ function formatPeriodDate(date) {
         </div>
       </div>
     </section>
-
-    <SimulationLiveReturnChart
-      :participants="participants"
-      :daily-performance="dailyPerformance"
-      :simulated-trades="simulatedTrades"
-      :initial-capital="initialCapital"
-      :progress="progress"
-      :speed="speed"
-      :total-days="150"
-    />
 
     <!-- Live Participant Rankings -->
     <div class="rankings-box">
@@ -407,6 +497,118 @@ function formatPeriodDate(date) {
 .play-btn:disabled {
   cursor: default;
   opacity: 0.45;
+}
+
+.live-trade-alert {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  width: 100%;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 13px;
+  border: 1px solid #b9e2e1;
+  border-radius: 14px;
+  background: #f1fbfa;
+  color: #263a43;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  animation: trade-alert-in 0.36s ease-out;
+}
+
+.live-trade-alert.is-waiting {
+  border-color: #dce5e8;
+  background: #f7f9fa;
+  cursor: default;
+}
+
+.live-trade-alert__avatar {
+  align-self: start;
+}
+
+.live-trade-alert__waiting-icon {
+  display: inline-grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 50%;
+  background: #e9eff1;
+  color: #91a0a6;
+}
+
+.live-trade-alert__content {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.live-trade-alert__content small {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #078f90;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.live-trade-alert__content small b {
+  padding: 3px 5px;
+  border-radius: 5px;
+  background: #fee8e9;
+  color: #df464e;
+  font-size: 8px;
+}
+
+.live-trade-alert__content small b.is-sell {
+  background: #e8f1fc;
+  color: #3478d4;
+}
+
+.live-trade-alert.is-waiting small {
+  color: #819197;
+}
+
+.live-trade-alert__content strong {
+  overflow: hidden;
+  color: #182a30;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.live-trade-alert__content > span {
+  color: #819197;
+  font-family: var(--font-mono);
+  font-size: 9px;
+}
+
+.live-trade-alert__reason {
+  display: -webkit-box;
+  margin: 4px 0 0;
+  overflow: hidden;
+  color: #5f737b;
+  font-size: 9px;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.live-trade-alert__reason b {
+  margin-right: 4px;
+  color: #078f90;
+}
+
+@keyframes trade-alert-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .simulation-conditions {
