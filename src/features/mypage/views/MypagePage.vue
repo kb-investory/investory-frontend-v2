@@ -539,18 +539,20 @@ onMounted(async () => {
 }
 .tendency-badges {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 5px;
+  grid-template-columns: repeat(2, max-content);
+  justify-content: start;
+  gap: 5px 7px;
 }
 .tendency-badges span {
   display: inline-flex;
   min-height: 21px;
   align-items: center;
   gap: 5px;
-  justify-content: center;
-  padding: 3px 4px;
+  justify-content: flex-start;
+  justify-self: start;
+  padding: 3px 6px;
   border-radius: 999px;
-  background: #2f8fc3;
+  background: #1f5a86;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
   color: #ffffff;
   font-size: 6.1px;
