@@ -377,7 +377,7 @@ function formatPeriodDate(date) {
   padding: 0 8px;
   border: none;
   background: none;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 700;
   color: #66777d;
@@ -511,7 +511,7 @@ function formatPeriodDate(date) {
   place-items: center;
   width: 24px;
   height: 24px;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 700;
   color: #69787e;

@@ -175,7 +175,7 @@ function getVariantBadge(type) {
 }
 
 .race-complete-badge {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 700;
   color: #087f7c;
@@ -186,7 +186,7 @@ function getVariantBadge(type) {
 }
 
 .period-text {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: #64748b;
 }
@@ -281,7 +281,7 @@ function getVariantBadge(type) {
 }
 
 .rank-num {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 700;
   width: 22px;

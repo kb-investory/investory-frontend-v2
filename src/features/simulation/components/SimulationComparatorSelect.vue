@@ -275,7 +275,7 @@ function toggleBotSelection(bot) {
   align-items: center;
   gap: 6px;
   color: #087f7c;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 700;
 }
@@ -283,7 +283,7 @@ function toggleBotSelection(bot) {
 .challenger-intro h2 {
   margin: 0;
   color: #181817;
-  font-family: 'Funnel Sans', system-ui, sans-serif;
+  font-family: var(--font-heading);
   font-size: 24px;
   font-weight: 800;
   letter-spacing: -0.6px;
@@ -327,7 +327,7 @@ function toggleBotSelection(bot) {
 
 .player-card__info > span {
   color: #e8b931;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 700;
 }
@@ -375,7 +375,7 @@ function toggleBotSelection(bot) {
   border-radius: 50%;
   background: #0b8f8b;
   color: #fff;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
 }
 
@@ -477,7 +477,7 @@ function toggleBotSelection(bot) {
 }
 
 .roster-card__avatar > span {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 8px;
   font-weight: 700;
 }
@@ -492,7 +492,7 @@ function toggleBotSelection(bot) {
 
 .roster-card__class {
   color: #263a43;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 8px;
   font-weight: 700;
 }
@@ -682,7 +682,7 @@ function toggleBotSelection(bot) {
 
 .bot-modal__avatar strong {
   color: #40545b;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 9px;
 }
 
@@ -699,7 +699,7 @@ function toggleBotSelection(bot) {
   border-radius: 4px;
   background: #edf1f2;
   color: #40545b;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 700;
 }
@@ -717,7 +717,7 @@ function toggleBotSelection(bot) {
 .bot-modal h3 {
   margin: 0;
   color: #181817;
-  font-family: 'Funnel Sans', system-ui, sans-serif;
+  font-family: var(--font-heading);
   font-size: 19px;
   font-weight: 800;
 }
@@ -773,7 +773,7 @@ function toggleBotSelection(bot) {
 
 .bot-modal__section-title span {
   color: #a0a09a;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 8px;
 }
 
@@ -802,7 +802,7 @@ function toggleBotSelection(bot) {
   border-radius: 6px;
   background: #f2f5f5;
   color: #40545b;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 700;
 }

@@ -11,6 +11,7 @@ body {
   color: var(--color-text);
   background: var(--color-background);
   font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }

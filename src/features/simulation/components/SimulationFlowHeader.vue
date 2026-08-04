@@ -64,7 +64,7 @@ h1 {
   margin: 0;
   overflow: hidden;
   color: #181817;
-  font-family: 'Funnel Sans', system-ui, sans-serif;
+  font-family: var(--font-heading);
   font-size: 18px;
   font-weight: 700;
   line-height: normal;
@@ -85,7 +85,7 @@ h1 {
   border-radius: 14px;
   background: #263a43;
   color: #ffffff;
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 700;
   white-space: nowrap;

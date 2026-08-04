@@ -286,7 +286,7 @@ function formatPercent(val) {
 }
 
 .v-badge {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 700;
   color: #087f7c;
@@ -308,7 +308,7 @@ function formatPercent(val) {
 }
 
 .item-date {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 600;
   color: #181817;
@@ -326,7 +326,7 @@ function formatPercent(val) {
 }
 
 .return-text {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 700;
 }

@@ -252,7 +252,7 @@ function startSimulation() {
   align-items: center;
   gap: 6px;
   color: #087f7c;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 700;
 }
@@ -260,7 +260,7 @@ function startSimulation() {
 .setup-intro h2 {
   margin: 0;
   color: #181817;
-  font-family: 'Funnel Sans', system-ui, sans-serif;
+  font-family: var(--font-heading);
   font-size: 22px;
   font-weight: 800;
   letter-spacing: -0.5px;
@@ -289,7 +289,7 @@ function startSimulation() {
 
 .participants-panel__header > span {
   color: #a8bdc5;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 700;
 }
@@ -299,7 +299,7 @@ function startSimulation() {
   border-radius: 999px;
   background: #34515c;
   color: #74d3cf;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 8px;
 }
 
@@ -371,7 +371,7 @@ function startSimulation() {
 
 .participant-card > span {
   color: #263a43;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 8px;
   font-weight: 700;
 }
@@ -488,7 +488,7 @@ function startSimulation() {
 .date-summary__item strong {
   overflow: hidden;
   color: #181817;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -566,7 +566,7 @@ function startSimulation() {
   display: flex;
   justify-content: space-between;
   color: #a0a09a;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 8px;
 }
 

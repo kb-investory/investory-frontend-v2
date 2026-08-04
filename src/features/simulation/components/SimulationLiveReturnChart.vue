@@ -200,7 +200,7 @@ const chartSeries = computed(() => {
           distance: 6,
           offset: [0, (participantIndex - 1.5) * 2],
           color: '#DCE7EA',
-          fontFamily: 'Geist Mono, monospace',
+          fontFamily: 'SUIT Variable, SUIT, sans-serif',
           fontSize: 8,
           fontWeight: 700,
           backgroundColor: 'rgba(23, 45, 53, 0.82)',
@@ -639,7 +639,7 @@ function updateChart() {
         axisTick: { show: false },
         axisLabel: {
           color: '#91A8B2',
-          fontFamily: 'Geist Mono, monospace',
+          fontFamily: 'SUIT Variable, SUIT, sans-serif',
           fontSize: 9,
           hideOverlap: true,
           margin: 10,
@@ -654,7 +654,7 @@ function updateChart() {
         interval: viewport.yInterval,
         axisLabel: {
           color: '#94948E',
-          fontFamily: 'Geist Mono, monospace',
+          fontFamily: 'SUIT Variable, SUIT, sans-serif',
           fontSize: 9,
           width: 32,
           align: 'right',

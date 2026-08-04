@@ -221,7 +221,7 @@ function goToJournalNew() {
 }
 
 .progress-count {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 600;
   color: #384f59;
@@ -309,7 +309,7 @@ function goToJournalNew() {
 }
 
 .item-status.open-date {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-weight: 700;
   color: #384f59;
 }

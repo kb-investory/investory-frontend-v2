@@ -42,7 +42,7 @@ defineProps({
 
 .header-title {
   margin: 0;
-  font-family: 'Funnel Sans', system-ui, sans-serif;
+  font-family: var(--font-heading);
   font-size: 22px;
   font-weight: 800;
   letter-spacing: -0.4px;
@@ -67,7 +67,7 @@ defineProps({
 
 .header-subtitle {
   margin: 0;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 500;
   color: #666662;
