@@ -165,6 +165,9 @@ function goBack() {
           :participants="simulationStore.latestResult?.participantSummary"
           :simulated-trades="simulationStore.latestResult?.simulatedTrades"
           :daily-performance="simulationStore.latestResult?.dailyPerformance"
+          :period-start="simulationStore.latestResult?.periodStart"
+          :period-end="simulationStore.latestResult?.periodEnd"
+          :initial-capital="simulationStore.latestResult?.initialCapital"
           @complete="finishLiveSimulation"
         />
 

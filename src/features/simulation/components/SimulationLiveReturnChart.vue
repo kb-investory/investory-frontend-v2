@@ -33,6 +33,10 @@ const props = defineProps({
     type: Number,
     default: 1,
   },
+  totalDays: {
+    type: Number,
+    default: 150,
+  },
 })
 
 const chartElement = ref(null)
@@ -75,6 +79,22 @@ const viewIconByVariantType = {
 
 const timelineDates = computed(() =>
   [...new Set(props.dailyPerformance.map((snapshot) => snapshot.snapshotDate))].sort(),
+)
+
+const currentSimulationDate = computed(() => {
+  const dates = timelineDates.value
+  if (!dates.length) return '-'
+
+  const start = new Date(`${dates[0]}T00:00:00`).getTime()
+  const end = new Date(`${dates.at(-1)}T00:00:00`).getTime()
+  const timestamp = start + (end - start) * (Math.min(Math.max(props.progress, 0), 100) / 100)
+  const date = new Date(timestamp)
+
+  return `${date.getFullYear()}. ${String(date.getMonth() + 1).padStart(2, '0')}. ${String(date.getDate()).padStart(2, '0')}`
+})
+
+const currentSimulationDay = computed(() =>
+  Math.min(props.totalDays, Math.max(1, Math.round((props.totalDays * props.progress) / 100))),
 )
 
 const performanceByVariant = computed(() => {
@@ -552,12 +572,14 @@ onBeforeUnmount(() => {
 <template>
   <section class="live-return-chart" aria-label="참가자별 누적 수익률 그래프">
     <div class="live-return-chart__header">
-      <div>
-        <p class="live-return-chart__eyebrow">LIVE RETURN</p>
-        <h3>초기 자본 대비 누적 수익률</h3>
+      <div class="live-return-chart__session">
+        <i></i>
+        <div>
+          <strong>{{ currentSimulationDate }}</strong>
+          <span>DAY {{ currentSimulationDay }} / {{ totalDays }}</span>
+        </div>
       </div>
       <div class="live-return-chart__header-meta">
-        <span>단위: %</span>
         <span class="live-return-chart__camera-status"><i></i>{{ cameraLabel }}</span>
       </div>
     </div>
@@ -576,6 +598,11 @@ onBeforeUnmount(() => {
       >
         <AppIcon :name="option.icon" :size="16" />
       </button>
+    </div>
+
+    <div class="live-return-chart__progress" aria-label="시뮬레이션 진행률">
+      <div><i :style="{ width: `${progress}%` }"></i></div>
+      <strong>{{ Math.round(progress) }}%</strong>
     </div>
 
     <div ref="chartElement" class="live-return-chart__plot"></div>
@@ -609,29 +636,43 @@ onBeforeUnmount(() => {
 
 .live-return-chart__header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
 
-.live-return-chart__header h3,
-.live-return-chart__eyebrow {
-  margin: 0;
+.live-return-chart__session {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.live-return-chart__header h3 {
+.live-return-chart__session > i {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #0ea5a6;
+  box-shadow: 0 0 0 7px rgb(14 165 166 / 13%);
+}
+
+.live-return-chart__session div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.live-return-chart__session strong {
   color: #f7fafb;
-  font-size: 14px;
-  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.02em;
 }
 
-.live-return-chart__eyebrow {
-  margin-bottom: 3px;
-  color: #73d8d6;
+.live-return-chart__session span {
+  color: #91a8b2;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.06em;
 }
 
 .live-return-chart__header-meta {
@@ -639,7 +680,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: flex-end;
   gap: 5px;
-  padding-top: 3px;
+  padding-top: 0;
 }
 
 .live-return-chart__header-meta > span {
@@ -681,6 +722,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   min-width: 0;
+  min-height: 38px;
   padding: 8px 4px;
   border: 0;
   border-radius: 8px;
@@ -714,7 +756,35 @@ onBeforeUnmount(() => {
 
 .live-return-chart__plot {
   width: 100%;
-  height: 260px;
+  height: 236px;
+}
+
+.live-return-chart__progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.live-return-chart__progress > div {
+  flex: 1;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #3b5660;
+}
+
+.live-return-chart__progress i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #0ea5a6;
+  transition: width 0.1s linear;
+}
+
+.live-return-chart__progress strong {
+  color: #73d8d6;
+  font-family: var(--font-mono);
+  font-size: 10px;
 }
 
 .live-return-chart__legend {

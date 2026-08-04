@@ -64,6 +64,18 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  periodStart: {
+    type: String,
+    default: '',
+  },
+  periodEnd: {
+    type: String,
+    default: '',
+  },
+  initialCapital: {
+    type: Number,
+    default: 5000000,
+  },
 })
 
 const emit = defineEmits(['complete'])
@@ -147,6 +159,7 @@ const liveParticipants = computed(() =>
       ...participant,
       cumulativeReturnPercent,
       totalEquity: initialCapital * (1 + cumulativeReturnPercent / 100),
+      profitLoss: initialCapital * (cumulativeReturnPercent / 100),
     }
   }),
 )
@@ -207,13 +220,18 @@ function formatCurrency(val) {
   return new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(val)
 }
 
+function formatSignedCurrency(val) {
+  const prefix = val > 0 ? '+' : ''
+  return `${prefix}${formatCurrency(val)}`
+}
+
 function formatPercent(val) {
   const prefix = val > 0 ? '+' : ''
   return `${prefix}${val.toFixed(1)}%`
 }
 
-function formatDate(date) {
-  return date?.replaceAll('-', '.') ?? '-'
+function formatPeriodDate(date) {
+  return date ? date.replaceAll('-', '.') : '-'
 }
 </script>
 
@@ -223,18 +241,18 @@ function formatDate(date) {
     <div class="live-header">
       <div class="live-header__title-row">
         <h2 class="live-title">라이브 시뮬레이션</h2>
-        <StatusBadge
-          :status-text="progress < 100 ? '연산 중' : '연산 완료'"
-          :step-text="`${Math.round(progress)}%`"
-        />
+        <StatusBadge :status-text="progress < 100 ? '진행 중' : '완료'" step-text="" />
       </div>
 
       <!-- Playback Speed Controls -->
       <div class="live-header__controls">
         <span class="speed-controls__label">재생 속도</span>
         <div class="speed-controls">
+          <button class="play-btn" :disabled="progress >= 100" @click="togglePlay">
+            <AppIcon :name="isPlaying ? 'pause' : 'play'" :size="15" />
+          </button>
           <button
-            v-for="s in [1, 2, 5]"
+            v-for="s in [1, 2, 5, 10]"
             :key="s"
             class="speed-btn"
             :class="{ active: speed === s }"
@@ -242,78 +260,72 @@ function formatDate(date) {
           >
             {{ s }}×
           </button>
-          <button class="play-btn" :disabled="progress >= 100" @click="togglePlay">
-            <AppIcon :name="isPlaying ? 'pause' : 'play'" :size="15" />
-          </button>
         </div>
       </div>
     </div>
 
-    <!-- Live Progress Bar -->
-    <div class="progress-section">
-      <div class="progress-info">
-        <span class="progress-date">{{ formatDate(timelineDates[0]) }}</span>
-        <span class="progress-percent">{{ Math.round(progress) }}% 진행</span>
-        <span class="progress-date">{{ formatDate(timelineDates.at(-1)) }}</span>
+    <section class="simulation-conditions" aria-label="시뮬레이션 조건">
+      <div class="simulation-condition">
+        <AppIcon name="calendar-range" :size="16" />
+        <div>
+          <span>시뮬레이션 기간</span>
+          <strong>
+            {{ formatPeriodDate(periodStart || timelineDates[0]) }} −
+            {{ formatPeriodDate(periodEnd || timelineDates.at(-1)) }}
+          </strong>
+        </div>
       </div>
-
-      <div class="progress-bar-bg">
-        <div class="progress-bar-fill" :style="{ width: `${progress}%` }"></div>
+      <div class="simulation-condition">
+        <AppIcon name="wallet-cards" :size="16" />
+        <div>
+          <span>초기 자금</span>
+          <strong>{{ formatCurrency(initialCapital) }}</strong>
+        </div>
       </div>
-    </div>
+    </section>
 
     <SimulationLiveReturnChart
       :participants="participants"
       :daily-performance="dailyPerformance"
       :progress="progress"
       :speed="speed"
+      :total-days="150"
     />
 
     <!-- Live Participant Rankings -->
     <div class="rankings-box">
-      <h3 class="rankings-title">실시간 성과 순위</h3>
+      <div class="rankings-box__header">
+        <h3 class="rankings-title">현재 순위</h3>
+        <span>손익 · 수익률</span>
+      </div>
 
       <div class="rankings-list">
         <div
           v-for="(bot, index) in rankedParticipants"
           :key="bot.variantId"
-          class="rank-card"
-          :class="{ 'rank-card--top': index === 0 }"
+          class="rank-row"
         >
-          <div class="rank-badge">{{ index + 1 }}위</div>
-
-          <div class="rank-info">
-            <span class="rank-name">{{ bot.variantName }}</span>
-            <span class="rank-equity">{{ formatCurrency(bot.totalEquity) }}</span>
-          </div>
-
-          <span
-            class="rank-return"
-            :class="{
-              positive: bot.cumulativeReturnPercent > 0,
-              negative: bot.cumulativeReturnPercent < 0,
-            }"
-          >
-            {{ formatPercent(bot.cumulativeReturnPercent) }}
-          </span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Live Trade Executions Feed (Screen 1F) -->
-    <div class="trades-feed">
-      <h3 class="trades-feed__title">실시간 체결 & 판단 사유</h3>
-
-      <div class="trades-list">
-        <div v-for="trade in simulatedTrades" :key="trade.simulatedTradeId" class="trade-item">
-          <div class="trade-item__top">
-            <span class="trade-side" :class="trade.tradeSide.toLowerCase()">
-              {{ trade.tradeSide === 'BUY' ? '매수 체결' : '매도 체결' }}
+          <b class="rank-badge" :class="{ 'rank-badge--top': index === 0 }">{{ index + 1 }}</b>
+          <i class="rank-dot" :class="`rank-dot--${bot.variantType.toLowerCase()}`"></i>
+          <strong class="rank-name">{{ bot.variantName }}</strong>
+          <div class="rank-performance">
+            <span
+              :class="{
+                positive: bot.cumulativeReturnPercent > 0,
+                negative: bot.cumulativeReturnPercent < 0,
+              }"
+            >
+              {{ formatSignedCurrency(bot.profitLoss) }}
             </span>
-            <span class="trade-time">{{ trade.tradedAt }}</span>
+            <strong
+              :class="{
+                positive: bot.cumulativeReturnPercent > 0,
+                negative: bot.cumulativeReturnPercent < 0,
+              }"
+            >
+              {{ formatPercent(bot.cumulativeReturnPercent) }}
+            </strong>
           </div>
-
-          <p class="trade-reason">{{ trade.decisionReason }}</p>
         </div>
       </div>
     </div>
@@ -336,7 +348,7 @@ function formatDate(date) {
 .live-header {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .live-header__title-row,
@@ -350,7 +362,7 @@ function formatDate(date) {
 .live-title {
   margin: 0;
   color: #263a43;
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 800;
   line-height: 1.3;
   letter-spacing: -0.02em;
@@ -367,15 +379,15 @@ function formatDate(date) {
   display: flex;
   align-items: center;
   gap: 4px;
-  background: #f7f8fa;
-  padding: 5px;
-  border: 1px solid #e2e8eb;
-  border-radius: 14px;
+  padding: 4px;
+  border: 1px solid #dfe8eb;
+  border-radius: 15px;
+  background: #f7fafb;
 }
 
 .speed-btn {
-  min-width: 40px;
-  height: 34px;
+  min-width: 38px;
+  height: 38px;
   padding: 0 10px;
   border: none;
   background: none;
@@ -397,9 +409,9 @@ function formatDate(date) {
   border: none;
   background: #263a43;
   color: #ffffff;
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -411,49 +423,59 @@ function formatDate(date) {
   opacity: 0.45;
 }
 
-.progress-section {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 14px;
-  background: #263f48;
-  border-radius: 14px;
-  color: #ffffff;
-}
-
-.progress-info {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  font-weight: 600;
-  color: #dce6e9;
-}
-
-.progress-percent {
-  color: #73d8d6;
-  font-weight: 700;
-}
-
-.progress-bar-bg {
-  width: 100%;
-  height: 8px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 4px;
+.simulation-conditions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   overflow: hidden;
+  border: 1px solid #dce5e8;
+  border-radius: 16px;
+  background: #fff;
 }
 
-.progress-bar-fill {
-  height: 100%;
-  background: #0ea5a6;
-  border-radius: 4px;
-  transition: width 0.1s linear;
+.simulation-condition {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  min-width: 0;
+  padding: 18px 14px;
+}
+
+.simulation-condition + .simulation-condition {
+  border-left: 1px solid #e7edef;
+}
+
+.simulation-condition .app-icon {
+  margin-top: 2px;
+  color: #0ea5a6;
+}
+
+.simulation-condition div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.simulation-condition span {
+  color: #87979d;
+  font-size: 11px;
+}
+
+.simulation-condition strong {
+  overflow: hidden;
+  color: #182a30;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .rankings-box {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 16px;
+  gap: 8px;
+  padding: 15px 16px 12px;
   background: #ffffff;
   border: 1px solid #dde5e8;
   border-radius: 16px;
@@ -461,138 +483,102 @@ function formatDate(date) {
 
 .rankings-title {
   margin: 0;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   color: #263a43;
+}
+
+.rankings-box__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rankings-box__header > span {
+  color: #97a3a7;
+  font-size: 11px;
 }
 
 .rankings-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
 }
 
-.rank-card {
-  display: flex;
+.rank-row {
+  display: grid;
+  grid-template-columns: 25px 8px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  background: #f8fafc;
-  border-radius: 12px;
+  gap: 7px;
+  min-height: 32px;
+  border-bottom: 1px solid #edf1f2;
 }
 
-.rank-card--top {
-  background: #f0fbfa;
-  border: 1px solid #73d8d6;
+.rank-row:last-child {
+  border-bottom: 0;
 }
 
 .rank-badge {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
-  font-weight: 700;
-  color: #263a43;
-  background: #e2e8f0;
-  padding: 2px 8px;
-  border-radius: 6px;
-}
-
-.rank-card--top .rank-badge {
-  background: #0ea5a6;
-  color: #ffffff;
-}
-
-.rank-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.rank-name {
   font-size: 12px;
   font-weight: 700;
-  color: #1e293b;
+  color: #69787e;
+  background: #f1f2ef;
+  border-radius: 7px;
 }
 
-.rank-equity {
-  font-size: 11px;
-  color: #64748b;
+.rank-badge--top {
+  color: #0a908f;
+  background: #e6f7f6;
 }
 
-.rank-return {
-  font-size: 13px;
-  font-weight: 700;
+.rank-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
 }
 
-.rank-return.positive {
-  color: #ff4d55;
-}
-.rank-return.negative {
-  color: #2f70d9;
-}
+.rank-dot--actual_user { background: #395563; }
+.rank-dot--personal_bot { background: #0ea5a6; }
+.rank-dot--famous_strategy { background: #91a8b2; }
+.rank-dot--random_bot { background: #b18bd5; }
 
-.trades-feed {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 16px;
-  background: #ffffff;
-  border: 1px solid #dce6e9;
-  border-radius: 16px;
-}
-
-.trades-feed__title {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 700;
+.rank-name {
+  overflow: hidden;
   color: #263a43;
-}
-
-.trades-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.trade-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 10px;
-  background: #f8fafc;
-  border-radius: 10px;
-}
-
-.trade-item__top {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-}
-
-.trade-side {
+  font-size: 12px;
   font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 4px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.trade-side.buy {
-  background: #fff0f1;
+.rank-performance {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.rank-performance strong {
+  min-width: 42px;
+  font-size: 11px;
+  text-align: right;
+}
+
+.positive {
   color: #ff4d55;
 }
 
-.trade-side.sell {
-  background: #eef4ff;
+.negative {
   color: #2f70d9;
-}
-
-.trade-time {
-  color: #94a3b8;
-}
-
-.trade-reason {
-  margin: 0;
-  font-size: 11px;
-  line-height: 1.4;
-  color: #475569;
 }
 
 .next-step-btn {
