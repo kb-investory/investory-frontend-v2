@@ -8,7 +8,6 @@ import { useMypageStore } from '@/features/mypage/stores/mypageStore'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
-import MobileStatusBar from '@/shared/components/MobileStatusBar.vue'
 
 const router = useRouter()
 const mypageStore = useMypageStore()
@@ -105,8 +104,6 @@ onMounted(async () => {
 
 <template>
   <div class="mypage-page">
-    <MobileStatusBar />
-
     <header class="mypage-header">
       <div class="mypage-header__brand">
         <img src="/assets/logos/investory-logo.png" alt="Investory 로고" />
@@ -339,26 +336,15 @@ onMounted(async () => {
   color: #263a3f;
 }
 
-.mypage-page :deep(.mobile-status-bar) {
-  position: sticky;
-  z-index: 82;
-  top: 0;
-  height: 44px;
-  padding: 0 18px;
-  background: #fff;
-  font-size: 10px;
-}
-
 .mypage-header {
   position: sticky;
   z-index: 81;
-  top: 44px;
+  top: 0;
   display: flex;
-  min-height: 48px;
+  min-height: 64px;
   align-items: center;
   justify-content: space-between;
-  padding: 0 18px 8px;
-  border-bottom: 1px solid rgba(224, 232, 232, 0.82);
+  padding: 12px 18px 10px;
   background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(10px);
 }
@@ -397,7 +383,7 @@ onMounted(async () => {
 .mypage-content {
   display: grid;
   gap: 11px;
-  padding: 0 18px 18px;
+  padding: 8px 18px 18px;
 }
 
 .profile-summary {

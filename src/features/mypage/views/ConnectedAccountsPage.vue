@@ -7,7 +7,6 @@ import AccountDetailModal from '@/features/mypage/components/AccountDetailModal.
 import { useMypageStore } from '@/features/mypage/stores/mypageStore'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
-import MobileStatusBar from '@/shared/components/MobileStatusBar.vue'
 
 const router = useRouter()
 const mypageStore = useMypageStore()
@@ -83,7 +82,6 @@ onMounted(async () => {
 
 <template>
   <div class="accounts-page">
-    <MobileStatusBar />
     <header class="accounts-app-bar">
       <button
         type="button"
@@ -244,25 +242,15 @@ onMounted(async () => {
   background: #fff;
   color: #263a3f;
 }
-.accounts-page :deep(.mobile-status-bar) {
-  position: sticky;
-  z-index: 82;
-  top: 0;
-  height: 44px;
-  padding: 0 18px;
-  background: #fff;
-  font-size: 10px;
-}
 .accounts-app-bar {
   position: sticky;
   z-index: 81;
-  top: 44px;
+  top: 0;
   display: grid;
-  min-height: 48px;
+  min-height: 64px;
   grid-template-columns: 36px 1fr 36px;
   align-items: center;
-  padding: 0 16px 8px;
-  border-bottom: 1px solid rgba(224, 232, 232, 0.82);
+  padding: 12px 16px 10px;
   background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(10px);
 }
@@ -286,7 +274,7 @@ onMounted(async () => {
 .accounts-content {
   display: grid;
   gap: 12px;
-  padding: 0 18px 18px;
+  padding: 8px 18px 18px;
 }
 .accounts-hero h1 {
   margin: 0;
