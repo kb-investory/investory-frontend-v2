@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import AppIcon from '@/shared/components/AppIcon.vue'
 import StatusBadge from '@/shared/components/badges/StatusBadge.vue'
+import SimulationLiveReturnChart from '@/features/simulation/components/SimulationLiveReturnChart.vue'
 
 const props = defineProps({
   participants: {
@@ -59,6 +60,10 @@ const props = defineProps({
       },
     ],
   },
+  dailyPerformance: {
+    type: Array,
+    default: () => [],
+  },
 })
 
 const emit = defineEmits(['complete'])
@@ -67,25 +72,88 @@ const progress = ref(0)
 const speed = ref(1)
 const isPlaying = ref(true)
 let timer = null
+let lastFrameTime = null
+
+const timelineDates = computed(() =>
+  [...new Set(props.dailyPerformance.map((snapshot) => snapshot.snapshotDate))].sort(),
+)
+
+const performanceByVariant = computed(() => {
+  const grouped = new Map()
+
+  props.dailyPerformance.forEach((snapshot) => {
+    const snapshots = grouped.get(snapshot.simulationVariantId) ?? []
+    snapshots.push(snapshot)
+    grouped.set(snapshot.simulationVariantId, snapshots)
+  })
+
+  grouped.forEach((snapshots) =>
+    snapshots.sort((a, b) => a.snapshotDate.localeCompare(b.snapshotDate)),
+  )
+  return grouped
+})
+
+function getLiveReturn(participant) {
+  const snapshots = performanceByVariant.value.get(participant.variantId) ?? []
+  if (snapshots.length < 2) {
+    return participant.cumulativeReturnPercent * (progress.value / 100)
+  }
+
+  const segmentProgress = (progress.value / 100) * (snapshots.length - 1)
+  const currentIndex = Math.floor(segmentProgress)
+  const currentSnapshot = snapshots[currentIndex]
+  const nextSnapshot = snapshots[currentIndex + 1]
+
+  if (!nextSnapshot) return currentSnapshot.cumulativeReturnPercent
+
+  return (
+    currentSnapshot.cumulativeReturnPercent +
+    (nextSnapshot.cumulativeReturnPercent - currentSnapshot.cumulativeReturnPercent) *
+      (segmentProgress - currentIndex)
+  )
+}
+
+const liveParticipants = computed(() =>
+  (props.participants ?? []).map((participant) => {
+    const cumulativeReturnPercent = getLiveReturn(participant)
+    const initialCapital = participant.totalEquity / (1 + participant.cumulativeReturnPercent / 100)
+
+    return {
+      ...participant,
+      cumulativeReturnPercent,
+      totalEquity: initialCapital * (1 + cumulativeReturnPercent / 100),
+    }
+  }),
+)
 
 const rankedParticipants = computed(() =>
-  [...(props.participants ?? [])].sort(
-    (a, b) => b.cumulativeReturnPercent - a.cumulativeReturnPercent,
-  ),
+  [...liveParticipants.value].sort((a, b) => b.cumulativeReturnPercent - a.cumulativeReturnPercent),
 )
 
 function startSimulation() {
-  if (timer) clearInterval(timer)
-  timer = setInterval(() => {
-    if (!isPlaying.value) return
-    progress.value += speed.value * 2.5
+  if (timer) cancelAnimationFrame(timer)
+  lastFrameTime = null
+
+  const tick = (timestamp) => {
+    if (lastFrameTime === null) lastFrameTime = timestamp
+    const elapsedSeconds = (timestamp - lastFrameTime) / 1000
+    lastFrameTime = timestamp
+
+    if (isPlaying.value) {
+      progress.value += speed.value * 5 * elapsedSeconds
+    }
+
     if (progress.value >= 100) {
       progress.value = 100
       isPlaying.value = false
-      clearInterval(timer)
-      setTimeout(() => emit('complete'), 800)
+      timer = null
+      return
     }
-  }, 100)
+
+    timer = requestAnimationFrame(tick)
+  }
+
+  timer = requestAnimationFrame(tick)
 }
 
 function setSpeed(s) {
@@ -93,7 +161,13 @@ function setSpeed(s) {
 }
 
 function togglePlay() {
+  if (progress.value >= 100) return
   isPlaying.value = !isPlaying.value
+}
+
+function goToNextStep() {
+  if (progress.value < 100) return
+  emit('complete')
 }
 
 onMounted(() => {
@@ -101,7 +175,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  if (timer) clearInterval(timer)
+  if (timer) cancelAnimationFrame(timer)
 })
 
 function formatCurrency(val) {
@@ -111,6 +185,10 @@ function formatCurrency(val) {
 function formatPercent(val) {
   const prefix = val > 0 ? '+' : ''
   return `${prefix}${val.toFixed(1)}%`
+}
+
+function formatDate(date) {
+  return date?.replaceAll('-', '.') ?? '-'
 }
 </script>
 
@@ -137,7 +215,7 @@ function formatPercent(val) {
         >
           {{ s }}×
         </button>
-        <button class="play-btn" @click="togglePlay">
+        <button class="play-btn" :disabled="progress >= 100" @click="togglePlay">
           <AppIcon :name="isPlaying ? 'pause' : 'play'" :size="14" />
         </button>
       </div>
@@ -146,15 +224,22 @@ function formatPercent(val) {
     <!-- Live Progress Bar -->
     <div class="progress-section">
       <div class="progress-info">
-        <span class="progress-date">2026.03.01</span>
+        <span class="progress-date">{{ formatDate(timelineDates[0]) }}</span>
         <span class="progress-percent">{{ Math.round(progress) }}% 진행</span>
-        <span class="progress-date">2026.07.29</span>
+        <span class="progress-date">{{ formatDate(timelineDates.at(-1)) }}</span>
       </div>
 
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" :style="{ width: `${progress}%` }"></div>
       </div>
     </div>
+
+    <SimulationLiveReturnChart
+      :participants="participants"
+      :daily-performance="dailyPerformance"
+      :progress="progress"
+      :speed="speed"
+    />
 
     <!-- Live Participant Rankings -->
     <div class="rankings-box">
@@ -204,6 +289,11 @@ function formatPercent(val) {
         </div>
       </div>
     </div>
+
+    <button v-if="progress >= 100" type="button" class="next-step-btn" @click="goToNextStep">
+      <span>다음 단계</span>
+      <AppIcon name="arrow-right" :size="16" />
+    </button>
   </div>
 </template>
 
@@ -238,7 +328,7 @@ function formatPercent(val) {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #0b8f8b;
+  background: #0ea5a6;
   display: inline-block;
   margin-right: 4px;
 }
@@ -284,8 +374,9 @@ function formatPercent(val) {
 }
 
 .speed-btn.active {
-  background: #263a43;
+  background: #0b6b68;
   color: #ffffff;
+  box-shadow: 0 4px 10px rgb(11 107 104 / 20%);
 }
 
 .play-btn {
@@ -301,12 +392,17 @@ function formatPercent(val) {
   cursor: pointer;
 }
 
+.play-btn:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
 .progress-section {
   display: flex;
   flex-direction: column;
   gap: 6px;
   padding: 14px;
-  background: #263a43;
+  background: #263f48;
   border-radius: 14px;
   color: #ffffff;
 }
@@ -320,7 +416,7 @@ function formatPercent(val) {
 }
 
 .progress-percent {
-  color: #73ddd7;
+  color: #73d8d6;
   font-weight: 700;
 }
 
@@ -334,7 +430,7 @@ function formatPercent(val) {
 
 .progress-bar-fill {
   height: 100%;
-  background: var(--brand-teal);
+  background: #0ea5a6;
   border-radius: 4px;
   transition: width 0.1s linear;
 }
@@ -345,7 +441,7 @@ function formatPercent(val) {
   gap: 10px;
   padding: 16px;
   background: #ffffff;
-  border: 1px solid #dce6e9;
+  border: 1px solid #dde5e8;
   border-radius: 16px;
 }
 
@@ -372,8 +468,8 @@ function formatPercent(val) {
 }
 
 .rank-card--top {
-  background: #f5fbfb;
-  border: 1px solid #0b8f8b;
+  background: #f0fbfa;
+  border: 1px solid #73d8d6;
 }
 
 .rank-badge {
@@ -387,7 +483,7 @@ function formatPercent(val) {
 }
 
 .rank-card--top .rank-badge {
-  background: #0b8f8b;
+  background: #0ea5a6;
   color: #ffffff;
 }
 
@@ -414,10 +510,10 @@ function formatPercent(val) {
 }
 
 .rank-return.positive {
-  color: var(--brand-red);
+  color: #ff4d55;
 }
 .rank-return.negative {
-  color: var(--brand-blue);
+  color: #2f70d9;
 }
 
 .trades-feed {
@@ -465,13 +561,13 @@ function formatPercent(val) {
 }
 
 .trade-side.buy {
-  background: var(--brand-red-soft);
-  color: var(--brand-red);
+  background: #fff0f1;
+  color: #ff4d55;
 }
 
 .trade-side.sell {
-  background: var(--brand-blue-soft);
-  color: var(--brand-blue);
+  background: #eef4ff;
+  color: #2f70d9;
 }
 
 .trade-time {
@@ -483,5 +579,41 @@ function formatPercent(val) {
   font-size: 11px;
   line-height: 1.4;
   color: #475569;
+}
+
+.next-step-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 14px;
+  background: #263f48;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgb(38 58 67 / 18%);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.next-step-btn:hover {
+  transform: translateY(-1px);
+  background: #1f363e;
+  box-shadow: 0 10px 24px rgb(31 54 62 / 24%);
+}
+
+.next-step-btn:active {
+  transform: translateY(0);
+}
+
+.next-step-btn:focus-visible {
+  outline: 2px solid #0ea5a6;
+  outline-offset: 2px;
 }
 </style>

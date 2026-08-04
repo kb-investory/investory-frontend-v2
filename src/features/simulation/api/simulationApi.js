@@ -1,19 +1,42 @@
 import simulationData from '@/mocks/data/simulation.json'
 
+function clone(value) {
+  return structuredClone(value)
+}
+
 export async function getSimulationOverview() {
-  return simulationData.overview
+  return clone(simulationData.overview)
 }
 
 export async function getLatestSimulationResult() {
-  return simulationData.latest
+  return clone(simulationData.latest)
+}
+
+export async function compileSimulationBot() {
+  return clone(simulationData.compileResponse)
+}
+
+export async function getSimulationBotCompileJob(jobId) {
+  return clone(simulationData.compileJobs[jobId] ?? simulationData.compileJobs.JOB_794FF6CC)
 }
 
 export async function getSimulationComparators() {
-  return simulationData.latest.participantSummary
+  return clone(simulationData.comparators)
+}
+
+export async function runSimulation() {
+  return {
+    ...clone(simulationData.run),
+    dailySnapshots: clone(simulationData.latest.dailyPerformance),
+  }
+}
+
+export async function getSimulationDetail(simulationId) {
+  return clone(simulationData.details[String(simulationId)] ?? simulationData.details['101'])
 }
 
 export async function getSimulationMessages() {
-  return simulationData.messages
+  return clone(simulationData.messages)
 }
 
 export async function sendSimulationMessage(text) {

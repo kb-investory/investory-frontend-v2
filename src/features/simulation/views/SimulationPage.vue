@@ -164,6 +164,7 @@ function goBack() {
           v-else-if="currentStep === 'live'"
           :participants="simulationStore.latestResult?.participantSummary"
           :simulated-trades="simulationStore.latestResult?.simulatedTrades"
+          :daily-performance="simulationStore.latestResult?.dailyPerformance"
           @complete="finishLiveSimulation"
         />
 
