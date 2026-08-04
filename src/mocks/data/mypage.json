@@ -9,15 +9,7 @@
     "membershipDays": 121,
     "totalJournalsCount": 24
   },
-  "recentSimulation": {
-    "simulationId": 301,
-    "botName": "나의 투자봇 v3",
-    "returnRate": 16.8,
-    "rank": 1,
-    "totalParticipants": 186,
-    "differenceFromActual": 10.4,
-    "status": "완료"
-  },
+  "recentSimulation": null,
   "accounts": [
     {
       "accountId": 11,
