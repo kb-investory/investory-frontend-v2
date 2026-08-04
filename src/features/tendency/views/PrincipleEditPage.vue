@@ -331,6 +331,8 @@ onBeforeUnmount(() => {
 .principle-edit-page {
   min-height: 100%;
   padding-top: 54px;
+  background: #ffffff;
+  box-shadow: 0 0 0 20px #ffffff;
 }
 
 .edit-app-bar {
@@ -346,7 +348,7 @@ onBeforeUnmount(() => {
   gap: 8px;
   padding: 10px 20px 7px;
   border-bottom: 1px solid #e0e7e7;
-  background: rgba(246, 244, 239, 0.96);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(10px);
   transform: translateX(-50%);
 }

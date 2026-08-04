@@ -1,4 +1,6 @@
 <script setup>
+import StockLogo from '@/shared/components/StockLogo.vue'
+
 defineProps({
   holding: {
     type: Object,
@@ -13,13 +15,7 @@ function formatCurrency(value) {
 
 <template>
   <article class="holding-card">
-    <span
-      class="holding-card__mark"
-      :class="`holding-card__mark--${holding.markVariant}`"
-      aria-hidden="true"
-    >
-      {{ holding.mark }}
-    </span>
+    <StockLogo :stock="holding" :size="38" />
     <div class="holding-card__content">
       <strong>{{ holding.securityName }}</strong>
       <div class="holding-card__details">
@@ -43,36 +39,6 @@ function formatCurrency(value) {
   border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
   background: #ffffff;
-}
-
-.holding-card__mark {
-  display: grid;
-  width: 38px;
-  height: 38px;
-  flex: 0 0 38px;
-  place-items: center;
-  border-radius: 11px;
-  color: #ffffff;
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.holding-card__mark--samsung {
-  background: #1428a0;
-}
-
-.holding-card__mark--sk {
-  background: #f05a28;
-  font-size: 10px;
-}
-
-.holding-card__mark--tiger {
-  background: #17365d;
-}
-
-.holding-card__mark--kakao {
-  background: #fee500;
-  color: #181600;
 }
 
 .holding-card__content {

@@ -1,0 +1,66 @@
+{
+  "recentSecurityCodes": ["000660", "035420", "035720"],
+  "stocks": [
+    {
+      "securityId": 101,
+      "securityCode": "005930",
+      "securityName": "삼성전자",
+      "brandKey": "samsung",
+      "journalDays": 12,
+      "buyCount": 8,
+      "sellCount": 4,
+      "recentJournalDate": "2026-08-23",
+      "holdingQuantity": null,
+      "returnRate": null
+    },
+    {
+      "securityId": 102,
+      "securityCode": "006400",
+      "securityName": "삼성SDI",
+      "brandKey": "samsung-sdi",
+      "journalDays": 5,
+      "buyCount": 3,
+      "sellCount": 2,
+      "recentJournalDate": "2026-08-18",
+      "holdingQuantity": null,
+      "returnRate": null
+    },
+    {
+      "securityId": 103,
+      "securityCode": "000660",
+      "securityName": "SK하이닉스",
+      "brandKey": "sk",
+      "journalDays": 9,
+      "buyCount": 5,
+      "sellCount": 4,
+      "recentJournalDate": "2026-08-23",
+      "holdingQuantity": 25,
+      "returnRate": 12.4
+    },
+    {
+      "securityId": 104,
+      "securityCode": "035420",
+      "securityName": "NAVER",
+      "searchAliases": ["네이버"],
+      "brandKey": "naver",
+      "journalDays": 7,
+      "buyCount": 4,
+      "sellCount": 3,
+      "recentJournalDate": "2026-08-23",
+      "holdingQuantity": 12,
+      "returnRate": -3.2
+    },
+    {
+      "securityId": 105,
+      "securityCode": "035720",
+      "securityName": "카카오",
+      "brandKey": "kakao",
+      "journalDays": 6,
+      "buyCount": 2,
+      "sellCount": 4,
+      "recentJournalDate": "2026-08-23",
+      "holdingQuantity": 30,
+      "returnRate": 5.8
+    }
+  ]
+}
