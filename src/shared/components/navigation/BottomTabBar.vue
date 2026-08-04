@@ -43,9 +43,10 @@ defineProps({
   padding: 6px;
   border: 1px solid #d9e7e8;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.07);
-  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(12px);
+  pointer-events: auto;
 }
 
 .bottom-tab-bar__item {
