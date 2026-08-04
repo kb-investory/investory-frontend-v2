@@ -11,9 +11,10 @@
     "recentSimulationCount": 3
   },
   "compileResponse": {
-    "jobId": "JOB_794FF6CC",
-    "status": "COMPLETED",
-    "botVersion": "v1.0",
+    "jobId": "JOB_794FF6CD",
+    "status": "RUNNING",
+    "progressPercent": 12,
+    "botVersion": "v3.0",
     "ruleSchema": {
       "universe": {
         "minMarketCap": 100000000000,
@@ -57,25 +58,89 @@
       "variantId": 1,
       "variantType": "ACTUAL_USER",
       "variantName": "실제 나",
-      "description": "사용자의 과거 실제 계좌 매수·매도 거래 내역 재현 봇"
+      "description": "실제 매매 내역 그대로 참가",
+      "className": "PLAYER 01",
+      "level": "",
+      "tone": "actual",
+      "fixed": true
     },
     {
       "variantId": 2,
       "variantType": "PERSONAL_BOT",
-      "variantName": "나의 투자봇 v1",
-      "description": "사용자의 확정 원칙과 6축 성향 기반 AI 투자봇"
+      "variantName": "나의 투자봇 v3",
+      "description": "성장 근거와 공시를 중시",
+      "className": "PERSONAL",
+      "level": "LV.3",
+      "traits": ["성장", "공시"],
+      "fixed": true,
+      "tone": "personal",
+      "strategyLabel": "PERSONAL STRATEGY",
+      "versionLine": "2026.07.24 업데이트 · 신뢰도 78%",
+      "summary": "성장 근거와 공시를 중요하게 보고, 단기 급등과 종목 집중에는 신중해요.",
+      "principles": [
+        "성장 근거와 위험 요인을 각각 하나 이상 확인해요.",
+        "5거래일 동안 15% 이상 오른 종목은 진입을 주의해요.",
+        "최초 투자 근거가 유지될 때만 최대 2회 추가매수해요."
+      ],
+      "rules": [
+        { "label": "종목 선택", "value": "성장 점수 70점 이상" },
+        { "label": "포트폴리오", "value": "한 종목 최대 20%" },
+        { "label": "매도", "value": "고점 대비 12% 하락 시" }
+      ],
+      "dataTitle": "나의 데이터로 만들어졌어요",
+      "dataSummary": "거래 34건 · 투자 일지 18건 · 확정 원칙 5개"
     },
     {
       "variantId": 3,
       "variantType": "FAMOUS_STRATEGY",
-      "variantName": "우량 가치·품질 퀀트 봇",
-      "description": "저PER·고ROE 우량주를 추적하는 가치·품질 기준 전략 봇"
+      "variantName": "유명 투자자",
+      "description": "가치와 품질을 오래 추적",
+      "className": "LEGEND",
+      "level": "4가지 유형",
+      "traits": ["가치", "장기"],
+      "fixed": false,
+      "tone": "legend",
+      "strategyLabel": "LEGEND STRATEGY",
+      "versionLine": "4가지 투자 유형 · 장기 성과 기반",
+      "summary": "검증된 투자 대가의 관점으로 기업 가치와 장기 경쟁력을 함께 살펴봐요.",
+      "principles": [
+        "가격보다 기업의 내재 가치와 현금 흐름을 먼저 확인해요.",
+        "지속 가능한 경쟁 우위가 있는 기업을 오래 보유해요.",
+        "시장 변동보다 기업의 본질이 바뀌었는지를 판단해요."
+      ],
+      "rules": [
+        { "label": "종목 선택", "value": "가치·품질 점수 상위" },
+        { "label": "포트폴리오", "value": "한 종목 최대 25%" },
+        { "label": "매도", "value": "투자 가설 훼손 시" }
+      ],
+      "dataTitle": "비교 데이터가 준비되어 있어요",
+      "dataSummary": "대가 전략 4종 · 분석 기업 120개 · 장기 원칙 12개"
     },
     {
       "variantId": 4,
       "variantType": "RANDOM_BOT",
-      "variantName": "원숭이 봇",
-      "description": "무작위 종목과 매매 시도를 반복하는 비교 기준 봇"
+      "variantName": "원숭이",
+      "description": "본능의 랜덤 픽 · 500회",
+      "className": "WILD CARD",
+      "level": "???",
+      "traits": ["랜덤", "혼돈"],
+      "fixed": false,
+      "tone": "random",
+      "strategyLabel": "WILD CARD",
+      "versionLine": "랜덤 시드 500회 · 매회 새 조합",
+      "summary": "예측 대신 무작위 선택으로 투자 결과의 우연성과 기준 전략을 비교해요.",
+      "principles": [
+        "투자 가능 종목 안에서 매수 대상을 무작위로 골라요.",
+        "특정 업종이나 테마에 의도적으로 치우치지 않아요.",
+        "정해진 주기마다 새로운 무작위 조합을 만들어요."
+      ],
+      "rules": [
+        { "label": "종목 선택", "value": "투자 가능 종목 중 랜덤" },
+        { "label": "포트폴리오", "value": "동일 비중 분산" },
+        { "label": "매도", "value": "정해진 리밸런싱일" }
+      ],
+      "dataTitle": "비교 데이터가 준비되어 있어요",
+      "dataSummary": "랜덤 실험 500회 · 평균 8종목 · 동일 조건 비교"
     }
   ],
   "run": {
