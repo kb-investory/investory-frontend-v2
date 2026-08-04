@@ -21,6 +21,15 @@ const actionError = ref('')
 const withdrawalVerified = computed(
   () => withdrawalEmail.value.trim() === mypageStore.profile?.email,
 )
+const recentSimulationHeadline = computed(() => {
+  const simulation = mypageStore.recentSimulation
+  if (!simulation) return ''
+
+  return `${simulation.botName}가 ${simulation.rank}위예요`
+})
+const recentSimulationBotLabel = computed(() =>
+  mypageStore.recentSimulation?.botName?.replace('나의 투자봇', '나의봇'),
+)
 
 function goToSection(section) {
   router.push({ name: ROUTE_NAMES.MYPAGE_PLACEHOLDER, params: { section } })
@@ -169,12 +178,7 @@ onMounted(async () => {
           v-if="mypageStore.recentSimulation"
           type="button"
           class="simulation-summary-card"
-          @click="
-            router.push({
-              name: ROUTE_NAMES.MYPAGE_SIMULATION_DETAIL,
-              params: { simulationId: mypageStore.recentSimulation.simulationId },
-            })
-          "
+          @click="router.push({ name: ROUTE_NAMES.SIMULATION })"
         >
           <div class="summary-card__header summary-card__header--simulation">
             <span class="summary-card__icon summary-card__icon--orange">
@@ -182,11 +186,11 @@ onMounted(async () => {
             </span>
             <small>최근 시뮬레이션</small>
           </div>
-          <p class="simulation-summary-card__headline">나의 투자봇 v3가 1위예요</p>
+          <p class="simulation-summary-card__headline">{{ recentSimulationHeadline }}</p>
           <div class="simulation-preview" aria-label="시뮬레이션 결과 미리보기">
             <span class="simulation-preview__mine">
               <AppIcon name="bot" :size="14" />
-              나의봇 v3
+              {{ recentSimulationBotLabel }}
             </span>
             <span class="simulation-preview__investor">
               <AppIcon name="medal" :size="14" />
@@ -198,7 +202,7 @@ onMounted(async () => {
             </span>
           </div>
           <span class="summary-card__action summary-card__action--simulation">
-            시뮬레이션 결과로 바로가기
+            시뮬레이션으로 바로가기
             <AppIcon name="arrow-right" :size="11" />
           </span>
         </button>

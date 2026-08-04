@@ -12,6 +12,7 @@ import {
   updateUserProfile,
 } from '@/features/mypage/api/mypageApi'
 import { getJournalEntries } from '@/features/journal/api/journalApi'
+import { getLatestSimulationResult } from '@/features/simulation/api/simulationApi'
 import { getLatestTendencyAnalysis } from '@/features/tendency/api/tendencyApi'
 
 const OAUTH_PROVIDER_LABELS = Object.freeze({
@@ -56,10 +57,11 @@ export const useMypageStore = defineStore('mypage', () => {
     error.value = null
 
     try {
-      const [overview, analysis, journalResponse] = await Promise.all([
+      const [overview, analysis, journalResponse, simulationResult] = await Promise.all([
         getMypageOverview(),
         getLatestTendencyAnalysis(),
         getJournalEntries(),
+        getLatestSimulationResult(),
       ])
       const oauthProvider = String(
         authUser?.oauthProvider || authUser?.socialType || overview.profile.oauthProvider || '',
@@ -79,7 +81,20 @@ export const useMypageStore = defineStore('mypage', () => {
         code: result.dimension.code,
         label: result.type.name,
       }))
-      recentSimulation.value = overview.recentSimulation
+      const rankedParticipants = [...(simulationResult?.participantSummary || [])].sort(
+        (first, second) => second.cumulativeReturnPercent - first.cumulativeReturnPercent,
+      )
+      const personalBotIndex = rankedParticipants.findIndex(
+        (participant) => participant.variantType === 'PERSONAL_BOT',
+      )
+      const personalBot = rankedParticipants[personalBotIndex]
+      recentSimulation.value = personalBot
+        ? {
+            simulationId: simulationResult.simulationRun?.simulationRunId,
+            botName: personalBot.variantName,
+            rank: personalBotIndex + 1,
+          }
+        : overview.recentSimulation
       accounts.value = overview.accounts
       appInfo.value = overview.appInfo
       hasTendencyAnalysis.value = Boolean(analysis)
