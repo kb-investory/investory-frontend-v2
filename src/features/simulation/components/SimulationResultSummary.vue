@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
+import SimulationParticipantAvatar from '@/features/simulation/components/SimulationParticipantAvatar.vue'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
 
@@ -67,7 +68,8 @@ function getVariantBadge(type) {
     <!-- Winner Hero Card (Screen 1G) -->
     <div class="winner-hero">
       <div class="winner-hero__icon-box">
-        <AppIcon name="sparkles" :size="24" />
+        <SimulationParticipantAvatar v-if="winner" :variant-type="winner.variantType" :size="36" />
+        <AppIcon v-else name="sparkles" :size="24" />
       </div>
 
       <div class="winner-hero__content">
@@ -94,6 +96,7 @@ function getVariantBadge(type) {
             <span class="rank-num" :class="{ 'rank-num--first': index === 0 }">{{
               index + 1
             }}</span>
+            <SimulationParticipantAvatar :variant-type="bot.variantType" :size="26" />
             <div class="bot-info">
               <div class="name-row">
                 <span class="bot-name">{{ bot.variantName }}</span>
@@ -162,6 +165,7 @@ function getVariantBadge(type) {
   flex-direction: column;
   gap: 16px;
   width: 100%;
+  padding-bottom: 122px;
 }
 
 .result-header {
@@ -171,7 +175,7 @@ function getVariantBadge(type) {
 }
 
 .race-complete-badge {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 700;
   color: #087f7c;
@@ -182,7 +186,7 @@ function getVariantBadge(type) {
 }
 
 .period-text {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: #64748b;
 }
@@ -277,7 +281,7 @@ function getVariantBadge(type) {
 }
 
 .rank-num {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 700;
   width: 22px;
@@ -399,8 +403,20 @@ function getVariantBadge(type) {
 }
 
 .action-buttons {
+  position: fixed;
+  z-index: 30;
+  bottom: 12px;
+  left: 50%;
   display: flex;
+  width: min(calc(100% - 40px), 350px);
   flex-direction: column;
   gap: 8px;
+  padding: 10px;
+  border: 1px solid rgb(220 230 233 / 90%);
+  border-radius: 16px;
+  background: rgb(255 255 255 / 94%);
+  box-shadow: 0 8px 24px rgb(38 58 67 / 15%);
+  transform: translateX(-50%);
+  backdrop-filter: blur(10px);
 }
 </style>

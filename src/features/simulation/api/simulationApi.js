@@ -8,6 +8,9 @@ function clone(value) {
   return structuredClone(value)
 }
 
+const compileJobAttempts = new Map()
+const MOCK_COMPILE_PROGRESS = [18, 36, 54, 72, 88, 100]
+
 export async function getSimulationOverview() {
   return clone(simulationData.overview)
 }
@@ -22,11 +25,34 @@ export async function getLatestSimulationResult() {
 }
 
 export async function compileSimulationBot() {
-  return clone(simulationData.compileResponse)
+  const response = clone(simulationData.compileResponse)
+  compileJobAttempts.set(response.jobId, 0)
+  return response
 }
 
 export async function getSimulationBotCompileJob(jobId) {
-  return clone(simulationData.compileJobs[jobId] ?? simulationData.compileJobs.JOB_794FF6CC)
+  const attempts = (compileJobAttempts.get(jobId) ?? 0) + 1
+  compileJobAttempts.set(jobId, attempts)
+
+  const job = clone(simulationData.compileJobs[jobId] ?? simulationData.compileJobs.JOB_794FF6CC)
+  const progressIndex = Math.min(attempts - 1, MOCK_COMPILE_PROGRESS.length - 1)
+  const progressPercent = MOCK_COMPILE_PROGRESS[progressIndex]
+
+  if (progressPercent === 100) {
+    return {
+      ...job,
+      status: 'COMPLETED',
+      progressPercent: 100,
+      message: 'AI 원칙 봇 전략 생성이 완료되었습니다.',
+    }
+  }
+
+  return {
+    ...job,
+    status: 'RUNNING',
+    progressPercent,
+    message: '최근 거래 기록과 투자 원칙을 분석하고 있습니다.',
+  }
 }
 
 export async function getSimulationComparators() {

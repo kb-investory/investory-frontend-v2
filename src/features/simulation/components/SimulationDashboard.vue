@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 
 import SimulationHeader from '@/features/simulation/components/SimulationHeader.vue'
+import SimulationParticipantAvatar from '@/features/simulation/components/SimulationParticipantAvatar.vue'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
 
@@ -34,9 +35,7 @@ function formatPercent(val) {
 
 <template>
   <div class="dashboard-page-container">
-    <!-- Header (Screen 1: 원칙 중심) -->
-    <SimulationHeader subtitle="나의 선택을 과거 시장에서 다시 확인해요." />
-
+    <SimulationHeader />
     <!-- Hero Card: 같은 날, 같은 돈으로 다시 투자해 본다면? -->
     <div class="hero-card">
       <!-- Help Icon (top right) -->
@@ -71,19 +70,19 @@ function formatPercent(val) {
       <!-- Participants Pill Row -->
       <div class="participants-row">
         <div class="p-pill">
-          <AppIcon name="user" :size="13" />
+          <SimulationParticipantAvatar variant-type="ACTUAL_USER" :size="16" />
           <span>실제 나</span>
         </div>
         <div class="p-pill">
-          <AppIcon name="sparkles" :size="13" />
+          <SimulationParticipantAvatar variant-type="PERSONAL_BOT" :size="16" />
           <span>원칙 봇</span>
         </div>
         <div class="p-pill">
-          <AppIcon name="award" :size="13" />
+          <SimulationParticipantAvatar variant-type="FAMOUS_STRATEGY" :size="16" />
           <span>유명 투자자</span>
         </div>
         <div class="p-pill">
-          <AppIcon name="target" :size="13" />
+          <SimulationParticipantAvatar variant-type="RANDOM_BOT" :size="16" />
           <span>원숭이</span>
         </div>
       </div>
@@ -135,7 +134,7 @@ function formatPercent(val) {
   gap: 16px;
   width: 100%;
   padding: 8px 20px 32px;
-  background: var(--bg-primary);
+  background: transparent;
   box-sizing: border-box;
 }
 
@@ -287,7 +286,7 @@ function formatPercent(val) {
 }
 
 .v-badge {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 700;
   color: #087f7c;
@@ -309,7 +308,7 @@ function formatPercent(val) {
 }
 
 .item-date {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 600;
   color: #181817;
@@ -327,7 +326,7 @@ function formatPercent(val) {
 }
 
 .return-text {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 700;
 }

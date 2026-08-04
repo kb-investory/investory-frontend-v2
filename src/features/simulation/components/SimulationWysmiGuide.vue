@@ -144,7 +144,7 @@ function goToJournalNew() {
   gap: 14px;
   width: 100%;
   padding: 8px 20px 32px;
-  background: var(--bg-primary);
+  background: transparent;
   box-sizing: border-box;
 }
 
@@ -221,7 +221,7 @@ function goToJournalNew() {
 }
 
 .progress-count {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 600;
   color: #384f59;
@@ -309,7 +309,7 @@ function goToJournalNew() {
 }
 
 .item-status.open-date {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-mono);
   font-weight: 700;
   color: #384f59;
 }
