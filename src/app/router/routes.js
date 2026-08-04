@@ -116,7 +116,12 @@ export const routes = [
     path: '/tendency',
     name: ROUTE_NAMES.TENDENCY,
     component: () => import('@/features/tendency/views/TendencyPage.vue'),
-    meta: { title: '투자 성향' },
+    meta: {
+      title: '투자 성향',
+      layout: 'full-bleed',
+      frameHeight: 920,
+      mainBottomPadding: 82,
+    },
   },
   {
     path: '/tendency/history/:analysisRunId',
