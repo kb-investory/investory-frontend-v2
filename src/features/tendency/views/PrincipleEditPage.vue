@@ -330,27 +330,21 @@ onBeforeUnmount(() => {
 <style scoped>
 .principle-edit-page {
   min-height: 100%;
-  padding-top: 54px;
   background: #ffffff;
-  box-shadow: 0 0 0 20px #ffffff;
 }
 
 .edit-app-bar {
-  position: fixed;
+  position: sticky;
   z-index: 40;
-  top: var(--mobile-frame-edge-offset, 0px);
-  left: 50%;
+  top: 0;
   display: grid;
-  width: min(100%, 390px);
-  min-height: 54px;
+  width: 100%;
+  min-height: 64px;
   grid-template-columns: 36px minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
-  padding: 10px 20px 7px;
-  border-bottom: 1px solid #e0e7e7;
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(10px);
-  transform: translateX(-50%);
+  padding: 12px 16px 10px;
+  background: #ffffff;
 }
 
 .edit-app-bar button {
@@ -384,7 +378,7 @@ onBeforeUnmount(() => {
 .edit-content {
   display: grid;
   gap: 13px;
-  padding-bottom: 92px;
+  padding: 8px 20px 92px;
 }
 
 .edit-hero h1,

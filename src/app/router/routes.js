@@ -139,7 +139,7 @@ export const routes = [
     path: '/tendency/principles/edit',
     name: ROUTE_NAMES.TENDENCY_PRINCIPLES_EDIT,
     component: () => import('@/features/tendency/views/PrincipleEditPage.vue'),
-    meta: { title: '투자원칙 수정', hideBottomNav: true },
+    meta: { title: '투자원칙 수정', layout: 'full-bleed', hideBottomNav: true, frameHeight: 920 },
   },
   {
     path: '/simulation',
