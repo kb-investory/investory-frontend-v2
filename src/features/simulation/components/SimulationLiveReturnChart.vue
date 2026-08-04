@@ -61,6 +61,7 @@ let cameraTargetViewport = null
 let cameraFrame = null
 let lastCameraFrameTime = null
 let chartBlankClickHandler = null
+let chartDataClickHandler = null
 let previousLeaderId = null
 let autoFocusTimer = null
 let rankOrderTimer = null
@@ -235,6 +236,89 @@ const chartSeries = computed(() => {
   })
 })
 
+function getReturnAtTimestamp(points, timestamp) {
+  if (!points.length) return null
+  if (timestamp <= points[0][0]) return points[0][1]
+  if (timestamp >= points.at(-1)[0]) return points.at(-1)[1]
+
+  const nextIndex = points.findIndex((point) => point[0] >= timestamp)
+  if (nextIndex <= 0) return points[0][1]
+
+  const current = points[nextIndex - 1]
+  const next = points[nextIndex]
+  const amount = (timestamp - current[0]) / (next[0] - current[0])
+  return current[1] + (next[1] - current[1]) * amount
+}
+
+const tradeMarkerSeries = computed(() => {
+  const focusedVariantId = selectedViewId.value === 'all' ? null : selectedViewId.value
+  const completedTrades = props.simulatedTrades.filter((trade) => {
+    const timestamp = new Date(trade.tradedAt).getTime()
+    const isCompleted = Number.isFinite(timestamp) && timestamp <= currentSimulationTimestamp.value
+    const isFocused =
+      !focusedVariantId || String(trade.simulationVariantId) === String(focusedVariantId)
+    return isCompleted && isFocused
+  })
+
+  return ['BUY', 'SELL']
+    .map((tradeSide) => {
+      const data = completedTrades
+        .filter((trade) => trade.tradeSide === tradeSide)
+        .map((trade) => {
+          const timestamp = new Date(trade.tradedAt).getTime()
+          const participantSeries = chartSeries.value.find(
+            (series) => series.id === String(trade.simulationVariantId),
+          )
+          const returnPercent = participantSeries
+            ? getReturnAtTimestamp(participantSeries.data, timestamp)
+            : null
+          if (returnPercent === null) return null
+
+          return {
+            value: [timestamp, returnPercent],
+            tradeId: trade.simulatedTradeId,
+            variantId: String(trade.simulationVariantId),
+            securityName: getSecurityMeta(trade.securityId).name,
+            quantity: trade.quantity,
+            unitPrice: trade.unitPrice,
+            decisionReason: trade.decisionReason,
+          }
+        })
+        .filter(Boolean)
+
+      return {
+        id: `trade-markers-${tradeSide.toLowerCase()}`,
+        name: tradeSide === 'BUY' ? '매수' : '매도',
+        type: 'scatter',
+        data,
+        symbol: 'triangle',
+        symbolRotate: tradeSide === 'SELL' ? 180 : 0,
+        symbolSize: cameraFocus.value.mode === 'full' ? 8 : 11,
+        z: 8,
+        itemStyle: {
+          color: tradeSide === 'BUY' ? '#F04F55' : '#3478D4',
+          borderColor: '#F7FAFB',
+          borderWidth: 1,
+        },
+        label: {
+          show: cameraFocus.value.mode === 'focus',
+          position: tradeSide === 'BUY' ? 'top' : 'bottom',
+          distance: 4,
+          color: tradeSide === 'BUY' ? '#FAD6D8' : '#CFE2FA',
+          fontSize: 7,
+          fontWeight: 700,
+          formatter: tradeSide === 'BUY' ? '매수' : '매도',
+        },
+        tooltip: {
+          trigger: 'item',
+          formatter: ({ data: item }) =>
+            `<strong>${tradeSide === 'BUY' ? '매수' : '매도'} · ${item.securityName}</strong><br/>${item.quantity}주 · ${formatCurrency(item.unitPrice)}<br/>${item.decisionReason}`,
+        },
+      }
+    })
+    .filter((series) => series.data.length)
+})
+
 const rankedSeries = computed(() =>
   chartSeries.value
     .map((series, originalIndex) => ({
@@ -399,6 +483,23 @@ function setContentView(view) {
     })
   }
 }
+
+function selectCameraView(viewId) {
+  if (autoFocusTimer) {
+    clearTimeout(autoFocusTimer)
+    autoFocusTimer = null
+  }
+  selectedViewId.value = selectedViewId.value === viewId && viewId !== 'all' ? 'all' : viewId
+}
+
+function openTradeView(participantId, tradeId = null) {
+  selectedTradeParticipantId.value = String(participantId)
+  selectedTradeTab.value = 'history'
+  selectedContentView.value = 'trades'
+  expandedTradeId.value = tradeId
+}
+
+defineExpose({ openTradeView })
 
 function toggleTradeDetails(tradeId) {
   expandedTradeId.value = expandedTradeId.value === tradeId ? null : tradeId
@@ -601,6 +702,8 @@ function startCameraTransition() {
 function updateChart() {
   if (!chart) return
   const viewport = cameraViewport ?? replayViewport.value
+  const visibleSeries = [...chartSeries.value, ...tradeMarkerSeries.value]
+  if (focusMarkerOverlay.value) visibleSeries.push(focusMarkerOverlay.value)
 
   chart.setOption(
     {
@@ -670,9 +773,7 @@ function updateChart() {
           },
         },
       },
-      series: focusMarkerOverlay.value
-        ? [...chartSeries.value, focusMarkerOverlay.value]
-        : chartSeries.value,
+      series: visibleSeries,
     },
     // 포커스 → 전체 보기 전환 시 병합된 포커스 마커가 남지 않도록 시리즈를 통째로 교체한다.
     { replaceMerge: ['series'] },
@@ -691,9 +792,20 @@ function handleOutsidePointerDown(event) {
 
 onMounted(() => {
   chart = echarts.init(chartElement.value, undefined, { renderer: 'svg' })
+  chartDataClickHandler = (params) => {
+    if (String(params.seriesId).startsWith('trade-markers-')) {
+      openTradeView(params.data.variantId, params.data.tradeId)
+      return
+    }
+
+    if (params.seriesType === 'line') {
+      selectCameraView(String(params.seriesId))
+    }
+  }
   chartBlankClickHandler = (event) => {
     if (!event.target) hideTooltip()
   }
+  chart.on('click', chartDataClickHandler)
   chart.getZr().on('click', chartBlankClickHandler)
   document.addEventListener('pointerdown', handleOutsidePointerDown, true)
   resizeObserver = new ResizeObserver(() => chart?.resize())
@@ -703,7 +815,7 @@ onMounted(() => {
   updateChart()
 })
 
-watch([chartSeries, focusMarkerOverlay, () => props.speed], () => {
+watch([chartSeries, tradeMarkerSeries, focusMarkerOverlay, () => props.speed], () => {
   if (!cameraFrame) updateChart()
 })
 
@@ -780,6 +892,7 @@ watch(rankedSeries, (series) => {
 onBeforeUnmount(() => {
   resizeObserver?.disconnect()
   document.removeEventListener('pointerdown', handleOutsidePointerDown, true)
+  if (chartDataClickHandler) chart?.off('click', chartDataClickHandler)
   if (chartBlankClickHandler) chart?.getZr().off('click', chartBlankClickHandler)
   if (cameraFrame) cancelAnimationFrame(cameraFrame)
   if (autoFocusTimer) clearTimeout(autoFocusTimer)
@@ -855,7 +968,7 @@ onBeforeUnmount(() => {
           :aria-label="option.name"
           :title="option.name"
           :style="{ '--view-color': option.color }"
-          @click="selectedViewId = option.id"
+          @click="selectCameraView(option.id)"
         >
           <div class="live-return-chart__view-avatar">
             <b v-if="option.rank" class="live-return-chart__view-rank">{{ option.rank }}위</b>
