@@ -44,6 +44,8 @@ let cameraTargetViewport = null
 let cameraFrame = null
 let lastCameraFrameTime = null
 let chartBlankClickHandler = null
+let previousLeaderId = null
+let autoFocusTimer = null
 
 const colorByVariantType = {
   ACTUAL_USER: '#F7FAFB',
@@ -515,11 +517,34 @@ watch(cameraOptions, (options) => {
   }
 })
 
+watch(rankedSeries, (series) => {
+  const leader = series[0]
+  if (!leader) {
+    previousLeaderId = null
+    return
+  }
+
+  const isInitialLeader = previousLeaderId === null
+  const hasLeaderChanged = previousLeaderId !== leader.id
+  previousLeaderId = leader.id
+
+  // 첫 렌더링은 건너뛰고, 1위가 바뀌는 순간만 새 선두를 잠시 따라간다.
+  if (isInitialLeader || !hasLeaderChanged || props.progress <= 0) return
+
+  selectedViewId.value = leader.id
+  if (autoFocusTimer) clearTimeout(autoFocusTimer)
+  autoFocusTimer = setTimeout(() => {
+    selectedViewId.value = 'all'
+    autoFocusTimer = null
+  }, 2400)
+})
+
 onBeforeUnmount(() => {
   resizeObserver?.disconnect()
   document.removeEventListener('pointerdown', handleOutsidePointerDown, true)
   if (chartBlankClickHandler) chart?.getZr().off('click', chartBlankClickHandler)
   if (cameraFrame) cancelAnimationFrame(cameraFrame)
+  if (autoFocusTimer) clearTimeout(autoFocusTimer)
   chart?.dispose()
 })
 </script>
