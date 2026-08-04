@@ -124,9 +124,7 @@ watch(securityCode, loadTimeline, { immediate: true })
         <AppIcon name="chevron-left" :size="20" />
       </button>
       <h1>종목 거래 일지</h1>
-      <button type="button" aria-label="다른 종목 검색" @click="goToSearch">
-        <AppIcon name="search" :size="19" />
-      </button>
+      <span aria-hidden="true" />
     </header>
 
     <main v-if="isLoading" class="stock-journal-page__state" aria-label="불러오는 중">

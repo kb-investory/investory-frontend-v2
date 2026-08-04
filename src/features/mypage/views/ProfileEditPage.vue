@@ -6,7 +6,6 @@ import { ROUTE_NAMES } from '@/app/router/route-names'
 import { useMypageStore } from '@/features/mypage/stores/mypageStore'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
-import MobileStatusBar from '@/shared/components/MobileStatusBar.vue'
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
@@ -119,7 +118,6 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', handleBeforeUnl
 
 <template>
   <div class="profile-edit-page">
-    <MobileStatusBar />
     <header class="profile-app-bar">
       <button
         type="button"
@@ -222,18 +220,12 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', handleBeforeUnl
   background: #fff;
   color: #263a3f;
 }
-.profile-edit-page :deep(.mobile-status-bar) {
-  height: 44px;
-  padding: 0 18px;
-  background: #fff;
-  font-size: 10px;
-}
 .profile-app-bar {
   display: grid;
-  min-height: 48px;
+  min-height: 64px;
   grid-template-columns: 36px 1fr 36px;
   align-items: center;
-  padding: 0 16px 8px;
+  padding: 12px 16px 10px;
 }
 .profile-app-bar button {
   display: grid;
@@ -255,7 +247,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', handleBeforeUnl
 .profile-edit-content {
   display: grid;
   gap: 12px;
-  padding: 0 18px 100px;
+  padding: 8px 18px 100px;
 }
 .profile-preview {
   display: grid;
