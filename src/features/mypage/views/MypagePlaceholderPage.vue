@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
 import AppIcon from '@/shared/components/AppIcon.vue'
-import MobileStatusBar from '@/shared/components/MobileStatusBar.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -66,7 +65,6 @@ const content = computed(() => {
 
 <template>
   <div class="placeholder-page">
-    <MobileStatusBar />
     <header>
       <button
         type="button"
@@ -101,18 +99,12 @@ const content = computed(() => {
   background: #fff;
   color: #263a3f;
 }
-.placeholder-page :deep(.mobile-status-bar) {
-  height: 44px;
-  padding: 0 18px;
-  background: #fff;
-  font-size: 10px;
-}
 .placeholder-page > header {
   display: grid;
-  min-height: 48px;
+  min-height: 64px;
   grid-template-columns: 36px 1fr 36px;
   align-items: center;
-  padding: 0 16px 8px;
+  padding: 12px 16px 10px;
 }
 .placeholder-page > header button {
   display: grid;
