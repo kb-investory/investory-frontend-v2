@@ -245,17 +245,26 @@ onMounted(async () => {
   color: #263a3f;
 }
 .accounts-page :deep(.mobile-status-bar) {
+  position: sticky;
+  z-index: 82;
+  top: 0;
   height: 44px;
   padding: 0 18px;
   background: #fff;
   font-size: 10px;
 }
 .accounts-app-bar {
+  position: sticky;
+  z-index: 81;
+  top: 44px;
   display: grid;
   min-height: 48px;
   grid-template-columns: 36px 1fr 36px;
   align-items: center;
   padding: 0 16px 8px;
+  border-bottom: 1px solid rgba(224, 232, 232, 0.82);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
 }
 .accounts-app-bar button {
   display: grid;

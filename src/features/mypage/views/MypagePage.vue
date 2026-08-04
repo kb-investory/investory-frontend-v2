@@ -100,7 +100,7 @@ onMounted(async () => {
 
     <header class="mypage-header">
       <div class="mypage-header__brand">
-        <img src="/assets/icons/monkey.png" alt="Investory" />
+        <img src="/assets/logos/investory-logo.png" alt="Investory 로고" />
         <h1>마이페이지</h1>
       </div>
       <button type="button" aria-label="마이페이지 도움말" @click="modal = 'help'">
@@ -320,6 +320,9 @@ onMounted(async () => {
 }
 
 .mypage-page :deep(.mobile-status-bar) {
+  position: sticky;
+  z-index: 82;
+  top: 0;
   height: 44px;
   padding: 0 18px;
   background: #fff;
@@ -327,11 +330,17 @@ onMounted(async () => {
 }
 
 .mypage-header {
+  position: sticky;
+  z-index: 81;
+  top: 44px;
   display: flex;
   min-height: 48px;
   align-items: center;
   justify-content: space-between;
   padding: 0 18px 8px;
+  border-bottom: 1px solid rgba(224, 232, 232, 0.82);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
 }
 
 .mypage-header__brand {
@@ -340,13 +349,14 @@ onMounted(async () => {
   gap: 8px;
 }
 .mypage-header__brand img {
-  width: 30px;
-  height: 30px;
+  width: 50px;
+  height: 26px;
   object-fit: contain;
 }
 .mypage-header h1 {
   margin: 0;
-  font-size: 16px;
+  font-size: 19px;
+  font-weight: 850;
   letter-spacing: -0.04em;
 }
 .mypage-header > button {
