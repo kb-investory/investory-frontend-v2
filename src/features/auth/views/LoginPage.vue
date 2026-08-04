@@ -23,9 +23,7 @@ async function handleSocialLogin(provider) {
     <div class="login-shell">
       <main class="login-content">
         <div class="brand-intro">
-          <div class="brand-logo" aria-label="Investory">
-            <span>Inve</span><strong>S</strong><span>tory</span><i />
-          </div>
+          <img class="brand-logo" src="/assets/logos/investory-logo.png" alt="Investory" />
 
           <div class="welcome-message">
             <span class="welcome-message__line" aria-hidden="true" />
@@ -105,29 +103,12 @@ async function handleSocialLogin(provider) {
 }
 
 .brand-logo {
-  display: flex;
-  width: fit-content;
-  align-items: baseline;
-  color: #111111;
-  font-family: var(--font-heading);
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: -1px;
-}
-
-.brand-logo strong {
-  color: var(--brand-teal);
-  font-size: 33px;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.brand-logo i {
-  width: 6px;
-  height: 6px;
-  margin-left: 3px;
-  border-radius: 50%;
-  background: var(--brand-teal);
+  display: block;
+  width: 118px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: contain;
+  object-position: center;
 }
 
 .welcome-message {
