@@ -14,9 +14,9 @@ const {
   actualParticipant,
   comparatorRoster: roster,
   botCompileProgress,
-  botCompileStatus,
   isBotCompiling,
   isBotCompileComplete,
+  isBotCompileFailed,
   selectedComparatorTypes: selectedComparators,
   selectedParticipantCount: selectedBotCount,
 } = storeToRefs(simulationStore)
@@ -32,11 +32,26 @@ function openBotModal(bot) {
 }
 
 function isPersonalBotLoading(bot) {
+  return bot?.variantType === 'PERSONAL_BOT' && isBotCompiling.value
+}
+
+function isPersonalBotUnavailable(bot) {
   return bot?.variantType === 'PERSONAL_BOT' && !isBotCompileComplete.value
 }
 
 function toggleBotSelection(bot) {
   simulationStore.toggleComparator(bot?.variantType)
+}
+
+function handlePrimaryAction() {
+  if (isBotCompileFailed.value) {
+    void simulationStore.compilePersonalBot()
+    return
+  }
+
+  if (isBotCompileComplete.value) {
+    emit('confirm', selectedComparators.value)
+  }
 }
 </script>
 
@@ -84,7 +99,7 @@ function toggleBotSelection(bot) {
         <button
           type="button"
           class="roster-card__details"
-          :disabled="isPersonalBotLoading(bot)"
+          :disabled="isPersonalBotUnavailable(bot)"
           @click="openBotModal(bot)"
         >
           <div class="roster-card__avatar">
@@ -99,6 +114,9 @@ function toggleBotSelection(bot) {
               class="roster-card__title-skeleton"
               aria-label="나의 투자봇 생성 중"
             ></span>
+            <strong v-else-if="bot.variantType === 'PERSONAL_BOT' && isBotCompileFailed">
+              투자봇 생성 실패
+            </strong>
             <strong v-else>{{ bot.variantName }}</strong>
             <small>{{ bot.description }}</small>
             <div class="roster-card__traits">
@@ -122,7 +140,7 @@ function toggleBotSelection(bot) {
                 : `${bot.variantName} 선택`
           "
           :aria-pressed="isSelected(bot)"
-          :disabled="bot.fixed"
+          :disabled="bot.fixed || isPersonalBotUnavailable(bot)"
           @click="toggleBotSelection(bot)"
         >
           <AppIcon
@@ -130,6 +148,11 @@ function toggleBotSelection(bot) {
             name="loader-circle"
             :size="16"
             class="roster-card__loader"
+          />
+          <AppIcon
+            v-else-if="bot.variantType === 'PERSONAL_BOT' && isBotCompileFailed"
+            name="triangle-alert"
+            :size="16"
           />
           <AppIcon v-else :name="isSelected(bot) ? 'check' : 'plus'" :size="16" />
         </button>
@@ -140,21 +163,18 @@ function toggleBotSelection(bot) {
       <BaseButton
         variant="primary"
         full-width
-        :disabled="!isBotCompileComplete"
-        @click="emit('confirm', selectedComparators)"
+        :disabled="!isBotCompileComplete && !isBotCompileFailed"
+        aria-live="polite"
+        @click="handlePrimaryAction"
       >
-        <template v-if="!isBotCompileComplete">
-          <AppIcon
-            :name="botCompileStatus === 'FAILED' ? 'triangle-alert' : 'loader-circle'"
-            :size="17"
-            :class="{ 'roster-card__loader': isBotCompiling }"
-          />
+        <template v-if="isBotCompileFailed">
+          <AppIcon name="refresh-cw" :size="17" />
+          <span>투자봇 다시 생성하기</span>
+        </template>
+        <template v-else-if="!isBotCompileComplete">
+          <AppIcon name="loader-circle" :size="17" class="roster-card__loader" />
           <span>
-            {{
-              botCompileStatus === 'FAILED'
-                ? '투자봇 생성에 실패했어요'
-                : `투자봇 생성 중 ${botCompileProgress}%`
-            }}
+            {{ `투자봇 생성 중 ${botCompileProgress}%` }}
           </span>
         </template>
         <template v-else>

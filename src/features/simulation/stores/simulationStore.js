@@ -57,6 +57,7 @@ export const useSimulationStore = defineStore('simulation', () => {
     ['QUEUED', 'RUNNING'].includes(botCompileStatus.value),
   )
   const isBotCompileComplete = computed(() => botCompileStatus.value === 'COMPLETED')
+  const isBotCompileFailed = computed(() => botCompileStatus.value === 'FAILED')
 
   async function fetchOverview() {
     loading.value = true
@@ -88,6 +89,7 @@ export const useSimulationStore = defineStore('simulation', () => {
 
     botCompileStatus.value = 'QUEUED'
     botCompileProgress.value = 0
+    botCompileJobId.value = null
     botCompileError.value = null
 
     try {
@@ -219,6 +221,7 @@ export const useSimulationStore = defineStore('simulation', () => {
     selectedParticipantCount,
     isBotCompiling,
     isBotCompileComplete,
+    isBotCompileFailed,
     MIN_REQUIRED_DAYS,
     fetchOverview,
     fetchComparators,
