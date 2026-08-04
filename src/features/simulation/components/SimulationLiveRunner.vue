@@ -2,8 +2,8 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import AppIcon from '@/shared/components/AppIcon.vue'
-import StatusBadge from '@/shared/components/badges/StatusBadge.vue'
 import SimulationLiveReturnChart from '@/features/simulation/components/SimulationLiveReturnChart.vue'
+import SimulationParticipantAvatar from '@/features/simulation/components/SimulationParticipantAvatar.vue'
 
 const props = defineProps({
   participants: {
@@ -204,7 +204,6 @@ function togglePlay() {
 }
 
 function goToNextStep() {
-  if (progress.value < 100) return
   emit('complete')
 }
 
@@ -231,19 +230,16 @@ function formatPercent(val) {
 }
 
 function formatPeriodDate(date) {
-  return date ? date.replaceAll('-', '.') : '-'
+  if (!date) return '-'
+  const [year, month, day] = date.split('-')
+  return `${year.slice(-2)}.${month}.${day}.`
 }
 </script>
 
 <template>
-  <div class="live-runner-container">
+  <div class="live-runner-container has-next-step">
     <!-- Top Header -->
     <div class="live-header">
-      <div class="live-header__title-row">
-        <h2 class="live-title">라이브 시뮬레이션</h2>
-        <StatusBadge :status-text="progress < 100 ? '진행 중' : '완료'" step-text="" />
-      </div>
-
       <!-- Playback Speed Controls -->
       <div class="live-header__controls">
         <span class="speed-controls__label">재생 속도</span>
@@ -270,7 +266,7 @@ function formatPeriodDate(date) {
         <div>
           <span>시뮬레이션 기간</span>
           <strong>
-            {{ formatPeriodDate(periodStart || timelineDates[0]) }} −
+            {{ formatPeriodDate(periodStart || timelineDates[0]) }} ~
             {{ formatPeriodDate(periodEnd || timelineDates.at(-1)) }}
           </strong>
         </div>
@@ -287,6 +283,8 @@ function formatPeriodDate(date) {
     <SimulationLiveReturnChart
       :participants="participants"
       :daily-performance="dailyPerformance"
+      :simulated-trades="simulatedTrades"
+      :initial-capital="initialCapital"
       :progress="progress"
       :speed="speed"
       :total-days="150"
@@ -306,7 +304,7 @@ function formatPeriodDate(date) {
           class="rank-row"
         >
           <b class="rank-badge" :class="{ 'rank-badge--top': index === 0 }">{{ index + 1 }}</b>
-          <i class="rank-dot" :class="`rank-dot--${bot.variantType.toLowerCase()}`"></i>
+          <SimulationParticipantAvatar :variant-type="bot.variantType" :size="20" />
           <strong class="rank-name">{{ bot.variantName }}</strong>
           <div class="rank-performance">
             <span
@@ -330,8 +328,8 @@ function formatPeriodDate(date) {
       </div>
     </div>
 
-    <button v-if="progress >= 100" type="button" class="next-step-btn" @click="goToNextStep">
-      <span>다음 단계</span>
+    <button type="button" class="next-step-btn" @click="goToNextStep">
+      <span>결과 확인하러 가기</span>
       <AppIcon name="arrow-right" :size="16" />
     </button>
   </div>
@@ -348,10 +346,8 @@ function formatPeriodDate(date) {
 .live-header {
   display: flex;
   flex-direction: column;
-  gap: 16px;
 }
 
-.live-header__title-row,
 .live-header__controls {
   display: flex;
   align-items: center;
@@ -359,43 +355,33 @@ function formatPeriodDate(date) {
   gap: 12px;
 }
 
-.live-title {
-  margin: 0;
-  color: #263a43;
-  font-size: 22px;
-  font-weight: 800;
-  line-height: 1.3;
-  letter-spacing: -0.02em;
-  white-space: nowrap;
-}
-
 .speed-controls__label {
   color: #263a43;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
 }
 
 .speed-controls {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px;
+  gap: 3px;
+  padding: 3px;
   border: 1px solid #dfe8eb;
-  border-radius: 15px;
+  border-radius: 13px;
   background: #f7fafb;
 }
 
 .speed-btn {
-  min-width: 38px;
-  height: 38px;
-  padding: 0 10px;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
   border: none;
   background: none;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 12px;
   font-weight: 700;
   color: #66777d;
-  border-radius: 10px;
+  border-radius: 9px;
   cursor: pointer;
 }
 
@@ -409,9 +395,9 @@ function formatPeriodDate(date) {
   border: none;
   background: #263a43;
   color: #ffffff;
-  width: 38px;
-  height: 38px;
-  border-radius: 11px;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -425,7 +411,7 @@ function formatPeriodDate(date) {
 
 .simulation-conditions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   overflow: hidden;
   border: 1px solid #dce5e8;
   border-radius: 16px;
@@ -434,26 +420,27 @@ function formatPeriodDate(date) {
 
 .simulation-condition {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 9px;
   min-width: 0;
-  padding: 18px 14px;
+  padding: 13px 14px;
 }
 
 .simulation-condition + .simulation-condition {
-  border-left: 1px solid #e7edef;
+  border-top: 1px solid #e7edef;
 }
 
 .simulation-condition .app-icon {
-  margin-top: 2px;
   color: #0ea5a6;
 }
 
 .simulation-condition div {
   display: flex;
+  flex: 1;
   min-width: 0;
-  flex-direction: column;
-  gap: 5px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .simulation-condition span {
@@ -508,7 +495,7 @@ function formatPeriodDate(date) {
 
 .rank-row {
   display: grid;
-  grid-template-columns: 25px 8px minmax(0, 1fr) auto;
+  grid-template-columns: 25px 20px minmax(0, 1fr) auto;
   align-items: center;
   gap: 7px;
   min-height: 32px;
@@ -582,11 +569,15 @@ function formatPeriodDate(date) {
 }
 
 .next-step-btn {
+  position: fixed;
+  z-index: 30;
+  bottom: 16px;
+  left: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  width: 100%;
+  width: min(calc(100% - 40px), 350px);
   min-height: 48px;
   padding: 12px 18px;
   border: 0;
@@ -597,23 +588,28 @@ function formatPeriodDate(date) {
   font-weight: 700;
   cursor: pointer;
   box-shadow: 0 8px 20px rgb(38 58 67 / 18%);
+  transform: translateX(-50%);
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
 }
 
 .next-step-btn:hover {
-  transform: translateY(-1px);
+  transform: translate(-50%, -1px);
   background: #1f363e;
   box-shadow: 0 10px 24px rgb(31 54 62 / 24%);
 }
 
 .next-step-btn:active {
-  transform: translateY(0);
+  transform: translateX(-50%);
 }
 
 .next-step-btn:focus-visible {
   outline: 2px solid #0ea5a6;
   outline-offset: 2px;
+}
+
+.live-runner-container.has-next-step {
+  padding-bottom: 72px;
 }
 </style>
