@@ -14,8 +14,7 @@ const props = defineProps({
 
 const hasImageError = ref(false)
 const logoUrl = computed(
-  () =>
-    `https://ssl.pstatic.net/imgstock/fn/real/logo/stock/Stock${props.stock.securityCode}.svg`,
+  () => `https://ssl.pstatic.net/imgstock/fn/real/logo/stock/Stock${props.stock.securityCode}.svg`,
 )
 
 watch(
