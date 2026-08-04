@@ -100,4 +100,12 @@ defineProps({
   align-items: center;
   justify-content: center;
 }
+
+.base-button__text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+}
 </style>
