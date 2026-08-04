@@ -164,15 +164,20 @@ onMounted(async () => {
               {{ badge.label }}
             </span>
           </div>
-          <p v-else class="tendency-summary-card__empty">분석 후 6가지 성향 결과가 표시돼요</p>
+          <div v-else class="summary-empty-state">
+            <img src="/assets/icons/monkey-question.png" alt="" />
+            <div class="summary-empty-state__copy">
+              <strong>아직 분석 전이에요</strong>
+              <p>나의 6가지 성향을<br />먼저 확인해보세요</p>
+            </div>
+          </div>
           <span class="summary-card__action">
-            투자성향으로 바로가기
+            {{ mypageStore.tendencyBadges.length ? '투자성향으로 바로가기' : '투자성향 분석하기' }}
             <AppIcon name="arrow-right" :size="11" />
           </span>
         </button>
 
         <button
-          v-if="mypageStore.recentSimulation"
           type="button"
           class="simulation-summary-card"
           @click="router.push({ name: ROUTE_NAMES.SIMULATION })"
@@ -181,25 +186,34 @@ onMounted(async () => {
             <span class="summary-card__icon summary-card__icon--orange">
               <AppIcon name="trophy" :size="17" />
             </span>
-            <small>최근 시뮬레이션</small>
+            <small>{{ mypageStore.recentSimulation ? '최근 시뮬레이션' : '시뮬레이션' }}</small>
           </div>
-          <p class="simulation-summary-card__headline">{{ recentSimulationHeadline }}</p>
-          <div class="simulation-preview" aria-label="시뮬레이션 결과 미리보기">
-            <span class="simulation-preview__mine">
-              <AppIcon name="bot" :size="14" />
-              {{ recentSimulationBotLabel }}
-            </span>
-            <span class="simulation-preview__investor">
-              <AppIcon name="medal" :size="14" />
-              유명 투자자
-            </span>
-            <span class="simulation-preview__monkey">
-              <AppIcon name="paw-print" :size="14" />
-              원숭이
-            </span>
+          <template v-if="mypageStore.recentSimulation">
+            <p class="simulation-summary-card__headline">{{ recentSimulationHeadline }}</p>
+            <div class="simulation-preview" aria-label="시뮬레이션 결과 미리보기">
+              <span class="simulation-preview__mine">
+                <AppIcon name="bot" :size="14" />
+                {{ recentSimulationBotLabel }}
+              </span>
+              <span class="simulation-preview__investor">
+                <AppIcon name="medal" :size="14" />
+                유명 투자자
+              </span>
+              <span class="simulation-preview__monkey">
+                <AppIcon name="paw-print" :size="14" />
+                원숭이
+              </span>
+            </div>
+          </template>
+          <div v-else class="summary-empty-state summary-empty-state--simulation">
+            <img src="/assets/icons/monkey-question.png" alt="" />
+            <div class="summary-empty-state__copy">
+              <strong>아직 결과가 없어요</strong>
+              <p>투자봇 4개로<br />첫 대결을 시작해보세요</p>
+            </div>
           </div>
           <span class="summary-card__action summary-card__action--simulation">
-            시뮬레이션으로 바로가기
+            {{ mypageStore.recentSimulation ? '시뮬레이션으로 바로가기' : '시뮬레이션 시작하기' }}
             <AppIcon name="arrow-right" :size="11" />
           </span>
         </button>
@@ -568,10 +582,39 @@ onMounted(async () => {
   background: #2eb5ff;
   content: '';
 }
-.tendency-summary-card__empty {
+.summary-empty-state {
+  display: flex;
+  min-height: 51px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.summary-empty-state img {
+  width: 43px;
+  height: 43px;
+  flex: 0 0 43px;
+  object-fit: contain;
+}
+.summary-empty-state__copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.summary-empty-state__copy strong {
+  color: #2e3032;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+.summary-empty-state__copy p {
   margin: 0;
   color: #7d8b8e;
-  font-size: 7px;
+  font-size: 6.5px;
+  line-height: 1.45;
+}
+.summary-empty-state--simulation .summary-empty-state__copy p {
+  color: #887967;
 }
 .simulation-summary-card__headline {
   min-height: 20px;
