@@ -116,7 +116,12 @@ export const routes = [
     path: '/tendency',
     name: ROUTE_NAMES.TENDENCY,
     component: () => import('@/features/tendency/views/TendencyPage.vue'),
-    meta: { title: '투자 성향' },
+    meta: {
+      title: '투자 성향',
+      layout: 'full-bleed',
+      frameHeight: 920,
+      mainBottomPadding: 82,
+    },
   },
   {
     path: '/tendency/history/:analysisRunId',
@@ -134,7 +139,7 @@ export const routes = [
     path: '/tendency/principles/edit',
     name: ROUTE_NAMES.TENDENCY_PRINCIPLES_EDIT,
     component: () => import('@/features/tendency/views/PrincipleEditPage.vue'),
-    meta: { title: '투자원칙 수정', hideBottomNav: true },
+    meta: { title: '투자원칙 수정', layout: 'full-bleed', hideBottomNav: true, frameHeight: 920 },
   },
   {
     path: '/simulation',
