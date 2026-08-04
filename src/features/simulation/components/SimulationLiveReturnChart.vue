@@ -1,15 +1,17 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import * as echarts from 'echarts/core'
-import { EffectScatterChart, LineChart } from 'echarts/charts'
+import { LineChart, ScatterChart } from 'echarts/charts'
 import { GridComponent, MarkPointComponent, TooltipComponent } from 'echarts/components'
 import { SVGRenderer } from 'echarts/renderers'
 
+import AppIcon from '@/shared/components/AppIcon.vue'
+
 echarts.use([
-  EffectScatterChart,
   GridComponent,
   LineChart,
   MarkPointComponent,
+  ScatterChart,
   SVGRenderer,
   TooltipComponent,
 ])
@@ -61,6 +63,14 @@ const markerSymbolByVariantType = {
     'path://M4 4h16v16H4zM7 7h3v3H7zM14 7h3v3h-3zM10.5 10.5h3v3h-3zM7 14h3v3H7zM14 14h3v3h-3z',
 }
 
+// 추후 전달받은 전용 아이콘으로 이 매핑만 교체하면 된다.
+const viewIconByVariantType = {
+  ACTUAL_USER: 'user',
+  PERSONAL_BOT: 'sparkles',
+  FAMOUS_STRATEGY: 'trophy',
+  RANDOM_BOT: 'circle-help',
+}
+
 const timelineDates = computed(() =>
   [...new Set(props.dailyPerformance.map((snapshot) => snapshot.snapshotDate))].sort(),
 )
@@ -88,7 +98,7 @@ const chartSeries = computed(() => {
   const completedIndex = Math.floor(segmentProgress)
   const interpolation = segmentProgress - completedIndex
 
-  return props.participants.map((participant) => {
+  return props.participants.map((participant, participantIndex) => {
     const snapshots = performanceByVariant.value.get(participant.variantId) ?? []
     const completedSnapshots = snapshots.slice(0, completedIndex + 1)
     const data = completedSnapshots.map((snapshot) => [
@@ -125,13 +135,36 @@ const chartSeries = computed(() => {
         silent: true,
         symbol: markerSymbolByVariantType[participant.variantType] ?? 'circle',
         symbolSize: 14,
-        label: { show: false },
+        label: {
+          show: selectedViewId.value === 'all',
+          position: 'right',
+          distance: 6,
+          offset: [0, (participantIndex - 1.5) * 2],
+          color: '#DCE7EA',
+          fontFamily: 'Geist Mono, monospace',
+          fontSize: 8,
+          fontWeight: 700,
+          backgroundColor: 'rgba(23, 45, 53, 0.82)',
+          borderColor: colorByVariantType[participant.variantType] ?? '#66777D',
+          borderWidth: 1,
+          borderRadius: 5,
+          padding: [3, 5],
+          formatter: ({ value }) =>
+            `${Number(value) > 0 ? '+' : ''}${Number(value).toFixed(1)}%`,
+        },
         itemStyle: {
           color: colorByVariantType[participant.variantType] ?? '#66777D',
           borderColor: '#263F48',
           borderWidth: 2,
         },
-        data: data.length ? [{ coord: data.at(-1) }] : [],
+        data: data.length
+          ? [
+              {
+                coord: data.at(-1),
+                value: data.at(-1)[1],
+              },
+            ]
+          : [],
       },
       itemStyle: {
         color: colorByVariantType[participant.variantType] ?? '#66777D',
@@ -168,18 +201,19 @@ const cameraFocus = computed(() => {
 
 const focusedIdSet = computed(() => new Set(cameraFocus.value.ids))
 
-const cameraOptions = computed(() => [
-  { id: 'all', label: '전체', name: '전체 그래프' },
-  ...rankedSeries.value.map((series) => ({
-    id: series.id,
-    label: `${series.rank}위`,
-    name: series.name,
-  })),
-])
-
 const legendSeries = computed(() =>
   [...rankedSeries.value].sort((a, b) => a.originalIndex - b.originalIndex),
 )
+
+const cameraOptions = computed(() => [
+  { id: 'all', icon: 'activity', name: '전체 그래프', color: '#B8C7CC' },
+  ...legendSeries.value.map((series) => ({
+    id: series.id,
+    icon: viewIconByVariantType[series.variantType] ?? 'circle-help',
+    name: `${series.rank}위 · ${series.name}`,
+    color: series.itemStyle.color,
+  })),
+])
 
 function getNiceStep(range) {
   const roughStep = Math.max(range / 4, 0.1)
@@ -259,12 +293,11 @@ const focusMarkerOverlay = computed(() => {
   const focused = rankedSeries.value.find((series) => focusedIdSet.value.has(series.id))
 
   if (!focused) return null
-  const shortName = focused.name.length > 8 ? `${focused.name.slice(0, 8)}…` : focused.name
 
   return {
     id: 'focus-marker-overlay',
     name: `${focused.name} 포커스`,
-    type: 'effectScatter',
+    type: 'scatter',
     data: [focused.point],
     symbol: markerSymbolByVariantType[focused.variantType] ?? 'circle',
     symbolSize: 24,
@@ -274,23 +307,20 @@ const focusMarkerOverlay = computed(() => {
       color: focused.itemStyle.color,
     },
     label: {
-      show: false,
-      position: 'right',
-      distance: 9,
-      color: '#F7FAFB',
+      show: true,
+      position: 'top',
+      distance: 10,
+      color: '#263F48',
       fontSize: 10,
       fontWeight: 700,
-      backgroundColor: 'rgba(31, 54, 62, 0.94)',
+      backgroundColor: '#F7FAFB',
       borderColor: focused.itemStyle.color,
       borderWidth: 1,
       borderRadius: 7,
-      padding: [5, 7],
-      formatter: `${focused.rank}위 ${shortName}\n${focused.point[1] > 0 ? '+' : ''}${focused.point[1].toFixed(1)}%`,
-    },
-    rippleEffect: {
-      brushType: 'stroke',
-      period: 2.4,
-      scale: 3.2,
+      padding: [5, 8],
+      shadowBlur: 8,
+      shadowColor: 'rgba(16, 36, 43, 0.2)',
+      formatter: `${focused.point[1] > 0 ? '+' : ''}${focused.point[1].toFixed(1)}%`,
     },
   }
 })
@@ -364,76 +394,81 @@ function updateChart() {
   if (!chart) return
   const viewport = cameraViewport ?? replayViewport.value
 
-  chart.setOption({
-    animation: true,
-    animationDuration: 0,
-    // 진행 값 자체를 매 프레임 보간하므로 ECharts의 중첩 업데이트 애니메이션은 사용하지 않는다.
-    animationDurationUpdate: 0,
-    animationEasingUpdate: 'linear',
-    grid: {
-      top: 16,
-      right: 12,
-      bottom: 26,
-      left: 38,
-    },
-    tooltip: {
-      trigger: 'axis',
-      backgroundColor: '#172D35',
-      borderColor: '#45616B',
-      borderWidth: 1,
-      textStyle: {
-        color: '#FFFFFF',
-        fontSize: 11,
+  chart.setOption(
+    {
+      animation: true,
+      animationDuration: 0,
+      // 진행 값 자체를 매 프레임 보간하므로 ECharts의 중첩 업데이트 애니메이션은 사용하지 않는다.
+      animationDurationUpdate: 0,
+      animationEasingUpdate: 'linear',
+      grid: {
+        top: 16,
+        // 전체 보기에서 끝점 오른쪽의 작은 수익률 말풍선이 잘리지 않을 공간만 확보한다.
+        right: cameraFocus.value.mode === 'full' ? 48 : 12,
+        bottom: 26,
+        left: 38,
       },
-      valueFormatter: (value) => `${Number(value).toFixed(1)}%`,
-    },
-    xAxis: {
-      type: 'time',
-      min: viewport.xMin,
-      max: viewport.xMax,
-      splitNumber: 4,
-      minInterval: 7 * 24 * 60 * 60 * 1000,
-      axisLine: {
-        lineStyle: { color: '#48616A' },
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: '#172D35',
+        borderColor: '#45616B',
+        borderWidth: 1,
+        textStyle: {
+          color: '#FFFFFF',
+          fontSize: 11,
+        },
+        valueFormatter: (value) => `${Number(value).toFixed(1)}%`,
       },
-      axisTick: { show: false },
-      axisLabel: {
-        color: '#91A8B2',
-        fontFamily: 'Geist Mono, monospace',
-        fontSize: 9,
-        hideOverlap: true,
-        margin: 10,
-        formatter: formatDate,
+      xAxis: {
+        type: 'time',
+        min: viewport.xMin,
+        max: viewport.xMax,
+        splitNumber: 4,
+        minInterval: 7 * 24 * 60 * 60 * 1000,
+        axisLine: {
+          lineStyle: { color: '#48616A' },
+        },
+        axisTick: { show: false },
+        axisLabel: {
+          color: '#91A8B2',
+          fontFamily: 'Geist Mono, monospace',
+          fontSize: 9,
+          hideOverlap: true,
+          margin: 10,
+          formatter: formatDate,
+        },
+        splitLine: { show: false },
       },
-      splitLine: { show: false },
-    },
-    yAxis: {
-      type: 'value',
-      min: viewport.yMin,
-      max: viewport.yMax,
-      interval: viewport.yInterval,
-      axisLabel: {
-        color: '#94948E',
-        fontFamily: 'Geist Mono, monospace',
-        fontSize: 9,
-        width: 32,
-        align: 'right',
-        hideOverlap: true,
-        formatter: (value) => `${Number(value).toFixed(Number.isInteger(value) ? 0 : 1)}%`,
-      },
-      axisLine: { show: false },
-      axisTick: { show: false },
-      splitLine: {
-        lineStyle: {
-          color: '#3A535C',
-          type: 'dashed',
+      yAxis: {
+        type: 'value',
+        min: viewport.yMin,
+        max: viewport.yMax,
+        interval: viewport.yInterval,
+        axisLabel: {
+          color: '#94948E',
+          fontFamily: 'Geist Mono, monospace',
+          fontSize: 9,
+          width: 32,
+          align: 'right',
+          hideOverlap: true,
+          formatter: (value) => `${Number(value).toFixed(Number.isInteger(value) ? 0 : 1)}%`,
+        },
+        axisLine: { show: false },
+        axisTick: { show: false },
+        splitLine: {
+          lineStyle: {
+            color: '#3A535C',
+            type: 'dashed',
+          },
         },
       },
+      series: focusMarkerOverlay.value
+        ? [...chartSeries.value, focusMarkerOverlay.value]
+        : chartSeries.value,
     },
-    series: focusMarkerOverlay.value
-      ? [...chartSeries.value, focusMarkerOverlay.value]
-      : chartSeries.value,
-  })
+    // 포커스 → 전체 보기 전환 시 병합된 포커스 마커가 남지 않도록 시리즈를 통째로 교체한다.
+    { replaceMerge: ['series'] },
+  )
 }
 
 function hideTooltip() {
@@ -509,10 +544,12 @@ onBeforeUnmount(() => {
         type="button"
         :class="{ 'is-active': selectedViewId === option.id }"
         :aria-pressed="selectedViewId === option.id"
+        :aria-label="option.name"
         :title="option.name"
+        :style="{ '--view-color': option.color }"
         @click="selectedViewId = option.id"
       >
-        {{ option.label }}
+        <AppIcon :name="option.icon" :size="16" />
       </button>
     </div>
 
@@ -615,12 +652,15 @@ onBeforeUnmount(() => {
 }
 
 .live-return-chart__view-controls button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-width: 0;
-  padding: 7px 4px;
+  padding: 8px 4px;
   border: 0;
   border-radius: 8px;
   background: transparent;
-  color: #b8c7cc;
+  color: var(--view-color, #b8c7cc);
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 700;

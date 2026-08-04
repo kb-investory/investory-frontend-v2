@@ -93,23 +93,48 @@ const performanceByVariant = computed(() => {
   return grouped
 })
 
+const liveRankingTimestamp = computed(() => {
+  if (timelineDates.value.length < 2) return null
+
+  const start = new Date(`${timelineDates.value[0]}T00:00:00`).getTime()
+  const end = new Date(`${timelineDates.value.at(-1)}T00:00:00`).getTime()
+  if (progress.value >= 100) return end
+
+  const currentTimestamp = start + (end - start) * (progress.value / 100)
+  const completedTradeTimestamps = props.simulatedTrades
+    .map((trade) => new Date(trade.tradedAt).getTime())
+    .filter((timestamp) => Number.isFinite(timestamp) && timestamp <= currentTimestamp)
+
+  return completedTradeTimestamps.length ? Math.max(...completedTradeTimestamps) : start
+})
+
 function getLiveReturn(participant) {
   const snapshots = performanceByVariant.value.get(participant.variantId) ?? []
-  if (snapshots.length < 2) {
-    return participant.cumulativeReturnPercent * (progress.value / 100)
+  const targetTimestamp = liveRankingTimestamp.value
+  if (!targetTimestamp) return 0
+  if (!snapshots.length) {
+    const start = new Date(`${timelineDates.value[0]}T00:00:00`).getTime()
+    const end = new Date(`${timelineDates.value.at(-1)}T00:00:00`).getTime()
+    const eventProgress = Math.min(Math.max((targetTimestamp - start) / (end - start), 0), 1)
+    return participant.cumulativeReturnPercent * eventProgress
   }
 
-  const segmentProgress = (progress.value / 100) * (snapshots.length - 1)
-  const currentIndex = Math.floor(segmentProgress)
-  const currentSnapshot = snapshots[currentIndex]
-  const nextSnapshot = snapshots[currentIndex + 1]
+  const nextIndex = snapshots.findIndex(
+    (snapshot) => new Date(`${snapshot.snapshotDate}T00:00:00`).getTime() > targetTimestamp,
+  )
+  if (nextIndex === 0) return snapshots[0].cumulativeReturnPercent
+  if (nextIndex === -1) return snapshots.at(-1).cumulativeReturnPercent
 
-  if (!nextSnapshot) return currentSnapshot.cumulativeReturnPercent
+  const currentSnapshot = snapshots[nextIndex - 1]
+  const nextSnapshot = snapshots[nextIndex]
+  const currentTimestamp = new Date(`${currentSnapshot.snapshotDate}T00:00:00`).getTime()
+  const nextTimestamp = new Date(`${nextSnapshot.snapshotDate}T00:00:00`).getTime()
+  const intervalProgress = (targetTimestamp - currentTimestamp) / (nextTimestamp - currentTimestamp)
 
   return (
     currentSnapshot.cumulativeReturnPercent +
     (nextSnapshot.cumulativeReturnPercent - currentSnapshot.cumulativeReturnPercent) *
-      (segmentProgress - currentIndex)
+      intervalProgress
   )
 }
 
@@ -196,28 +221,31 @@ function formatDate(date) {
   <div class="live-runner-container">
     <!-- Top Header -->
     <div class="live-header">
-      <div class="live-header__left">
+      <div class="live-header__title-row">
         <h2 class="live-title">라이브 시뮬레이션</h2>
-        <StatusBadge :variant="progress < 100 ? 'success' : 'neutral'">
-          <span class="live-dot" :class="{ pulsing: isPlaying }"></span>
-          {{ progress < 100 ? '백테스트 연산 중' : '연산 완료' }}
-        </StatusBadge>
+        <StatusBadge
+          :status-text="progress < 100 ? '연산 중' : '연산 완료'"
+          :step-text="`${Math.round(progress)}%`"
+        />
       </div>
 
       <!-- Playback Speed Controls -->
-      <div class="speed-controls">
-        <button
-          v-for="s in [1, 2, 5]"
-          :key="s"
-          class="speed-btn"
-          :class="{ active: speed === s }"
-          @click="setSpeed(s)"
-        >
-          {{ s }}×
-        </button>
-        <button class="play-btn" :disabled="progress >= 100" @click="togglePlay">
-          <AppIcon :name="isPlaying ? 'pause' : 'play'" :size="14" />
-        </button>
+      <div class="live-header__controls">
+        <span class="speed-controls__label">재생 속도</span>
+        <div class="speed-controls">
+          <button
+            v-for="s in [1, 2, 5]"
+            :key="s"
+            class="speed-btn"
+            :class="{ active: speed === s }"
+            @click="setSpeed(s)"
+          >
+            {{ s }}×
+          </button>
+          <button class="play-btn" :disabled="progress >= 100" @click="togglePlay">
+            <AppIcon :name="isPlaying ? 'pause' : 'play'" :size="15" />
+          </button>
+        </div>
       </div>
     </div>
 
@@ -307,49 +335,32 @@ function formatDate(date) {
 
 .live-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.live-header__left {
+.live-header__title-row,
+.live-header__controls {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .live-title {
   margin: 0;
-  font-size: 18px;
-  font-weight: 700;
   color: #263a43;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 
-.live-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #0ea5a6;
-  display: inline-block;
-  margin-right: 4px;
-}
-
-.live-dot.pulsing {
-  animation: pulse 1.2s infinite;
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(0.95);
-    opacity: 0.7;
-  }
-  50% {
-    transform: scale(1.3);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(0.95);
-    opacity: 0.7;
-  }
+.speed-controls__label {
+  color: #263a43;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .speed-controls {
@@ -357,19 +368,22 @@ function formatDate(date) {
   align-items: center;
   gap: 4px;
   background: #f7f8fa;
-  padding: 4px;
-  border-radius: 12px;
+  padding: 5px;
+  border: 1px solid #e2e8eb;
+  border-radius: 14px;
 }
 
 .speed-btn {
+  min-width: 40px;
+  height: 34px;
+  padding: 0 10px;
   border: none;
   background: none;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: #66777d;
-  padding: 4px 8px;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
 }
 
@@ -383,9 +397,9 @@ function formatDate(date) {
   border: none;
   background: #263a43;
   color: #ffffff;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;

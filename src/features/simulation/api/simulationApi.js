@@ -1,4 +1,8 @@
 import simulationData from '@/mocks/data/simulation.json'
+import {
+  liveDailyPerformance,
+  liveSimulatedTrades,
+} from '@/mocks/data/liveSimulationPerformance.js'
 
 function clone(value) {
   return structuredClone(value)
@@ -9,7 +13,12 @@ export async function getSimulationOverview() {
 }
 
 export async function getLatestSimulationResult() {
-  return clone(simulationData.latest)
+  return clone({
+    ...simulationData.latest,
+    dailyPerformance: liveDailyPerformance,
+    simulatedTrades: liveSimulatedTrades,
+    totalTradesCount: liveSimulatedTrades.length,
+  })
 }
 
 export async function compileSimulationBot() {
@@ -27,7 +36,7 @@ export async function getSimulationComparators() {
 export async function runSimulation() {
   return {
     ...clone(simulationData.run),
-    dailySnapshots: clone(simulationData.latest.dailyPerformance),
+    dailySnapshots: clone(liveDailyPerformance),
   }
 }
 
