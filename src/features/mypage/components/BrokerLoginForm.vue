@@ -261,10 +261,13 @@ function handleSubmit() {
 .form-field > input,
 .form-field__password input {
   padding: 0 14px;
-  border: 0;
   outline: 0;
   color: var(--color-text);
   font-size: 14px;
+}
+
+.form-field__password input {
+  border: 0;
 }
 
 .form-field > input:focus,
