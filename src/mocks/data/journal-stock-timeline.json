@@ -1,0 +1,224 @@
+{
+  "stockTimelines": {
+    "005930": {
+      "firstPurchasedAt": "2025-03-10",
+      "currentQuantity": 24,
+      "cumulativeProfitAmount": 42600,
+      "trades": [
+        {
+          "tradeId": 510,
+          "accountId": 25,
+          "accountName": "종합주식계좌",
+          "tradeSide": "BUY",
+          "quantity": 6,
+          "unitPrice": 84100,
+          "transactionCostAmount": 120,
+          "tradedAt": "2026-08-23T10:12:00+09:00",
+          "note": {
+            "journalTradeNoteId": 710,
+            "journalId": 310,
+            "journalDate": "2026-08-23",
+            "rationaleText": "사전 매수 기준을 충족한 구간에서 1차 진입",
+            "createdAt": "2026-08-23T18:20:00+09:00",
+            "updatedAt": "2026-08-23T18:20:00+09:00"
+          }
+        },
+        {
+          "tradeId": 509,
+          "accountId": 25,
+          "accountName": "종합주식계좌",
+          "tradeSide": "BUY",
+          "quantity": 4,
+          "unitPrice": 84350,
+          "transactionCostAmount": 80,
+          "tradedAt": "2026-08-23T10:48:00+09:00",
+          "note": null
+        },
+        {
+          "tradeId": 508,
+          "accountId": 25,
+          "accountName": "종합주식계좌",
+          "tradeSide": "SELL",
+          "quantity": 4,
+          "unitPrice": 83500,
+          "transactionCostAmount": 110,
+          "tradedAt": "2026-08-11T14:20:00+09:00",
+          "note": null
+        },
+        {
+          "tradeId": 507,
+          "accountId": 25,
+          "accountName": "종합주식계좌",
+          "tradeSide": "BUY",
+          "quantity": 6,
+          "unitPrice": 81900,
+          "transactionCostAmount": 110,
+          "tradedAt": "2026-08-06T09:42:00+09:00",
+          "note": {
+            "journalTradeNoteId": 707,
+            "journalId": 307,
+            "journalDate": "2026-08-06",
+            "rationaleText": "실적 발표 전 정한 1차 매수 가격 도달",
+            "createdAt": "2026-08-06T18:10:00+09:00",
+            "updatedAt": "2026-08-06T18:10:00+09:00"
+          }
+        },
+        {
+          "tradeId": 506,
+          "accountId": 25,
+          "accountName": "종합주식계좌",
+          "tradeSide": "BUY",
+          "quantity": 5,
+          "unitPrice": 80500,
+          "transactionCostAmount": 95,
+          "tradedAt": "2026-08-03T15:08:00+09:00",
+          "note": null
+        }
+      ]
+    },
+    "006400": {
+      "firstPurchasedAt": "2026-01-14",
+      "currentQuantity": 9,
+      "cumulativeProfitAmount": -18400,
+      "trades": [
+        {
+          "tradeId": 620,
+          "accountId": 25,
+          "accountName": "종합주식계좌",
+          "tradeSide": "SELL",
+          "quantity": 2,
+          "unitPrice": 346000,
+          "transactionCostAmount": 920,
+          "tradedAt": "2026-08-18T13:42:00+09:00",
+          "note": {
+            "journalTradeNoteId": 820,
+            "journalId": 320,
+            "journalDate": "2026-08-18",
+            "rationaleText": "목표 비중을 넘겨 일부 수량을 정리",
+            "createdAt": "2026-08-18T18:00:00+09:00",
+            "updatedAt": "2026-08-18T18:00:00+09:00"
+          }
+        },
+        {
+          "tradeId": 619,
+          "accountId": 25,
+          "accountName": "종합주식계좌",
+          "tradeSide": "BUY",
+          "quantity": 3,
+          "unitPrice": 338500,
+          "transactionCostAmount": 510,
+          "tradedAt": "2026-08-08T10:05:00+09:00",
+          "note": null
+        }
+      ]
+    },
+    "000660": {
+      "firstPurchasedAt": "2025-10-21",
+      "currentQuantity": 25,
+      "cumulativeProfitAmount": 312500,
+      "trades": [
+        {
+          "tradeId": 710,
+          "accountId": 25,
+          "accountName": "종합주식계좌",
+          "tradeSide": "BUY",
+          "quantity": 5,
+          "unitPrice": 191500,
+          "transactionCostAmount": 480,
+          "tradedAt": "2026-08-23T14:36:00+09:00",
+          "note": {
+            "journalTradeNoteId": 910,
+            "journalId": 330,
+            "journalDate": "2026-08-23",
+            "rationaleText": "목표 비중 초과분을 계획대로 정리",
+            "createdAt": "2026-08-23T18:30:00+09:00",
+            "updatedAt": "2026-08-23T18:30:00+09:00"
+          }
+        },
+        {
+          "tradeId": 709,
+          "accountId": 25,
+          "accountName": "종합주식계좌",
+          "tradeSide": "BUY",
+          "quantity": 4,
+          "unitPrice": 187000,
+          "transactionCostAmount": 390,
+          "tradedAt": "2026-08-12T09:18:00+09:00",
+          "note": null
+        }
+      ]
+    },
+    "035420": {
+      "firstPurchasedAt": "2026-02-02",
+      "currentQuantity": 12,
+      "cumulativeProfitAmount": -28600,
+      "trades": [
+        {
+          "tradeId": 810,
+          "accountId": 25,
+          "accountName": "종합주식계좌",
+          "tradeSide": "SELL",
+          "quantity": 3,
+          "unitPrice": 214500,
+          "transactionCostAmount": 640,
+          "tradedAt": "2026-08-23T11:05:00+09:00",
+          "note": null
+        },
+        {
+          "tradeId": 809,
+          "accountId": 25,
+          "accountName": "종합주식계좌",
+          "tradeSide": "BUY",
+          "quantity": 4,
+          "unitPrice": 208000,
+          "transactionCostAmount": 420,
+          "tradedAt": "2026-08-04T14:25:00+09:00",
+          "note": {
+            "journalTradeNoteId": 1009,
+            "journalId": 340,
+            "journalDate": "2026-08-04",
+            "rationaleText": "광고 사업 회복 흐름을 확인하고 분할 매수",
+            "createdAt": "2026-08-04T18:15:00+09:00",
+            "updatedAt": "2026-08-04T18:15:00+09:00"
+          }
+        }
+      ]
+    },
+    "035720": {
+      "firstPurchasedAt": "2026-04-17",
+      "currentQuantity": 30,
+      "cumulativeProfitAmount": 66700,
+      "trades": [
+        {
+          "tradeId": 910,
+          "accountId": 25,
+          "accountName": "종합주식계좌",
+          "tradeSide": "BUY",
+          "quantity": 12,
+          "unitPrice": 48900,
+          "transactionCostAmount": 290,
+          "tradedAt": "2026-08-23T13:20:00+09:00",
+          "note": {
+            "journalTradeNoteId": 1110,
+            "journalId": 350,
+            "journalDate": "2026-08-23",
+            "rationaleText": "비중 조정 원칙을 실행하기 위한 추가 매수",
+            "createdAt": "2026-08-23T18:40:00+09:00",
+            "updatedAt": "2026-08-23T18:40:00+09:00"
+          }
+        },
+        {
+          "tradeId": 909,
+          "accountId": 25,
+          "accountName": "종합주식계좌",
+          "tradeSide": "SELL",
+          "quantity": 5,
+          "unitPrice": 51200,
+          "transactionCostAmount": 255,
+          "tradedAt": "2026-08-09T10:32:00+09:00",
+          "note": null
+        }
+      ]
+    }
+  }
+}
