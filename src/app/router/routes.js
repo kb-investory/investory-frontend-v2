@@ -165,14 +165,7 @@ export const routes = [
   },
   {
     path: '/simulation/bot-ready',
-    name: ROUTE_NAMES.SIMULATION_BOT_READY,
-    component: () => import('@/features/simulation/views/SimulationPage.vue'),
-    meta: {
-      title: '시뮬레이션 - 원칙 봇 준비',
-      layout: 'full-bleed',
-      frameHeight: 980,
-      mainBottomPadding: 84,
-    },
+    redirect: '/simulation/comparators',
   },
   {
     path: '/simulation/comparators',
@@ -181,6 +174,7 @@ export const routes = [
     meta: {
       title: '시뮬레이션 - 비교 봇 선택',
       layout: 'full-bleed',
+      hideBottomNav: true,
       frameHeight: 980,
       mainBottomPadding: 84,
     },
@@ -192,6 +186,7 @@ export const routes = [
     meta: {
       title: '시뮬레이션 - 조건 설정',
       layout: 'full-bleed',
+      hideBottomNav: true,
       frameHeight: 980,
       mainBottomPadding: 84,
     },
@@ -203,6 +198,7 @@ export const routes = [
     meta: {
       title: '시뮬레이션 - 실행 중',
       layout: 'full-bleed',
+      hideBottomNav: true,
       frameHeight: 980,
       mainBottomPadding: 84,
     },
@@ -214,6 +210,7 @@ export const routes = [
     meta: {
       title: '시뮬레이션 - 결과',
       layout: 'full-bleed',
+      hideBottomNav: true,
       frameHeight: 980,
       mainBottomPadding: 84,
     },
@@ -225,6 +222,7 @@ export const routes = [
     meta: {
       title: '시뮬레이션 - 데이터 준비 중',
       layout: 'full-bleed',
+      hideBottomNav: true,
       frameHeight: 980,
       mainBottomPadding: 84,
     },

@@ -21,12 +21,15 @@ defineProps({
 
 <style scoped>
 .simulation-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: flex;
   flex-direction: column;
   gap: 5px;
   width: 100%;
   padding: 12px 0 4px;
-  background: transparent;
+  background: #ffffff;
   box-sizing: border-box;
 }
 

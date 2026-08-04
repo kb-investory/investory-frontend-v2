@@ -20,7 +20,6 @@ export const ROUTE_NAMES = {
   AI_CONVERSATION: 'AiConversation',
   SIMULATION: 'Simulation',
   SIMULATION_DASHBOARD: 'SimulationDashboard',
-  SIMULATION_BOT_READY: 'SimulationBotReady',
   SIMULATION_COMPARATORS: 'SimulationComparators',
   SIMULATION_SETUP: 'SimulationSetup',
   SIMULATION_LIVE: 'SimulationLive',
