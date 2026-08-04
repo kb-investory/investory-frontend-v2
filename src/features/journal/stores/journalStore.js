@@ -66,10 +66,7 @@ export const useJournalStore = defineStore('journal', () => {
     const lastDay = new Date(year, month, 0).getDate()
     const monthKey = `${year}-${String(month).padStart(2, '0')}`
 
-    await fetchCalendarRange(
-      `${monthKey}-01`,
-      `${monthKey}-${String(lastDay).padStart(2, '0')}`,
-    )
+    await fetchCalendarRange(`${monthKey}-01`, `${monthKey}-${String(lastDay).padStart(2, '0')}`)
   }
 
   async function fetchJournalDetail(journalId) {

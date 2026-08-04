@@ -72,13 +72,14 @@ function goBack() {
 async function handleLogin(credentials) {
   try {
     await brokerStore.connectBroker(credentials)
+    await goToHoldings()
   } catch {
     // 요청 상태와 오류 문구는 Store에서 관리합니다.
   }
 }
 
 function goToHoldings() {
-  router.push({
+  return router.push({
     name: ROUTE_NAMES.BROKER_HOLDINGS,
     query: { brokerId: brokerStore.selectedBroker?.brokerId },
   })

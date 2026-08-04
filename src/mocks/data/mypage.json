@@ -1,44 +1,110 @@
 {
   "profile": {
     "userId": 1,
-    "name": "홍길동",
-    "nickname": "지혜로운투자자",
-    "email": "user@investory.kr",
-    "profileImageUrl": "https://picsum.photos/100/100?random=1",
-    "tier": "GOLD",
-    "connectedBrokerageCount": 2,
+    "name": "김구민",
+    "email": "koomin@jb.com",
+    "profileImageUrl": "/assets/icons/monkey.png",
+    "oauthProvider": "KAKAO",
+    "oauthProviderLabel": "카카오",
+    "membershipDays": 121,
     "totalJournalsCount": 24
   },
-  "brokerages": [
+  "recentSimulation": {
+    "simulationId": 301,
+    "botName": "나의 투자봇 v3",
+    "returnRate": 16.8,
+    "rank": 1,
+    "totalParticipants": 186,
+    "differenceFromActual": 10.4,
+    "status": "완료"
+  },
+  "accounts": [
     {
-      "brokerageId": 1,
-      "brokerageName": "KB증권",
-      "accountNumber": "284-****-9102",
-      "isConnected": true,
-      "lastSyncedAt": "2026-07-30T09:30:00Z"
+      "accountId": 11,
+      "brokerId": 1,
+      "brokerCode": "MIRAE",
+      "brokerName": "미래증권",
+      "accountType": "연금금",
+      "accountNumber": "1234-****-8801",
+      "status": "CONNECTED",
+      "statusLabel": "연결됨",
+      "lastSyncedAt": "2026-08-03T09:38:00+09:00",
+      "syncErrorReason": ""
     },
     {
-      "brokerageId": 2,
-      "brokerageName": "키움증권",
-      "accountNumber": "512-****-3310",
-      "isConnected": true,
-      "lastSyncedAt": "2026-07-30T08:15:00Z"
+      "accountId": 12,
+      "brokerId": 3,
+      "brokerCode": "HANWHA",
+      "brokerName": "한빛증권",
+      "accountType": "종합매매",
+      "accountNumber": "•••• 5678",
+      "status": "CONNECTED",
+      "statusLabel": "연결됨",
+      "lastSyncedAt": "2026-08-03T09:37:00+09:00",
+      "syncErrorReason": ""
+    },
+    {
+      "accountId": 13,
+      "brokerId": 2,
+      "brokerCode": "KB",
+      "brokerName": "KB증권",
+      "accountType": "위탁종합",
+      "accountNumber": "9912-****-3150",
+      "status": "CONNECTED",
+      "statusLabel": "연결됨",
+      "lastSyncedAt": "2026-08-02T09:37:00+09:00",
+      "syncErrorReason": ""
     }
   ],
-  "notifications": [
-    {
-      "id": 1,
-      "title": "오늘 일지 작성 마감 알림",
-      "content": "오늘 장이 마감되었습니다. 당일 매매 판단을 일지로 작성해 보세요.",
-      "isRead": false,
-      "createdAt": "2026-07-30T15:40:00Z"
+  "accountDetails": {
+    "11": {
+      "marketValue": 8640000,
+      "holdingCount": 5,
+      "latestTrade": {
+        "securityName": "SK하이닉스",
+        "side": "BUY",
+        "quantity": 4,
+        "tradedAt": "2026-08-03T09:18:00+09:00"
+      },
+      "holdingSnapshot": {
+        "holdingCount": 5,
+        "marketValue": 8640000,
+        "reflectedAt": "2026-08-03T09:38:00+09:00"
+      }
     },
-    {
-      "id": 2,
-      "title": "투자 성향 리포트 도착",
-      "content": "최근 30일간의 매매 기록 분석이 완료되었습니다.",
-      "isRead": true,
-      "createdAt": "2026-07-29T18:00:00Z"
+    "12": {
+      "marketValue": 10240000,
+      "holdingCount": 7,
+      "latestTrade": {
+        "securityName": "삼성전자",
+        "side": "BUY",
+        "quantity": 10,
+        "tradedAt": "2026-08-03T09:12:00+09:00"
+      },
+      "holdingSnapshot": {
+        "holdingCount": 7,
+        "marketValue": 10240000,
+        "reflectedAt": "2026-08-03T09:37:00+09:00"
+      }
+    },
+    "13": {
+      "marketValue": 5780000,
+      "holdingCount": 4,
+      "latestTrade": {
+        "securityName": "현대차",
+        "side": "SELL",
+        "quantity": 2,
+        "tradedAt": "2026-08-02T14:31:00+09:00"
+      },
+      "holdingSnapshot": {
+        "holdingCount": 4,
+        "marketValue": 5780000,
+        "reflectedAt": "2026-08-02T15:40:00+09:00"
+      }
     }
-  ]
+  },
+  "appInfo": {
+    "name": "Investory",
+    "version": "v1.0.0"
+  }
 }
