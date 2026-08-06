@@ -444,7 +444,6 @@ const currentHoldings = computed(() => {
         ticker: '-',
         currentPrice: holding.costBasis / holding.quantity,
       }
-      const name = holding.securityName || meta.name
       const averagePrice = holding.costBasis / holding.quantity
       const valuation = meta.currentPrice * holding.quantity
       const returnPercent = averagePrice ? ((meta.currentPrice - averagePrice) / averagePrice) * 100 : 0
