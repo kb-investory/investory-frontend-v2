@@ -14,7 +14,7 @@ defineProps({
     <div class="weekly-rhythm__header">
       <div>
         <h2 id="weekly-rhythm-title">이번 주 기록 리듬</h2>
-        <p>판단을 남긴 날이 꾸준히 쌓이고 있어요</p>
+        <p>{{ weekly.description }}</p>
       </div>
 
       <span class="weekly-rhythm__streak">
@@ -24,7 +24,12 @@ defineProps({
     </div>
 
     <div class="weekly-rhythm__days">
-      <div v-for="day in weekly.days" :key="day.label" class="weekly-rhythm__day">
+      <div
+        v-for="day in weekly.days"
+        :key="day.date"
+        class="weekly-rhythm__day"
+        :aria-label="`${day.date}, ${day.completed ? `거래 ${day.tradeCount}건 기록` : '기록 없음'}`"
+      >
         <span
           class="weekly-rhythm__day-state"
           :class="[
