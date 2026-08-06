@@ -135,7 +135,7 @@ export async function getTendencyAccessStatus() {
   }
 }
 
-const USE_MOCK_FALLBACK = false
+const USE_MOCK_FALLBACK = import.meta.env.VITE_USE_MOCK_FALLBACK !== 'false'
 
 export async function getRecommendedPrinciples() {
   try {

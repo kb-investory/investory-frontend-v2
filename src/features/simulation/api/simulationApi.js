@@ -23,7 +23,7 @@ function createLatestSimulationResult() {
   }
 }
 
-const USE_MOCK_FALLBACK = false
+const USE_MOCK_FALLBACK = import.meta.env.VITE_USE_MOCK_FALLBACK !== 'false'
 
 const DEFAULT_HARDCODED_PROFILE = {
   value: 0.15,
