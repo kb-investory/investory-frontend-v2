@@ -2,7 +2,6 @@
 import { RouterLink } from 'vue-router'
 
 import AppIcon from '@/shared/components/AppIcon.vue'
-import MonkeyImage from '@/shared/components/MonkeyImage.vue'
 
 defineProps({
   items: {
@@ -25,7 +24,7 @@ defineProps({
         class="bottom-tab-bar__icon-wrapper"
         :class="{ 'bottom-tab-bar__icon-wrapper--monkey': item.isMonkey }"
       >
-        <MonkeyImage v-if="item.isMonkey" :size="22" />
+        <span v-if="item.isMonkey" class="bottom-tab-bar__monkey" aria-hidden="true" />
         <AppIcon v-else :name="item.icon" :size="18" />
       </div>
       <span class="bottom-tab-bar__label">{{ item.label }}</span>
@@ -78,8 +77,34 @@ defineProps({
 }
 
 .bottom-tab-bar__icon-wrapper--monkey {
+  position: relative;
   width: 22px;
   height: 22px;
+  overflow: hidden;
+}
+
+.bottom-tab-bar__monkey {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 1600%;
+  height: 100%;
+  background: url('/assets/icons/monkey-turntable-sprite.png') 0 0 / 100% 100% no-repeat;
+  animation: bottom-tab-monkey-turntable 3.2s steps(16, end) infinite;
+  will-change: transform;
+}
+
+@keyframes bottom-tab-monkey-turntable {
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bottom-tab-bar__monkey {
+    animation: none;
+  }
 }
 
 .bottom-tab-bar__label {
