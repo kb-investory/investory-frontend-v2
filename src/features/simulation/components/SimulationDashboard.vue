@@ -1,12 +1,12 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import SimulationHeader from '@/features/simulation/components/SimulationHeader.vue'
 import SimulationParticipantAvatar from '@/features/simulation/components/SimulationParticipantAvatar.vue'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
 
-defineProps({
+const props = defineProps({
   overview: {
     type: Object,
     default: null,
@@ -15,17 +15,27 @@ defineProps({
     type: Object,
     default: null,
   },
+  historyRecords: {
+    type: Array,
+    default: () => [],
+  },
 })
 
 const emit = defineEmits(['startSimulation', 'selectRecord'])
 const showHelpModal = ref(false)
 
-const historyRecords = [
-  { version: 'v3', date: '2026.07.27', period: '2025.03.10 — 2026.07.27', returnPercent: 15.7 },
-  { version: 'v2', date: '2026.06.18', period: '2025.03.10 — 2026.06.17', returnPercent: 11.4 },
-  { version: 'v2', date: '2026.05.02', period: '2025.03.10 — 2026.05.01', returnPercent: 9.8 },
-  { version: 'v1', date: '2026.03.21', period: '2025.03.10 — 2026.03.20', returnPercent: 6.2 },
+const DEFAULT_HISTORY_RECORDS = [
+  { simulationRunId: 101, version: 'v3', date: '2026.07.27', period: '2026.03.01 ~ 2026.07.29', returnPercent: 17.0 },
+  { simulationRunId: 102, version: 'v2', date: '2026.06.18', period: '2026.03.01 ~ 2026.06.17', returnPercent: 11.4 },
+  { simulationRunId: 103, version: 'v2', date: '2026.05.02', period: '2026.03.01 ~ 2026.05.01', returnPercent: 9.8 },
+  { simulationRunId: 104, version: 'v1', date: '2026.03.21', period: '2026.03.01 ~ 2026.03.20', returnPercent: 6.2 },
 ]
+
+const displayRecords = computed(() =>
+  props.historyRecords && props.historyRecords.length > 0
+    ? props.historyRecords
+    : DEFAULT_HISTORY_RECORDS,
+)
 
 function formatPercent(val) {
   const prefix = val > 0 ? '+' : ''
@@ -103,8 +113,8 @@ function formatPercent(val) {
 
       <div class="history-list">
         <div
-          v-for="(rec, idx) in historyRecords"
-          :key="idx"
+          v-for="(rec, idx) in displayRecords"
+          :key="rec.simulationRunId || idx"
           class="history-item"
           @click="emit('selectRecord', rec)"
         >
