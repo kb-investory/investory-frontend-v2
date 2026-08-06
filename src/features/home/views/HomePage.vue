@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
@@ -12,11 +12,18 @@ import WeeklyRecordRhythm from '@/features/home/components/WeeklyRecordRhythm.vu
 import { useHomeClock } from '@/features/home/composables/useHomeClock'
 import { useHomeStore } from '@/features/home/stores/homeStore'
 import { useBrokerConnectionStore } from '@/features/mypage/stores/brokerConnectionStore'
+import ReanalysisFloating from '@/features/tendency/components/ReanalysisFloating.vue'
+import { useTendencyStore } from '@/features/tendency/stores/tendencyStore'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
+
+const REANALYSIS_NOTICE_COLLAPSED_KEY = 'investory:reanalysis-notice-collapsed:v3'
 
 const router = useRouter()
 const homeStore = useHomeStore()
 const brokerStore = useBrokerConnectionStore()
+const tendencyStore = useTendencyStore()
+const reanalysisNoticeCollapsed = ref(true)
+let reanalysisMidnightTimer
 
 const journalRoute = { name: ROUTE_NAMES.JOURNAL_CREATE }
 const tendencyRoute = { name: ROUTE_NAMES.TENDENCY }
@@ -30,7 +37,59 @@ const liveToday = computed(() => ({
   dayProgressPercent: dayProgressPercent.value,
 }))
 
-onMounted(() => homeStore.fetchDashboard())
+function toggleReanalysisNotice() {
+  const analysisRunId = tendencyStore.analysis?.analysisRunId
+  if (!analysisRunId) return
+
+  reanalysisNoticeCollapsed.value = !reanalysisNoticeCollapsed.value
+  window.localStorage.setItem(
+    `${REANALYSIS_NOTICE_COLLAPSED_KEY}:${analysisRunId}`,
+    String(reanalysisNoticeCollapsed.value),
+  )
+}
+
+function openTendencyReanalysis() {
+  router.push({
+    name: ROUTE_NAMES.TENDENCY,
+    query: { reanalyze: 'true' },
+  })
+}
+
+function scheduleMidnightRefresh() {
+  const now = new Date()
+  const nextMidnight = new Date(now)
+  nextMidnight.setHours(24, 0, 0, 0)
+
+  reanalysisMidnightTimer = window.setTimeout(() => {
+    tendencyStore.refreshAnalysisDate()
+    scheduleMidnightRefresh()
+  }, nextMidnight.getTime() - now.getTime())
+}
+
+watch(
+  () => tendencyStore.analysis?.analysisRunId,
+  (analysisRunId) => {
+    if (!analysisRunId) {
+      reanalysisNoticeCollapsed.value = true
+      return
+    }
+
+    reanalysisNoticeCollapsed.value =
+      window.localStorage.getItem(`${REANALYSIS_NOTICE_COLLAPSED_KEY}:${analysisRunId}`) !==
+      'false'
+  },
+  { immediate: true },
+)
+
+onMounted(async () => {
+  await Promise.allSettled([homeStore.fetchDashboard(), tendencyStore.fetchTendencies()])
+  tendencyStore.refreshAnalysisDate()
+  scheduleMidnightRefresh()
+})
+
+onBeforeUnmount(() => {
+  window.clearTimeout(reanalysisMidnightTimer)
+})
 
 function openTransactions() {
   router.push(journalRoute)
@@ -77,6 +136,14 @@ function openSearch() {
     </div>
 
     <p v-else class="home-page__error">홈 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</p>
+
+    <div v-if="tendencyStore.shouldShowReanalysis" class="home-page__reanalysis-floating">
+      <ReanalysisFloating
+        :collapsed="reanalysisNoticeCollapsed"
+        @analyze="openTendencyReanalysis"
+        @toggle="toggleReanalysisNotice"
+      />
+    </div>
   </div>
 </template>
 
@@ -105,5 +172,15 @@ function openSearch() {
   color: #718087;
   font-size: 13px;
   text-align: center;
+}
+
+.home-page__reanalysis-floating {
+  position: fixed;
+  z-index: 160;
+  right: max(16px, calc((100vw - 390px) / 2 + 16px));
+  bottom: calc(var(--mobile-frame-edge-offset, 0px) + 84px);
+  display: flex;
+  width: min(calc(100% - 32px), 358px);
+  flex-direction: column;
 }
 </style>

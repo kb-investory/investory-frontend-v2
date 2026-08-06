@@ -8,7 +8,7 @@ defineProps({
   },
   collapsed: {
     type: Boolean,
-    default: false,
+    default: true,
   },
 })
 
@@ -29,6 +29,7 @@ defineEmits(['navigate', 'toggle'])
       @click="$emit('toggle')"
     >
       <img src="/assets/icons/monkey.png" alt="" />
+      <span>click !</span>
     </button>
 
     <template v-else>
@@ -75,8 +76,8 @@ defineEmits(['navigate', 'toggle'])
 }
 
 .recommendation-floating--collapsed {
-  width: 54px;
-  min-height: 54px;
+  width: 62px;
+  min-height: 68px;
   align-self: flex-end;
   gap: 0;
   padding: 6px;
@@ -94,8 +95,7 @@ defineEmits(['navigate', 'toggle'])
   border-radius: 11px;
 }
 
-.recommendation-floating__icon img,
-.recommendation-floating__monkey-button img {
+.recommendation-floating__icon img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -155,12 +155,28 @@ defineEmits(['navigate', 'toggle'])
 }
 
 .recommendation-floating__monkey-button {
-  width: 42px;
-  height: 42px;
+  flex-direction: column;
+  width: 50px;
+  height: 56px;
   overflow: hidden;
   padding: 0;
   border-radius: 12px;
   background: transparent;
+}
+
+.recommendation-floating__monkey-button img {
+  width: 42px;
+  height: 42px;
+  object-fit: cover;
+  transform: scale(1.18);
+}
+
+.recommendation-floating__monkey-button span {
+  margin-top: -1px;
+  color: #ffd66b;
+  font-size: 8px;
+  font-weight: 900;
+  line-height: 1;
 }
 
 .recommendation-floating__body:focus-visible,
