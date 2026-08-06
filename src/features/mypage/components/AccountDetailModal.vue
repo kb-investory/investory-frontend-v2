@@ -102,22 +102,25 @@ function formatTime(value, { withDay = false } = {}) {
         <section class="recent-section">
           <header>
             <h3>최근 거래</h3>
-            <span>{{ formatTime(account.latestTrade?.tradedAt, { withDay: true }) }} 기준</span>
+            <span v-if="account.latestTrade">
+              {{ formatTime(account.latestTrade.tradedAt, { withDay: true }) }} 기준
+            </span>
           </header>
-          <article>
+          <article v-if="account.latestTrade">
             <span><AppIcon name="arrow-right" :size="16" /></span>
             <div>
               <strong>
-                {{ account.latestTrade?.securityName }} {{ account.latestTrade?.quantity }}주
-                {{ account.latestTrade?.side === 'SELL' ? '매도' : '매수' }}
+                {{ account.latestTrade.securityName }} {{ account.latestTrade.quantity }}주
+                {{ account.latestTrade.side === 'SELL' ? '매도' : '매수' }}
               </strong>
               <p>
-                {{ formatTime(account.latestTrade?.tradedAt, { withDay: true }) }} ·
-                {{ account.latestTrade?.side === 'SELL' ? '매도' : '매수' }} 체결 · 평가금액
+                {{ formatTime(account.latestTrade.tradedAt, { withDay: true }) }} ·
+                {{ account.latestTrade.side === 'SELL' ? '매도' : '매수' }} 체결 · 평가금액
                 {{ formatCompactCurrency(account.marketValue) }}
               </p>
             </div>
           </article>
+          <p v-else class="recent-section__empty">최근 거래 내역이 아직 없어요.</p>
         </section>
 
         <section class="connection-section">
@@ -375,6 +378,18 @@ function formatTime(value, { withDay = false } = {}) {
   border-radius: 8px;
   background: #e9f8f7;
   color: #078d88;
+}
+.recent-section__empty {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  border: 1px solid #e0e8e8;
+  border-radius: 11px;
+  background: #fff;
+  color: #8b9799;
+  font-size: 7px;
 }
 .recent-section strong {
   font-size: 8px;
