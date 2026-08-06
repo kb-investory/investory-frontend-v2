@@ -8,7 +8,6 @@ import { useMypageStore } from '@/features/mypage/stores/mypageStore'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
-import MobileStatusBar from '@/shared/components/MobileStatusBar.vue'
 
 const router = useRouter()
 const mypageStore = useMypageStore()
@@ -21,9 +20,30 @@ const actionError = ref('')
 const withdrawalVerified = computed(
   () => withdrawalEmail.value.trim() === mypageStore.profile?.email,
 )
+const recentSimulationHeadline = computed(() => {
+  const simulation = mypageStore.recentSimulation
+  if (!simulation) return ''
+
+  return `${simulation.participantCount}명 중 실제 나는 ${simulation.rank}위예요`
+})
+
+const simulationParticipants = [
+  { label: '실제 나', image: '/assets/images/real-me.png', className: 'actual' },
+  { label: '나의 봇', image: '/assets/images/my-bot.png', className: 'bot' },
+  {
+    label: '유명 투자자',
+    image: '/assets/images/famous-investor.png',
+    className: 'investor',
+  },
+  { label: '원숭이', image: '/assets/images/monkey.png', className: 'monkey' },
+]
 
 function goToSection(section) {
   router.push({ name: ROUTE_NAMES.MYPAGE_PLACEHOLDER, params: { section } })
+}
+
+function goToSimulation() {
+  router.push({ name: ROUTE_NAMES.SIMULATION })
 }
 
 function clearAuthStorage({ allMemberData = false } = {}) {
@@ -96,11 +116,9 @@ onMounted(async () => {
 
 <template>
   <div class="mypage-page">
-    <MobileStatusBar />
-
     <header class="mypage-header">
       <div class="mypage-header__brand">
-        <img src="/assets/icons/monkey.png" alt="Investory" />
+        <img src="/assets/logos/investory-logo.png" alt="Investory 로고" />
         <h1>마이페이지</h1>
       </div>
       <button type="button" aria-label="마이페이지 도움말" @click="modal = 'help'">
@@ -143,50 +161,67 @@ onMounted(async () => {
         </button>
       </section>
 
-      <button
-        type="button"
-        class="tendency-summary-card"
-        @click="router.push({ name: ROUTE_NAMES.TENDENCY })"
-      >
-        <span class="summary-card__icon"><AppIcon name="chart-pie" :size="18" /></span>
-        <div>
-          <small>나의 6가지 투자성향</small>
+      <section class="mypage-highlights" aria-label="투자성향과 시뮬레이션 요약">
+        <button
+          type="button"
+          class="tendency-summary-card"
+          @click="router.push({ name: ROUTE_NAMES.TENDENCY })"
+        >
+          <div class="summary-card__header">
+            <span class="summary-card__icon"><AppIcon name="chart-pie" :size="17" /></span>
+            <small>투자성향</small>
+          </div>
           <div v-if="mypageStore.tendencyBadges.length" class="tendency-badges">
             <span v-for="badge in mypageStore.tendencyBadges" :key="badge.code">
               {{ badge.label }}
             </span>
           </div>
-          <p v-else class="tendency-summary-card__empty">분석 후 6가지 성향 결과가 표시돼요</p>
-        </div>
-        <span class="summary-card__action">
-          투자성향으로 바로가기
-          <AppIcon name="arrow-right" :size="12" />
-        </span>
-      </button>
+          <div v-else class="summary-empty-state">
+            <img src="/assets/icons/monkey-question.png" alt="" />
+            <div class="summary-empty-state__copy">
+              <strong>아직 분석 전이에요</strong>
+              <p>나의 6가지 성향을<br />먼저 확인해보세요</p>
+            </div>
+          </div>
+          <span class="summary-card__action">
+            {{ mypageStore.tendencyBadges.length ? '투자성향으로 바로가기' : '투자성향 분석하기' }}
+            <AppIcon name="arrow-right" :size="11" />
+          </span>
+        </button>
 
-      <button
-        v-if="mypageStore.recentSimulation"
-        type="button"
-        class="simulation-summary-card"
-        @click="
-          router.push({
-            name: ROUTE_NAMES.MYPAGE_SIMULATION_DETAIL,
-            params: { simulationId: mypageStore.recentSimulation.simulationId },
-          })
-        "
-      >
-        <span class="summary-card__icon summary-card__icon--orange">
-          <AppIcon name="trophy" :size="18" />
-        </span>
-        <div>
-          <small>최근 시뮬레이션</small>
-          <p class="simulation-summary-card__headline">나의 투자봇 v3가 1위예요</p>
-        </div>
-        <span class="summary-card__action summary-card__action--simulation">
-          시뮬레이션 결과로 바로가기
-          <AppIcon name="arrow-right" :size="12" />
-        </span>
-      </button>
+        <button type="button" class="simulation-summary-card" @click="goToSimulation">
+          <div class="summary-card__header summary-card__header--simulation">
+            <span class="summary-card__icon summary-card__icon--orange">
+              <AppIcon name="trophy" :size="17" />
+            </span>
+            <small>{{ mypageStore.recentSimulation ? '최근 시뮬레이션' : '시뮬레이션' }}</small>
+          </div>
+          <template v-if="mypageStore.recentSimulation">
+            <p class="simulation-summary-card__headline">{{ recentSimulationHeadline }}</p>
+            <div class="simulation-preview" aria-label="시뮬레이션 결과 미리보기">
+              <span
+                v-for="participant in simulationParticipants"
+                :key="participant.className"
+                :class="`simulation-preview__${participant.className}`"
+              >
+                <img :src="participant.image" :alt="participant.label" />
+                {{ participant.label }}
+              </span>
+            </div>
+          </template>
+          <div v-else class="summary-empty-state summary-empty-state--simulation">
+            <img src="/assets/icons/monkey-question.png" alt="" />
+            <div class="summary-empty-state__copy">
+              <strong>아직 결과가 없어요</strong>
+              <p>투자봇 4개로<br />첫 대결을 시작해보세요</p>
+            </div>
+          </div>
+          <span class="summary-card__action summary-card__action--simulation">
+            {{ mypageStore.recentSimulation ? '시뮬레이션 다시하기' : '시뮬레이션 시작하기' }}
+            <AppIcon name="arrow-right" :size="11" />
+          </span>
+        </button>
+      </section>
 
       <section class="menu-section">
         <h2>계정 및 연결</h2>
@@ -319,19 +354,17 @@ onMounted(async () => {
   color: #263a3f;
 }
 
-.mypage-page :deep(.mobile-status-bar) {
-  height: 44px;
-  padding: 0 18px;
-  background: #fff;
-  font-size: 10px;
-}
-
 .mypage-header {
+  position: sticky;
+  z-index: 81;
+  top: 0;
   display: flex;
-  min-height: 48px;
+  min-height: 64px;
   align-items: center;
   justify-content: space-between;
-  padding: 0 18px 8px;
+  padding: 12px 18px 10px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
 }
 
 .mypage-header__brand {
@@ -340,13 +373,14 @@ onMounted(async () => {
   gap: 8px;
 }
 .mypage-header__brand img {
-  width: 30px;
-  height: 30px;
+  width: 50px;
+  height: 26px;
   object-fit: contain;
 }
 .mypage-header h1 {
   margin: 0;
-  font-size: 16px;
+  font-size: 19px;
+  font-weight: 850;
   letter-spacing: -0.04em;
 }
 .mypage-header > button {
@@ -367,7 +401,7 @@ onMounted(async () => {
 .mypage-content {
   display: grid;
   gap: 11px;
-  padding: 0 18px 18px;
+  padding: 8px 18px 18px;
 }
 
 .profile-summary {
@@ -446,27 +480,43 @@ onMounted(async () => {
   cursor: pointer;
 }
 
+.mypage-highlights {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
 .tendency-summary-card,
 .simulation-summary-card {
-  display: grid;
+  display: flex;
   width: 100%;
-  grid-template-columns: 32px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 9px;
+  min-height: 174px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
   padding: 11px;
-  border: 1px solid #dfe7e7;
-  border-radius: 13px;
+  border: 1px solid #cfe7e5;
+  border-radius: 17px;
   background: #fff;
   color: #35484c;
   cursor: pointer;
   text-align: left;
+  box-shadow: 0 2px 5px rgba(29, 72, 77, 0.08);
+}
+.simulation-summary-card {
+  border-color: #f0dfc7;
+  background: #fffdf9;
+}
+.summary-card__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .summary-card__icon {
   display: grid;
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   place-items: center;
-  border-radius: 9px;
+  border-radius: 11px;
   background: #e8f8f7;
   color: #078d88;
 }
@@ -476,22 +526,25 @@ onMounted(async () => {
 }
 .tendency-summary-card small,
 .simulation-summary-card small {
-  display: block;
-  margin-bottom: 4px;
-  color: #78888b;
-  font-size: 7px;
+  color: #078d88;
+  font-size: 9px;
+  font-weight: 800;
+}
+.summary-card__header--simulation small {
+  color: #ca7a16;
 }
 .summary-card__action {
   display: inline-flex;
-  min-height: 27px;
+  min-height: 36px;
   align-items: center;
   justify-content: center;
   gap: 3px;
-  padding: 0 8px;
+  margin-top: auto;
+  padding: 0 7px;
   border-radius: 999px;
   background: #e6f7f5;
   color: #087f7b;
-  font-size: 7px;
+  font-size: 7.2px;
   font-weight: 800;
   white-space: nowrap;
 }
@@ -503,21 +556,24 @@ onMounted(async () => {
   text-align: center !important;
 }
 .tendency-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px 4px;
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  justify-content: start;
+  gap: 5px 7px;
 }
 .tendency-badges span {
   display: inline-flex;
-  min-height: 19px;
+  min-height: 21px;
   align-items: center;
   gap: 5px;
-  padding: 3px 7px 3px 6px;
+  justify-content: flex-start;
+  justify-self: start;
+  padding: 3px 6px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #397caf 0%, #235c91 100%);
+  background: #1f5a86;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
   color: #ffffff;
-  font-size: 7px;
+  font-size: 6.1px;
   font-weight: 800;
   line-height: 1;
   white-space: nowrap;
@@ -530,16 +586,93 @@ onMounted(async () => {
   background: #2eb5ff;
   content: '';
 }
-.tendency-summary-card__empty {
+.summary-empty-state {
+  display: flex;
+  min-height: 51px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.summary-empty-state img {
+  width: 43px;
+  height: 43px;
+  flex: 0 0 43px;
+  object-fit: contain;
+}
+.summary-empty-state__copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.summary-empty-state__copy strong {
+  color: #2e3032;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+.summary-empty-state__copy p {
   margin: 0;
   color: #7d8b8e;
-  font-size: 7px;
+  font-size: 6.5px;
+  line-height: 1.45;
+}
+.summary-empty-state--simulation .summary-empty-state__copy p {
+  color: #887967;
 }
 .simulation-summary-card__headline {
+  min-height: 20px;
   margin: 0;
-  color: #35484c;
+  color: #2e3032;
   font-size: 10px;
   font-weight: 800;
+  line-height: 1.45;
+  text-align: center;
+}
+.simulation-preview {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+}
+.simulation-preview span {
+  display: grid;
+  min-width: 0;
+  min-height: 54px;
+  place-items: center;
+  gap: 2px;
+  border: 1px solid #71868e;
+  border-radius: 8px;
+  background: #e7eef1;
+  color: #53666c;
+  font-size: 5.9px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-align: center;
+}
+.simulation-preview img {
+  width: 27px;
+  height: 34px;
+  object-fit: contain;
+}
+.simulation-preview .simulation-preview__actual {
+  border-color: #8ea2aa;
+  background: #edf3f5;
+  color: #53666c;
+}
+.simulation-preview .simulation-preview__bot {
+  border-color: #e8b22f;
+  background: #fff2bd;
+  color: #a56c00;
+}
+.simulation-preview .simulation-preview__investor {
+  border-color: #d7a64a;
+  background: #fff5db;
+  color: #9a6a14;
+}
+.simulation-preview .simulation-preview__monkey {
+  border-color: #b9a5cf;
+  background: #f0e9f7;
+  color: #7b5c9a;
 }
 .simulation-summary-card p:not(.simulation-summary-card__headline) {
   color: #68777a;

@@ -29,7 +29,6 @@ const recommendationNoticeCollapsed = ref(
 )
 const reanalysisNoticeCollapsed = ref(false)
 
-const analyzedDate = computed(() => formatDate(tendencyStore.analysis?.analyzedDate))
 const analysisPeriod = computed(() => {
   const period = tendencyStore.analysis?.period
   if (!period) return ''
@@ -152,7 +151,15 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="tendency-page">
-    <SegmentedControl v-model="activeTab" :options="['투자성향', '투자원칙']" />
+    <header class="tendency-navigation">
+      <div class="tendency-navigation__brand">
+        <img src="/assets/logos/investory-logo.png" alt="Investory 로고" />
+        <h1>{{ activeTab === '투자성향' ? '나의 투자성향' : '투자원칙' }}</h1>
+      </div>
+    </header>
+    <div class="tendency-tabs">
+      <SegmentedControl v-model="activeTab" :options="['투자성향', '투자원칙']" />
+    </div>
 
     <div v-if="tendencyStore.loading" class="loading-wrapper">
       <BaseLoading />
@@ -169,7 +176,6 @@ onBeforeUnmount(() => {
 
     <section v-else-if="tendencyStore.isAnalysisLocked" class="analysis-locked">
       <header class="analysis-locked__header">
-        <h1>{{ activeTab === '투자성향' ? '나의 투자 성향' : '투자원칙' }}</h1>
         <p>
           {{
             activeTab === '투자성향'
@@ -251,13 +257,6 @@ onBeforeUnmount(() => {
 
     <main v-else-if="tendencyStore.analysis && activeTab === '투자성향'" class="analysis-content">
       <header class="analysis-header">
-        <div class="analysis-header__title-row">
-          <h1>나의 투자 성향</h1>
-          <span class="analysis-date">
-            <AppIcon name="calendar-range" :size="11" />
-            {{ analyzedDate }} 분석
-          </span>
-        </div>
         <p>최근 90일의 연결 계좌 거래와 투자 일지를 바탕으로 분석했어요.</p>
         <span class="analysis-period">{{ analysisPeriod }}</span>
       </header>
@@ -335,7 +334,6 @@ onBeforeUnmount(() => {
 
     <main v-else-if="activeTab === '투자성향'" class="analysis-empty-content">
       <header class="empty-analysis-header">
-        <h1>나의 투자 성향</h1>
         <p>아직 분석 결과가 없어요</p>
       </header>
 
@@ -383,7 +381,6 @@ onBeforeUnmount(() => {
     <main v-else-if="activeTab === '투자원칙'" class="principles-content">
       <header class="principles-header">
         <div>
-          <h1>투자원칙</h1>
           <p>성향을 바탕으로 확정한 나의 매매 기준</p>
         </div>
       </header>
@@ -499,9 +496,47 @@ onBeforeUnmount(() => {
   display: flex;
   min-height: 100%;
   flex-direction: column;
-  gap: 13px;
+  gap: 17px;
+  padding: 0 20px;
   background: #ffffff;
-  box-shadow: 0 0 0 20px #ffffff;
+}
+
+.tendency-navigation {
+  position: sticky;
+  z-index: 81;
+  top: 0;
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  margin: 0 -20px;
+  padding: 12px 18px 10px;
+  background: #ffffff;
+}
+
+.tendency-navigation__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tendency-navigation__brand img {
+  width: 50px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.tendency-navigation h1 {
+  margin: 0;
+  color: #181817;
+  font-family: var(--font-heading);
+  font-size: 19px;
+  font-weight: 850;
+  letter-spacing: -0.04em;
+}
+
+.tendency-tabs :deep(.segmented-control) {
+  height: 44px;
+  padding: 2px 0;
 }
 
 .tendency-floating-stack {
@@ -542,19 +577,11 @@ onBeforeUnmount(() => {
   padding-top: 3px;
 }
 
-.analysis-locked__header h1,
 .analysis-locked__header p,
 .analysis-locked__card h2,
 .analysis-locked__card > p,
 .analysis-locked__notice {
   margin: 0;
-}
-
-.analysis-locked__header h1 {
-  color: #181817;
-  font-family: var(--font-heading);
-  font-size: 22px;
-  letter-spacing: -0.045em;
 }
 
 .analysis-locked__header p {
@@ -837,30 +864,11 @@ onBeforeUnmount(() => {
   padding-top: 3px;
 }
 
-.analysis-header__title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.analysis-header h1,
 .analysis-header p,
-.principles-header h1,
 .principles-header p,
 .history-card h2,
 .history-card p {
   margin: 0;
-}
-
-.analysis-header h1,
-.principles-header h1 {
-  color: #181817;
-  font-family: var(--font-heading);
-  font-size: 22px;
-  font-weight: 800;
-  line-height: 1.3;
-  letter-spacing: -0.045em;
 }
 
 .analysis-header p,
@@ -868,19 +876,6 @@ onBeforeUnmount(() => {
   color: #7c8587;
   font-size: 11px;
   line-height: 1.45;
-}
-
-.analysis-date {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 8px;
-  border-radius: 7px;
-  background: #f5f7f7;
-  color: #6d7779;
-  font-family: var(--font-mono);
-  font-size: 9px;
-  white-space: nowrap;
 }
 
 .analysis-period {
@@ -1211,20 +1206,12 @@ onBeforeUnmount(() => {
   padding-top: 3px;
 }
 
-.empty-analysis-header h1,
 .empty-analysis-header p,
 .analysis-empty-visual p,
 .analysis-empty-security,
 .principles-empty h2,
 .principles-empty p {
   margin: 0;
-}
-
-.empty-analysis-header h1 {
-  color: #181817;
-  font-family: var(--font-heading);
-  font-size: 22px;
-  letter-spacing: -0.045em;
 }
 
 .empty-analysis-header p {

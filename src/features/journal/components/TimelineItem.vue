@@ -169,7 +169,7 @@ defineProps({
 }
 
 .timeline-item__return-rate {
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-sans);
   font-weight: 700;
 }
 </style>

@@ -1,7 +1,7 @@
 <script setup>
 import { ArrowRight, Moon, TrendingUp } from '@lucide/vue'
 
-import MonkeyImage from '@/shared/components/MonkeyImage.vue'
+import RunningMonkey from './RunningMonkey.vue'
 
 defineProps({
   today: {
@@ -58,7 +58,7 @@ defineEmits(['open-transactions'])
         <div class="today-record__track">
           <span class="today-record__elapsed" :style="{ width: `${today.dayProgressPercent}%` }" />
           <span class="today-record__monkey" :style="{ left: `${today.dayProgressPercent}%` }">
-            <MonkeyImage :size="30" />
+            <RunningMonkey :size="36" />
           </span>
           <span class="today-record__moon" aria-hidden="true">
             <Moon :size="20" :stroke-width="1.8" />
@@ -268,9 +268,17 @@ defineEmits(['open-transactions'])
 
 .today-record__monkey {
   position: absolute;
-  top: 0;
+  top: -3px;
   z-index: 2;
   transform: translateX(-50%);
+  transition: left 1s linear;
+  will-change: left;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .today-record__monkey {
+    transition: none;
+  }
 }
 
 .today-record__moon {

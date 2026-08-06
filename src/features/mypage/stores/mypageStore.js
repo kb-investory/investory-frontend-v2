@@ -12,6 +12,7 @@ import {
   updateUserProfile,
 } from '@/features/mypage/api/mypageApi'
 import { getJournalEntries } from '@/features/journal/api/journalApi'
+import { getLatestCompletedSimulationResult } from '@/features/simulation/api/simulationApi'
 import { getLatestTendencyAnalysis } from '@/features/tendency/api/tendencyApi'
 
 const OAUTH_PROVIDER_LABELS = Object.freeze({
@@ -56,10 +57,11 @@ export const useMypageStore = defineStore('mypage', () => {
     error.value = null
 
     try {
-      const [overview, analysis, journalResponse] = await Promise.all([
+      const [overview, analysis, journalResponse, simulationResult] = await Promise.all([
         getMypageOverview(),
         getLatestTendencyAnalysis(),
         getJournalEntries(),
+        getLatestCompletedSimulationResult(),
       ])
       const oauthProvider = String(
         authUser?.oauthProvider || authUser?.socialType || overview.profile.oauthProvider || '',
@@ -79,7 +81,20 @@ export const useMypageStore = defineStore('mypage', () => {
         code: result.dimension.code,
         label: result.type.name,
       }))
-      recentSimulation.value = overview.recentSimulation
+      const rankedParticipants = [...(simulationResult?.participantSummary || [])].sort(
+        (first, second) => second.cumulativeReturnPercent - first.cumulativeReturnPercent,
+      )
+      const actualUserIndex = rankedParticipants.findIndex(
+        (participant) => participant.variantType === 'ACTUAL_USER',
+      )
+      const actualUser = rankedParticipants[actualUserIndex]
+      recentSimulation.value = actualUser
+        ? {
+            simulationId: simulationResult.simulationRun?.simulationRunId,
+            rank: actualUserIndex + 1,
+            participantCount: rankedParticipants.length,
+          }
+        : null
       accounts.value = overview.accounts
       appInfo.value = overview.appInfo
       hasTendencyAnalysis.value = Boolean(analysis)

@@ -104,6 +104,10 @@ function openSearch() {
   router.push({ name: ROUTE_NAMES.JOURNAL_SEARCH })
 }
 
+function goToJournal() {
+  router.push({ name: ROUTE_NAMES.JOURNAL })
+}
+
 function openEditor() {
   router.push({
     name: ROUTE_NAMES.JOURNAL_CREATE,
@@ -138,7 +142,16 @@ watch(
   <div class="journal-date-page">
     <main class="journal-date-page__content">
       <header class="journal-date-page__header">
-        <div>
+        <button
+          class="journal-date-page__back"
+          type="button"
+          aria-label="월간 투자 일지로 돌아가기"
+          @click="goToJournal"
+        >
+          <AppIcon name="chevron-left" :size="20" />
+        </button>
+
+        <div class="journal-date-page__heading">
           <h1>투자 일지</h1>
           <p>선택한 주의 기록과 판단 근거를 확인하세요</p>
         </div>
@@ -200,11 +213,16 @@ watch(
 }
 
 .journal-date-page__header {
-  display: flex;
+  display: grid;
   height: 60px;
   flex: 0 0 60px;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
   align-items: center;
-  justify-content: space-between;
+  gap: 6px;
+}
+
+.journal-date-page__heading {
+  min-width: 0;
 }
 
 .journal-date-page__header h1 {
@@ -224,24 +242,34 @@ watch(
   line-height: 17px;
 }
 
+.journal-date-page__back,
 .journal-date-page__search {
   display: grid;
   width: 44px;
   height: 44px;
-  flex: 0 0 44px;
   place-items: center;
   padding: 0;
-  border: 1px solid #dce6e9;
-  border-radius: 50%;
   color: var(--text-primary, #181817);
   background: #ffffff;
   cursor: pointer;
 }
 
+.journal-date-page__back {
+  border: 0;
+  border-radius: 12px;
+}
+
+.journal-date-page__search {
+  border: 1px solid #dce6e9;
+  border-radius: 50%;
+}
+
+.journal-date-page__back:hover,
 .journal-date-page__search:hover {
   background: var(--brand-mist, #f5fbfb);
 }
 
+.journal-date-page__back:focus-visible,
 .journal-date-page__search:focus-visible {
   outline: 2px solid var(--brand-teal-deep, #087f7c);
   outline-offset: 2px;

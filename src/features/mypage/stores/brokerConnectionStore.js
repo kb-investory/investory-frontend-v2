@@ -6,6 +6,7 @@ import {
   getBrokerProviders,
   getConnectedHoldings,
 } from '@/features/mypage/api/brokerConnectionApi'
+import { addConnectedBrokerAccounts } from '@/features/mypage/api/mypageApi'
 
 const CONNECTION_SESSION_KEY = 'investory:broker-connection'
 
@@ -136,11 +137,16 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
     connectionError.value = ''
   }
 
-  function completeConnection() {
+  async function completeConnection() {
     if (!hasLoadedHoldings.value) {
       throw new Error('보유 종목 확인을 완료한 후 계좌 연결을 마쳐 주세요.')
     }
 
+    await addConnectedBrokerAccounts({
+      connection: connection.value,
+      account: account.value,
+      holdings: holdings.value,
+    })
     connectionCompleted.value = true
 
     try {

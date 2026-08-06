@@ -39,9 +39,10 @@
   --color-border-subtle: var(--border-subtle);
 
   /* Typography */
-  --font-sans: Inter, system-ui, sans-serif;
-  --font-heading: 'Funnel Sans', system-ui, sans-serif;
-  --font-mono: 'Geist Mono', 'IBM Plex Mono', monospace;
+  --font-sans: 'SUIT Variable', SUIT, system-ui, sans-serif;
+  --font-heading: 'SUIT Variable', SUIT, system-ui, sans-serif;
+  --font-mono: 'SUIT Variable', SUIT, system-ui, sans-serif;
+  --font-brand: 'SUIT Variable', SUIT, system-ui, sans-serif;
 
   /* Radii */
   --radius-xs: 6px;

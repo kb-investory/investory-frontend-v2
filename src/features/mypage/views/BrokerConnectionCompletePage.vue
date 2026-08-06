@@ -1,17 +1,34 @@
 <script setup>
+import { ref } from 'vue'
 import { ArrowRight, Check, House } from '@lucide/vue'
 import { useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
 import { useBrokerConnectionStore } from '@/features/mypage/stores/brokerConnectionStore'
+import { useMypageStore } from '@/features/mypage/stores/mypageStore'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
 
 const router = useRouter()
 const brokerStore = useBrokerConnectionStore()
+const mypageStore = useMypageStore()
+const completing = ref(false)
+const completionError = ref('')
 
-function goHome() {
-  brokerStore.completeConnection()
-  router.push({ name: ROUTE_NAMES.HOME })
+async function goHome() {
+  if (completing.value) return
+
+  completing.value = true
+  completionError.value = ''
+  try {
+    await brokerStore.completeConnection()
+    await mypageStore.fetchAccounts()
+    await router.push({ name: ROUTE_NAMES.HOME })
+  } catch (error) {
+    completionError.value =
+      error instanceof Error ? error.message : '계좌 연결을 완료하지 못했어요.'
+  } finally {
+    completing.value = false
+  }
 }
 </script>
 
@@ -65,10 +82,13 @@ function goHome() {
         </div>
 
         <footer class="complete-action">
-          <BaseButton full-width @click="goHome">
-            홈에서 자산 확인하기
+          <BaseButton full-width :disabled="completing" @click="goHome">
+            {{ completing ? '계좌 추가 중...' : '홈에서 자산 확인하기' }}
             <template #icon><ArrowRight :size="18" /></template>
           </BaseButton>
+          <p v-if="completionError" class="complete-action__error" role="alert">
+            {{ completionError }}
+          </p>
           <p>연결된 계좌는 마이페이지에서 언제든 관리할 수 있어요.</p>
         </footer>
       </main>
@@ -162,6 +182,11 @@ function goHome() {
 .complete-guide p,
 .complete-action p {
   margin: 0;
+}
+
+.complete-action .complete-action__error {
+  color: #d64545;
+  font-weight: 700;
 }
 
 .complete-copy h2 {

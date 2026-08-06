@@ -6,7 +6,6 @@ import { ROUTE_NAMES } from '@/app/router/route-names'
 import { useMypageStore } from '@/features/mypage/stores/mypageStore'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
-import MobileStatusBar from '@/shared/components/MobileStatusBar.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -77,8 +76,6 @@ onMounted(() => mypageStore.fetchAccountDetail(accountId.value))
 
 <template>
   <div class="account-detail-page">
-    <MobileStatusBar />
-
     <header class="detail-app-bar">
       <button
         type="button"
@@ -210,18 +207,12 @@ onMounted(() => mypageStore.fetchAccountDetail(accountId.value))
   background: #ffffff;
   color: #263a3f;
 }
-.account-detail-page :deep(.mobile-status-bar) {
-  height: 44px;
-  padding: 0 18px;
-  background: #ffffff;
-  font-size: 10px;
-}
 .detail-app-bar {
   display: grid;
-  min-height: 54px;
+  min-height: 64px;
   grid-template-columns: 38px 1fr 38px;
   align-items: center;
-  padding: 0 18px 8px;
+  padding: 12px 18px 10px;
 }
 .detail-app-bar button {
   display: grid;
@@ -244,7 +235,7 @@ onMounted(() => mypageStore.fetchAccountDetail(accountId.value))
 .detail-content {
   display: grid;
   gap: 13px;
-  padding: 0 18px 24px;
+  padding: 8px 18px 24px;
 }
 .account-hero {
   display: grid;

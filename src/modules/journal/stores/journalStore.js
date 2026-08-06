@@ -25,6 +25,7 @@ export const useJournalStore = defineStore('journal', () => {
   const cursor = ref(null)
   const hasMore = ref(false)
   const totalCount = ref(0)
+  const totalJournalCount = ref(0)
   const isLoading = ref(false)
   const isLoadingMore = ref(false)
 
@@ -99,6 +100,11 @@ export const useJournalStore = defineStore('journal', () => {
     await fetchJournals({ isInitial: false })
   }
 
+  async function fetchTotalJournalCount() {
+    const results = await getJournals()
+    totalJournalCount.value = Array.isArray(results) ? results.length : (results.totalCount ?? 0)
+  }
+
   async function fetchJournal(journalId) {
     selectedJournal.value = await getJournal(journalId)
   }
@@ -110,6 +116,7 @@ export const useJournalStore = defineStore('journal', () => {
   async function addJournal(payload) {
     const journal = await createJournal(payload)
     await resetAndFetch()
+    await fetchTotalJournalCount()
     return journal
   }
 
@@ -267,6 +274,7 @@ export const useJournalStore = defineStore('journal', () => {
     cursor,
     hasMore,
     totalCount,
+    totalJournalCount,
     isLoading,
     isLoadingMore,
     monthlySummary,
@@ -277,6 +285,7 @@ export const useJournalStore = defineStore('journal', () => {
     setActiveTab,
     fetchJournals,
     fetchNextJournals,
+    fetchTotalJournalCount,
     resetAndFetch,
     fetchJournal,
     fetchJournalVersion,

@@ -1,4 +1,669 @@
 {
+  "overview": {
+    "isReady": true,
+    "eligiblePeriod": {
+      "startDate": "2026-03-01",
+      "endDate": "2026-07-29",
+      "totalDays": 150
+    },
+    "recommendedInitialCapital": 5000000,
+    "connectedAccountsCount": 1,
+    "recentSimulationCount": 3
+  },
+  "compileResponse": {
+    "jobId": "JOB_794FF6CD",
+    "status": "RUNNING",
+    "progressPercent": 12,
+    "botVersion": "v3.0",
+    "ruleSchema": {
+      "universe": {
+        "minMarketCap": 100000000000,
+        "excludedSectors": ["금융", "유틸리티"]
+      },
+      "selection": {
+        "targetScores": {
+          "value": 15,
+          "growth": 40,
+          "quality": 20,
+          "trend": 15,
+          "disclosure": 10
+        }
+      },
+      "entry": {
+        "chaseBuyLimit": 15,
+        "splitBuyCount": 3
+      },
+      "exit": {
+        "takeProfitRate": 0.2,
+        "stopLossRate": -0.1
+      }
+    }
+  },
+  "compileJobs": {
+    "JOB_794FF6CC": {
+      "jobId": "JOB_794FF6CC",
+      "status": "COMPLETED",
+      "progressPercent": 100,
+      "message": "AI 원칙 봇 전략 생성이 완료되었습니다."
+    },
+    "JOB_794FF6CD": {
+      "jobId": "JOB_794FF6CD",
+      "status": "RUNNING",
+      "progressPercent": 68,
+      "message": "최근 거래 기록과 투자 원칙을 분석하고 있습니다."
+    }
+  },
+  "comparators": [
+    {
+      "variantId": 1,
+      "variantType": "ACTUAL_USER",
+      "variantName": "실제 나",
+      "description": "실제 매매 내역 그대로 참가",
+      "className": "PLAYER 01",
+      "level": "",
+      "tone": "actual",
+      "fixed": true
+    },
+    {
+      "variantId": 2,
+      "variantType": "PERSONAL_BOT",
+      "variantName": "나의 투자봇 v3",
+      "description": "성장 근거와 공시를 중시",
+      "className": "PERSONAL",
+      "level": "LV.3",
+      "traits": ["성장", "공시"],
+      "fixed": true,
+      "tone": "personal",
+      "strategyLabel": "PERSONAL STRATEGY",
+      "versionLine": "2026.07.24 업데이트 · 신뢰도 78%",
+      "summary": "성장 근거와 공시를 중요하게 보고, 단기 급등과 종목 집중에는 신중해요.",
+      "principles": [
+        "성장 근거와 위험 요인을 각각 하나 이상 확인해요.",
+        "5거래일 동안 15% 이상 오른 종목은 진입을 주의해요.",
+        "최초 투자 근거가 유지될 때만 최대 2회 추가매수해요."
+      ],
+      "rules": [
+        { "label": "종목 선택", "value": "성장 점수 70점 이상" },
+        { "label": "포트폴리오", "value": "한 종목 최대 20%" },
+        { "label": "매도", "value": "고점 대비 12% 하락 시" }
+      ],
+      "dataTitle": "나의 데이터로 만들어졌어요",
+      "dataSummary": "거래 34건 · 투자 일지 18건 · 확정 원칙 5개"
+    },
+    {
+      "variantId": 3,
+      "variantType": "FAMOUS_STRATEGY",
+      "variantName": "유명 투자자",
+      "description": "가치와 품질을 오래 추적",
+      "className": "LEGEND",
+      "level": "4가지 유형",
+      "traits": ["가치", "장기"],
+      "fixed": false,
+      "tone": "legend",
+      "strategyLabel": "LEGEND STRATEGY",
+      "versionLine": "4가지 투자 유형 · 장기 성과 기반",
+      "summary": "검증된 투자 대가의 관점으로 기업 가치와 장기 경쟁력을 함께 살펴봐요.",
+      "principles": [
+        "가격보다 기업의 내재 가치와 현금 흐름을 먼저 확인해요.",
+        "지속 가능한 경쟁 우위가 있는 기업을 오래 보유해요.",
+        "시장 변동보다 기업의 본질이 바뀌었는지를 판단해요."
+      ],
+      "rules": [
+        { "label": "종목 선택", "value": "가치·품질 점수 상위" },
+        { "label": "포트폴리오", "value": "한 종목 최대 25%" },
+        { "label": "매도", "value": "투자 가설 훼손 시" }
+      ],
+      "dataTitle": "비교 데이터가 준비되어 있어요",
+      "dataSummary": "대가 전략 4종 · 분석 기업 120개 · 장기 원칙 12개"
+    },
+    {
+      "variantId": 4,
+      "variantType": "RANDOM_BOT",
+      "variantName": "원숭이",
+      "description": "본능의 랜덤 픽 · 500회",
+      "className": "WILD CARD",
+      "level": "???",
+      "traits": ["랜덤", "혼돈"],
+      "fixed": false,
+      "tone": "random",
+      "strategyLabel": "WILD CARD",
+      "versionLine": "랜덤 시드 500회 · 매회 새 조합",
+      "summary": "예측 대신 무작위 선택으로 투자 결과의 우연성과 기준 전략을 비교해요.",
+      "principles": [
+        "투자 가능 종목 안에서 매수 대상을 무작위로 골라요.",
+        "특정 업종이나 테마에 의도적으로 치우치지 않아요.",
+        "정해진 주기마다 새로운 무작위 조합을 만들어요."
+      ],
+      "rules": [
+        { "label": "종목 선택", "value": "투자 가능 종목 중 랜덤" },
+        { "label": "포트폴리오", "value": "동일 비중 분산" },
+        { "label": "매도", "value": "정해진 리밸런싱일" }
+      ],
+      "dataTitle": "비교 데이터가 준비되어 있어요",
+      "dataSummary": "랜덤 실험 500회 · 평균 8종목 · 동일 조건 비교"
+    }
+  ],
+  "run": {
+    "simulationRunId": 101,
+    "periodStart": "2026-03-01",
+    "periodEnd": "2026-07-29",
+    "initialCapital": 5000000,
+    "participantSummary": [
+      {
+        "variantId": 1,
+        "variantType": "ACTUAL_USER",
+        "variantName": "실제 나",
+        "totalEquity": 5250000,
+        "cumulativeReturnPercent": 5,
+        "mddPercent": -3.2
+      },
+      {
+        "variantId": 2,
+        "variantType": "PERSONAL_BOT",
+        "variantName": "나의 투자봇 v1",
+        "totalEquity": 5850000,
+        "cumulativeReturnPercent": 17,
+        "mddPercent": -1.8
+      },
+      {
+        "variantId": 3,
+        "variantType": "FAMOUS_STRATEGY",
+        "variantName": "우량 가치·품질 퀀트 봇",
+        "totalEquity": 5400000,
+        "cumulativeReturnPercent": 8,
+        "mddPercent": -4.5
+      },
+      {
+        "variantId": 4,
+        "variantType": "RANDOM_BOT",
+        "variantName": "원숭이 봇",
+        "totalEquity": 4900000,
+        "cumulativeReturnPercent": -2,
+        "mddPercent": -8.1
+      }
+    ],
+    "ruleSchema": {
+      "universe": {
+        "minMarketCap": 100000000000
+      },
+      "selection": {
+        "targetScores": {
+          "growth": 40
+        }
+      },
+      "entry": {
+        "chaseBuyLimit": 15
+      },
+      "exit": {
+        "takeProfitRate": 0.2,
+        "stopLossRate": -0.1
+      }
+    },
+    "totalTradesCount": 6,
+    "simulatedTrades": [
+      {
+        "simulatedTradeId": 1001,
+        "simulationVariantId": 2,
+        "securityId": 101,
+        "tradeSide": "BUY",
+        "tradedAt": "2026-03-05T09:00:00",
+        "quantity": 10,
+        "unitPrice": 70000,
+        "decisionReason": "[AI 팩터 통과] 팩터 점수 78.5점으로 최소 기준을 넘고 상승 추세를 확인했습니다."
+      },
+      {
+        "simulatedTradeId": 1002,
+        "simulationVariantId": 2,
+        "securityId": 101,
+        "tradeSide": "SELL",
+        "tradedAt": "2026-04-12T09:00:00",
+        "quantity": 5,
+        "unitPrice": 82000,
+        "decisionReason": "[원칙 익절 실행] 목표 수익률 +15% 달성에 따라 보유 수량의 50%를 분할 매도했습니다."
+      },
+      {
+        "simulatedTradeId": 1003,
+        "simulationVariantId": 1,
+        "securityId": 202,
+        "tradeSide": "BUY",
+        "tradedAt": "2026-05-02T09:00:00",
+        "quantity": 8,
+        "unitPrice": 115000,
+        "decisionReason": "[실제 거래 재현] 사용자가 같은 조건에서 매수했던 거래를 반영했습니다."
+      },
+      {
+        "simulatedTradeId": 1004,
+        "simulationVariantId": 3,
+        "securityId": 303,
+        "tradeSide": "BUY",
+        "tradedAt": "2026-05-16T09:00:00",
+        "quantity": 12,
+        "unitPrice": 52000,
+        "decisionReason": "[가치·품질 리밸런싱] 저평가와 수익성 기준을 모두 충족한 종목을 편입했습니다."
+      },
+      {
+        "simulatedTradeId": 1005,
+        "simulationVariantId": 4,
+        "securityId": 404,
+        "tradeSide": "BUY",
+        "tradedAt": "2026-06-03T09:00:00",
+        "quantity": 15,
+        "unitPrice": 39000,
+        "decisionReason": "[무작위 선택] 동일한 투자 가능 종목군에서 무작위로 선택했습니다."
+      },
+      {
+        "simulatedTradeId": 1006,
+        "simulationVariantId": 2,
+        "securityId": 505,
+        "tradeSide": "BUY",
+        "tradedAt": "2026-07-08T09:00:00",
+        "quantity": 6,
+        "unitPrice": 96000,
+        "decisionReason": "[분할 매수] 변동성 구간에서 정한 비중 한도 내로 추가 매수했습니다."
+      }
+    ],
+    "dailySnapshots": [
+      {
+        "snapshotDate": "2026-03-01",
+        "simulationVariantId": 2,
+        "cash": 5000000,
+        "totalEquity": 5000000,
+        "cumulativeReturnPercent": 0,
+        "mddPercent": 0
+      },
+      {
+        "snapshotDate": "2026-04-01",
+        "simulationVariantId": 2,
+        "cash": 3100000,
+        "totalEquity": 5185000,
+        "cumulativeReturnPercent": 3.7,
+        "mddPercent": -0.8
+      },
+      {
+        "snapshotDate": "2026-05-01",
+        "simulationVariantId": 2,
+        "cash": 3510000,
+        "totalEquity": 5410000,
+        "cumulativeReturnPercent": 8.2,
+        "mddPercent": -1.8
+      },
+      {
+        "snapshotDate": "2026-06-01",
+        "simulationVariantId": 2,
+        "cash": 2840000,
+        "totalEquity": 5630000,
+        "cumulativeReturnPercent": 12.6,
+        "mddPercent": -1.8
+      },
+      {
+        "snapshotDate": "2026-07-29",
+        "simulationVariantId": 2,
+        "cash": 3010000,
+        "totalEquity": 5850000,
+        "cumulativeReturnPercent": 17,
+        "mddPercent": -1.8
+      }
+    ]
+  },
+  "latest": {
+    "simulationRun": {
+      "simulationRunId": 101,
+      "userId": 1,
+      "periodStart": "2026-03-01",
+      "periodEnd": "2026-07-29",
+      "initialCapital": 5000000,
+      "runStatus": "COMPLETED"
+    },
+    "simulationVariants": [
+      {
+        "simulationVariantId": 1,
+        "variantType": "ACTUAL_USER",
+        "variantName": "실제 나"
+      },
+      {
+        "simulationVariantId": 2,
+        "variantType": "PERSONAL_BOT",
+        "variantName": "나의 투자봇 v1"
+      },
+      {
+        "simulationVariantId": 3,
+        "variantType": "FAMOUS_STRATEGY",
+        "variantName": "우량 가치·품질 퀀트 봇"
+      },
+      {
+        "simulationVariantId": 4,
+        "variantType": "RANDOM_BOT",
+        "variantName": "원숭이 봇"
+      }
+    ],
+    "participantSummary": [
+      {
+        "variantId": 1,
+        "variantType": "ACTUAL_USER",
+        "variantName": "실제 나",
+        "totalEquity": 5250000,
+        "cumulativeReturnPercent": 5,
+        "mddPercent": -3.2
+      },
+      {
+        "variantId": 2,
+        "variantType": "PERSONAL_BOT",
+        "variantName": "나의 투자봇 v1",
+        "totalEquity": 5850000,
+        "cumulativeReturnPercent": 17,
+        "mddPercent": -1.8
+      },
+      {
+        "variantId": 3,
+        "variantType": "FAMOUS_STRATEGY",
+        "variantName": "우량 가치·품질 퀀트 봇",
+        "totalEquity": 5400000,
+        "cumulativeReturnPercent": 8,
+        "mddPercent": -4.5
+      },
+      {
+        "variantId": 4,
+        "variantType": "RANDOM_BOT",
+        "variantName": "원숭이 봇",
+        "totalEquity": 4900000,
+        "cumulativeReturnPercent": -2,
+        "mddPercent": -8.1
+      }
+    ],
+    "totalTradesCount": 6,
+    "simulatedTrades": [
+      {
+        "simulatedTradeId": 1001,
+        "simulationVariantId": 2,
+        "securityId": 101,
+        "tradeSide": "BUY",
+        "tradedAt": "2026-03-05T09:00:00",
+        "quantity": 10,
+        "unitPrice": 70000,
+        "decisionReason": "[AI 팩터 통과] 팩터 점수 78.5점으로 최소 기준을 넘고 상승 추세를 확인했습니다."
+      },
+      {
+        "simulatedTradeId": 1002,
+        "simulationVariantId": 2,
+        "securityId": 101,
+        "tradeSide": "SELL",
+        "tradedAt": "2026-04-12T09:00:00",
+        "quantity": 5,
+        "unitPrice": 82000,
+        "decisionReason": "[원칙 익절 실행] 목표 수익률 +15% 달성에 따라 보유 수량의 50%를 분할 매도했습니다."
+      },
+      {
+        "simulatedTradeId": 1006,
+        "simulationVariantId": 2,
+        "securityId": 505,
+        "tradeSide": "BUY",
+        "tradedAt": "2026-07-08T09:00:00",
+        "quantity": 6,
+        "unitPrice": 96000,
+        "decisionReason": "[분할 매수] 변동성 구간에서 정한 비중 한도 내로 추가 매수했습니다."
+      }
+    ],
+    "dailyPerformance": [
+      {
+        "snapshotDate": "2026-03-01",
+        "simulationVariantId": 1,
+        "cash": 5000000,
+        "totalEquity": 5000000,
+        "cumulativeReturnPercent": 0,
+        "mddPercent": 0
+      },
+      {
+        "snapshotDate": "2026-04-01",
+        "simulationVariantId": 1,
+        "cash": 3720000,
+        "totalEquity": 5060000,
+        "cumulativeReturnPercent": 1.2,
+        "mddPercent": -1.5
+      },
+      {
+        "snapshotDate": "2026-05-01",
+        "simulationVariantId": 1,
+        "cash": 3090000,
+        "totalEquity": 5155000,
+        "cumulativeReturnPercent": 3.1,
+        "mddPercent": -3.2
+      },
+      {
+        "snapshotDate": "2026-06-01",
+        "simulationVariantId": 1,
+        "cash": 3220000,
+        "totalEquity": 5210000,
+        "cumulativeReturnPercent": 4.2,
+        "mddPercent": -3.2
+      },
+      {
+        "snapshotDate": "2026-07-29",
+        "simulationVariantId": 1,
+        "cash": 3360000,
+        "totalEquity": 5250000,
+        "cumulativeReturnPercent": 5,
+        "mddPercent": -3.2
+      },
+      {
+        "snapshotDate": "2026-03-01",
+        "simulationVariantId": 2,
+        "cash": 5000000,
+        "totalEquity": 5000000,
+        "cumulativeReturnPercent": 0,
+        "mddPercent": 0
+      },
+      {
+        "snapshotDate": "2026-04-01",
+        "simulationVariantId": 2,
+        "cash": 3100000,
+        "totalEquity": 5185000,
+        "cumulativeReturnPercent": 3.7,
+        "mddPercent": -0.8
+      },
+      {
+        "snapshotDate": "2026-05-01",
+        "simulationVariantId": 2,
+        "cash": 3510000,
+        "totalEquity": 5410000,
+        "cumulativeReturnPercent": 8.2,
+        "mddPercent": -1.8
+      },
+      {
+        "snapshotDate": "2026-06-01",
+        "simulationVariantId": 2,
+        "cash": 2840000,
+        "totalEquity": 5630000,
+        "cumulativeReturnPercent": 12.6,
+        "mddPercent": -1.8
+      },
+      {
+        "snapshotDate": "2026-07-29",
+        "simulationVariantId": 2,
+        "cash": 3010000,
+        "totalEquity": 5850000,
+        "cumulativeReturnPercent": 17,
+        "mddPercent": -1.8
+      },
+      {
+        "snapshotDate": "2026-03-01",
+        "simulationVariantId": 3,
+        "cash": 5000000,
+        "totalEquity": 5000000,
+        "cumulativeReturnPercent": 0,
+        "mddPercent": 0
+      },
+      {
+        "snapshotDate": "2026-04-01",
+        "simulationVariantId": 3,
+        "cash": 3490000,
+        "totalEquity": 5120000,
+        "cumulativeReturnPercent": 2.4,
+        "mddPercent": -1.1
+      },
+      {
+        "snapshotDate": "2026-05-01",
+        "simulationVariantId": 3,
+        "cash": 3280000,
+        "totalEquity": 5235000,
+        "cumulativeReturnPercent": 4.7,
+        "mddPercent": -2.3
+      },
+      {
+        "snapshotDate": "2026-06-01",
+        "simulationVariantId": 3,
+        "cash": 2910000,
+        "totalEquity": 5315000,
+        "cumulativeReturnPercent": 6.3,
+        "mddPercent": -4.5
+      },
+      {
+        "snapshotDate": "2026-07-29",
+        "simulationVariantId": 3,
+        "cash": 3040000,
+        "totalEquity": 5400000,
+        "cumulativeReturnPercent": 8,
+        "mddPercent": -4.5
+      },
+      {
+        "snapshotDate": "2026-03-01",
+        "simulationVariantId": 4,
+        "cash": 5000000,
+        "totalEquity": 5000000,
+        "cumulativeReturnPercent": 0,
+        "mddPercent": 0
+      },
+      {
+        "snapshotDate": "2026-04-01",
+        "simulationVariantId": 4,
+        "cash": 3710000,
+        "totalEquity": 4935000,
+        "cumulativeReturnPercent": -1.3,
+        "mddPercent": -2.2
+      },
+      {
+        "snapshotDate": "2026-05-01",
+        "simulationVariantId": 4,
+        "cash": 3160000,
+        "totalEquity": 4845000,
+        "cumulativeReturnPercent": -3.1,
+        "mddPercent": -5.1
+      },
+      {
+        "snapshotDate": "2026-06-01",
+        "simulationVariantId": 4,
+        "cash": 2810000,
+        "totalEquity": 4925000,
+        "cumulativeReturnPercent": -1.5,
+        "mddPercent": -8.1
+      },
+      {
+        "snapshotDate": "2026-07-29",
+        "simulationVariantId": 4,
+        "cash": 2950000,
+        "totalEquity": 4900000,
+        "cumulativeReturnPercent": -2,
+        "mddPercent": -8.1
+      }
+    ]
+  },
+  "details": {
+    "101": {
+      "simulationRun": {
+        "simulationRunId": 101,
+        "userId": 1,
+        "periodStart": "2026-03-01",
+        "periodEnd": "2026-07-29",
+        "initialCapital": 5000000,
+        "runStatus": "COMPLETED"
+      },
+      "simulationVariants": [
+        {
+          "simulationVariantId": 1,
+          "variantType": "ACTUAL_USER",
+          "variantName": "실제 나"
+        },
+        {
+          "simulationVariantId": 2,
+          "variantType": "PERSONAL_BOT",
+          "variantName": "나의 투자봇 v1"
+        },
+        {
+          "simulationVariantId": 3,
+          "variantType": "FAMOUS_STRATEGY",
+          "variantName": "우량 가치·품질 퀀트 봇"
+        },
+        {
+          "simulationVariantId": 4,
+          "variantType": "RANDOM_BOT",
+          "variantName": "원숭이 봇"
+        }
+      ],
+      "simulatedTrades": [
+        {
+          "simulatedTradeId": 1001,
+          "simulationVariantId": 2,
+          "securityId": 101,
+          "tradeSide": "BUY",
+          "tradedAt": "2026-03-05T09:00:00",
+          "quantity": 10,
+          "unitPrice": 70000,
+          "decisionReason": "[AI 팩터 통과] 팩터 점수 78.5점으로 최소 기준을 넘고 상승 추세를 확인했습니다."
+        },
+        {
+          "simulatedTradeId": 1002,
+          "simulationVariantId": 2,
+          "securityId": 101,
+          "tradeSide": "SELL",
+          "tradedAt": "2026-04-12T09:00:00",
+          "quantity": 5,
+          "unitPrice": 82000,
+          "decisionReason": "[원칙 익절 실행] 목표 수익률 +15% 달성에 따라 보유 수량의 50%를 분할 매도했습니다."
+        }
+      ],
+      "dailyPerformance": [
+        {
+          "snapshotDate": "2026-03-01",
+          "simulationVariantId": 2,
+          "cash": 5000000,
+          "totalEquity": 5000000,
+          "cumulativeReturnPercent": 0,
+          "mddPercent": 0
+        },
+        {
+          "snapshotDate": "2026-04-01",
+          "simulationVariantId": 2,
+          "cash": 3100000,
+          "totalEquity": 5185000,
+          "cumulativeReturnPercent": 3.7,
+          "mddPercent": -0.8
+        },
+        {
+          "snapshotDate": "2026-05-01",
+          "simulationVariantId": 2,
+          "cash": 3510000,
+          "totalEquity": 5410000,
+          "cumulativeReturnPercent": 8.2,
+          "mddPercent": -1.8
+        },
+        {
+          "snapshotDate": "2026-06-01",
+          "simulationVariantId": 2,
+          "cash": 2840000,
+          "totalEquity": 5630000,
+          "cumulativeReturnPercent": 12.6,
+          "mddPercent": -1.8
+        },
+        {
+          "snapshotDate": "2026-07-29",
+          "simulationVariantId": 2,
+          "cash": 3010000,
+          "totalEquity": 5850000,
+          "cumulativeReturnPercent": 17,
+          "mddPercent": -1.8
+        }
+      ]
+    }
+  },
   "messages": [
     {
       "id": 1,

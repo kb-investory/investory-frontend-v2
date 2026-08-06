@@ -2,7 +2,6 @@
 import { RouterLink } from 'vue-router'
 
 import AppIcon from '@/shared/components/AppIcon.vue'
-import MonkeyImage from '@/shared/components/MonkeyImage.vue'
 
 defineProps({
   items: {
@@ -25,7 +24,20 @@ defineProps({
         class="bottom-tab-bar__icon-wrapper"
         :class="{ 'bottom-tab-bar__icon-wrapper--monkey': item.isMonkey }"
       >
-        <MonkeyImage v-if="item.isMonkey" :size="22" />
+        <template v-if="item.isMonkey">
+          <img
+            class="bottom-tab-bar__monkey bottom-tab-bar__monkey--animated"
+            src="/assets/icons/monkey-turntable-96.webp"
+            alt=""
+            aria-hidden="true"
+          />
+          <img
+            class="bottom-tab-bar__monkey bottom-tab-bar__monkey--static"
+            src="/assets/icons/monkey-turntable-front.png"
+            alt=""
+            aria-hidden="true"
+          />
+        </template>
         <AppIcon v-else :name="item.icon" :size="18" />
       </div>
       <span class="bottom-tab-bar__label">{{ item.label }}</span>
@@ -43,9 +55,10 @@ defineProps({
   padding: 6px;
   border: 1px solid #d9e7e8;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.07);
-  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(12px);
+  pointer-events: auto;
 }
 
 .bottom-tab-bar__item {
@@ -77,8 +90,31 @@ defineProps({
 }
 
 .bottom-tab-bar__icon-wrapper--monkey {
+  position: relative;
   width: 22px;
   height: 22px;
+  overflow: hidden;
+}
+
+.bottom-tab-bar__monkey {
+  display: block;
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+.bottom-tab-bar__monkey--static {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bottom-tab-bar__monkey--animated {
+    display: none;
+  }
+
+  .bottom-tab-bar__monkey--static {
+    display: block;
+  }
 }
 
 .bottom-tab-bar__label {

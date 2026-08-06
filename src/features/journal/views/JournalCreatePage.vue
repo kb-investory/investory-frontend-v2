@@ -124,10 +124,6 @@ function handleBack() {
   router.push({ name: ROUTE_NAMES.JOURNAL })
 }
 
-function handleClose() {
-  router.push({ name: ROUTE_NAMES.JOURNAL })
-}
-
 function updateTradeNote({ tradeId, value }) {
   form.tradeNotes[tradeId] = value
 }
@@ -195,7 +191,7 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
 
 <template>
   <div class="journal-create-page">
-    <AppBar title="오늘의 투자 일기" @back="handleBack" @close="handleClose" />
+    <AppBar title="오늘의 투자 일기" :show-close="false" @back="handleBack" />
 
     <div
       v-if="journalStore.loading && !journalStore.dailyEntry"
