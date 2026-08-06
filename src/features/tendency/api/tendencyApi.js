@@ -1,4 +1,5 @@
 import tendencyData from '@/mocks/data/tendency.json'
+import { request } from '@/shared/api/client'
 
 const FLOW_STORAGE_KEY = 'investory:mock:tendency-flow:v3'
 const MINIMUM_RECORD_DAYS = 90
@@ -134,21 +135,59 @@ export async function getTendencyAccessStatus() {
   }
 }
 
+const USE_MOCK_FALLBACK = false
+
 export async function getRecommendedPrinciples() {
-  return {
-    recommendations: tendencyData.suggestedPrinciples,
+  try {
+    const data = await request('/api/v1/principles/recommendations')
+    return data
+  } catch (error) {
+    if (!USE_MOCK_FALLBACK) throw error
+    console.warn('API /api/v1/principles/recommendations 요청 실패, 목데이터를 사용합니다:', error)
+    return {
+      recommendations: tendencyData.suggestedPrinciples,
+    }
   }
 }
 
 export async function saveUserPrinciples({ principles }) {
-  const flowState = readFlowState()
-  writeFlowState({
-    ...flowState,
-    principles,
-  })
+  try {
+    const payload = {
+      principles: (principles || []).map((p, idx) => ({
+        recommendationId: p.recommendationId ?? p.recommendationSource?.analysisRunId ?? (idx + 1),
+        principleText: p.content ?? p.principleText ?? '',
+        ruleJson: p.ruleJson ?? { holding: { minimumDays: 90 } },
+        sortOrder: p.sortOrder ?? (idx + 1),
+      })),
+    }
 
-  return {
-    principles,
+    const response = await request('/api/v1/principles', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    })
+
+    const flowState = readFlowState()
+    writeFlowState({
+      ...flowState,
+      principles,
+    })
+
+    return {
+      ...response,
+      principles: response.principles ?? principles,
+    }
+  } catch (error) {
+    if (!USE_MOCK_FALLBACK) throw error
+    console.warn('API /api/v1/principles 요청 실패, 목데이터를 사용합니다:', error)
+    const flowState = readFlowState()
+    writeFlowState({
+      ...flowState,
+      principles,
+    })
+
+    return {
+      principles,
+    }
   }
 }
 
