@@ -113,7 +113,6 @@ const securityMetaById = {
   606: { name: '셀트리온', ticker: '068270', currentPrice: 190000 },
 }
 
-
 const timelineDates = computed(() =>
   [
     ...new Set(
@@ -180,9 +179,7 @@ const chartSeries = computed(() => {
     const snapshots = performanceByVariant.value.get(participant.variantId) ?? []
     const completedSnapshots = snapshots.slice(0, completedIndex + 1)
     const data = completedSnapshots.map((snapshot) => [
-      new Date(
-        `${snapshot.snapshotDate || snapshot.performanceDate}T00:00:00`,
-      ).getTime(),
+      new Date(`${snapshot.snapshotDate || snapshot.performanceDate}T00:00:00`).getTime(),
       snapshot.cumulativeReturnPercent,
     ])
 
@@ -233,8 +230,7 @@ const chartSeries = computed(() => {
           borderWidth: 1,
           borderRadius: 5,
           padding: [3, 5],
-          formatter: ({ value }) =>
-            `${Number(value) > 0 ? '+' : ''}${Number(value).toFixed(1)}%`,
+          formatter: ({ value }) => `${Number(value) > 0 ? '+' : ''}${Number(value).toFixed(1)}%`,
         },
         itemStyle: {
           color: colorByVariantType[participant.variantType] ?? '#66777D',
@@ -446,7 +442,9 @@ const currentHoldings = computed(() => {
       }
       const averagePrice = holding.costBasis / holding.quantity
       const valuation = meta.currentPrice * holding.quantity
-      const returnPercent = averagePrice ? ((meta.currentPrice - averagePrice) / averagePrice) * 100 : 0
+      const returnPercent = averagePrice
+        ? ((meta.currentPrice - averagePrice) / averagePrice) * 100
+        : 0
 
       return {
         ...holding,
@@ -1837,7 +1835,9 @@ onBeforeUnmount(() => {
   color: #d4dfe2;
   font-size: 10px;
   line-height: 1;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
 }
 
 .live-return-chart__legend span.is-focused {

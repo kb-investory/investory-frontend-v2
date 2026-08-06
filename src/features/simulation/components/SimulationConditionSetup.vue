@@ -121,9 +121,7 @@ watch(
       try {
         const res = await getInitialCapital(newApiDate)
         const capital =
-          res?.totalInitialCapital ??
-          res?.recommendedInitialCapital ??
-          res?.total_initial_capital
+          res?.totalInitialCapital ?? res?.recommendedInitialCapital ?? res?.total_initial_capital
         if (typeof capital === 'number' && capital > 0) {
           currentInitialCapital.value = capital
         }
@@ -269,19 +267,16 @@ function startSimulation() {
       <div>
         <strong>{{ participantCount }}명 · 같은 시점 · 같은 투자금</strong>
         <span>
-          실제 나 + 투자봇 {{ participantCount - 1 }}명 · ₩{{ formatCurrency(currentInitialCapital) }}
+          실제 나 + 투자봇 {{ participantCount - 1 }}명 · ₩{{
+            formatCurrency(currentInitialCapital)
+          }}
         </span>
       </div>
       <AppIcon name="circle-check" :size="17" />
     </section>
 
     <div class="setup-action">
-      <BaseButton
-        variant="primary"
-        full-width
-        :disabled="isPending"
-        @click="startSimulation"
-      >
+      <BaseButton variant="primary" full-width :disabled="isPending" @click="startSimulation">
         <template v-if="isPending">
           <AppIcon name="loader-circle" :size="17" class="pending-spinner" />
           <span>시뮬레이션 준비 중</span>

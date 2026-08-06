@@ -189,9 +189,8 @@ function getLiveReturn(participant) {
 
   const nextIndex = snapshots.findIndex(
     (snapshot) =>
-      new Date(
-        `${snapshot.snapshotDate || snapshot.performanceDate}T00:00:00`,
-      ).getTime() > targetTimestamp,
+      new Date(`${snapshot.snapshotDate || snapshot.performanceDate}T00:00:00`).getTime() >
+      targetTimestamp,
   )
   if (nextIndex === 0) return snapshots[0].cumulativeReturnPercent
   if (nextIndex === -1) return snapshots.at(-1).cumulativeReturnPercent
@@ -358,13 +357,15 @@ function formatPeriodDate(date) {
         </small>
         <small v-else>거래 신호를 기다리고 있어요</small>
         <strong v-if="latestTrade">
-          {{ latestTrade.securityName ?? securityNameById[latestTrade.securityId] ?? `종목 ${latestTrade.securityId}` }}
+          {{
+            latestTrade.securityName ??
+            securityNameById[latestTrade.securityId] ??
+            `종목 ${latestTrade.securityId}`
+          }}
           {{ latestTrade.quantity }}주
         </strong>
         <strong v-else>매수·매도가 발생하면 바로 알려드릴게요</strong>
-        <span v-if="latestTrade">
-          주당 {{ formatCurrency(latestTrade.unitPrice) }}
-        </span>
+        <span v-if="latestTrade"> 주당 {{ formatCurrency(latestTrade.unitPrice) }} </span>
         <p v-if="latestTrade" class="live-trade-alert__reason">
           <b>판단 근거</b>
           {{ latestTrade.decisionReason }}
@@ -411,11 +412,7 @@ function formatPeriodDate(date) {
       </div>
 
       <div class="rankings-list">
-        <div
-          v-for="(bot, index) in rankedParticipants"
-          :key="bot.variantId"
-          class="rank-row"
-        >
+        <div v-for="(bot, index) in rankedParticipants" :key="bot.variantId" class="rank-row">
           <b class="rank-badge" :class="{ 'rank-badge--top': index === 0 }">{{ index + 1 }}</b>
           <SimulationParticipantAvatar :variant-type="bot.variantType" :size="20" />
           <strong class="rank-name">{{ bot.variantName }}</strong>
@@ -755,10 +752,18 @@ function formatPeriodDate(date) {
   border-radius: 999px;
 }
 
-.rank-dot--actual_user { background: #395563; }
-.rank-dot--personal_bot { background: #0ea5a6; }
-.rank-dot--famous_strategy { background: #91a8b2; }
-.rank-dot--random_bot { background: #b18bd5; }
+.rank-dot--actual_user {
+  background: #395563;
+}
+.rank-dot--personal_bot {
+  background: #0ea5a6;
+}
+.rank-dot--famous_strategy {
+  background: #91a8b2;
+}
+.rank-dot--random_bot {
+  background: #b18bd5;
+}
 
 .rank-name {
   overflow: hidden;

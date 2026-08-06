@@ -26,7 +26,9 @@ const altByVariantType = {
   RANDOM_BOT: '원숭이',
 }
 
-const src = computed(() => avatarByVariantType[props.variantType] ?? avatarByVariantType.ACTUAL_USER)
+const src = computed(
+  () => avatarByVariantType[props.variantType] ?? avatarByVariantType.ACTUAL_USER,
+)
 const alt = computed(() => altByVariantType[props.variantType] ?? '참가자')
 </script>
 

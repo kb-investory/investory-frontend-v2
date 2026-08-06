@@ -42,7 +42,8 @@ function mapRecommendationToPrinciple(recommendation, sortOrder, analysisRunId) 
     sortOrder
   const content = recommendation.recommendationText ?? recommendation.principleText ?? ''
   const title = recommendation.analysisType?.name ?? recommendation.title ?? '추천 원칙'
-  const category = recommendation.analysisType?.code ?? recommendation.ruleJson?.ruleType ?? 'GENERAL'
+  const category =
+    recommendation.analysisType?.code ?? recommendation.ruleJson?.ruleType ?? 'GENERAL'
 
   return {
     principleId: `recommendation-${recommendationId}`,

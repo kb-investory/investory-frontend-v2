@@ -72,10 +72,7 @@
       ],
       "learningInsights": {
         "primaryMistakePattern": "상승 뒤에는 쫓아 사고, 하락 때는 너무 빨리 팔았어요.",
-        "primaryMistakePatternLines": [
-          "상승 뒤에는 쫓아 사고,",
-          "하락 때는 너무 빨리 팔았어요."
-        ],
+        "primaryMistakePatternLines": ["상승 뒤에는 쫓아 사고,", "하락 때는 너무 빨리 팔았어요."],
         "emotionalTradeCount": 5,
         "underperformedTradeCount": 4,
         "actualReturnPercent": 5,

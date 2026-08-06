@@ -17,7 +17,12 @@ defineEmits(['back'])
 
 <template>
   <header class="simulation-flow-header">
-    <button type="button" class="simulation-flow-header__back" aria-label="뒤로가기" @click="$emit('back')">
+    <button
+      type="button"
+      class="simulation-flow-header__back"
+      aria-label="뒤로가기"
+      @click="$emit('back')"
+    >
       <AppIcon name="chevron-left" :size="20" />
     </button>
 

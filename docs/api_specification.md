@@ -22,7 +22,7 @@
 | 10   | Simulation | `GET`  | `/api/v1/simulations/{simulationId}/report`    | **[신규]** AI 감정 복기, 근거 검증, 학습 인사이트 리포트 조회 |
 | 11   | Principles | `GET`  | `/api/v1/principles/recommendations`           | **[신규]** 성향 및 결과 복기 기반 추천 원칙 목록 조회         |
 | 12   | Principles | `POST` | `/api/v1/principles`                           | **[신규]** 선택된 추천 원칙을 사용자의 원칙으로 저장/적용     |
-| 13   | Simulation | `GET`  | `/api/v1/simulations/history`                 | **[신규]** 시뮬레이션 과거 실행 기록 목록 조회                 |
+| 13   | Simulation | `GET`  | `/api/v1/simulations/history`                  | **[신규]** 시뮬레이션 과거 실행 기록 목록 조회                |
 
 ---
 
