@@ -24,7 +24,20 @@ defineProps({
         class="bottom-tab-bar__icon-wrapper"
         :class="{ 'bottom-tab-bar__icon-wrapper--monkey': item.isMonkey }"
       >
-        <span v-if="item.isMonkey" class="bottom-tab-bar__monkey" aria-hidden="true" />
+        <template v-if="item.isMonkey">
+          <img
+            class="bottom-tab-bar__monkey bottom-tab-bar__monkey--animated"
+            src="/assets/icons/monkey-turntable-96.webp"
+            alt=""
+            aria-hidden="true"
+          />
+          <img
+            class="bottom-tab-bar__monkey bottom-tab-bar__monkey--static"
+            src="/assets/icons/monkey-turntable-front.png"
+            alt=""
+            aria-hidden="true"
+          />
+        </template>
         <AppIcon v-else :name="item.icon" :size="18" />
       </div>
       <span class="bottom-tab-bar__label">{{ item.label }}</span>
@@ -84,26 +97,23 @@ defineProps({
 }
 
 .bottom-tab-bar__monkey {
-  position: absolute;
-  top: 0;
-  left: 0;
   display: block;
-  width: 1600%;
-  height: 100%;
-  background: url('/assets/icons/monkey-turntable-sprite.png') 0 0 / 100% 100% no-repeat;
-  animation: bottom-tab-monkey-turntable 3.2s steps(16, end) infinite;
-  will-change: transform;
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
 }
 
-@keyframes bottom-tab-monkey-turntable {
-  to {
-    transform: translateX(-100%);
-  }
+.bottom-tab-bar__monkey--static {
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bottom-tab-bar__monkey {
-    animation: none;
+  .bottom-tab-bar__monkey--animated {
+    display: none;
+  }
+
+  .bottom-tab-bar__monkey--static {
+    display: block;
   }
 }
 
