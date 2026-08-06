@@ -88,7 +88,13 @@ let timer = null
 let lastFrameTime = null
 
 const securityNameById = {
-  101: 'SK하이닉스',
+  101: '삼성전자',
+  102: 'SK하이닉스',
+  103: 'NAVER',
+  104: '카카오',
+  105: '현대차',
+
+  // 레거시 목데이터 종목 ID 호환 지원
   202: '삼성전자',
   303: 'NAVER',
   404: '카카오',
@@ -97,7 +103,13 @@ const securityNameById = {
 }
 
 const timelineDates = computed(() =>
-  [...new Set(props.dailyPerformance.map((snapshot) => snapshot.snapshotDate))].sort(),
+  [
+    ...new Set(
+      (props.dailyPerformance ?? [])
+        .map((snapshot) => snapshot.snapshotDate || snapshot.performanceDate)
+        .filter(Boolean),
+    ),
+  ].sort(),
 )
 
 const currentSimulationTimestamp = computed(() => {
@@ -133,14 +145,18 @@ const latestTradeParticipant = computed(() =>
 const performanceByVariant = computed(() => {
   const grouped = new Map()
 
-  props.dailyPerformance.forEach((snapshot) => {
+  ;(props.dailyPerformance ?? []).forEach((snapshot) => {
     const snapshots = grouped.get(snapshot.simulationVariantId) ?? []
     snapshots.push(snapshot)
     grouped.set(snapshot.simulationVariantId, snapshots)
   })
 
   grouped.forEach((snapshots) =>
-    snapshots.sort((a, b) => a.snapshotDate.localeCompare(b.snapshotDate)),
+    snapshots.sort((a, b) =>
+      (a.snapshotDate || a.performanceDate || '').localeCompare(
+        b.snapshotDate || b.performanceDate || '',
+      ),
+    ),
   )
   return grouped
 })
@@ -172,15 +188,21 @@ function getLiveReturn(participant) {
   }
 
   const nextIndex = snapshots.findIndex(
-    (snapshot) => new Date(`${snapshot.snapshotDate}T00:00:00`).getTime() > targetTimestamp,
+    (snapshot) =>
+      new Date(`${snapshot.snapshotDate || snapshot.performanceDate}T00:00:00`).getTime() >
+      targetTimestamp,
   )
   if (nextIndex === 0) return snapshots[0].cumulativeReturnPercent
   if (nextIndex === -1) return snapshots.at(-1).cumulativeReturnPercent
 
   const currentSnapshot = snapshots[nextIndex - 1]
   const nextSnapshot = snapshots[nextIndex]
-  const currentTimestamp = new Date(`${currentSnapshot.snapshotDate}T00:00:00`).getTime()
-  const nextTimestamp = new Date(`${nextSnapshot.snapshotDate}T00:00:00`).getTime()
+  const currentTimestamp = new Date(
+    `${currentSnapshot.snapshotDate || currentSnapshot.performanceDate}T00:00:00`,
+  ).getTime()
+  const nextTimestamp = new Date(
+    `${nextSnapshot.snapshotDate || nextSnapshot.performanceDate}T00:00:00`,
+  ).getTime()
   const intervalProgress = (targetTimestamp - currentTimestamp) / (nextTimestamp - currentTimestamp)
 
   return (
@@ -335,13 +357,15 @@ function formatPeriodDate(date) {
         </small>
         <small v-else>거래 신호를 기다리고 있어요</small>
         <strong v-if="latestTrade">
-          {{ securityNameById[latestTrade.securityId] ?? `종목 ${latestTrade.securityId}` }}
+          {{
+            latestTrade.securityName ??
+            securityNameById[latestTrade.securityId] ??
+            `종목 ${latestTrade.securityId}`
+          }}
           {{ latestTrade.quantity }}주
         </strong>
         <strong v-else>매수·매도가 발생하면 바로 알려드릴게요</strong>
-        <span v-if="latestTrade">
-          주당 {{ formatCurrency(latestTrade.unitPrice) }}
-        </span>
+        <span v-if="latestTrade"> 주당 {{ formatCurrency(latestTrade.unitPrice) }} </span>
         <p v-if="latestTrade" class="live-trade-alert__reason">
           <b>판단 근거</b>
           {{ latestTrade.decisionReason }}
@@ -388,11 +412,7 @@ function formatPeriodDate(date) {
       </div>
 
       <div class="rankings-list">
-        <div
-          v-for="(bot, index) in rankedParticipants"
-          :key="bot.variantId"
-          class="rank-row"
-        >
+        <div v-for="(bot, index) in rankedParticipants" :key="bot.variantId" class="rank-row">
           <b class="rank-badge" :class="{ 'rank-badge--top': index === 0 }">{{ index + 1 }}</b>
           <SimulationParticipantAvatar :variant-type="bot.variantType" :size="20" />
           <strong class="rank-name">{{ bot.variantName }}</strong>
@@ -732,10 +752,18 @@ function formatPeriodDate(date) {
   border-radius: 999px;
 }
 
-.rank-dot--actual_user { background: #395563; }
-.rank-dot--personal_bot { background: #0ea5a6; }
-.rank-dot--famous_strategy { background: #91a8b2; }
-.rank-dot--random_bot { background: #b18bd5; }
+.rank-dot--actual_user {
+  background: #395563;
+}
+.rank-dot--personal_bot {
+  background: #0ea5a6;
+}
+.rank-dot--famous_strategy {
+  background: #91a8b2;
+}
+.rank-dot--random_bot {
+  background: #b18bd5;
+}
 
 .rank-name {
   overflow: hidden;

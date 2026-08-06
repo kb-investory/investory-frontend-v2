@@ -35,15 +35,27 @@ function getLocalDateKey(date = new Date()) {
 }
 
 function mapRecommendationToPrinciple(recommendation, sortOrder, analysisRunId) {
+  const recommendationId =
+    recommendation.recommendationId ??
+    recommendation.principleRecommendationId ??
+    recommendation.principleSetItemId ??
+    sortOrder
+  const content = recommendation.recommendationText ?? recommendation.principleText ?? ''
+  const title = recommendation.analysisType?.name ?? recommendation.title ?? '추천 원칙'
+  const category =
+    recommendation.analysisType?.code ?? recommendation.ruleJson?.ruleType ?? 'GENERAL'
+
   return {
-    principleId: `recommendation-${recommendation.recommendationId}`,
-    title: recommendation.analysisType.name,
-    content: recommendation.recommendationText,
-    originalContent: recommendation.recommendationText,
-    category: recommendation.analysisType.code,
+    principleId: `recommendation-${recommendationId}`,
+    recommendationId,
+    title,
+    content,
+    originalContent: content,
+    category,
+    ruleJson: recommendation.ruleJson,
     isActive: true,
     isUserModified: false,
-    sortOrder,
+    sortOrder: recommendation.sortOrder ?? sortOrder,
     appliedDate: getLocalDateKey(),
     recommendationSource: {
       type: 'TENDENCY_ANALYSIS',

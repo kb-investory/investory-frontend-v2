@@ -1,6 +1,6 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
-
+import { computed, onUnmounted, ref, watch } from 'vue'
+import { getInitialCapital } from '@/features/simulation/api/simulationApi'
 import SimulationParticipantAvatar from '@/features/simulation/components/SimulationParticipantAvatar.vue'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
@@ -28,12 +28,17 @@ const props = defineProps({
     type: Array,
     default: () => ['FAMOUS_STRATEGY', 'RANDOM_BOT'],
   },
+  isPending: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const emit = defineEmits(['start'])
 
 const startOffset = ref(0)
 const endOffset = ref(1)
+const currentInitialCapital = ref(props.initialCapital ?? 5000000)
 
 const maxOffset = computed(() => {
   const start = new Date(`${props.periodStart}T00:00:00`)
@@ -97,6 +102,49 @@ function toApiDate(date) {
 
 const selectedStartDate = computed(() => dateAtOffset(startOffset.value))
 const selectedEndDate = computed(() => dateAtOffset(endOffset.value))
+const selectedStartDateStr = computed(() => toApiDate(selectedStartDate.value))
+
+let debounceTimer = null
+let isFirstCall = true
+
+watch(
+  selectedStartDateStr,
+  (newApiDate) => {
+    if (!newApiDate) return
+
+    if (debounceTimer) {
+      clearTimeout(debounceTimer)
+      debounceTimer = null
+    }
+
+    const fetchCapital = async () => {
+      try {
+        const res = await getInitialCapital(newApiDate)
+        const capital =
+          res?.totalInitialCapital ?? res?.recommendedInitialCapital ?? res?.total_initial_capital
+        if (typeof capital === 'number' && capital > 0) {
+          currentInitialCapital.value = capital
+        }
+      } catch (e) {
+        console.warn('Failed to fetch initial capital for date:', e)
+      }
+    }
+
+    if (isFirstCall) {
+      isFirstCall = false
+      fetchCapital()
+    } else {
+      debounceTimer = setTimeout(fetchCapital, 300)
+    }
+  },
+  { immediate: true },
+)
+
+onUnmounted(() => {
+  if (debounceTimer) {
+    clearTimeout(debounceTimer)
+  }
+})
 
 function updateStart(event) {
   startOffset.value = Math.min(Number(event.target.value), endOffset.value - 1)
@@ -111,10 +159,12 @@ function formatCurrency(value) {
 }
 
 function startSimulation() {
+  if (props.isPending) return
+
   emit('start', {
     periodStart: toApiDate(selectedStartDate.value),
     periodEnd: toApiDate(selectedEndDate.value),
-    initialCapital: props.initialCapital,
+    initialCapital: currentInitialCapital.value,
   })
 }
 </script>
@@ -217,28 +267,366 @@ function startSimulation() {
       <div>
         <strong>{{ participantCount }}명 · 같은 시점 · 같은 투자금</strong>
         <span>
-          실제 나 + 투자봇 {{ participantCount - 1 }}명 · ₩{{ formatCurrency(initialCapital) }}
+          실제 나 + 투자봇 {{ participantCount - 1 }}명 · ₩{{
+            formatCurrency(currentInitialCapital)
+          }}
         </span>
       </div>
       <AppIcon name="circle-check" :size="17" />
     </section>
 
     <div class="setup-action">
-      <BaseButton variant="primary" full-width @click="startSimulation">
-        <span>이 조건으로 시뮬레이션 시작</span>
-        <AppIcon name="rocket" :size="17" />
+      <BaseButton variant="primary" full-width :disabled="isPending" @click="startSimulation">
+        <template v-if="isPending">
+          <AppIcon name="loader-circle" :size="17" class="pending-spinner" />
+          <span>시뮬레이션 준비 중</span>
+        </template>
+        <template v-else>
+          <span>이 조건으로 시뮬레이션 시작</span>
+          <AppIcon name="rocket" :size="17" />
+        </template>
       </BaseButton>
     </div>
+
+    <Transition name="pending-fade">
+      <div
+        v-if="isPending"
+        class="pending-overlay"
+        role="status"
+        aria-live="polite"
+        aria-label="시뮬레이션 준비 중"
+      >
+        <div class="pending-card">
+          <span class="pending-card__eyebrow">SETTING UP THE RACE</span>
+
+          <div class="pending-character" aria-hidden="true">
+            <span class="pending-character__orbit pending-character__orbit--one"></span>
+            <span class="pending-character__orbit pending-character__orbit--two"></span>
+            <span class="pending-character__glow"></span>
+            <span class="pending-character__avatar">
+              <SimulationParticipantAvatar variant-type="PERSONAL_BOT" :size="72" />
+            </span>
+            <i class="pending-character__dot pending-character__dot--one"></i>
+            <i class="pending-character__dot pending-character__dot--two"></i>
+            <i class="pending-character__dot pending-character__dot--three"></i>
+          </div>
+
+          <h3>참가자들이 출발선에 모이고 있어요</h3>
+          <p>
+            선택한 {{ participantCount }}명의 투자 기록과<br />
+            원칙을 같은 조건으로 맞추는 중이에요.
+          </p>
+
+          <div class="pending-steps" aria-hidden="true">
+            <span class="is-complete"><AppIcon name="check" :size="11" /> 조건 확인</span>
+            <i></i>
+            <span class="is-active"><b></b> 전략 준비</span>
+            <i></i>
+            <span><b></b> 출발</span>
+          </div>
+
+          <div class="pending-progress" aria-hidden="true"><i></i></div>
+          <small>잠시만 기다려 주세요 · 화면을 닫지 않아도 돼요</small>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
 <style scoped>
 .setup-page {
+  position: relative;
   display: flex;
   width: 100%;
   flex-direction: column;
   gap: 14px;
   padding-bottom: 76px;
+}
+
+.pending-spinner {
+  animation: pending-spin 0.85s linear infinite;
+}
+
+.pending-overlay {
+  position: fixed;
+  z-index: 140;
+  inset: 0;
+  display: flex;
+  width: min(100%, 390px);
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+  padding: 24px;
+  background: rgb(18 31 36 / 64%);
+  backdrop-filter: blur(3px);
+}
+
+.pending-card {
+  display: flex;
+  width: 100%;
+  max-width: 330px;
+  flex-direction: column;
+  align-items: center;
+  padding: 27px 20px 22px;
+  border: 1px solid rgb(255 255 255 / 58%);
+  border-radius: 24px;
+  background: rgb(255 255 255 / 97%);
+  box-shadow: 0 24px 64px rgb(5 20 25 / 32%);
+  text-align: center;
+}
+
+.pending-card__eyebrow {
+  color: #0b8f8b;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.pending-character {
+  position: relative;
+  display: grid;
+  width: 142px;
+  height: 142px;
+  margin: 10px 0 4px;
+  place-items: center;
+}
+
+.pending-character__glow {
+  position: absolute;
+  width: 94px;
+  height: 94px;
+  border-radius: 50%;
+  background: #dff5f3;
+  box-shadow: 0 0 42px rgb(11 143 139 / 24%);
+  animation: pending-glow 1.7s ease-in-out infinite;
+}
+
+.pending-character__avatar {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  width: 88px;
+  height: 88px;
+  place-items: center;
+  border: 5px solid #fff;
+  border-radius: 50%;
+  background: #e8f7f6;
+  box-shadow: 0 10px 24px rgb(38 58 67 / 18%);
+  animation: pending-float 1.8s ease-in-out infinite;
+}
+
+.pending-character__orbit {
+  position: absolute;
+  border: 1px solid #b9dcd9;
+  border-radius: 50%;
+}
+
+.pending-character__orbit--one {
+  width: 116px;
+  height: 116px;
+  animation: pending-orbit 5s linear infinite;
+}
+
+.pending-character__orbit--two {
+  width: 140px;
+  height: 140px;
+  border-style: dashed;
+  opacity: 0.52;
+  animation: pending-orbit 8s linear infinite reverse;
+}
+
+.pending-character__dot {
+  position: absolute;
+  z-index: 3;
+  width: 8px;
+  height: 8px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #0b8f8b;
+  box-shadow: 0 2px 5px rgb(38 58 67 / 18%);
+}
+
+.pending-character__dot--one {
+  top: 21px;
+  right: 31px;
+  animation: pending-dot 1.2s ease-in-out infinite;
+}
+
+.pending-character__dot--two {
+  bottom: 21px;
+  left: 30px;
+  background: #e8b931;
+  animation: pending-dot 1.2s 0.3s ease-in-out infinite;
+}
+
+.pending-character__dot--three {
+  right: 9px;
+  bottom: 57px;
+  width: 6px;
+  height: 6px;
+  background: #7b83d5;
+  animation: pending-dot 1.2s 0.6s ease-in-out infinite;
+}
+
+.pending-card h3 {
+  margin: 0;
+  color: #263a43;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+
+.pending-card > p {
+  margin: 7px 0 17px;
+  color: #77898f;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.pending-steps {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.pending-steps span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #a0adb1;
+  font-size: 8px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pending-steps span.is-complete {
+  color: #0b8f8b;
+}
+
+.pending-steps span.is-active {
+  color: #40555d;
+}
+
+.pending-steps span b {
+  width: 7px;
+  height: 7px;
+  border: 2px solid #c5d0d3;
+  border-radius: 50%;
+}
+
+.pending-steps span.is-active b {
+  border-color: #0b8f8b;
+  background: #0b8f8b;
+  box-shadow: 0 0 0 3px #dff3f1;
+  animation: pending-dot 1.15s ease-in-out infinite;
+}
+
+.pending-steps > i {
+  width: 15px;
+  height: 1px;
+  background: #dfe6e8;
+}
+
+.pending-progress {
+  width: 100%;
+  height: 5px;
+  margin: 15px 0 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8eeee;
+}
+
+.pending-progress i {
+  display: block;
+  width: 38%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #0b8f8b, #65c9c4);
+  animation: pending-progress 1.35s ease-in-out infinite;
+}
+
+.pending-card > small {
+  color: #98a5a9;
+  font-size: 8px;
+}
+
+.pending-fade-enter-active,
+.pending-fade-leave-active {
+  transition: opacity 0.22s ease;
+}
+
+.pending-fade-enter-active .pending-card,
+.pending-fade-leave-active .pending-card {
+  transition:
+    transform 0.25s ease,
+    opacity 0.2s ease;
+}
+
+.pending-fade-enter-from,
+.pending-fade-leave-to {
+  opacity: 0;
+}
+
+.pending-fade-enter-from .pending-card,
+.pending-fade-leave-to .pending-card {
+  opacity: 0;
+  transform: translateY(10px) scale(0.97);
+}
+
+@keyframes pending-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pending-float {
+  0%,
+  100% {
+    transform: translateY(2px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes pending-glow {
+  0%,
+  100% {
+    opacity: 0.64;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes pending-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pending-dot {
+  0%,
+  100% {
+    transform: scale(0.82);
+  }
+  50% {
+    transform: scale(1.22);
+  }
+}
+
+@keyframes pending-progress {
+  0% {
+    transform: translateX(-105%);
+  }
+  100% {
+    transform: translateX(275%);
+  }
 }
 
 .setup-intro {
@@ -650,7 +1038,14 @@ function startSimulation() {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .participant-card {
+  .participant-card,
+  .pending-spinner,
+  .pending-character__glow,
+  .pending-character__avatar,
+  .pending-character__orbit,
+  .pending-character__dot,
+  .pending-steps span.is-active b,
+  .pending-progress i {
     animation: none;
   }
 }

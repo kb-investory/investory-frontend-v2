@@ -5,11 +5,11 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
 import JournalStockJourneySummary from '@/features/journal/components/JournalStockJourneySummary.vue'
-import JournalStockLogo from '@/features/journal/components/JournalStockLogo.vue'
 import JournalStockTradeGroup from '@/features/journal/components/JournalStockTradeGroup.vue'
 import { useJournalStockTimelineStore } from '@/features/journal/stores/journalStockTimelineStore'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
+import StockLogo from '@/shared/components/StockLogo.vue'
 
 const FILTERS = [
   { value: 'all', label: '전체' },
@@ -147,7 +147,7 @@ watch(securityCode, loadTimeline, { immediate: true })
     <main v-else-if="timeline && stock" class="stock-journal-page__content">
       <section class="stock-journal-page__stock-header" aria-label="선택 종목 정보">
         <div class="stock-journal-page__identity">
-          <JournalStockLogo :stock="stock" :size="46" />
+          <StockLogo :stock="stock" :size="46" />
           <div>
             <h2>{{ stock.securityName }}</h2>
             <p>{{ stock.securityCode }} · {{ stock.marketType }}</p>

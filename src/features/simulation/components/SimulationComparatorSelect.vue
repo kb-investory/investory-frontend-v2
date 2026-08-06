@@ -255,10 +255,7 @@ function handlePrimaryAction() {
           </div>
         </div>
 
-        <div
-          class="bot-modal__select-button"
-          :class="{ 'is-selected': isSelected(activeBot) }"
-        >
+        <div class="bot-modal__select-button" :class="{ 'is-selected': isSelected(activeBot) }">
           <AppIcon :name="isSelected(activeBot) ? 'circle-check' : 'circle-help'" :size="17" />
           <span>
             {{
@@ -928,5 +925,4 @@ function handlePrimaryAction() {
     background: #f0f4f5;
   }
 }
-
 </style>

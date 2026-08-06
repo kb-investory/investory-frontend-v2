@@ -1,5 +1,5 @@
 <script setup>
-import JournalStockLogo from '@/features/journal/components/JournalStockLogo.vue'
+import StockLogo from '@/shared/components/StockLogo.vue'
 import AppIcon from '@/shared/components/AppIcon.vue'
 
 defineProps({
@@ -24,7 +24,7 @@ function formatRecentDate(dateKey) {
     :aria-label="`${stock.securityName} 종목 거래 일지 보기`"
     @click="$emit('select', stock)"
   >
-    <JournalStockLogo :stock="stock" />
+    <StockLogo :stock="stock" />
 
     <span class="stock-search-item__content">
       <span class="stock-search-item__identity">

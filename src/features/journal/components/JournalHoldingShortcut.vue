@@ -1,5 +1,5 @@
 <script setup>
-import JournalStockLogo from '@/features/journal/components/JournalStockLogo.vue'
+import StockLogo from '@/shared/components/StockLogo.vue'
 
 defineProps({
   stock: {
@@ -19,7 +19,7 @@ defineEmits(['select'])
     :aria-label="`${stock.securityName}, ${stock.holdingQuantity}주 보유, 종목 거래 일지 보기`"
     @click="$emit('select', stock)"
   >
-    <JournalStockLogo :stock="stock" :size="32" />
+    <StockLogo :stock="stock" :size="32" />
     <strong>{{ stock.securityName }}</strong>
     <span>{{ stock.holdingQuantity }}주 보유</span>
     <span class="holding-shortcut__return">
