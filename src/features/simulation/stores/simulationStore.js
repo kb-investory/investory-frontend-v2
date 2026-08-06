@@ -8,6 +8,7 @@ import {
   getSimulationComparators,
   getSimulationOverview,
   getSimulationSessions,
+  saveLatestCompletedSimulationResult,
   sendSimulationPrompt,
 } from '@/features/simulation/api/simulationApi'
 
@@ -53,9 +54,7 @@ export const useSimulationStore = defineStore('simulation', () => {
       ).length,
   )
 
-  const isBotCompiling = computed(() =>
-    ['QUEUED', 'RUNNING'].includes(botCompileStatus.value),
-  )
+  const isBotCompiling = computed(() => ['QUEUED', 'RUNNING'].includes(botCompileStatus.value))
   const isBotCompileComplete = computed(() => botCompileStatus.value === 'COMPLETED')
   const isBotCompileFailed = computed(() => botCompileStatus.value === 'FAILED')
 
@@ -98,7 +97,11 @@ export const useSimulationStore = defineStore('simulation', () => {
       botCompileStatus.value = job.status ?? 'RUNNING'
       botCompileProgress.value = job.progressPercent ?? 0
 
-      for (let attempt = 0; attempt < 20 && !['COMPLETED', 'FAILED'].includes(job.status); attempt += 1) {
+      for (
+        let attempt = 0;
+        attempt < 20 && !['COMPLETED', 'FAILED'].includes(job.status);
+        attempt += 1
+      ) {
         await new Promise((resolve) => setTimeout(resolve, 500))
         job = await getSimulationBotCompileJob(job.jobId)
         botCompileStatus.value = job.status
@@ -152,6 +155,12 @@ export const useSimulationStore = defineStore('simulation', () => {
 
   function setSimulationConditions(conditions) {
     simulationConditions.value = { ...conditions }
+  }
+
+  async function completeSimulation() {
+    if (!latestResult.value) return null
+    latestResult.value = await saveLatestCompletedSimulationResult(latestResult.value)
+    return latestResult.value
   }
 
   async function fetchMessages() {
@@ -230,6 +239,7 @@ export const useSimulationStore = defineStore('simulation', () => {
     setSelectedComparators,
     toggleComparator,
     setSimulationConditions,
+    completeSimulation,
     fetchMessages,
     sendMessage,
     setMockDataDays,
