@@ -91,7 +91,8 @@ function startLiveSimulation(conditions) {
   router.push(STEP_PATHS.live)
 }
 
-function finishLiveSimulation() {
+async function finishLiveSimulation() {
+  await simulationStore.completeSimulation()
   router.push(STEP_PATHS.result)
 }
 
@@ -185,7 +186,8 @@ function goBack() {
             simulationStore.latestResult?.periodStart
           "
           :period-end="
-            simulationStore.simulationConditions?.periodEnd ?? simulationStore.latestResult?.periodEnd
+            simulationStore.simulationConditions?.periodEnd ??
+            simulationStore.latestResult?.periodEnd
           "
           :initial-capital="
             simulationStore.simulationConditions?.initialCapital ??

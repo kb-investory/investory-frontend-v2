@@ -10,18 +10,41 @@ function clone(value) {
 
 const compileJobAttempts = new Map()
 const MOCK_COMPILE_PROGRESS = [18, 36, 54, 72, 88, 100]
+const LATEST_COMPLETED_RESULT_KEY = 'investory:mock:latest-completed-simulation:v1'
+
+function createLatestSimulationResult() {
+  return {
+    ...simulationData.latest,
+    dailyPerformance: liveDailyPerformance,
+    simulatedTrades: liveSimulatedTrades,
+    totalTradesCount: liveSimulatedTrades.length,
+  }
+}
 
 export async function getSimulationOverview() {
   return clone(simulationData.overview)
 }
 
 export async function getLatestSimulationResult() {
-  return clone({
-    ...simulationData.latest,
-    dailyPerformance: liveDailyPerformance,
-    simulatedTrades: liveSimulatedTrades,
-    totalTradesCount: liveSimulatedTrades.length,
-  })
+  return clone(createLatestSimulationResult())
+}
+
+export async function getLatestCompletedSimulationResult() {
+  try {
+    const storedResult = JSON.parse(
+      window.localStorage.getItem(LATEST_COMPLETED_RESULT_KEY) || 'null',
+    )
+    return storedResult ? clone(storedResult) : null
+  } catch {
+    window.localStorage.removeItem(LATEST_COMPLETED_RESULT_KEY)
+    return null
+  }
+}
+
+export async function saveLatestCompletedSimulationResult(result) {
+  const completedResult = JSON.parse(JSON.stringify(result || createLatestSimulationResult()))
+  window.localStorage.setItem(LATEST_COMPLETED_RESULT_KEY, JSON.stringify(completedResult))
+  return clone(completedResult)
 }
 
 export async function compileSimulationBot() {

@@ -24,14 +24,26 @@ const recentSimulationHeadline = computed(() => {
   const simulation = mypageStore.recentSimulation
   if (!simulation) return ''
 
-  return `${simulation.botName}가 ${simulation.rank}위예요`
+  return `${simulation.participantCount}명 중 실제 나는 ${simulation.rank}위예요`
 })
-const recentSimulationBotLabel = computed(() =>
-  mypageStore.recentSimulation?.botName?.replace('나의 투자봇', '나의봇'),
-)
+
+const simulationParticipants = [
+  { label: '실제 나', image: '/assets/images/real-me.png', className: 'actual' },
+  { label: '나의 봇', image: '/assets/images/my-bot.png', className: 'bot' },
+  {
+    label: '유명 투자자',
+    image: '/assets/images/famous-investor.png',
+    className: 'investor',
+  },
+  { label: '원숭이', image: '/assets/images/monkey.png', className: 'monkey' },
+]
 
 function goToSection(section) {
   router.push({ name: ROUTE_NAMES.MYPAGE_PLACEHOLDER, params: { section } })
+}
+
+function goToSimulation() {
+  router.push({ name: ROUTE_NAMES.SIMULATION })
 }
 
 function clearAuthStorage({ allMemberData = false } = {}) {
@@ -177,11 +189,7 @@ onMounted(async () => {
           </span>
         </button>
 
-        <button
-          type="button"
-          class="simulation-summary-card"
-          @click="router.push({ name: ROUTE_NAMES.SIMULATION })"
-        >
+        <button type="button" class="simulation-summary-card" @click="goToSimulation">
           <div class="summary-card__header summary-card__header--simulation">
             <span class="summary-card__icon summary-card__icon--orange">
               <AppIcon name="trophy" :size="17" />
@@ -191,17 +199,13 @@ onMounted(async () => {
           <template v-if="mypageStore.recentSimulation">
             <p class="simulation-summary-card__headline">{{ recentSimulationHeadline }}</p>
             <div class="simulation-preview" aria-label="시뮬레이션 결과 미리보기">
-              <span class="simulation-preview__mine">
-                <AppIcon name="bot" :size="14" />
-                {{ recentSimulationBotLabel }}
-              </span>
-              <span class="simulation-preview__investor">
-                <AppIcon name="medal" :size="14" />
-                유명 투자자
-              </span>
-              <span class="simulation-preview__monkey">
-                <AppIcon name="paw-print" :size="14" />
-                원숭이
+              <span
+                v-for="participant in simulationParticipants"
+                :key="participant.className"
+                :class="`simulation-preview__${participant.className}`"
+              >
+                <img :src="participant.image" :alt="participant.label" />
+                {{ participant.label }}
               </span>
             </div>
           </template>
@@ -213,7 +217,7 @@ onMounted(async () => {
             </div>
           </div>
           <span class="summary-card__action summary-card__action--simulation">
-            {{ mypageStore.recentSimulation ? '시뮬레이션으로 바로가기' : '시뮬레이션 시작하기' }}
+            {{ mypageStore.recentSimulation ? '시뮬레이션 다시하기' : '시뮬레이션 시작하기' }}
             <AppIcon name="arrow-right" :size="11" />
           </span>
         </button>
@@ -627,12 +631,13 @@ onMounted(async () => {
 }
 .simulation-preview {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 4px;
 }
 .simulation-preview span {
   display: grid;
-  min-height: 48px;
+  min-width: 0;
+  min-height: 54px;
   place-items: center;
   gap: 2px;
   border: 1px solid #71868e;
@@ -644,10 +649,25 @@ onMounted(async () => {
   line-height: 1.1;
   text-align: center;
 }
-.simulation-preview .simulation-preview__investor {
+.simulation-preview img {
+  width: 27px;
+  height: 34px;
+  object-fit: contain;
+}
+.simulation-preview .simulation-preview__actual {
+  border-color: #8ea2aa;
+  background: #edf3f5;
+  color: #53666c;
+}
+.simulation-preview .simulation-preview__bot {
   border-color: #e8b22f;
   background: #fff2bd;
   color: #a56c00;
+}
+.simulation-preview .simulation-preview__investor {
+  border-color: #d7a64a;
+  background: #fff5db;
+  color: #9a6a14;
 }
 .simulation-preview .simulation-preview__monkey {
   border-color: #b9a5cf;

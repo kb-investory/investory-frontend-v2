@@ -12,7 +12,7 @@ import {
   updateUserProfile,
 } from '@/features/mypage/api/mypageApi'
 import { getJournalEntries } from '@/features/journal/api/journalApi'
-import { getLatestSimulationResult } from '@/features/simulation/api/simulationApi'
+import { getLatestCompletedSimulationResult } from '@/features/simulation/api/simulationApi'
 import { getLatestTendencyAnalysis } from '@/features/tendency/api/tendencyApi'
 
 const OAUTH_PROVIDER_LABELS = Object.freeze({
@@ -61,7 +61,7 @@ export const useMypageStore = defineStore('mypage', () => {
         getMypageOverview(),
         getLatestTendencyAnalysis(),
         getJournalEntries(),
-        getLatestSimulationResult(),
+        getLatestCompletedSimulationResult(),
       ])
       const oauthProvider = String(
         authUser?.oauthProvider || authUser?.socialType || overview.profile.oauthProvider || '',
@@ -84,18 +84,17 @@ export const useMypageStore = defineStore('mypage', () => {
       const rankedParticipants = [...(simulationResult?.participantSummary || [])].sort(
         (first, second) => second.cumulativeReturnPercent - first.cumulativeReturnPercent,
       )
-      const personalBotIndex = rankedParticipants.findIndex(
-        (participant) => participant.variantType === 'PERSONAL_BOT',
+      const actualUserIndex = rankedParticipants.findIndex(
+        (participant) => participant.variantType === 'ACTUAL_USER',
       )
-      const personalBot = rankedParticipants[personalBotIndex]
-      recentSimulation.value =
-        overview.recentSimulation && personalBot
-          ? {
-              simulationId: simulationResult.simulationRun?.simulationRunId,
-              botName: personalBot.variantName,
-              rank: personalBotIndex + 1,
-            }
-          : overview.recentSimulation
+      const actualUser = rankedParticipants[actualUserIndex]
+      recentSimulation.value = actualUser
+        ? {
+            simulationId: simulationResult.simulationRun?.simulationRunId,
+            rank: actualUserIndex + 1,
+            participantCount: rankedParticipants.length,
+          }
+        : null
       accounts.value = overview.accounts
       appInfo.value = overview.appInfo
       hasTendencyAnalysis.value = Boolean(analysis)
