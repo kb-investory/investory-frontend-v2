@@ -1,0 +1,140 @@
+{
+  "reports": {
+    "101": {
+      "simulationId": 101,
+      "generatedAt": "2026-07-29T18:00:00",
+      "decisionReviews": [
+        {
+          "tradeId": 2101,
+          "tradedAt": "2026-04-18T09:10:00",
+          "securityName": "SK하이닉스",
+          "action": "SELL",
+          "actionSummary": "30% 매도",
+          "emotionTag": "FEAR_SELL",
+          "emotionLabel": "공포 매도",
+          "subsequentReturnPercent": 11.4,
+          "principleBotAction": "HOLD",
+          "principleFeedback": "실적 전망이 유지됐으므로 보유했어야 해요."
+        },
+        {
+          "tradeId": 2102,
+          "tradedAt": "2026-05-22T10:25:00",
+          "securityName": "에코프로",
+          "action": "BUY",
+          "actionSummary": "추가 매수",
+          "emotionTag": "GREED_BUY",
+          "emotionLabel": "탐욕 매수",
+          "subsequentReturnPercent": -8.7,
+          "principleBotAction": "HOLD",
+          "principleFeedback": "종목 비중 20% 한도에 따라 매수를 멈췄어야 해요."
+        },
+        {
+          "tradeId": 2103,
+          "tradedAt": "2026-06-11T14:05:00",
+          "securityName": "삼성전자",
+          "action": "SELL",
+          "actionSummary": "전량 매도",
+          "emotionTag": "HASTE_SELL",
+          "emotionLabel": "조급 매도",
+          "subsequentReturnPercent": 5.2,
+          "principleBotAction": "HOLD",
+          "principleFeedback": "손절 기준 -12%까지 관찰했어야 해요."
+        }
+      ],
+      "evidenceReviews": [
+        {
+          "tradeId": 2102,
+          "action": "에코프로 추가 매수",
+          "basis": "커뮤니티 급등 기대",
+          "basisType": "EMOTION",
+          "result": "-8.7%",
+          "confidenceScore": 28,
+          "confidenceLabel": "감정 기반"
+        },
+        {
+          "tradeId": 2101,
+          "action": "SK하이닉스 분할 매도",
+          "basis": "시장 하락 우려",
+          "basisType": "INSUFFICIENT",
+          "result": "기회비용 -11.4%",
+          "confidenceScore": 46,
+          "confidenceLabel": "근거 부족"
+        },
+        {
+          "tradeId": 2104,
+          "action": "현대차 장기 보유",
+          "basis": "실적·밸류에이션 확인",
+          "basisType": "DATA",
+          "result": "+9.1%",
+          "confidenceScore": 86,
+          "confidenceLabel": "데이터 기반"
+        }
+      ],
+      "learningInsights": {
+        "primaryMistakePattern": "상승 뒤에는 쫓아 사고, 하락 때는 너무 빨리 팔았어요.",
+        "primaryMistakePatternLines": [
+          "상승 뒤에는 쫓아 사고,",
+          "하락 때는 너무 빨리 팔았어요."
+        ],
+        "emotionalTradeCount": 5,
+        "underperformedTradeCount": 4,
+        "actualReturnPercent": 5,
+        "principleReturnPercent": 17,
+        "returnImprovementPercentPoint": 12,
+        "summary": "감정 태그가 붙은 5건 중 4건에서 원칙보다 성과가 낮았어요."
+      },
+      "recommendedPrinciples": [
+        {
+          "recommendationId": 1,
+          "principleType": "LONG_TERM",
+          "title": "장기 투자 유지",
+          "description": "투자 가설이 유효하면 단기 등락에 반응하지 않기",
+          "ruleJson": {
+            "holding": {
+              "minimumDays": 90
+            }
+          }
+        },
+        {
+          "recommendationId": 2,
+          "principleType": "DIVERSIFICATION",
+          "title": "분산 투자 강화",
+          "description": "단일 종목 비중을 전체 자산의 20% 이내로 제한",
+          "ruleJson": {
+            "portfolio": {
+              "maxPositionWeight": 0.2
+            }
+          }
+        },
+        {
+          "recommendationId": 3,
+          "principleType": "STOP_LOSS",
+          "title": "손절 기준 명확화",
+          "description": "고점 대비 -12% 또는 투자 가설 훼손 시 매도",
+          "ruleJson": {
+            "exit": {
+              "stopLossRate": -0.12
+            }
+          }
+        }
+      ],
+      "improvementActions": [
+        {
+          "category": "EMOTIONAL_TRADING",
+          "title": "감정적 매매 줄이기",
+          "action": "자동화된 적립식 투자 활용"
+        },
+        {
+          "category": "JOURNAL",
+          "title": "투자 저널 기록 강화",
+          "action": "매매 이유와 근거를 반드시 기록"
+        },
+        {
+          "category": "ASSET_ALLOCATION",
+          "title": "자산 배분 비율 조정",
+          "action": "주식 60 · 채권 25 · 현금 15로 재설정"
+        }
+      ]
+    }
+  }
+}

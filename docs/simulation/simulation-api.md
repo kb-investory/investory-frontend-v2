@@ -216,6 +216,7 @@
 | `initial_capital`   | `Number`        | N    | `5000000.0`    | 시뮬레이션 시작 자본금 (원)    |
 | `principles`        | `Array[String]` | N    | `NULL`         | 적용할 개인 투자 원칙 문장     |
 | `profile`           | `Object`        | N    | `NULL`         | 적용할 6축 투자 성향 가중치    |
+| `participantTypes`  | `Array[String]` | N    | 전체 참가자    | 실행할 참가자 유형 코드 목록   |
 
 #### 📄 요청 JSON 샘플
 
@@ -224,7 +225,8 @@
   "simulation_run_id": 1,
   "period_start": "2026-03-01",
   "period_end": "2026-07-29",
-  "initial_capital": 5000000.0
+  "initial_capital": 5000000.0,
+  "participantTypes": ["ACTUAL_USER", "PERSONAL_BOT", "FAMOUS_STRATEGY"]
 }
 ```
 

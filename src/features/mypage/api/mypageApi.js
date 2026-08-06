@@ -71,6 +71,70 @@ export async function getConnectedAccounts() {
   return { accounts: clone(readState().accounts) }
 }
 
+export async function addConnectedBrokerAccounts({ connection, account, holdings = [] }) {
+  await wait(180)
+
+  if (!connection?.connectionId || !account?.brokerId) {
+    throw new Error('추가할 연결 계좌 정보를 확인할 수 없어요.')
+  }
+
+  const state = readState()
+  const accountCount = Math.max(1, Number(account.accountCount) || 1)
+  const existingAccounts = state.accounts.filter(
+    (item) => item.sourceConnectionId === connection.connectionId,
+  )
+
+  if (existingAccounts.length === accountCount) {
+    return { accounts: clone(state.accounts), addedAccounts: clone(existingAccounts) }
+  }
+
+  const syncedAt = getLocalIsoString()
+  const marketValue = holdings.reduce(
+    (total, holding) => total + Number(holding.valuationAmount || 0),
+    0,
+  )
+  state.accountDetails ||= {}
+  let nextAccountId = Math.max(0, ...state.accounts.map((item) => Number(item.accountId) || 0)) + 1
+  const addedAccounts = []
+
+  for (let index = existingAccounts.length; index < accountCount; index += 1) {
+    const accountId = nextAccountId
+    nextAccountId += 1
+    const numberSeed = String(Number(connection.connectionId) + index)
+      .slice(-4)
+      .padStart(4, '0')
+    const connectedAccount = {
+      accountId,
+      brokerId: account.brokerId,
+      brokerCode: account.brokerCode,
+      brokerName: account.brokerName,
+      accountType: accountCount > 1 ? `종합매매 ${index + 1}` : '종합매매',
+      accountNumber: `•••• ${numberSeed}`,
+      status: 'CONNECTED',
+      statusLabel: '연결됨',
+      lastSyncedAt: syncedAt,
+      syncErrorReason: '',
+      sourceConnectionId: connection.connectionId,
+    }
+
+    state.accounts.push(connectedAccount)
+    state.accountDetails[String(accountId)] = {
+      marketValue,
+      holdingCount: holdings.length,
+      latestTrade: null,
+      holdingSnapshot: {
+        holdingCount: holdings.length,
+        marketValue,
+        reflectedAt: syncedAt,
+      },
+    }
+    addedAccounts.push(connectedAccount)
+  }
+
+  writeState(state)
+  return { accounts: clone(state.accounts), addedAccounts: clone(addedAccounts) }
+}
+
 export async function getConnectedAccountDetail(accountId) {
   await wait(180)
   const state = readState()

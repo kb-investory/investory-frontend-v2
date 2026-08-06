@@ -6,8 +6,11 @@ import {
   getLatestSimulationResult,
   getSimulationBotCompileJob,
   getSimulationComparators,
+  getSimulationHistory,
   getSimulationOverview,
+  getSimulationReport,
   getSimulationSessions,
+  runSimulation as runSimulationApi,
   saveLatestCompletedSimulationResult,
   sendSimulationPrompt,
 } from '@/features/simulation/api/simulationApi'
@@ -15,6 +18,8 @@ import {
 export const useSimulationStore = defineStore('simulation', () => {
   const overview = ref(null)
   const latestResult = ref(null)
+  const historyRecords = ref([])
+  const simulationReport = ref(null)
   const sessions = ref([])
   const messages = ref([])
   const comparators = ref([])
@@ -54,6 +59,57 @@ export const useSimulationStore = defineStore('simulation', () => {
       ).length,
   )
 
+  const activeParticipantTypes = computed(() => [
+    'ACTUAL_USER',
+    ...new Set([
+      ...comparatorRoster.value
+        .filter((comparator) => comparator.fixed)
+        .map((comparator) => comparator.variantType),
+      ...selectedComparatorTypes.value,
+    ]),
+  ])
+
+  function filterResultBySelectedParticipants(result) {
+    if (!result) return result
+
+    const allowedTypes = new Set(activeParticipantTypes.value)
+    const variants = result.simulationVariants ?? []
+    const participantSummary = result.participantSummary ?? []
+    const allowedVariantIds = new Set(
+      [
+        ...variants
+          .filter((variant) => allowedTypes.has(variant.variantType))
+          .map((variant) => variant.simulationVariantId ?? variant.variantId),
+        ...participantSummary
+          .filter((participant) => allowedTypes.has(participant.variantType))
+          .map((participant) => participant.variantId ?? participant.simulationVariantId),
+      ].map(String),
+    )
+
+    const isAllowedSnapshot = (item) =>
+      allowedVariantIds.has(String(item.simulationVariantId ?? item.variantId))
+    const filteredTrades = (result.simulatedTrades ?? []).filter(isAllowedSnapshot)
+    const filteredPerformance = (result.dailyPerformance ?? result.dailySnapshots ?? []).filter(
+      isAllowedSnapshot,
+    )
+
+    return {
+      ...result,
+      simulationVariants: variants.filter((variant) => allowedTypes.has(variant.variantType)),
+      participantSummary: participantSummary.filter((participant) =>
+        allowedTypes.has(participant.variantType),
+      ),
+      simulatedTrades: filteredTrades,
+      totalTradesCount: filteredTrades.length,
+      dailyPerformance: filteredPerformance,
+      dailySnapshots: filteredPerformance,
+    }
+  }
+
+  const liveSimulationResult = computed(() =>
+    filterResultBySelectedParticipants(latestResult.value),
+  )
+
   const isBotCompiling = computed(() => ['QUEUED', 'RUNNING'].includes(botCompileStatus.value))
   const isBotCompileComplete = computed(() => botCompileStatus.value === 'COMPLETED')
   const isBotCompileFailed = computed(() => botCompileStatus.value === 'FAILED')
@@ -61,8 +117,14 @@ export const useSimulationStore = defineStore('simulation', () => {
   async function fetchOverview() {
     loading.value = true
     try {
-      overview.value = await getSimulationOverview()
-      latestResult.value = await getLatestSimulationResult()
+      const [overviewRes, latestRes, historyRes] = await Promise.all([
+        getSimulationOverview(),
+        getLatestSimulationResult(),
+        getSimulationHistory(),
+      ])
+      overview.value = overviewRes
+      latestResult.value = latestRes
+      historyRecords.value = historyRes || []
     } catch (error) {
       console.error('Failed to fetch simulation overview:', error)
     } finally {
@@ -80,6 +142,29 @@ export const useSimulationStore = defineStore('simulation', () => {
       console.error('Failed to fetch simulation comparators:', error)
     } finally {
       comparatorsLoading.value = false
+    }
+  }
+
+  async function fetchSimulationReport(simulationId) {
+    const resolvedId =
+      simulationId ??
+      latestResult.value?.simulationRunId ??
+      latestResult.value?.simulationRun?.simulationRunId
+
+    if (!resolvedId) {
+      console.warn('[SimulationStore] fetchSimulationReport: simulationId를 찾을 수 없습니다.', {
+        simulationId,
+        latestResult: latestResult.value,
+      })
+      return null
+    }
+
+    try {
+      simulationReport.value = await getSimulationReport(resolvedId)
+      return simulationReport.value
+    } catch (error) {
+      console.error('Failed to fetch simulation report:', error)
+      return null
     }
   }
 
@@ -157,6 +242,27 @@ export const useSimulationStore = defineStore('simulation', () => {
     simulationConditions.value = { ...conditions }
   }
 
+  async function executeSimulation(conditions) {
+    loading.value = true
+    try {
+      const activeConditions = conditions || simulationConditions.value
+      const result = await runSimulationApi({
+        periodStart: activeConditions?.periodStart,
+        periodEnd: activeConditions?.periodEnd,
+        initialCapital: activeConditions?.initialCapital,
+        principles: activeConditions?.principles,
+        participantTypes: activeParticipantTypes.value,
+      })
+      latestResult.value = filterResultBySelectedParticipants(result)
+      return latestResult.value
+    } catch (error) {
+      console.error('Failed to execute simulation:', error)
+      throw error
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function completeSimulation() {
     if (!latestResult.value) return null
     latestResult.value = await saveLatestCompletedSimulationResult(latestResult.value)
@@ -211,6 +317,8 @@ export const useSimulationStore = defineStore('simulation', () => {
   return {
     overview,
     latestResult,
+    historyRecords,
+    simulationReport,
     sessions,
     messages,
     comparators,
@@ -228,17 +336,21 @@ export const useSimulationStore = defineStore('simulation', () => {
     actualParticipant,
     comparatorRoster,
     selectedParticipantCount,
+    activeParticipantTypes,
+    liveSimulationResult,
     isBotCompiling,
     isBotCompileComplete,
     isBotCompileFailed,
     MIN_REQUIRED_DAYS,
     fetchOverview,
     fetchComparators,
+    fetchSimulationReport,
     compilePersonalBot,
     resetBotCompilation,
     setSelectedComparators,
     toggleComparator,
     setSimulationConditions,
+    executeSimulation,
     completeSimulation,
     fetchMessages,
     sendMessage,
