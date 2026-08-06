@@ -97,17 +97,31 @@ const shortLabelByVariantType = {
 }
 
 // 백엔드 종목 응답이 연결되면 이 메타데이터만 API 필드로 교체한다.
+// 백엔드 종목 응답 및 프론트엔드 목데이터 호환 종목 메타데이터
 const securityMetaById = {
-  101: { name: 'SK하이닉스', ticker: '000660', currentPrice: 112000 },
-  202: { name: '삼성전자', ticker: '005930', currentPrice: 83500 },
-  303: { name: 'NAVER', ticker: '035420', currentPrice: 108500 },
-  404: { name: '카카오', ticker: '035720', currentPrice: 37200 },
-  505: { name: '현대차', ticker: '005380', currentPrice: 101500 },
-  606: { name: '셀트리온', ticker: '068270', currentPrice: 29400 },
+  101: { name: '삼성전자', ticker: '005930', currentPrice: 82000 },
+  102: { name: 'SK하이닉스', ticker: '000660', currentPrice: 182000 },
+  103: { name: 'NAVER', ticker: '035420', currentPrice: 195000 },
+  104: { name: '카카오', ticker: '035720', currentPrice: 53500 },
+  105: { name: '현대차', ticker: '005380', currentPrice: 255000 },
+
+  // 레거시 목데이터 종목 ID 호환 지원
+  202: { name: '삼성전자', ticker: '005930', currentPrice: 82000 },
+  303: { name: 'NAVER', ticker: '035420', currentPrice: 195000 },
+  404: { name: '카카오', ticker: '035720', currentPrice: 53500 },
+  505: { name: '현대차', ticker: '005380', currentPrice: 255000 },
+  606: { name: '셀트리온', ticker: '068270', currentPrice: 190000 },
 }
 
+
 const timelineDates = computed(() =>
-  [...new Set(props.dailyPerformance.map((snapshot) => snapshot.snapshotDate))].sort(),
+  [
+    ...new Set(
+      (props.dailyPerformance ?? [])
+        .map((snapshot) => snapshot.snapshotDate || snapshot.performanceDate)
+        .filter(Boolean),
+    ),
+  ].sort(),
 )
 
 const currentSimulationDate = computed(() => {
@@ -138,14 +152,18 @@ const currentSimulationTimestamp = computed(() => {
 const performanceByVariant = computed(() => {
   const grouped = new Map()
 
-  props.dailyPerformance.forEach((snapshot) => {
+  ;(props.dailyPerformance ?? []).forEach((snapshot) => {
     const snapshots = grouped.get(snapshot.simulationVariantId) ?? []
     snapshots.push(snapshot)
     grouped.set(snapshot.simulationVariantId, snapshots)
   })
 
   grouped.forEach((snapshots) =>
-    snapshots.sort((a, b) => a.snapshotDate.localeCompare(b.snapshotDate)),
+    snapshots.sort((a, b) =>
+      (a.snapshotDate || a.performanceDate || '').localeCompare(
+        b.snapshotDate || b.performanceDate || '',
+      ),
+    ),
   )
   return grouped
 })
@@ -162,15 +180,21 @@ const chartSeries = computed(() => {
     const snapshots = performanceByVariant.value.get(participant.variantId) ?? []
     const completedSnapshots = snapshots.slice(0, completedIndex + 1)
     const data = completedSnapshots.map((snapshot) => [
-      new Date(`${snapshot.snapshotDate}T00:00:00`).getTime(),
+      new Date(
+        `${snapshot.snapshotDate || snapshot.performanceDate}T00:00:00`,
+      ).getTime(),
       snapshot.cumulativeReturnPercent,
     ])
 
     const nextSnapshot = snapshots[completedIndex + 1]
     const currentSnapshot = snapshots[completedIndex]
     if (currentSnapshot && nextSnapshot && interpolation > 0) {
-      const currentDate = new Date(`${currentSnapshot.snapshotDate}T00:00:00`).getTime()
-      const nextDate = new Date(`${nextSnapshot.snapshotDate}T00:00:00`).getTime()
+      const currentDate = new Date(
+        `${currentSnapshot.snapshotDate || currentSnapshot.performanceDate}T00:00:00`,
+      ).getTime()
+      const nextDate = new Date(
+        `${nextSnapshot.snapshotDate || nextSnapshot.performanceDate}T00:00:00`,
+      ).getTime()
       const currentReturn =
         currentSnapshot.cumulativeReturnPercent +
         (nextSnapshot.cumulativeReturnPercent - currentSnapshot.cumulativeReturnPercent) *
@@ -416,10 +440,11 @@ const currentHoldings = computed(() => {
     .filter((holding) => holding.quantity > 0)
     .map((holding) => {
       const meta = securityMetaById[holding.securityId] ?? {
-        name: `종목 ${holding.securityId}`,
+        name: holding.securityName || `종목 ${holding.securityId}`,
         ticker: '-',
         currentPrice: holding.costBasis / holding.quantity,
       }
+      const name = holding.securityName || meta.name
       const averagePrice = holding.costBasis / holding.quantity
       const valuation = meta.currentPrice * holding.quantity
       const returnPercent = averagePrice ? ((meta.currentPrice - averagePrice) / averagePrice) * 100 : 0

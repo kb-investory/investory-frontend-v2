@@ -62,6 +62,12 @@ const effectiveMode = computed(() => {
 
 onMounted(async () => {
   await Promise.all([simulationStore.fetchOverview(), simulationStore.fetchComparators()])
+  if (currentStep.value === 'live' && !simulationStore.latestResult?.simulatedTrades) {
+    await simulationStore.executeSimulation()
+  }
+  if (currentStep.value === 'result') {
+    await simulationStore.fetchSimulationReport()
+  }
   if (currentStep.value === 'comparator_select') {
     void simulationStore.compilePersonalBot()
   }
@@ -72,6 +78,12 @@ watch(currentStep, async (step) => {
   pageRoot.value?.closest('.mobile-main')?.scrollTo({ top: 0 })
   if (step === 'comparator_select') {
     void simulationStore.compilePersonalBot()
+  }
+  if (step === 'live' && !simulationStore.latestResult?.simulatedTrades) {
+    await simulationStore.executeSimulation()
+  }
+  if (step === 'result') {
+    await simulationStore.fetchSimulationReport()
   }
 })
 
@@ -86,8 +98,9 @@ function handleConfirmComparators(botTypes) {
   router.push(STEP_PATHS.condition_setup)
 }
 
-function startLiveSimulation(conditions) {
+async function startLiveSimulation(conditions) {
   simulationStore.setSimulationConditions(conditions)
+  await simulationStore.executeSimulation(conditions)
   router.push(STEP_PATHS.live)
 }
 
@@ -155,6 +168,7 @@ function goBack() {
           v-if="currentStep === 'home'"
           :overview="simulationStore.overview"
           :latest-result="simulationStore.latestResult"
+          :history-records="simulationStore.historyRecords"
           @start-simulation="startBotCreation"
         />
 
@@ -172,15 +186,16 @@ function goBack() {
           :total-days="simulationStore.overview?.eligiblePeriod?.totalDays"
           :initial-capital="simulationStore.overview?.recommendedInitialCapital"
           :selected-bot-types="selectedComparators"
+          :is-pending="simulationStore.loading"
           @start="startLiveSimulation"
         />
 
         <!-- Step 1E/1F: Live Simulation Execution -->
         <SimulationLiveRunner
           v-else-if="currentStep === 'live'"
-          :participants="simulationStore.latestResult?.participantSummary"
-          :simulated-trades="simulationStore.latestResult?.simulatedTrades"
-          :daily-performance="simulationStore.latestResult?.dailyPerformance"
+          :participants="simulationStore.liveSimulationResult?.participantSummary"
+          :simulated-trades="simulationStore.liveSimulationResult?.simulatedTrades"
+          :daily-performance="simulationStore.liveSimulationResult?.dailyPerformance"
           :period-start="
             simulationStore.simulationConditions?.periodStart ??
             simulationStore.latestResult?.periodStart
@@ -200,6 +215,7 @@ function goBack() {
         <SimulationResultSummary
           v-else-if="currentStep === 'result'"
           :latest-result="simulationStore.latestResult"
+          :report="simulationStore.simulationReport"
           @restart="restartFlow"
         />
       </div>
