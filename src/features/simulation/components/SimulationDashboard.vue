@@ -25,10 +25,34 @@ const emit = defineEmits(['startSimulation', 'selectRecord'])
 const showHelpModal = ref(false)
 
 const DEFAULT_HISTORY_RECORDS = [
-  { simulationRunId: 101, version: 'v3', date: '2026.07.27', period: '2026.03.01 ~ 2026.07.29', returnPercent: 17.0 },
-  { simulationRunId: 102, version: 'v2', date: '2026.06.18', period: '2026.03.01 ~ 2026.06.17', returnPercent: 11.4 },
-  { simulationRunId: 103, version: 'v2', date: '2026.05.02', period: '2026.03.01 ~ 2026.05.01', returnPercent: 9.8 },
-  { simulationRunId: 104, version: 'v1', date: '2026.03.21', period: '2026.03.01 ~ 2026.03.20', returnPercent: 6.2 },
+  {
+    simulationRunId: 101,
+    version: 'v3',
+    date: '2026.07.27',
+    period: '2026.03.01 ~ 2026.07.29',
+    returnPercent: 17.0,
+  },
+  {
+    simulationRunId: 102,
+    version: 'v2',
+    date: '2026.06.18',
+    period: '2026.03.01 ~ 2026.06.17',
+    returnPercent: 11.4,
+  },
+  {
+    simulationRunId: 103,
+    version: 'v2',
+    date: '2026.05.02',
+    period: '2026.03.01 ~ 2026.05.01',
+    returnPercent: 9.8,
+  },
+  {
+    simulationRunId: 104,
+    version: 'v1',
+    date: '2026.03.21',
+    period: '2026.03.01 ~ 2026.03.20',
+    returnPercent: 6.2,
+  },
 ]
 
 const displayRecords = computed(() =>

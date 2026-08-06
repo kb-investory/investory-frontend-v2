@@ -58,8 +58,7 @@ const evidenceTrades = computed(() =>
     ...trade,
     score: trade.confidenceScore,
     label: trade.confidenceLabel,
-    tone:
-      trade.confidenceScore >= 70 ? 'high' : trade.confidenceScore >= 40 ? 'medium' : 'low',
+    tone: trade.confidenceScore >= 70 ? 'high' : trade.confidenceScore >= 40 ? 'medium' : 'low',
   })),
 )
 
@@ -110,7 +109,7 @@ const participants = computed(() =>
         ? Math.abs(participant.cumulativeReturn) <= 2 && participant.cumulativeReturn !== 0
           ? participant.cumulativeReturn * 100
           : participant.cumulativeReturn
-        : participant.cumulative_return ?? 0)
+        : (participant.cumulative_return ?? 0))
 
     return {
       ...participant,
@@ -158,7 +157,7 @@ const principleReturn = computed(
 const principleGap = computed(
   () =>
     props.report?.learningInsights?.returnImprovementPercentPoint ??
-    (principleReturn.value - actualReturn.value),
+    principleReturn.value - actualReturn.value,
 )
 const learningInsights = computed(() => props.report?.learningInsights ?? {})
 
@@ -233,8 +232,7 @@ const returnSeries = computed(() => {
     const values = chartDates.value.map((date) => {
       const snapshot = rows.find(
         (item) =>
-          isSameVariant(item, participant) &&
-          (item.snapshotDate || item.performanceDate) === date,
+          isSameVariant(item, participant) && (item.snapshotDate || item.performanceDate) === date,
       )
       return snapshot?.cumulativeReturnPercent ?? 0
     })
@@ -297,11 +295,7 @@ function goToPrinciplesEdit() {
         <p>{{ resultPeriod }} · 동일 자금 기준</p>
       </div>
       <div class="winner-chip">
-        <SimulationParticipantAvatar
-          v-if="winner"
-          :variant-type="winner.variantType"
-          :size="32"
-        />
+        <SimulationParticipantAvatar v-if="winner" :variant-type="winner.variantType" :size="32" />
         <div>
           <span>이번 1위</span>
           <strong>{{ winner?.shortName ?? '원칙 봇' }}</strong>
@@ -435,17 +429,25 @@ function goToPrinciplesEdit() {
         <article v-for="trade in evidenceTrades" :key="trade.action" class="evidence-card">
           <div class="confidence-row">
             <span>근거 신뢰도</span>
-            <strong :class="`confidence--${trade.tone}`">{{ trade.score }}점 · {{ trade.label }}</strong>
+            <strong :class="`confidence--${trade.tone}`"
+              >{{ trade.score }}점 · {{ trade.label }}</strong
+            >
           </div>
           <div class="confidence-track">
             <i :class="`confidence--${trade.tone}`" :style="{ width: `${trade.score}%` }"></i>
           </div>
           <div class="evidence-flow">
-            <div><small>행동</small><strong>{{ trade.action }}</strong></div>
+            <div>
+              <small>행동</small><strong>{{ trade.action }}</strong>
+            </div>
             <AppIcon name="arrow-right" :size="14" />
-            <div><small>근거</small><strong>{{ trade.basis }}</strong></div>
+            <div>
+              <small>근거</small><strong>{{ trade.basis }}</strong>
+            </div>
             <AppIcon name="arrow-right" :size="14" />
-            <div><small>결과</small><strong>{{ trade.result }}</strong></div>
+            <div>
+              <small>결과</small><strong>{{ trade.result }}</strong>
+            </div>
           </div>
         </article>
       </div>
@@ -522,7 +524,10 @@ function goToPrinciplesEdit() {
         </div>
         <div v-for="item in improvementItems" :key="item.title" class="improvement-row">
           <AppIcon :name="item.icon" :size="16" />
-          <p><strong>{{ item.title }}</strong><span>{{ item.detail }}</span></p>
+          <p>
+            <strong>{{ item.title }}</strong
+            ><span>{{ item.detail }}</span>
+          </p>
         </div>
       </div>
     </section>

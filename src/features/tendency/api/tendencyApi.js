@@ -154,10 +154,10 @@ export async function saveUserPrinciples({ principles }) {
   try {
     const payload = {
       principles: (principles || []).map((p, idx) => ({
-        recommendationId: p.recommendationId ?? p.recommendationSource?.analysisRunId ?? (idx + 1),
+        recommendationId: p.recommendationId ?? p.recommendationSource?.analysisRunId ?? idx + 1,
         principleText: p.content ?? p.principleText ?? '',
         ruleJson: p.ruleJson ?? { holding: { minimumDays: 90 } },
-        sortOrder: p.sortOrder ?? (idx + 1),
+        sortOrder: p.sortOrder ?? idx + 1,
       })),
     }
 

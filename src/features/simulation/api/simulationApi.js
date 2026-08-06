@@ -148,7 +148,9 @@ export async function getSimulationOverview(params = {}) {
 export async function getLatestSimulationResult() {
   try {
     const data = await request('/api/v1/simulations/latest')
-    const dailyPerformance = normalizeDailyPerformanceArray(data.dailyPerformance || data.dailySnapshots)
+    const dailyPerformance = normalizeDailyPerformanceArray(
+      data.dailyPerformance || data.dailySnapshots,
+    )
     return {
       ...data,
       dailyPerformance,
@@ -208,7 +210,10 @@ export async function getSimulationBotCompileJob(jobId) {
     return await request(`/api/v1/simulation-bots/compile-jobs/${jobId}`)
   } catch (error) {
     if (!USE_MOCK_FALLBACK) throw error
-    console.warn(`API /api/v1/simulation-bots/compile-jobs/${jobId} 요청 실패, 목데이터를 사용합니다:`, error)
+    console.warn(
+      `API /api/v1/simulation-bots/compile-jobs/${jobId} 요청 실패, 목데이터를 사용합니다:`,
+      error,
+    )
     const attempts = (compileJobAttempts.get(jobId) ?? 0) + 1
     compileJobAttempts.set(jobId, attempts)
 
@@ -251,7 +256,9 @@ export async function runSimulation(payload = {}) {
       periodStart: payload.periodStart ?? '2026-03-01',
       periodEnd: payload.periodEnd ?? '2026-07-29',
       initialCapital: payload.initialCapital ?? 5000000.0,
-      principles: payload.principles ?? ['익절 +20% 달성 시 이익 실현하고 손절률 -10% 도달 시 손절'],
+      principles: payload.principles ?? [
+        '익절 +20% 달성 시 이익 실현하고 손절률 -10% 도달 시 손절',
+      ],
       participantTypes: payload.participantTypes ?? [
         'ACTUAL_USER',
         'PERSONAL_BOT',
