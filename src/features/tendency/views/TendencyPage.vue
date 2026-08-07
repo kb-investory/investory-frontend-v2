@@ -17,6 +17,7 @@ import SegmentedControl from '@/shared/components/navigation/SegmentedControl.vu
 
 const RECOMMENDATION_NOTICE_COLLAPSED_KEY = 'investory:recommendation-notice-collapsed:v3'
 const REANALYSIS_NOTICE_COLLAPSED_KEY = 'investory:reanalysis-notice-collapsed:v3'
+const FLOATING_POSITION_KEY = 'investory:tendency-floating-position:v1'
 
 const route = useRoute()
 const router = useRouter()
@@ -29,6 +30,17 @@ const recommendationNoticeCollapsed = ref(
   window.localStorage.getItem(RECOMMENDATION_NOTICE_COLLAPSED_KEY) !== 'false',
 )
 const reanalysisNoticeCollapsed = ref(true)
+const floatingPosition = ref(
+  window.localStorage.getItem(FLOATING_POSITION_KEY) || 'bottom-right',
+)
+const floatingDragOffset = ref({ x: 0, y: 0 })
+const floatingDragging = ref(false)
+let floatingPointerStart = null
+let suppressFloatingClick = false
+
+const floatingStackStyle = computed(() => ({
+  transform: `translate(${floatingDragOffset.value.x}px, ${floatingDragOffset.value.y}px)`,
+}))
 
 const analysisPeriod = computed(() => {
   const period = tendencyStore.analysis?.period
@@ -112,6 +124,52 @@ function toggleReanalysisNotice() {
   )
 }
 
+function startFloatingDrag(event) {
+  if (event.button !== 0) return
+
+  floatingPointerStart = { x: event.clientX, y: event.clientY }
+  floatingDragging.value = false
+  window.addEventListener('pointermove', moveFloatingStack, { passive: false })
+  window.addEventListener('pointerup', finishFloatingDrag, { once: true })
+}
+
+function moveFloatingStack(event) {
+  if (!floatingPointerStart) return
+
+  const x = event.clientX - floatingPointerStart.x
+  const y = event.clientY - floatingPointerStart.y
+  if (!floatingDragging.value && Math.hypot(x, y) < 8) return
+
+  floatingDragging.value = true
+  floatingDragOffset.value = { x, y }
+  event.preventDefault()
+}
+
+function finishFloatingDrag(event) {
+  window.removeEventListener('pointermove', moveFloatingStack)
+
+  if (floatingDragging.value) {
+    const vertical = event.clientY < window.innerHeight / 2 ? 'top' : 'bottom'
+    const horizontal = event.clientX < window.innerWidth / 2 ? 'left' : 'right'
+    floatingPosition.value = `${vertical}-${horizontal}`
+    window.localStorage.setItem(FLOATING_POSITION_KEY, floatingPosition.value)
+    suppressFloatingClick = true
+    window.setTimeout(() => {
+      suppressFloatingClick = false
+    }, 0)
+  }
+
+  floatingPointerStart = null
+  floatingDragOffset.value = { x: 0, y: 0 }
+  floatingDragging.value = false
+}
+
+function preventFloatingClick(event) {
+  if (!suppressFloatingClick) return
+  event.preventDefault()
+  event.stopPropagation()
+}
+
 function scheduleMidnightRefresh() {
   const now = new Date()
   const nextMidnight = new Date(now)
@@ -156,6 +214,8 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   window.clearTimeout(reanalysisMidnightTimer)
+  window.removeEventListener('pointermove', moveFloatingStack)
+  window.removeEventListener('pointerup', finishFloatingDrag)
 })
 </script>
 
@@ -481,6 +541,13 @@ onBeforeUnmount(() => {
         (tendencyStore.shouldShowReanalysis || tendencyStore.shouldShowRecommendation)
       "
       class="tendency-floating-stack"
+      :class="[
+        `tendency-floating-stack--${floatingPosition}`,
+        { 'tendency-floating-stack--dragging': floatingDragging },
+      ]"
+      :style="floatingStackStyle"
+      @pointerdown="startFloatingDrag"
+      @click.capture="preventFloatingClick"
     >
       <ReanalysisFloating
         v-if="tendencyStore.shouldShowReanalysis"
@@ -538,12 +605,54 @@ onBeforeUnmount(() => {
 .tendency-floating-stack {
   position: fixed;
   z-index: 160;
-  right: max(16px, calc((100vw - 390px) / 2 + 16px));
-  bottom: calc(var(--mobile-frame-edge-offset, 0px) + 84px);
   display: flex;
   width: min(calc(100% - 32px), 358px);
   flex-direction: column;
   gap: 8px;
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+  transition:
+    top 0.22s ease,
+    right 0.22s ease,
+    bottom 0.22s ease,
+    left 0.22s ease;
+}
+
+.tendency-floating-stack--dragging {
+  cursor: grabbing;
+  transition: none;
+}
+
+.tendency-floating-stack--top-left,
+.tendency-floating-stack--bottom-left {
+  --floating-content-shift: -18px;
+
+  left: max(16px, calc((100vw - 390px) / 2 + 16px));
+}
+
+.tendency-floating-stack--top-right,
+.tendency-floating-stack--bottom-right {
+  --floating-content-shift: 18px;
+
+  right: max(16px, calc((100vw - 390px) / 2 + 16px));
+}
+
+.tendency-floating-stack--top-left,
+.tendency-floating-stack--top-right {
+  top: calc(var(--mobile-frame-edge-offset, 0px) + 76px);
+}
+
+.tendency-floating-stack--bottom-left,
+.tendency-floating-stack--bottom-right {
+  bottom: calc(var(--mobile-frame-edge-offset, 0px) + 84px);
+}
+
+.tendency-floating-stack--top-left :deep(.reanalysis-floating--collapsed),
+.tendency-floating-stack--top-left :deep(.recommendation-floating--collapsed),
+.tendency-floating-stack--bottom-left :deep(.reanalysis-floating--collapsed),
+.tendency-floating-stack--bottom-left :deep(.recommendation-floating--collapsed) {
+  align-self: flex-start;
 }
 
 .analysis-content,

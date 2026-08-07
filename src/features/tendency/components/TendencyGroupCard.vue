@@ -25,6 +25,19 @@ defineProps({
 })
 
 defineEmits(['select'])
+
+const RESULT_ICONS = Object.freeze({
+  PORTFOLIO_RISK_ALLOCATION: 'chart-pie',
+  BUY_JUDGMENT_BASIS: 'search',
+  INVESTMENT_HORIZON: 'calendar-range',
+  LOSS_RESPONSE: 'shield-check',
+  PROFIT_RESPONSE: 'trending-up',
+  PRINCIPLE_FULFILLMENT: 'refresh-cw',
+})
+
+function getResultIcon(dimensionCode) {
+  return RESULT_ICONS[dimensionCode] || 'target'
+}
 </script>
 
 <template>
@@ -49,6 +62,9 @@ defineEmits(['select'])
         :aria-label="`${result.dimension.name} ${result.type.name} 상세 보기`"
         @click="$emit('select', result)"
       >
+        <span class="result-card__icon">
+          <AppIcon :name="getResultIcon(result.dimension.code)" :size="22" />
+        </span>
         <span class="result-card__dimension">{{ result.dimension.name }}</span>
         <strong class="result-card__type">{{ result.type.name }}</strong>
       </button>
@@ -123,7 +139,7 @@ defineEmits(['select'])
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 76px;
+  min-height: 96px;
   padding: 9px 7px;
   border: 1px solid transparent;
   border-radius: 9px;
@@ -132,6 +148,16 @@ defineEmits(['select'])
   transition:
     transform 0.15s ease,
     box-shadow 0.15s ease;
+}
+
+.result-card__icon {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 3px;
+  color: currentColor;
 }
 
 .result-card:hover,
@@ -144,7 +170,7 @@ defineEmits(['select'])
 .result-card__dimension {
   display: flex;
   width: 100%;
-  min-height: 32px;
+  min-height: 28px;
   align-items: center;
   justify-content: center;
   color: currentColor;
