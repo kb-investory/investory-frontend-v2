@@ -12,7 +12,7 @@ function clone(value) {
 
 const compileJobAttempts = new Map()
 const MOCK_COMPILE_PROGRESS = [18, 36, 54, 72, 88, 100]
-const LATEST_COMPLETED_RESULT_KEY = 'investory:mock:latest-completed-simulation:v1'
+const LATEST_COMPLETED_RESULT_KEY = 'investory:mock:latest-completed-simulation:v2'
 
 function createLatestSimulationResult() {
   return {
@@ -113,7 +113,8 @@ export async function getSimulationHistory() {
   } catch (error) {
     if (!USE_MOCK_FALLBACK) throw error
     console.warn('API /api/v1/simulations/history 요청 실패, 목데이터를 사용합니다:', error)
-    return clone(MOCK_HISTORY_RECORDS)
+    const completedResult = await getLatestCompletedSimulationResult()
+    return completedResult ? clone(MOCK_HISTORY_RECORDS) : []
   }
 }
 
@@ -159,7 +160,7 @@ export async function getLatestSimulationResult() {
   } catch (error) {
     if (!USE_MOCK_FALLBACK) throw error
     console.warn('API /api/v1/simulations/latest 요청 실패, 목데이터를 사용합니다:', error)
-    return clone(createLatestSimulationResult())
+    return getLatestCompletedSimulationResult()
   }
 }
 
