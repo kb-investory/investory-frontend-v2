@@ -25,19 +25,68 @@ const recentSimulationHeadline = computed(() => {
   const simulation = mypageStore.recentSimulation
   if (!simulation) return ''
 
-  return `${simulation.participantCount}명 중 실제 나는 ${simulation.rank}위예요`
+  const selectedLabels = simulation.participants
+    .filter((participant) => participant.variantType !== 'ACTUAL_USER')
+    .map(
+      (participant) =>
+        SIMULATION_PARTICIPANT_META[participant.variantType]?.label || participant.variantName,
+    )
+
+  return `${selectedLabels.join('·')} 선택 시`
 })
 
-const simulationParticipants = [
-  { label: '실제 나', image: '/assets/images/real-me.png', className: 'actual' },
-  { label: '나의 봇', image: '/assets/images/my-bot.png', className: 'bot' },
-  {
+const SIMULATION_PARTICIPANT_META = Object.freeze({
+  ACTUAL_USER: { label: '실제 나', image: '/assets/images/real-me.png', className: 'actual' },
+  PERSONAL_BOT: { label: '나의 봇', image: '/assets/images/my-bot.png', className: 'bot' },
+  FAMOUS_STRATEGY: {
     label: '유명 투자자',
     image: '/assets/images/famous-investor.png',
     className: 'investor',
   },
-  { label: '원숭이', image: '/assets/images/monkey.png', className: 'monkey' },
-]
+  RANDOM_BOT: { label: '원숭이', image: '/assets/images/monkey.png', className: 'monkey' },
+})
+
+const podiumParticipants = computed(() => {
+  const participants = mypageStore.recentSimulation?.participants || []
+  const participatingTypes = new Set(participants.map((participant) => participant.variantType))
+  const unselectedParticipants = Object.entries(SIMULATION_PARTICIPANT_META)
+    .filter(
+      ([variantType]) =>
+        variantType !== 'ACTUAL_USER' && !participatingTypes.has(variantType),
+    )
+    .map(([variantType, meta]) => ({ variantType, ...meta }))
+  let unselectedIndex = 0
+
+  return [2, 1, 3, 4].map((rank) => {
+    const participant = participants.find((item) => item.rank === rank)
+    if (!participant) {
+      const unselectedParticipant = unselectedParticipants[unselectedIndex]
+      unselectedIndex += 1
+
+      return {
+        rank,
+        empty: true,
+        label: unselectedParticipant?.label || '',
+        image: unselectedParticipant?.image,
+        className: unselectedParticipant?.className || 'empty',
+      }
+    }
+
+    return {
+      ...participant,
+      ...(SIMULATION_PARTICIPANT_META[participant.variantType] || {
+        label: participant.variantName,
+        image: '/assets/images/my-bot.png',
+        className: 'bot',
+      }),
+    }
+  })
+})
+
+const tendencyGroups = computed(() => ({
+  selection: mypageStore.tendencyBadges.filter((badge) => badge.group === 'SELECTION'),
+  behavior: mypageStore.tendencyBadges.filter((badge) => badge.group === 'BEHAVIOR'),
+}))
 
 function goToSection(section) {
   router.push({ name: ROUTE_NAMES.MYPAGE_PLACEHOLDER, params: { section } })
@@ -168,14 +217,30 @@ onMounted(async () => {
           class="tendency-summary-card"
           @click="router.push({ name: ROUTE_NAMES.TENDENCY })"
         >
-          <div class="summary-card__header">
+          <div class="summary-card__header tendency-summary-card__header">
             <span class="summary-card__icon"><AppIcon name="chart-pie" :size="17" /></span>
-            <small>투자성향</small>
-          </div>
-          <div v-if="mypageStore.tendencyBadges.length" class="tendency-badges">
-            <span v-for="badge in mypageStore.tendencyBadges" :key="badge.code">
-              {{ badge.label }}
+            <span class="tendency-summary-card__heading">
+              <strong>나의 투자성향</strong>
+              <small v-if="!mypageStore.tendencyBadges.length">6가지 분석 전</small>
             </span>
+          </div>
+          <div v-if="mypageStore.tendencyBadges.length" class="tendency-result-preview">
+            <div class="tendency-group tendency-group--selection">
+              <strong>투자 선택</strong>
+              <span v-for="badge in tendencyGroups.selection" :key="badge.code">
+                {{ badge.label }}
+              </span>
+            </div>
+            <div class="tendency-group tendency-group--behavior">
+              <strong>매매 행동</strong>
+              <span v-for="badge in tendencyGroups.behavior" :key="badge.code">
+                {{ badge.label }}
+              </span>
+            </div>
+            <div class="tendency-insight">
+              <img src="/assets/images/mypage-insight-monkey.png" alt="책을 보며 생각하는 원숭이" />
+              <p>최근 기록에서 반복된 선택과 행동을 한눈에 확인해보세요.</p>
+            </div>
           </div>
           <div v-else class="summary-empty-state">
             <img src="/assets/icons/monkey-question.png" alt="" />
@@ -198,16 +263,32 @@ onMounted(async () => {
             <small>{{ mypageStore.recentSimulation ? '최근 시뮬레이션' : '시뮬레이션' }}</small>
           </div>
           <template v-if="mypageStore.recentSimulation">
-            <p class="simulation-summary-card__headline">{{ recentSimulationHeadline }}</p>
-            <div class="simulation-preview" aria-label="시뮬레이션 결과 미리보기">
-              <span
-                v-for="participant in simulationParticipants"
-                :key="participant.className"
-                :class="`simulation-preview__${participant.className}`"
+            <p class="simulation-summary-card__headline">
+              <span>{{ recentSimulationHeadline }}</span>
+              <strong>실제 나는 {{ mypageStore.recentSimulation.rank }}위예요</strong>
+            </p>
+            <div class="simulation-podium" aria-label="시뮬레이션 순위 미리보기">
+              <div
+                v-for="participant in podiumParticipants"
+                :key="participant.rank"
+                class="simulation-podium__participant"
+                :class="[
+                  `simulation-podium__participant--rank-${participant.rank}`,
+                  `simulation-podium__participant--${participant.className}`,
+                  { 'simulation-podium__participant--empty': participant.empty },
+                ]"
               >
-                <img :src="participant.image" :alt="participant.label" />
-                {{ participant.label }}
-              </span>
+                <span
+                  v-if="participant.rank === 1 && !participant.empty"
+                  class="simulation-podium__crown"
+                  aria-label="1위"
+                >👑</span>
+                <span v-else class="simulation-podium__crown-placeholder" aria-hidden="true" />
+                <img v-if="participant.image" :src="participant.image" :alt="participant.label" />
+                <span v-else class="simulation-podium__empty-image" aria-hidden="true" />
+                <small>{{ participant.label }}</small>
+                <strong>{{ participant.empty ? '선택 안 함' : `${participant.rank}위` }}</strong>
+              </div>
             </div>
           </template>
           <div v-else class="summary-empty-state summary-empty-state--simulation">
@@ -367,25 +448,31 @@ onMounted(async () => {
 }
 .mypage-content {
   display: grid;
-  gap: 11px;
-  padding: 8px 18px 18px;
+  gap: 14px;
+  padding: 8px 16px 24px;
 }
 
 .profile-summary {
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr) 34px;
+  grid-template-columns: 60px minmax(0, 1fr) 36px;
   align-items: center;
-  gap: 11px;
-  padding: 14px;
-  border-radius: 14px;
-  background: #233e46;
+  gap: 13px;
+  min-height: 116px;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 88% 30%, rgba(35, 198, 201, 0.2), transparent 30%),
+    linear-gradient(135deg, #102f4b 0%, #0c4674 100%);
   color: #fff;
+  box-shadow: 0 12px 26px rgba(23, 67, 101, 0.2);
 }
 .profile-summary__avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: #0d9994;
+  width: 60px;
+  height: 60px;
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  border-radius: 19px;
+  background: linear-gradient(145deg, #13b8af, #0a8f91);
   object-fit: cover;
 }
 .profile-summary__copy {
@@ -398,24 +485,27 @@ onMounted(async () => {
 }
 .profile-summary h2 {
   margin: 0;
-  font-size: var(--font-size-body);
+  font-size: 19px;
+  letter-spacing: -0.04em;
 }
 .profile-summary__copy > div > span {
-  padding: 3px 6px;
-  border-radius: 5px;
-  background: #0d8d88;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #10b5aa, #11a0a1);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.22);
   font-size: var(--font-size-caption);
+  font-weight: 800;
 }
 .profile-summary p {
-  margin: 3px 0;
-  color: #d7e2e3;
+  margin: 5px 0;
+  color: #cfe1ec;
   font-size: var(--font-size-caption);
 }
 .profile-summary small {
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #d7e2e3;
+  color: #daeaf3;
   font-size: var(--font-size-caption);
 }
 .provider-dot {
@@ -449,29 +539,31 @@ onMounted(async () => {
 
 .mypage-highlights {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 9px;
 }
 .tendency-summary-card,
 .simulation-summary-card {
   display: flex;
   width: 100%;
-  min-height: 148px;
+  min-width: 0;
+  min-height: 222px;
   flex-direction: column;
   align-items: stretch;
-  gap: 10px;
-  padding: 14px;
-  border: 1px solid #cfe7e5;
-  border-radius: 17px;
-  background: #fff;
+  gap: 8px;
+  padding: 12px 10px 10px;
+  border: 1px solid #b9e6e5;
+  border-radius: 22px;
+  background: linear-gradient(160deg, #ffffff 0%, #f7ffff 100%);
   color: #35484c;
   cursor: pointer;
   text-align: left;
-  box-shadow: 0 2px 5px rgba(29, 72, 77, 0.08);
+  box-shadow: 0 7px 18px rgba(33, 79, 102, 0.08);
 }
 .simulation-summary-card {
-  border-color: #f0dfc7;
-  background: #fffdf9;
+  border-color: #efd6ad;
+  background: linear-gradient(160deg, #ffffff 0%, #fffaf2 100%);
 }
 .summary-card__header {
   display: flex;
@@ -483,7 +575,8 @@ onMounted(async () => {
   width: 38px;
   height: 38px;
   place-items: center;
-  border-radius: 11px;
+  flex: 0 0 38px;
+  border-radius: 13px;
   background: #e8f8f7;
   color: #078d88;
 }
@@ -494,24 +587,44 @@ onMounted(async () => {
 .tendency-summary-card small,
 .simulation-summary-card small {
   color: #078d88;
-  font-size: var(--font-size-caption);
+  font-size: 11px;
   font-weight: 800;
 }
 .summary-card__header--simulation small {
   color: #ca7a16;
 }
+.tendency-summary-card__header {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+}
+.tendency-summary-card__heading {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+.tendency-summary-card__heading strong {
+  color: #067d79;
+  font-size: 12px;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+.tendency-summary-card__heading small {
+  color: #789092;
+  font-size: 8px;
+  font-weight: 650;
+}
 .summary-card__action {
   display: inline-flex;
-  min-height: 44px;
+  min-height: 36px;
   align-items: center;
   justify-content: center;
   gap: 3px;
   margin-top: auto;
-  padding: 0 7px;
+  padding: 0 6px;
   border-radius: 999px;
   background: #e6f7f5;
   color: #087f7b;
-  font-size: var(--font-size-body);
+  font-size: 10px;
   font-weight: 800;
   white-space: nowrap;
 }
@@ -522,58 +635,109 @@ onMounted(async () => {
   line-height: 1;
   text-align: center !important;
 }
-.tendency-badges {
+.tendency-result-preview {
   display: grid;
-  grid-template-columns: repeat(2, max-content);
-  justify-content: start;
-  gap: 5px 7px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  flex: 1;
 }
-.tendency-badges span {
-  display: inline-flex;
-  min-height: 21px;
-  align-items: center;
-  gap: 5px;
-  justify-content: flex-start;
-  justify-self: start;
-  padding: 3px 6px;
-  border-radius: 999px;
-  background: #1f5a86;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  font-size: var(--font-size-caption);
-  font-weight: 800;
+.tendency-group {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 7px 6px;
+  border-radius: 14px;
+  background: #eef7f9;
+  color: #294f63;
+}
+.tendency-group--behavior {
+  background: #f3effa;
+  color: #7252ad;
+}
+.tendency-group > strong {
+  margin-bottom: 7px;
+  font-size: 10px;
   line-height: 1;
+}
+.tendency-group > span {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  padding-left: 10px;
+  color: #385264;
+  font-size: 8px;
+  font-weight: 750;
+  line-height: 1.2;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
-.tendency-badges span::before {
-  width: 7px;
-  height: 7px;
-  flex: 0 0 7px;
+.tendency-group > span::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  transform: translateY(-50%);
   border-radius: 50%;
-  background: #2eb5ff;
+  background: #37a8d0;
   content: '';
+}
+.tendency-group--behavior > span {
+  color: #665482;
+}
+.tendency-group--behavior > span::before {
+  background: #9c82d6;
+}
+.tendency-insight {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 4px;
+  min-height: 54px;
+  padding: 1px 5px 0 0;
+}
+.tendency-insight img {
+  width: 48px;
+  height: 54px;
+  object-fit: contain;
+}
+.tendency-insight p {
+  margin: 0;
+  color: #61777c;
+  font-size: 8px;
+  font-weight: 650;
+  line-height: 1.45;
+  word-break: keep-all;
 }
 .summary-empty-state {
   display: flex;
-  min-height: 51px;
+  min-height: 52px;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  text-align: center;
 }
 .summary-empty-state img {
-  width: 43px;
-  height: 43px;
-  flex: 0 0 43px;
+  width: 56px;
+  height: 56px;
+  flex: 0 0 56px;
   object-fit: contain;
 }
 .summary-empty-state__copy {
   display: grid;
-  gap: 3px;
   min-width: 0;
+  align-content: center;
+  gap: 3px;
+  text-align: center;
 }
 .summary-empty-state__copy strong {
   color: #2e3032;
-  font-size: var(--font-size-body);
+  font-size: 12px;
   font-weight: 800;
   line-height: 1.25;
   word-break: keep-all;
@@ -581,65 +745,101 @@ onMounted(async () => {
 .summary-empty-state__copy p {
   margin: 0;
   color: #7d8b8e;
-  font-size: var(--font-size-caption);
+  font-size: 9px;
   line-height: 1.45;
 }
 .summary-empty-state--simulation .summary-empty-state__copy p {
   color: #887967;
 }
 .simulation-summary-card__headline {
-  min-height: 20px;
+  display: grid;
+  min-height: 34px;
+  align-content: center;
+  gap: 3px;
   margin: 0;
-  color: #2e3032;
-  font-size: var(--font-size-body);
-  font-weight: 800;
+  color: #61777c;
+  font-size: 9px;
+  font-weight: 650;
   line-height: 1.45;
   text-align: center;
+  word-break: keep-all;
 }
-.simulation-preview {
+.simulation-summary-card__headline strong {
+  color: #bd6f12;
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1.25;
+}
+.simulation-podium {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 4px;
-}
-.simulation-preview span {
-  display: grid;
-  min-width: 0;
-  min-height: 54px;
-  place-items: center;
+  align-items: end;
   gap: 2px;
-  border: 1px solid #71868e;
-  border-radius: 8px;
-  background: #e7eef1;
-  color: #53666c;
-  font-size: var(--font-size-caption);
-  font-weight: 800;
-  line-height: 1.1;
+  min-height: 100px;
+}
+.simulation-podium__participant {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  color: #38596c;
   text-align: center;
 }
-.simulation-preview img {
-  width: 27px;
-  height: 34px;
+.simulation-podium__participant img,
+.simulation-podium__empty-image {
+  width: 38px;
+  height: 46px;
   object-fit: contain;
 }
-.simulation-preview .simulation-preview__actual {
-  border-color: #8ea2aa;
-  background: #edf3f5;
-  color: #53666c;
+.simulation-podium__participant small {
+  overflow: hidden;
+  width: 100%;
+  min-height: 16px;
+  color: inherit;
+  font-size: 7px;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.simulation-preview .simulation-preview__bot {
-  border-color: #e8b22f;
-  background: #fff2bd;
-  color: #a56c00;
+.simulation-podium__participant strong {
+  display: grid;
+  width: 100%;
+  height: 30px;
+  place-items: center;
+  border-radius: 7px 7px 3px 3px;
+  background: #dfeff4;
+  color: #2e657b;
+  font-size: 10px;
 }
-.simulation-preview .simulation-preview__investor {
-  border-color: #d7a64a;
-  background: #fff5db;
-  color: #9a6a14;
+.simulation-podium__participant--rank-1 strong {
+  height: 42px;
+  background: #ffdb7b;
+  color: #8a5910;
 }
-.simulation-preview .simulation-preview__monkey {
-  border-color: #b9a5cf;
-  background: #f0e9f7;
-  color: #7b5c9a;
+.simulation-podium__participant--rank-2 strong {
+  height: 35px;
+  background: #f7e3a9;
+  color: #805e20;
+}
+.simulation-podium__participant--rank-4 strong {
+  height: 23px;
+  background: #ede5f7;
+  color: #765c94;
+  font-size: 7px;
+}
+.simulation-podium__crown,
+.simulation-podium__crown-placeholder {
+  display: grid;
+  height: 16px;
+  place-items: center;
+  color: #e98d00;
+  font-size: 20px;
+  line-height: 1;
+}
+.simulation-podium__participant--empty:not(.simulation-podium__participant--rank-4) {
+  opacity: 0.42;
 }
 .simulation-summary-card p:not(.simulation-summary-card__headline) {
   color: #68777a;
@@ -648,39 +848,36 @@ onMounted(async () => {
 
 .menu-section {
   display: grid;
-  gap: 5px;
+  gap: 8px;
 }
 .menu-section h2 {
   margin: 0;
-  color: #607174;
-  font-size: var(--font-size-body);
-  font-weight: 700;
+  color: #183b59;
+  font-size: 15px;
+  font-weight: 850;
 }
 .menu-list {
-  overflow: hidden;
-  border: 1px solid #e0e7e7;
-  border-radius: 12px;
-  background: #fff;
+  display: grid;
+  gap: 7px;
 }
 .menu-list button,
 .account-actions button {
   display: grid;
   width: 100%;
-  min-height: 52px;
+  min-height: 48px;
   grid-template-columns: 22px minmax(0, 1fr) 16px;
   align-items: center;
   gap: 7px;
-  padding: 0 10px;
-  border: 0;
-  border-bottom: 1px solid #edf1f1;
+  padding: 0 14px;
+  border: 1px solid #dce6ec;
+  border-radius: 14px;
   background: #fff;
-  color: #415356;
+  color: #29465d;
   cursor: pointer;
-  font-size: var(--font-size-body);
+  font-size: 13px;
+  font-weight: 700;
   text-align: left;
-}
-.menu-list button:last-child {
-  border-bottom: 0;
+  box-shadow: 0 3px 10px rgba(30, 65, 89, 0.035);
 }
 .account-actions {
   display: grid;
@@ -688,10 +885,10 @@ onMounted(async () => {
   margin-top: 1px;
 }
 .account-actions button {
-  border: 0;
-  border-radius: 10px;
-  background: #fff3f2;
-  color: #ec5258;
+  border-color: #ffe0df;
+  border-radius: 14px;
+  background: linear-gradient(90deg, #fff5f4, #fffafa);
+  color: #e94d54;
 }
 .app-version {
   display: flex;

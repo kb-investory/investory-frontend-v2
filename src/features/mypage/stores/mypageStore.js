@@ -80,6 +80,7 @@ export const useMypageStore = defineStore('mypage', () => {
       tendencyBadges.value = (analysis?.analysisResults || []).map((result) => ({
         code: result.dimension.code,
         label: result.type.name,
+        group: result.dimension.group,
       }))
       const rankedParticipants = [...(simulationResult?.participantSummary || [])].sort(
         (first, second) => second.cumulativeReturnPercent - first.cumulativeReturnPercent,
@@ -93,6 +94,13 @@ export const useMypageStore = defineStore('mypage', () => {
             simulationId: simulationResult.simulationRun?.simulationRunId,
             rank: actualUserIndex + 1,
             participantCount: rankedParticipants.length,
+            participants: rankedParticipants.map((participant, index) => ({
+              rank: index + 1,
+              variantId: participant.variantId,
+              variantType: participant.variantType,
+              variantName: participant.variantName,
+              cumulativeReturnPercent: participant.cumulativeReturnPercent,
+            })),
           }
         : null
       accounts.value = overview.accounts
