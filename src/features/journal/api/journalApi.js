@@ -48,7 +48,7 @@ function applyTradeNotes(entry, tradeNotes = []) {
 }
 
 export function getDefaultJournalDate() {
-  return formatLocalDate(new Date())
+  return formatUtcDate(new Date())
 }
 
 export async function getJournals() {
@@ -128,6 +128,20 @@ export async function getJournalEntryOnDate(journalDate = getDefaultJournalDate(
   try {
     return await request(`/journal/entries/on/${journalDate}`)
   } catch (error) {
+    const isFutureDateError =
+      error?.errorCode === 'JRN_002' || error?.message?.includes('미래 날짜')
+
+    if (isFutureDateError) {
+      const utcDate = formatUtcDate(new Date())
+      if (utcDate !== journalDate) {
+        try {
+          return await request(`/journal/entries/on/${utcDate}`)
+        } catch {
+          // ignore retry error
+        }
+      }
+    }
+
     if (!USE_MOCK_FALLBACK) throw error
     console.warn(`API /journal/entries/on/${journalDate} 요청 실패, 목데이터를 사용합니다:`, error)
     const entry = journalData.dailyEntries?.find((item) => item.journalDate === journalDate)

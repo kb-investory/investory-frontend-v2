@@ -39,15 +39,16 @@ const canSubmit = computed(
   () => Boolean(form.marketMood) && form.marketThought.trim().length > 0 && !journalStore.loading,
 )
 const dateLabel = computed(() => {
-  const date = new Date(`${journalDate.value}T00:00:00`)
+  const date = route.query.date ? new Date(`${route.query.date}T00:00:00`) : new Date()
   const weekday = new Intl.DateTimeFormat('ko-KR', { weekday: 'long' }).format(date)
   return `${date.getMonth() + 1}월 ${date.getDate()}일, ${weekday}`
 })
-const monthLabel = computed(() =>
-  new Intl.DateTimeFormat('ko-KR', { month: '2-digit' })
-    .format(new Date(`${journalDate.value}T00:00:00`))
-    .replace(/\D/g, ''),
-)
+const monthLabel = computed(() => {
+  const date = route.query.date ? new Date(`${route.query.date}T00:00:00`) : new Date()
+  return new Intl.DateTimeFormat('ko-KR', { month: '2-digit' })
+    .format(date)
+    .replace(/\D/g, '')
+})
 const sortedTrades = computed(() => {
   const trades = [...(journalStore.dailyEntry?.trades ?? [])]
   return trades.sort((a, b) => {
