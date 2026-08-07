@@ -23,7 +23,7 @@ export const useSimulationStore = defineStore('simulation', () => {
   const sessions = ref([])
   const messages = ref([])
   const comparators = ref([])
-  const selectedComparatorTypes = ref(['FAMOUS_STRATEGY'])
+  const selectedComparatorTypes = ref(['FAMOUS_STRATEGY', 'RANDOM_BOT'])
   const simulationConditions = ref(null)
   const loading = ref(false)
   const comparatorsLoading = ref(false)

@@ -1,7 +1,7 @@
 import tendencyData from '@/mocks/data/tendency.json'
 import { request } from '@/shared/api/client'
 
-const FLOW_STORAGE_KEY = 'investory:mock:tendency-flow:v5-expired-analysis'
+const FLOW_STORAGE_KEY = 'investory:mock:tendency-flow:v6-analysis-empty'
 const MINIMUM_RECORD_DAYS = 90
 
 function formatDateKey(date) {
@@ -27,7 +27,7 @@ function addDays(dateKey, days) {
 function createInitialFlowState() {
   return {
     serviceStartedDate: formatDateKey(getDateBefore(MINIMUM_RECORD_DAYS + 1)),
-    analysis: tendencyData,
+    analysis: null,
     principles: [],
   }
 }
