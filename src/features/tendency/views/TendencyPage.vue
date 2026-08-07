@@ -15,8 +15,8 @@ import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
 import PrimaryAppHeader from '@/shared/components/navigation/PrimaryAppHeader.vue'
 import SegmentedControl from '@/shared/components/navigation/SegmentedControl.vue'
 
-const RECOMMENDATION_NOTICE_COLLAPSED_KEY = 'investory:recommendation-notice-collapsed'
-const REANALYSIS_NOTICE_COLLAPSED_KEY = 'investory:reanalysis-notice-collapsed'
+const RECOMMENDATION_NOTICE_COLLAPSED_KEY = 'investory:recommendation-notice-collapsed:v3'
+const REANALYSIS_NOTICE_COLLAPSED_KEY = 'investory:reanalysis-notice-collapsed:v3'
 
 const route = useRoute()
 const router = useRouter()
@@ -26,9 +26,9 @@ const selectedResult = ref(null)
 const selectedHistory = ref(null)
 let reanalysisMidnightTimer
 const recommendationNoticeCollapsed = ref(
-  window.localStorage.getItem(RECOMMENDATION_NOTICE_COLLAPSED_KEY) === 'true',
+  window.localStorage.getItem(RECOMMENDATION_NOTICE_COLLAPSED_KEY) !== 'false',
 )
-const reanalysisNoticeCollapsed = ref(false)
+const reanalysisNoticeCollapsed = ref(true)
 
 const analysisPeriod = computed(() => {
   const period = tendencyStore.analysis?.period
@@ -132,17 +132,27 @@ watch(activeTab, (tab) => {
 watch(
   () => tendencyStore.analysis?.analysisRunId,
   (analysisRunId) => {
-    reanalysisNoticeCollapsed.value = analysisRunId
-      ? window.localStorage.getItem(`${REANALYSIS_NOTICE_COLLAPSED_KEY}:${analysisRunId}`) ===
-        'true'
-      : false
+    if (!analysisRunId) {
+      reanalysisNoticeCollapsed.value = true
+      return
+    }
+
+    reanalysisNoticeCollapsed.value =
+      window.localStorage.getItem(`${REANALYSIS_NOTICE_COLLAPSED_KEY}:${analysisRunId}`) !==
+      'false'
   },
   { immediate: true },
 )
 
-onMounted(() => {
-  tendencyStore.fetchTendencies()
+onMounted(async () => {
+  await tendencyStore.fetchTendencies()
+  tendencyStore.refreshAnalysisDate()
   scheduleMidnightRefresh()
+
+  if (route.query.reanalyze === 'true' && tendencyStore.shouldShowReanalysis) {
+    await router.replace({ name: ROUTE_NAMES.TENDENCY })
+    await startTendencyAnalysis()
+  }
 })
 
 onBeforeUnmount(() => {

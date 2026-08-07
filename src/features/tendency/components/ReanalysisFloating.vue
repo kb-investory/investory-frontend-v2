@@ -4,7 +4,7 @@ import AppIcon from '@/shared/components/AppIcon.vue'
 defineProps({
   collapsed: {
     type: Boolean,
-    default: false,
+    default: true,
   },
 })
 
@@ -24,12 +24,13 @@ defineEmits(['analyze', 'toggle'])
       aria-label="투자성향 재분석 안내 펼치기"
       @click="$emit('toggle')"
     >
-      <AppIcon name="rotate-ccw" :size="22" />
+      <img src="/assets/icons/monkey-surprised.png" alt="" />
+      <span>click !</span>
     </button>
 
     <template v-else>
       <span class="reanalysis-floating__icon">
-        <AppIcon name="rotate-ccw" :size="20" />
+        <img src="/assets/icons/monkey-surprised.png" alt="" />
       </span>
       <button type="button" class="reanalysis-floating__body" @click="$emit('analyze')">
         <span>새 분석 필요</span>
@@ -71,8 +72,8 @@ defineEmits(['analyze', 'toggle'])
 }
 
 .reanalysis-floating--collapsed {
-  width: 54px;
-  min-height: 54px;
+  width: 62px;
+  min-height: 68px;
   align-self: flex-end;
   gap: 0;
   padding: 6px;
@@ -88,12 +89,35 @@ defineEmits(['analyze', 'toggle'])
   justify-content: center;
   border: 0;
   border-radius: 12px;
-  background: #f5c466;
+  background: transparent;
   color: #263b43;
 }
 
+.reanalysis-floating__icon img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
 .reanalysis-floating__collapsed-button {
+  flex-direction: column;
+  width: 50px;
+  height: 56px;
   cursor: pointer;
+}
+
+.reanalysis-floating__collapsed-button img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+}
+
+.reanalysis-floating__collapsed-button span {
+  margin-top: -1px;
+  color: #ffd66b;
+  font-size: 8px;
+  font-weight: 900;
+  line-height: 1;
 }
 
 .reanalysis-floating__body {

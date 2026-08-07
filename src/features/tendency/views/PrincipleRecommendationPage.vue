@@ -228,9 +228,8 @@ onBeforeUnmount(() => {
         </div>
       </section>
 
-      <p v-if="applyError" class="apply-error" role="alert">{{ applyError }}</p>
-
       <footer class="apply-bar">
+        <p v-if="applyError" class="apply-error" role="alert">{{ applyError }}</p>
         <BaseButton
           full-width
           :disabled="!selectedCount || applying"
@@ -333,7 +332,7 @@ onBeforeUnmount(() => {
 .recommendation-content {
   display: grid;
   gap: 12px;
-  padding-bottom: 4px;
+  padding-bottom: 92px;
 }
 
 .tendency-summary {
@@ -601,8 +600,13 @@ onBeforeUnmount(() => {
 }
 
 .apply-bar {
-  width: 100%;
-  padding-top: 3px;
+  position: fixed;
+  z-index: 160;
+  right: max(16px, calc((100vw - 390px) / 2 + 16px));
+  bottom: calc(var(--mobile-frame-edge-offset, 0px) + 84px);
+  display: grid;
+  width: min(calc(100% - 32px), 358px);
+  gap: 7px;
 }
 
 .complete-state {

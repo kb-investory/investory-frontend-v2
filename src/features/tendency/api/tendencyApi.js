@@ -1,7 +1,7 @@
 import tendencyData from '@/mocks/data/tendency.json'
 import { request } from '@/shared/api/client'
 
-const FLOW_STORAGE_KEY = 'investory:mock:tendency-flow:v3'
+const FLOW_STORAGE_KEY = 'investory:mock:tendency-flow:v5-expired-analysis'
 const MINIMUM_RECORD_DAYS = 90
 
 function formatDateKey(date) {
@@ -27,7 +27,7 @@ function addDays(dateKey, days) {
 function createInitialFlowState() {
   return {
     serviceStartedDate: formatDateKey(getDateBefore(MINIMUM_RECORD_DAYS + 1)),
-    analysis: null,
+    analysis: tendencyData,
     principles: [],
   }
 }
@@ -37,6 +37,27 @@ function writeFlowState(state) {
   return state
 }
 
+function normalizeAnalysisHistory(analysis) {
+  if (!analysis) return null
+
+  const history = [...(analysis.history || [])].sort(
+    (a, b) => new Date(b.analyzedDate) - new Date(a.analyzedDate),
+  )
+
+  return {
+    ...analysis,
+    history: history.map((item, index) => ({
+      ...item,
+      label:
+        history.length === 1 || index === history.length - 1
+          ? '첫 분석'
+          : index === 0
+            ? '최신 분석'
+            : '정기 분석',
+    })),
+  }
+}
+
 function readFlowState() {
   try {
     const storedState = JSON.parse(window.localStorage.getItem(FLOW_STORAGE_KEY) || 'null')
@@ -44,7 +65,7 @@ function readFlowState() {
     if (storedState?.serviceStartedDate) {
       return {
         serviceStartedDate: storedState.serviceStartedDate,
-        analysis: storedState.analysis || null,
+        analysis: normalizeAnalysisHistory(storedState.analysis),
         principles: storedState.principles || [],
       }
     }
@@ -62,11 +83,16 @@ function createAnalysisResponse(previousAnalysis = null) {
   const analysisRunId = isReanalysis
     ? previousAnalysis.analysisRunId + 1
     : tendencyData.analysisRunId
+  const previousHistory = previousAnalysis?.history || []
+  const normalizedPreviousHistory = previousHistory.map((item, index) => ({
+    ...item,
+    label: index === previousHistory.length - 1 ? '첫 분석' : '정기 분석',
+  }))
   const historyItem = isReanalysis
     ? {
         analysisRunId,
         analyzedDate,
-        label: '재분석',
+        label: '최신 분석',
         description: '6가지 성향 결과 · 1개 변화',
         changedCount: 1,
         changes: [
@@ -98,7 +124,7 @@ function createAnalysisResponse(previousAnalysis = null) {
     summary: tendencyData.summary,
     groupSummaries: tendencyData.groupSummaries,
     analysisResults: tendencyData.analysisResults,
-    history: [historyItem, ...(previousAnalysis?.history || [])],
+    history: [historyItem, ...normalizedPreviousHistory],
   }
 }
 
