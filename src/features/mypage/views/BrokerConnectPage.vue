@@ -151,22 +151,22 @@ watch(searchQuery, (query) => loadBrokers(query), { immediate: true })
 .broker-intro__eyebrow {
   color: var(--brand-teal-deep);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
   letter-spacing: 1.2px;
 }
 
 .broker-intro h2 {
   font-family: var(--font-heading);
-  font-size: 27px;
+  font-size: var(--font-size-title-lg);
   letter-spacing: -0.4px;
-  line-height: 33px;
+  line-height: 1.4;
 }
 
 .broker-intro > p:last-child {
   color: var(--color-text-muted);
-  font-size: 13px;
-  line-height: 19px;
+  font-size: var(--font-size-body);
+  line-height: 1.4;
 }
 
 .search-input {
@@ -191,7 +191,7 @@ watch(searchQuery, (query) => loadBrokers(query), { immediate: true })
   border: 0;
   outline: 0;
   color: var(--color-text);
-  font-size: 13px;
+  font-size: var(--font-size-body);
 }
 
 .broker-list {
@@ -206,12 +206,12 @@ watch(searchQuery, (query) => loadBrokers(query), { immediate: true })
 }
 
 .broker-list__header h3 {
-  font-size: 14px;
+  font-size: var(--font-size-body);
 }
 
 .broker-list__header span {
   color: var(--color-text-subtle);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .broker-grid {
@@ -234,8 +234,8 @@ watch(searchQuery, (query) => loadBrokers(query), { immediate: true })
 }
 
 .broker-state p {
-  font-size: 13px;
-  line-height: 20px;
+  font-size: var(--font-size-body);
+  line-height: 1.4;
 }
 
 .broker-state button {
@@ -245,7 +245,7 @@ watch(searchQuery, (query) => loadBrokers(query), { immediate: true })
   background: var(--brand-mist);
   color: var(--brand-teal-deep);
   cursor: pointer;
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -276,13 +276,13 @@ watch(searchQuery, (query) => loadBrokers(query), { immediate: true })
 }
 
 .security-card strong {
-  font-size: 12px;
+  font-size: var(--font-size-caption);
 }
 
 .security-card small {
   color: var(--color-text-muted);
-  font-size: 10.5px;
-  line-height: 14px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
 }
 
 .broker-action {
@@ -297,7 +297,7 @@ watch(searchQuery, (query) => loadBrokers(query), { immediate: true })
 
 .broker-action p {
   color: var(--color-text-subtle);
-  font-size: 10.5px;
+  font-size: var(--font-size-caption);
   text-align: center;
 }
 

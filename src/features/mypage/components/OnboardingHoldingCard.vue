@@ -51,7 +51,7 @@ function formatCurrency(value) {
 .holding-card__content > strong {
   overflow: hidden;
   color: var(--color-heading);
-  font-size: 13px;
+  font-size: var(--font-size-body);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -66,9 +66,9 @@ function formatCurrency(value) {
 
 .holding-card__details span {
   color: var(--color-text-muted);
-  font-size: 9.5px;
+  font-size: var(--font-size-caption);
   font-weight: 500;
-  line-height: 13px;
+  line-height: 1.4;
 }
 
 .holding-card__details span:last-child {

@@ -43,14 +43,14 @@ defineProps({
 
 dt {
   color: var(--color-text-subtle);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 dd {
   margin: 0;
   color: var(--color-heading);
   font-family: var(--font-mono);
-  font-size: 16px;
+  font-size: var(--font-size-body);
   font-weight: 700;
 }
 

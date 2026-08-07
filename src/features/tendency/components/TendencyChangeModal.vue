@@ -210,7 +210,7 @@ onBeforeUnmount(() => {
 .change-modal__header h2 {
   color: #1d2729;
   font-family: var(--font-heading);
-  font-size: 19px;
+  font-size: var(--font-size-title-md);
   font-weight: 800;
   letter-spacing: -0.04em;
 }
@@ -218,7 +218,7 @@ onBeforeUnmount(() => {
 .change-modal__header p {
   margin-top: 5px;
   color: #8a9294;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .change-modal__close {
@@ -263,13 +263,13 @@ onBeforeUnmount(() => {
 
 .change-summary strong {
   color: #244044;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .change-summary p {
   margin-top: 4px;
   color: #758386;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   line-height: 1.45;
 }
 
@@ -288,12 +288,12 @@ onBeforeUnmount(() => {
 
 .section-heading h3 {
   color: #314245;
-  font-size: 12px;
+  font-size: var(--font-size-body);
 }
 
 .section-heading span {
   color: #0a8c88;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -312,7 +312,7 @@ onBeforeUnmount(() => {
   display: block;
   margin-bottom: 7px;
   color: #526164;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 
 .change-item__comparison {
@@ -334,12 +334,12 @@ onBeforeUnmount(() => {
 
 .change-item__comparison span {
   color: #8a9496;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 
 .change-item__comparison b {
   color: #536165;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .change-item__comparison .change-item__current {
@@ -353,7 +353,7 @@ onBeforeUnmount(() => {
 .change-item p {
   margin-top: 7px;
   color: #8a9395;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   line-height: 1.45;
   text-align: center;
 }
@@ -383,7 +383,7 @@ onBeforeUnmount(() => {
 .current-types__grid span {
   overflow: hidden;
   color: #8b9597;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -393,13 +393,13 @@ onBeforeUnmount(() => {
   border-radius: 4px;
   background: #fff;
   color: #0a8c88;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
 }
 
 .current-types__grid strong {
   color: #536165;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .current-types__grid .current-type--changed {
@@ -423,7 +423,7 @@ onBeforeUnmount(() => {
 }
 
 .change-modal__source span {
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   line-height: 1.45;
 }
 

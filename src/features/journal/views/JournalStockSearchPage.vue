@@ -181,7 +181,7 @@ async function openStockJournal(stock) {
 .stock-search-page__app-bar h1 {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: 20px;
+  font-size: var(--font-size-title-md);
   font-weight: 700;
   text-align: center;
 }
@@ -197,8 +197,8 @@ async function openStockJournal(stock) {
   margin: 0;
   color: #666662;
   font-family: var(--font-sans);
-  font-size: 11px;
-  line-height: 17px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
 }
 
 .stock-search-page__section,
@@ -212,7 +212,7 @@ async function openStockJournal(stock) {
 .stock-search-page__results h2 {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 700;
 }
 
@@ -236,7 +236,7 @@ async function openStockJournal(stock) {
   color: #666662;
   background: #f7f8fa;
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
   cursor: pointer;
 }
@@ -261,7 +261,7 @@ async function openStockJournal(stock) {
 .stock-search-page__holding-header span {
   color: #94948e;
   font-family: var(--font-sans);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .stock-search-page__result-list {
@@ -288,7 +288,7 @@ async function openStockJournal(stock) {
 .stock-search-page__state strong,
 .stock-search-page__state p {
   margin: 0;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .stock-search-page__state button {

@@ -29,7 +29,7 @@ defineProps({
   background: var(--color-background);
   color: var(--color-heading);
   font-family: var(--font-brand);
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
 }
 
@@ -40,7 +40,7 @@ defineProps({
 }
 
 .signal {
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   letter-spacing: -2px;
 }
 

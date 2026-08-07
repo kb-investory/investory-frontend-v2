@@ -55,7 +55,7 @@ defineProps({
   outline: 0;
   background: transparent;
   color: var(--color-text);
-  font-size: 14px;
+  font-size: var(--font-size-body);
 }
 
 .search-input input::placeholder {

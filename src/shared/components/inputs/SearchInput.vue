@@ -64,7 +64,7 @@ defineEmits(['update:modelValue'])
   background: transparent;
   color: #181817;
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: var(--font-size-body);
   outline: none;
 
   &::placeholder {

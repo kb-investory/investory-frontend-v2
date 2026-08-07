@@ -45,14 +45,14 @@ defineProps({
 .timer-progress-bar__label {
   color: #181817;
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
 .timer-progress-bar__timer {
   color: #087f7c;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 

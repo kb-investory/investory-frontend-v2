@@ -49,7 +49,7 @@ defineProps({
 .text-field__label {
   color: var(--color-heading);
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 600;
 }
 
@@ -63,7 +63,7 @@ defineProps({
   background: var(--color-surface);
   color: var(--color-text);
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: var(--font-size-body);
 }
 
 .text-field__input::placeholder {

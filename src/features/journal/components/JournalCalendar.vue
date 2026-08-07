@@ -154,7 +154,7 @@ function getAriaLabel(cell) {
   color: var(--text-secondary, #666662);
   background: #f7f8fa;
   font-family: var(--font-sans);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
   text-align: center;
 }
@@ -187,7 +187,7 @@ function getAriaLabel(cell) {
   color: var(--text-primary, #181817);
   background: transparent;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
   cursor: default;
 }
@@ -261,7 +261,7 @@ function getAriaLabel(cell) {
   padding-right: 6px;
   color: var(--text-tertiary, #94948e);
   font-family: var(--font-sans);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 
 .journal-calendar__legend-mark {

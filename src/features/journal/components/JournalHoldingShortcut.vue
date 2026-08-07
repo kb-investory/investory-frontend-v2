@@ -71,7 +71,7 @@ defineEmits(['select'])
   max-width: 100%;
   overflow: hidden;
   font-family: var(--font-sans);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -99,13 +99,13 @@ defineEmits(['select'])
 
 .holding-shortcut__return small {
   color: #666662;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 
 .holding-shortcut__return b {
   color: #e34b4b;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .holding-shortcut__return b.holding-shortcut__return--loss {

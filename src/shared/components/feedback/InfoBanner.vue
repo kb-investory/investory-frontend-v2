@@ -57,7 +57,7 @@ defineProps({
   margin: 0;
   color: #18272d;
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: var(--font-size-body);
   font-weight: 700;
 }
 
@@ -65,7 +65,7 @@ defineProps({
   margin: 0;
   color: #666662;
   font-family: var(--font-sans);
-  font-size: 11px;
-  line-height: normal;
+  font-size: var(--font-size-caption);
+  line-height: 1.45;
 }
 </style>

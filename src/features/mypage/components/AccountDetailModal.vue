@@ -194,12 +194,12 @@ function formatTime(value, { withDay = false } = {}) {
   margin: 0;
 }
 .detail-modal__header h2 {
-  font-size: 15px;
+  font-size: var(--font-size-body);
 }
 .detail-modal__header p {
   margin-top: 3px;
   color: #879396;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
 }
 .detail-modal__header button {
   display: grid;
@@ -248,12 +248,12 @@ function formatTime(value, { withDay = false } = {}) {
   margin: 0;
 }
 .account-hero h3 {
-  font-size: 12px;
+  font-size: var(--font-size-body);
 }
 .account-hero p {
   margin-top: 3px;
   color: #d4e0e1;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
 }
 .account-hero__status {
   display: inline-flex;
@@ -264,7 +264,7 @@ function formatTime(value, { withDay = false } = {}) {
   border-radius: 999px;
   background: #0d6e6b;
   color: #dffbf8;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
   font-weight: 750;
 }
 .account-hero__status i {
@@ -286,17 +286,17 @@ function formatTime(value, { withDay = false } = {}) {
   align-items: center;
   gap: 4px;
   color: #b8c8ca;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
 }
 .account-hero__value strong {
-  font-size: 18px;
+  font-size: var(--font-size-body);
 }
 .account-hero__holding {
   display: flex;
   justify-content: flex-end;
   gap: 6px;
   color: #b8c8ca;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
 }
 .account-hero__holding strong {
   color: #fff;
@@ -321,12 +321,12 @@ function formatTime(value, { withDay = false } = {}) {
   color: #fff;
 }
 .sync-card strong {
-  font-size: 8px;
+  font-size: var(--font-size-body);
 }
 .sync-card p {
   margin: 3px 0 0;
   color: #78878a;
-  font-size: 6px;
+  font-size: var(--font-size-caption);
 }
 .sync-card button {
   min-height: 28px;
@@ -336,7 +336,7 @@ function formatTime(value, { withDay = false } = {}) {
   background: #fff;
   color: #078d88;
   cursor: pointer;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
 }
 .recent-section,
@@ -352,11 +352,11 @@ function formatTime(value, { withDay = false } = {}) {
 .recent-section h3,
 .connection-section h3 {
   margin: 0;
-  font-size: 9px;
+  font-size: var(--font-size-body);
 }
 .recent-section > header span {
   color: #8b9799;
-  font-size: 6px;
+  font-size: var(--font-size-caption);
 }
 .recent-section article,
 .connection-section button {
@@ -389,22 +389,22 @@ function formatTime(value, { withDay = false } = {}) {
   border-radius: 11px;
   background: #fff;
   color: #8b9799;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
 }
 .recent-section strong {
-  font-size: 8px;
+  font-size: var(--font-size-body);
 }
 .recent-section p {
   margin: 3px 0 0;
   color: #7c898c;
-  font-size: 6px;
+  font-size: var(--font-size-caption);
 }
 .connection-section button {
   width: 100%;
   border: 1px solid #f0dfdf;
   color: #e05054;
   cursor: pointer;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   text-align: left;
 }
 .disconnect-overlay {
@@ -434,12 +434,12 @@ function formatTime(value, { withDay = false } = {}) {
 }
 .disconnect-dialog h2 {
   margin: 11px 0 5px;
-  font-size: 15px;
+  font-size: var(--font-size-body);
 }
 .disconnect-dialog p {
   margin: 0;
   color: #718083;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   line-height: 1.55;
 }
 .disconnect-dialog > div {

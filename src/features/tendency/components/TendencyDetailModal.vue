@@ -227,7 +227,7 @@ onBeforeUnmount(() => {
 .detail-modal__header h2 {
   color: #1d2729;
   font-family: var(--font-heading);
-  font-size: 21px;
+  font-size: var(--font-size-title-md);
   font-weight: 800;
   letter-spacing: -0.045em;
 }
@@ -235,7 +235,7 @@ onBeforeUnmount(() => {
 .detail-modal__header p {
   margin-top: 6px;
   color: #8a9294;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .detail-modal__close {
@@ -260,7 +260,7 @@ onBeforeUnmount(() => {
 .detail-modal__guide {
   margin-top: 20px;
   color: #667477;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .type-options {
@@ -304,7 +304,7 @@ onBeforeUnmount(() => {
   display: block;
   max-width: 100%;
   overflow: hidden;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -327,7 +327,7 @@ onBeforeUnmount(() => {
   top: 4px;
   right: 5px;
   color: #0a8c88;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
 }
 
@@ -353,7 +353,7 @@ onBeforeUnmount(() => {
 
 .type-description__header strong {
   color: #263638;
-  font-size: 12px;
+  font-size: var(--font-size-caption);
 }
 
 .type-description__header span {
@@ -361,7 +361,7 @@ onBeforeUnmount(() => {
   border-radius: 6px;
   background: #e7f7f6;
   color: #0a8985;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
 }
 
@@ -377,7 +377,7 @@ onBeforeUnmount(() => {
   position: relative;
   padding-left: 12px;
   color: #68777a;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   line-height: 1.55;
 }
 
@@ -414,13 +414,13 @@ onBeforeUnmount(() => {
 
 .current-result__header span {
   color: #0b8f8b;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
 }
 
 .current-result h3 {
   color: #1f2b2d;
-  font-size: 19px;
+  font-size: var(--font-size-title-md);
   letter-spacing: -0.035em;
 }
 
@@ -436,12 +436,12 @@ onBeforeUnmount(() => {
 
 .confidence strong {
   color: #0a8d89;
-  font-size: 15px;
+  font-size: var(--font-size-body);
 }
 
 .confidence span {
   color: #929b9d;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   font-weight: 500;
 }
 
@@ -453,7 +453,7 @@ onBeforeUnmount(() => {
 
 .current-result h4 {
   color: #344548;
-  font-size: 12px;
+  font-size: var(--font-size-body);
 }
 
 .evidence-list {
@@ -475,13 +475,13 @@ onBeforeUnmount(() => {
   gap: 4px;
   margin: 0;
   color: #59676a;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .evidence-list__item small {
   overflow: hidden;
   color: #9aa2a4;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 400;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -491,7 +491,7 @@ onBeforeUnmount(() => {
   flex: 0 0 auto;
   margin: 0;
   color: #263537;
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 800;
 }
 
@@ -507,7 +507,7 @@ onBeforeUnmount(() => {
 }
 
 .detail-modal__source span {
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   line-height: 1.45;
 }
 

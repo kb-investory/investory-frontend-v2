@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue'
 import { Frown, Laugh, Meh, Smile } from '@lucide/vue'
 
 const moodOptions = [
@@ -8,7 +9,7 @@ const moodOptions = [
   { value: 'CONFIDENT', label: '확신', color: '#3976d9', icon: Laugh },
 ]
 
-defineProps({
+const props = defineProps({
   modelValue: {
     type: String,
     default: 'CALM',
@@ -16,9 +17,56 @@ defineProps({
 })
 
 const emit = defineEmits(['update:modelValue'])
+const controlRef = ref(null)
+const draggingPointerId = ref(null)
 
 function selectMood(mood) {
   emit('update:modelValue', mood)
+}
+
+function selectNearestMood(clientY) {
+  const optionElements = controlRef.value?.querySelectorAll('.mood-selector__option')
+
+  if (!optionElements?.length) return
+
+  let nearestIndex = 0
+  let nearestDistance = Number.POSITIVE_INFINITY
+
+  optionElements.forEach((optionElement, index) => {
+    const optionRect = optionElement.getBoundingClientRect()
+    const distance = Math.abs(clientY - (optionRect.top + optionRect.height / 2))
+
+    if (distance < nearestDistance) {
+      nearestIndex = index
+      nearestDistance = distance
+    }
+  })
+
+  const nearestMood = moodOptions[nearestIndex]?.value
+
+  if (nearestMood && nearestMood !== props.modelValue) {
+    selectMood(nearestMood)
+  }
+}
+
+function startMoodDrag(event) {
+  draggingPointerId.value = event.pointerId
+  event.currentTarget.setPointerCapture?.(event.pointerId)
+  selectNearestMood(event.clientY)
+}
+
+function moveMoodDrag(event) {
+  if (draggingPointerId.value !== event.pointerId) return
+
+  selectNearestMood(event.clientY)
+}
+
+function finishMoodDrag(event) {
+  if (draggingPointerId.value !== event.pointerId) return
+
+  selectNearestMood(event.clientY)
+  event.currentTarget.releasePointerCapture?.(event.pointerId)
+  draggingPointerId.value = null
 }
 </script>
 
@@ -27,7 +75,7 @@ function selectMood(mood) {
     <legend class="mood-selector__title">판단의 온도</legend>
     <p class="mood-selector__description">움직이면 표정이 바뀌어요</p>
 
-    <div class="mood-selector__control">
+    <div ref="controlRef" class="mood-selector__control">
       <div class="mood-selector__rail" aria-hidden="true" />
 
       <button
@@ -40,7 +88,14 @@ function selectMood(mood) {
         :aria-pressed="modelValue === option.value"
         @click="selectMood(option.value)"
       >
-        <span class="mood-selector__handle">
+        <span
+          class="mood-selector__handle"
+          @click.stop.prevent
+          @pointerdown.stop.prevent="startMoodDrag"
+          @pointermove.stop.prevent="moveMoodDrag"
+          @pointerup.stop.prevent="finishMoodDrag"
+          @pointercancel.stop.prevent="finishMoodDrag"
+        >
           <component :is="option.icon" :size="16" :stroke-width="1.8" aria-hidden="true" />
         </span>
         <span class="mood-selector__label">
@@ -65,15 +120,15 @@ function selectMood(mood) {
   padding: 0;
   color: var(--text-primary);
   font-family: var(--font-heading);
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
 .mood-selector__description {
   margin: 2px 0 7px;
   color: var(--text-tertiary);
-  font-size: 10px;
-  line-height: 15px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
 }
 
 .mood-selector__control {
@@ -89,7 +144,7 @@ function selectMood(mood) {
   position: absolute;
   top: 6px;
   bottom: 6px;
-  left: 13px;
+  left: 8px;
   width: 12px;
   border-radius: 6px;
   background: linear-gradient(180deg, #e34b4b 0%, #e58b2d 34%, #4bb7c5 68%, #3976d9 100%);
@@ -121,12 +176,18 @@ function selectMood(mood) {
   border-radius: 50%;
   background: transparent;
   color: transparent;
+  cursor: grab;
+  touch-action: none;
   transform: translateY(-50%);
   transition:
     border-color 0.15s ease,
     background-color 0.15s ease,
     color 0.15s ease,
     box-shadow 0.15s ease;
+}
+
+.mood-selector__handle:active {
+  cursor: grabbing;
 }
 
 .mood-selector__option--active .mood-selector__handle {
@@ -140,9 +201,10 @@ function selectMood(mood) {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 11px;
+  margin-left: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
-  line-height: 15px;
+  line-height: 1.4;
   white-space: nowrap;
 }
 

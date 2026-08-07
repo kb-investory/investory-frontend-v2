@@ -125,7 +125,7 @@ async function goHome() {
 .complete-header h1 {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: 18px;
+  font-size: var(--font-size-body);
   font-weight: 700;
 }
 
@@ -139,7 +139,7 @@ async function goHome() {
   background: var(--slate-strong);
   color: #ffffff;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -191,15 +191,15 @@ async function goHome() {
 
 .complete-copy h2 {
   font-family: var(--font-heading);
-  font-size: 23px;
+  font-size: var(--font-size-title-md);
   letter-spacing: -0.5px;
 }
 
 .complete-copy p {
   color: var(--color-text-muted);
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 500;
-  line-height: 19px;
+  line-height: 1.4;
 }
 
 .complete-summary {
@@ -224,14 +224,14 @@ async function goHome() {
 
 .complete-summary dt {
   color: #dce6e9;
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   font-weight: 500;
 }
 
 .complete-summary dd {
   margin: 0;
   color: #ffffff;
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -264,13 +264,13 @@ async function goHome() {
 }
 
 .complete-guide strong {
-  font-size: 12px;
+  font-size: var(--font-size-caption);
 }
 
 .complete-guide p {
   color: var(--color-text-muted);
-  font-size: 12px;
-  line-height: 17px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
 }
 
 .complete-action {
@@ -290,8 +290,8 @@ async function goHome() {
 
 .complete-action p {
   color: var(--color-text-subtle);
-  font-size: 11px;
-  line-height: 16px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
   text-align: center;
 }
 

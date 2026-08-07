@@ -54,9 +54,9 @@ defineEmits(['back'])
   align-items: center;
   justify-content: center;
   padding: 0;
-  border: 0;
-  border-radius: 10px;
-  background: transparent;
+  border: 1px solid #e1e8e8;
+  border-radius: 50%;
+  background: #ffffff;
   color: #263a43;
   cursor: pointer;
 }
@@ -70,7 +70,7 @@ h1 {
   overflow: hidden;
   color: #181817;
   font-family: var(--font-heading);
-  font-size: 18px;
+  font-size: var(--font-size-title-md);
   font-weight: 700;
   line-height: normal;
   text-align: center;
@@ -91,7 +91,7 @@ h1 {
   background: #263a43;
   color: #ffffff;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   white-space: nowrap;
 }

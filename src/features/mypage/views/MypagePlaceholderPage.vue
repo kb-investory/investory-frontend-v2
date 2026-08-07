@@ -139,12 +139,12 @@ const content = computed(() => {
 }
 .placeholder-page h1 {
   margin: 15px 0 6px;
-  font-size: 18px;
+  font-size: var(--font-size-body);
 }
 .placeholder-page p {
   margin: 0;
   color: #7b898c;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 .help-list {
   display: grid;
@@ -165,7 +165,7 @@ const content = computed(() => {
   border-radius: 10px;
   background: #f8fbfb;
   color: #536568;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   line-height: 1.5;
 }
 .help-list svg {

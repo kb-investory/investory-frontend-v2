@@ -101,7 +101,7 @@ const brokerMark = computed(
   background: var(--bg-primary);
   color: var(--color-text-muted);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -113,9 +113,9 @@ const brokerMark = computed(
 .broker-card__name {
   width: 100%;
   overflow: hidden;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
-  line-height: 13px;
+  line-height: 1.4;
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;

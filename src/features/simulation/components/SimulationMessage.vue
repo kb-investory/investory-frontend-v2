@@ -26,7 +26,7 @@ defineProps({
 }
 
 strong {
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   color: var(--color-primary);
 }
 

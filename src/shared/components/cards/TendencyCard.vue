@@ -76,7 +76,7 @@ defineProps({
   margin: 0;
   color: #18272d;
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 700;
 }
 
@@ -84,7 +84,7 @@ defineProps({
   margin: 0;
   color: #94948e;
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .tendency-card__right {
@@ -99,7 +99,7 @@ defineProps({
   background: #e8f7f6;
   color: #087f7c;
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 

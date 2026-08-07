@@ -37,14 +37,14 @@ p {
 h3 {
   color: var(--color-heading);
   font-family: var(--font-heading);
-  font-size: 16px;
+  font-size: var(--font-size-body);
   font-weight: 700;
 }
 
 p {
   color: var(--color-text-muted);
   font-family: var(--font-sans);
-  font-size: 11px;
-  line-height: 16px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
 }
 </style>

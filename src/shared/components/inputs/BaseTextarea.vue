@@ -61,13 +61,15 @@ defineEmits(['update:modelValue'])
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
 }
 
 .base-textarea__label {
   color: #181817;
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: var(--font-size-body);
   font-weight: 700;
+  line-height: 1.4;
 }
 
 .base-textarea__required {
@@ -76,9 +78,11 @@ defineEmits(['update:modelValue'])
 }
 
 .base-textarea__counter {
+  flex: 0 0 auto;
   color: #94948e;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
+  white-space: nowrap;
 }
 
 .base-textarea__field-wrapper {
@@ -96,8 +100,8 @@ defineEmits(['update:modelValue'])
   background: transparent;
   color: #181817;
   font-family: var(--font-sans);
-  font-size: 12px;
-  line-height: 18px;
+  font-size: var(--font-size-body);
+  line-height: 1.55;
   outline: none;
   resize: vertical;
 

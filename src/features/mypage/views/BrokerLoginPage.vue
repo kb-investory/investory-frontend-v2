@@ -177,22 +177,22 @@ function goToHoldings() {
 .broker-login-intro__eyebrow {
   color: var(--brand-teal-deep);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
   letter-spacing: 1.2px;
 }
 
 .broker-login-intro h2 {
   font-family: var(--font-heading);
-  font-size: 27px;
+  font-size: var(--font-size-title-lg);
   letter-spacing: -0.4px;
-  line-height: 34px;
+  line-height: 1.4;
 }
 
 .broker-login-intro > p:last-child {
   color: var(--color-text-muted);
-  font-size: 12.5px;
-  line-height: 18px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
 }
 
 .selected-broker {
@@ -220,7 +220,7 @@ function goToHoldings() {
   background: var(--brand-teal);
   color: var(--slate-strong);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -231,11 +231,11 @@ function goToHoldings() {
 
 .selected-broker__copy small {
   color: #dce6e9;
-  font-size: 9.5px;
+  font-size: var(--font-size-caption);
 }
 
 .selected-broker__copy strong {
-  font-size: 13.5px;
+  font-size: var(--font-size-body);
 }
 
 .selected-broker__change {
@@ -243,7 +243,7 @@ function goToHoldings() {
   align-items: center;
   gap: 1px;
   color: #8fa7b0;
-  font-size: 10.5px;
+  font-size: var(--font-size-caption);
 }
 
 .broker-login-state {
@@ -266,13 +266,13 @@ function goToHoldings() {
 }
 
 .broker-login-state h2 {
-  font-size: 20px;
+  font-size: var(--font-size-title-md);
 }
 
 .broker-login-state p {
   margin-bottom: 8px;
   color: var(--color-text-muted);
-  font-size: 13px;
+  font-size: var(--font-size-body);
 }
 
 @media (min-width: 600px) {
