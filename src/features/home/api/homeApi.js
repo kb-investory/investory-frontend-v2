@@ -11,10 +11,10 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value))
 }
 
-function formatLocalDate(date) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
+function formatLocalDate(date = new Date()) {
+  const year = date.getUTCFullYear()
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(date.getUTCDate()).padStart(2, '0')
 
   return `${year}-${month}-${day}`
 }
@@ -115,21 +115,29 @@ export async function getHomeDashboard(today = new Date()) {
       tradeCount: entry.tradeCount ?? 1,
     }))
 
+    const defaultToday = USE_MOCK_FALLBACK
+      ? homeData.dashboard.today
+      : { totalTrades: 0, buyTrades: 0, sellTrades: 0, stockCount: 0, missingReasons: 0 }
+
     const dashboard = {
       today: {
         title: isTodayJournalWritten ? '오늘의 기록이 완성되었습니다' : '오늘의 선택을 기록으로 이어가요',
-        totalTrades: trades.length || homeData.dashboard.today.totalTrades,
-        buyTrades: buyTrades || homeData.dashboard.today.buyTrades,
-        sellTrades: sellTrades || homeData.dashboard.today.sellTrades,
-        stockCount: uniqueStocks || homeData.dashboard.today.stockCount,
-        missingReasons: trades.length ? missingReasons : homeData.dashboard.today.missingReasons,
+        totalTrades: trades.length ? trades.length : defaultToday.totalTrades,
+        buyTrades: trades.length ? buyTrades : defaultToday.buyTrades,
+        sellTrades: trades.length ? sellTrades : defaultToday.sellTrades,
+        stockCount: trades.length ? uniqueStocks : defaultToday.stockCount,
+        missingReasons: trades.length ? missingReasons : defaultToday.missingReasons,
       },
       quickActions: {
         journalStatus: isTodayJournalWritten ? '작성 완료' : '작성 전',
         tendencyProgress: '6 / 10',
         connectionCount: connections.length,
       },
-      weekly: buildWeeklyRecordRhythm(homeData.dashboard.weekly, activities, today),
+      weekly: buildWeeklyRecordRhythm(
+        USE_MOCK_FALLBACK ? homeData.dashboard.weekly : { streakDays: 0, days: [] },
+        activities,
+        today,
+      ),
     }
 
     return dashboard
@@ -149,56 +157,59 @@ export async function getSummary() {
     const brokerRes = await getBrokerAccounts()
     if (brokerRes?.summary) {
       return {
-        ...homeData.summary,
-        totalMarketValue: brokerRes.summary.totalMarketValue ?? homeData.summary.totalMarketValue,
-        totalUnrealizedPnl: brokerRes.summary.totalUnrealizedPnl ?? homeData.summary.totalUnrealizedPnl,
+        ...(USE_MOCK_FALLBACK ? homeData.summary : {}),
+        totalMarketValue: brokerRes.summary.totalMarketValue ?? 0,
+        totalUnrealizedPnl: brokerRes.summary.totalUnrealizedPnl ?? 0,
       }
     }
   } catch (error) {
     if (!USE_MOCK_FALLBACK) throw error
   }
-  return homeData.summary
+  return USE_MOCK_FALLBACK ? homeData.summary : { totalMarketValue: 0, totalUnrealizedPnl: 0 }
 }
 
 export async function getHoldings() {
   try {
     const res = await getLedgerHoldings()
-    if (res?.holdings && res.holdings.length > 0) {
+    if (Array.isArray(res?.holdings)) {
       return res.holdings.map((h) => ({
         securityId: h.securityId,
-        securityName: h.securityName,
-        symbol: h.securityCode,
+        securityName: h.securityName || h.name || h.securityCode,
+        name: h.securityName || h.name || h.securityCode,
+        symbol: h.securityCode || h.symbol || '',
         quantity: h.quantity,
-        avgCost: h.averageCost,
-        currentPrice: h.currentPrice || h.averageCost,
-        valuationAmount: h.marketValue,
-        unrealizedPnl: h.unrealizedPnl,
-        returnRate: h.portfolioWeight,
-        holdingRatio: h.portfolioWeight,
+        avgCost: h.averagePurchasePrice ?? h.averageCost ?? h.avgCost ?? 0,
+        averageCost: h.averagePurchasePrice ?? h.averageCost ?? h.avgCost ?? 0,
+        currentPrice: h.currentPrice || h.averagePurchasePrice || 0,
+        valuationAmount: h.marketValue ?? h.valuationAmount ?? 0,
+        unrealizedPnl: h.profitLossAmount ?? h.unrealizedPnl ?? 0,
+        returnRate: h.returnRate ?? 0,
+        holdingRatio: h.portfolioWeight ?? 0,
       }))
     }
   } catch (error) {
     if (!USE_MOCK_FALLBACK) throw error
   }
-  return homeData.holdings
+  return USE_MOCK_FALLBACK ? homeData.holdings : []
 }
 
 export async function getAccountsSummary() {
   try {
     const brokerRes = await getBrokerAccounts()
-    return {
-      summary: {
-        accountCount: brokerRes?.summary?.accountCount ?? homeData.summary.accountCount,
-        totalMarketValue: brokerRes?.summary?.totalMarketValue ?? homeData.summary.totalMarketValue,
-        totalUnrealizedPnl: brokerRes?.summary?.totalUnrealizedPnl ?? homeData.summary.totalUnrealizedPnl,
-      },
-      accounts: brokerRes?.accounts ?? homeData.accounts ?? [],
+    if (brokerRes) {
+      return {
+        summary: {
+          accountCount: brokerRes.summary?.accountCount ?? 0,
+          totalMarketValue: brokerRes.summary?.totalMarketValue ?? 0,
+          totalUnrealizedPnl: brokerRes.summary?.totalUnrealizedPnl ?? 0,
+        },
+        accounts: brokerRes.accounts ?? [],
+      }
     }
   } catch (error) {
     if (!USE_MOCK_FALLBACK) throw error
-    return {
-      summary: homeData.summary,
-      accounts: homeData.accounts ?? [],
-    }
   }
+  return USE_MOCK_FALLBACK
+    ? { summary: homeData.summary, accounts: homeData.accounts ?? [] }
+    : { summary: { accountCount: 0, totalMarketValue: 0, totalUnrealizedPnl: 0 }, accounts: [] }
 }
