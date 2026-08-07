@@ -26,7 +26,7 @@ async function handleSocialLogin(provider) {
           <RouterLink class="brand-logo-link" :to="{ name: ROUTE_NAMES.HOME }">
             <img
               class="brand-logo"
-              src="/assets/logos/investory-logo.png"
+              src="/assets/logos/investory-logo-transparent.png"
               alt="Investory 홈으로 이동"
             />
           </RouterLink>

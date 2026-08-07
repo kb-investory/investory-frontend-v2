@@ -75,8 +75,7 @@ watch(
     }
 
     reanalysisNoticeCollapsed.value =
-      window.localStorage.getItem(`${REANALYSIS_NOTICE_COLLAPSED_KEY}:${analysisRunId}`) !==
-      'false'
+      window.localStorage.getItem(`${REANALYSIS_NOTICE_COLLAPSED_KEY}:${analysisRunId}`) !== 'false'
   },
   { immediate: true },
 )
@@ -99,7 +98,7 @@ function openTransactions() {
 <template>
   <div class="home-page">
     <div v-if="homeStore.dashboard" class="home-page__content">
-      <HomeHeader logo-src="/assets/logos/investory-logo.png" :date-label="dateLabel" />
+      <HomeHeader logo-src="/assets/logos/investory-logo-transparent.png" :date-label="dateLabel" />
 
       <HomeConnectionSummary
         v-if="brokerStore.connectionCompleted && brokerStore.account"

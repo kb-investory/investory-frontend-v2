@@ -138,8 +138,7 @@ watch(
     }
 
     reanalysisNoticeCollapsed.value =
-      window.localStorage.getItem(`${REANALYSIS_NOTICE_COLLAPSED_KEY}:${analysisRunId}`) !==
-      'false'
+      window.localStorage.getItem(`${REANALYSIS_NOTICE_COLLAPSED_KEY}:${analysisRunId}`) !== 'false'
   },
   { immediate: true },
 )
