@@ -8,6 +8,14 @@ function clone(value) {
 }
 
 function formatLocalDate(date = new Date()) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
+function formatUtcDate(date = new Date()) {
   const year = date.getUTCFullYear()
   const month = String(date.getUTCMonth() + 1).padStart(2, '0')
   const day = String(date.getUTCDate()).padStart(2, '0')
@@ -136,9 +144,7 @@ export async function getJournalEntryOnDate(journalDate = getDefaultJournalDate(
 }
 
 export async function createJournal(payload) {
-  const maxDate = getDefaultJournalDate()
-  const rawDate = payload.journalDate || maxDate
-  const journalDate = rawDate > maxDate ? maxDate : rawDate
+  const journalDate = payload.journalDate || getDefaultJournalDate()
 
   try {
     return await request('/journal/entries', {
@@ -154,6 +160,28 @@ export async function createJournal(payload) {
       }),
     })
   } catch (error) {
+    // 백엔드 서버(UTC 타임존)와 KST 새벽 시차로 인해 JRN_002(미래 날짜) 발생 시,
+    // UTC 날짜로 자동 변환하여 1회 재시도합니다.
+    const isFutureDateError =
+      error?.errorCode === 'JRN_002' || error?.message?.includes('미래 날짜')
+
+    if (isFutureDateError) {
+      const utcDate = formatUtcDate(new Date())
+      if (utcDate !== journalDate) {
+        return await request('/journal/entries', {
+          method: 'POST',
+          body: JSON.stringify({
+            journalDate: utcDate,
+            marketThought: payload.marketThought || '',
+            marketMood: payload.marketMood || null,
+            tradeNotes: (payload.tradeNotes || []).map((note) => ({
+              tradeId: Number(note.tradeId),
+              rationaleText: note.rationaleText || '',
+            })),
+          }),
+        })
+      }
+    }
     if (!USE_MOCK_FALLBACK) throw error
     console.warn('API POST /journal/entries 요청 실패, 목데이터 생성을 흉내냅니다:', error)
     const journalDate = payload.journalDate || getDefaultJournalDate()
