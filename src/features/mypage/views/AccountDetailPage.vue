@@ -227,7 +227,7 @@ onMounted(() => mypageStore.fetchAccountDetail(accountId.value))
 }
 .detail-app-bar strong {
   padding-left: 8px;
-  font-size: 17px;
+  font-size: var(--font-size-body);
 }
 .detail-loading {
   min-height: 520px;
@@ -263,12 +263,12 @@ onMounted(() => mypageStore.fetchAccountDetail(accountId.value))
 }
 .account-hero h1 {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--font-size-body);
 }
 .account-hero p {
   margin: 4px 0 0;
   color: #c7d5d7;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
 }
 .account-hero__status {
   display: flex;
@@ -278,7 +278,7 @@ onMounted(() => mypageStore.fetchAccountDetail(accountId.value))
   border-radius: 999px;
   background: #0d726e;
   color: #dffffc;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
 }
 .account-hero__status i {
@@ -300,10 +300,10 @@ onMounted(() => mypageStore.fetchAccountDetail(accountId.value))
   align-items: center;
   gap: 4px;
   color: #b9c9cc;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
 }
 .account-hero__value strong {
-  font-size: 21px;
+  font-size: var(--font-size-title-md);
   letter-spacing: -0.04em;
 }
 .asset-summary-section,
@@ -316,7 +316,7 @@ onMounted(() => mypageStore.fetchAccountDetail(accountId.value))
 .recent-section h2,
 .connection-section h2 {
   margin: 0;
-  font-size: 10px;
+  font-size: var(--font-size-body);
 }
 .asset-summary {
   display: grid;
@@ -335,12 +335,12 @@ onMounted(() => mypageStore.fetchAccountDetail(accountId.value))
 }
 .asset-summary dt {
   color: #829093;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
 }
 .asset-summary dd {
   margin: 7px 0 0;
   color: #078e89;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 850;
 }
 .sync-card {
@@ -363,12 +363,12 @@ onMounted(() => mypageStore.fetchAccountDetail(accountId.value))
   color: #ffffff;
 }
 .sync-card strong {
-  font-size: 9px;
+  font-size: var(--font-size-body);
 }
 .sync-card p {
   margin: 4px 0 0;
   color: #78878a;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
 }
 .sync-card button {
   min-height: 31px;
@@ -378,7 +378,7 @@ onMounted(() => mypageStore.fetchAccountDetail(accountId.value))
   background: #ffffff;
   color: #078d88;
   cursor: pointer;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
 }
 .sync-card button:disabled {
@@ -388,7 +388,7 @@ onMounted(() => mypageStore.fetchAccountDetail(accountId.value))
 .sync-notice {
   margin: -6px 0 0;
   color: #078d88;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
   text-align: center;
 }
 .recent-section > header {
@@ -398,7 +398,7 @@ onMounted(() => mypageStore.fetchAccountDetail(accountId.value))
 }
 .recent-section header span {
   color: #929da0;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
 }
 .recent-list,
 .connection-actions {
@@ -422,12 +422,12 @@ onMounted(() => mypageStore.fetchAccountDetail(accountId.value))
   color: #07918c;
 }
 .recent-list strong {
-  font-size: 9px;
+  font-size: var(--font-size-body);
 }
 .recent-list p {
   margin: 3px 0 0;
   color: #758487;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
 }
 .connection-actions button {
   display: grid;
@@ -442,7 +442,7 @@ onMounted(() => mypageStore.fetchAccountDetail(accountId.value))
   background: #ffffff;
   color: #3b5155;
   cursor: pointer;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   text-align: left;
 }
 .connection-actions button:last-child {
@@ -461,7 +461,7 @@ onMounted(() => mypageStore.fetchAccountDetail(accountId.value))
   text-align: center;
 }
 .detail-empty h1 {
-  font-size: 16px;
+  font-size: var(--font-size-body);
 }
 .detail-empty button {
   min-height: 40px;
@@ -498,11 +498,11 @@ onMounted(() => mypageStore.fetchAccountDetail(accountId.value))
 }
 .disconnect-dialog h2 {
   margin: 12px 0 6px;
-  font-size: 16px;
+  font-size: var(--font-size-body);
 }
 .disconnect-dialog p {
   color: #718083;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   line-height: 1.6;
 }
 .disconnect-dialog > div {

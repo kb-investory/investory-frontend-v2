@@ -1191,14 +1191,14 @@ onBeforeUnmount(() => {
 .live-return-chart__session strong {
   color: #f7fafb;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--font-size-body);
   letter-spacing: 0.02em;
 }
 
 .live-return-chart__session small {
   color: #078f90;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   letter-spacing: 0.04em;
 }
@@ -1206,13 +1206,13 @@ onBeforeUnmount(() => {
 .live-return-chart__session span {
   color: #91a8b2;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
 .live-return-chart--trades .live-return-chart__session strong {
   color: #181817;
-  font-size: 17px;
+  font-size: var(--font-size-body);
 }
 
 .live-return-chart--trades .live-return-chart__content-toggle {
@@ -1253,7 +1253,7 @@ onBeforeUnmount(() => {
   background: transparent;
   color: #b8c7cc;
   font-family: inherit;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   line-height: 1;
   font-weight: 700;
   white-space: nowrap;
@@ -1309,7 +1309,7 @@ onBeforeUnmount(() => {
   background: transparent;
   color: var(--view-color, #b8c7cc);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   cursor: pointer;
   transition:
@@ -1330,7 +1330,7 @@ onBeforeUnmount(() => {
   background: rgb(10 30 37 / 45%);
   color: #dce7ea;
   font-family: var(--font-mono);
-  font-size: 7px;
+  font-size: var(--font-size-caption);
   line-height: 1;
   text-align: center;
 }
@@ -1376,7 +1376,7 @@ onBeforeUnmount(() => {
   max-width: 100%;
   overflow: hidden;
   color: currentColor;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   line-height: 1;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1412,14 +1412,14 @@ onBeforeUnmount(() => {
 .live-return-chart__progress strong {
   color: #73d8d6;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .live-return-chart__progress > span {
   flex: 0 0 auto;
   color: #b8c7cc;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -1450,7 +1450,7 @@ onBeforeUnmount(() => {
   background: #f7f9fa;
   color: #5e7179;
   font: inherit;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   cursor: pointer;
   transition:
@@ -1510,7 +1510,7 @@ onBeforeUnmount(() => {
 
 .trade-summary dt {
   color: #91a0a6;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   white-space: nowrap;
 }
 
@@ -1518,7 +1518,7 @@ onBeforeUnmount(() => {
   margin: 0;
   color: #263a43;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -1550,7 +1550,7 @@ onBeforeUnmount(() => {
   background: transparent;
   color: #71848b;
   font: inherit;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   cursor: pointer;
 }
@@ -1571,7 +1571,7 @@ onBeforeUnmount(() => {
   background: #e2f5f4;
   color: #078f90;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 
 .trade-timeline {
@@ -1619,7 +1619,7 @@ onBeforeUnmount(() => {
   padding-top: 3px;
   color: #819197;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   text-align: right;
 }
 
@@ -1662,7 +1662,7 @@ onBeforeUnmount(() => {
 .trade-timeline__title strong {
   overflow: hidden;
   color: #181817;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1673,7 +1673,7 @@ onBeforeUnmount(() => {
   border-radius: 5px;
   background: #fee8e9;
   color: #df464e;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -1686,7 +1686,7 @@ onBeforeUnmount(() => {
   margin-left: auto;
   color: #53666e;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   font-style: normal;
   font-weight: 700;
   white-space: nowrap;
@@ -1696,7 +1696,7 @@ onBeforeUnmount(() => {
   margin: 4px 0 0;
   color: #91a0a6;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 
 .trade-timeline__reason {
@@ -1704,7 +1704,7 @@ onBeforeUnmount(() => {
   margin: 6px 0 0;
   overflow: hidden;
   color: #667980;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   line-height: 1.45;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 1;
@@ -1717,7 +1717,7 @@ onBeforeUnmount(() => {
 .trade-timeline__reason b {
   margin-right: 4px;
   color: #078f90;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 
 .holding-list {
@@ -1749,13 +1749,13 @@ onBeforeUnmount(() => {
 
 .holding-card__top strong {
   color: #181817;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .holding-card__top span {
   color: #91a0a6;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 
 .holding-card__top > strong {
@@ -1798,7 +1798,7 @@ onBeforeUnmount(() => {
 
 .holding-card dt {
   color: #91a0a6;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 
 .holding-card dd {
@@ -1806,7 +1806,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   color: #3f535b;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1818,7 +1818,7 @@ onBeforeUnmount(() => {
   border-radius: 10px;
   background: #f5f8f9;
   color: #819197;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   text-align: center;
 }
 
@@ -1833,7 +1833,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 5px;
   color: #d4dfe2;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   line-height: 1;
   transition:
     opacity 0.3s ease,
@@ -1859,13 +1859,13 @@ onBeforeUnmount(() => {
   background: #3b5660;
   color: #fff;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 
 .live-return-chart__legend em {
   color: #91a8b2;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-style: normal;
 }
 

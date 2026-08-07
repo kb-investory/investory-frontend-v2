@@ -228,7 +228,7 @@ watch(
 .journal-date-page__header h1 {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: 20px;
+  font-size: var(--font-size-title-md);
   font-weight: 700;
   letter-spacing: -0.5px;
   line-height: 1.2;
@@ -238,8 +238,8 @@ watch(
   margin: 3px 0 0;
   color: var(--text-tertiary, #94948e);
   font-family: var(--font-sans);
-  font-size: 11px;
-  line-height: 17px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
 }
 
 .journal-date-page__back,
@@ -298,14 +298,14 @@ watch(
 .journal-date-page__state h2 {
   color: var(--text-primary, #181817);
   font-family: var(--font-heading);
-  font-size: 16px;
+  font-size: var(--font-size-body);
 }
 
 .journal-date-page__state p {
   margin-top: 5px;
   font-family: var(--font-sans);
-  font-size: 11px;
-  line-height: 17px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
 }
 
 .journal-date-page__state button {
@@ -316,7 +316,7 @@ watch(
   color: #ffffff;
   background: var(--teal-deep, #075f5a);
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   cursor: pointer;
 }

@@ -88,7 +88,7 @@ function formatRecentDate(dateKey) {
 .stock-search-item__identity strong {
   overflow: hidden;
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: var(--font-size-body);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -97,8 +97,8 @@ function formatRecentDate(dateKey) {
 .stock-search-item__stats,
 .stock-search-item__recent {
   font-family: var(--font-mono);
-  font-size: 10px;
-  line-height: 15px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
 }
 
 .stock-search-item__identity span,

@@ -92,12 +92,12 @@ function formatCurrency(value) {
 .trade-group__date strong {
   color: var(--text-primary, #181817);
   font-family: var(--font-mono);
-  font-size: 19px;
+  font-size: var(--font-size-title-md);
 }
 
 .trade-group__date span {
   color: var(--text-tertiary, #94948e);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
 }
 
@@ -126,7 +126,7 @@ function formatCurrency(value) {
 .trade-group__item > time {
   color: var(--text-tertiary, #94948e);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
 }
 
@@ -161,7 +161,7 @@ function formatCurrency(value) {
 
 .trade-group__side {
   flex: 0 0 auto;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .trade-group__side--buy {
@@ -175,7 +175,7 @@ function formatCurrency(value) {
 .trade-group__summary > span:last-child {
   overflow: hidden;
   color: var(--text-secondary, #666662);
-  font-size: 10.5px;
+  font-size: var(--font-size-caption);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -198,9 +198,9 @@ function formatCurrency(value) {
   overflow: hidden;
   margin: 0;
   color: var(--slate-primary, #384f59);
-  font-size: 10.5px;
+  font-size: var(--font-size-caption);
   font-weight: 500;
-  line-height: 15px;
+  line-height: 1.4;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

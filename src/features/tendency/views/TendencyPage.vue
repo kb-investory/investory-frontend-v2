@@ -12,6 +12,7 @@ import { useTendencyStore } from '@/features/tendency/stores/tendencyStore'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
+import PrimaryAppHeader from '@/shared/components/navigation/PrimaryAppHeader.vue'
 import SegmentedControl from '@/shared/components/navigation/SegmentedControl.vue'
 
 const RECOMMENDATION_NOTICE_COLLAPSED_KEY = 'investory:recommendation-notice-collapsed:v3'
@@ -161,11 +162,9 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="tendency-page">
+    <PrimaryAppHeader class="tendency-primary-header" />
     <header class="tendency-navigation">
-      <div class="tendency-navigation__brand">
-        <img src="/assets/logos/investory-logo.png" alt="Investory 로고" />
-        <h1>{{ activeTab === '투자성향' ? '나의 투자성향' : '투자원칙' }}</h1>
-      </div>
+      <h1>{{ activeTab === '투자성향' ? '나의 투자성향' : '투자원칙' }}</h1>
     </header>
     <div class="tendency-tabs">
       <SegmentedControl v-model="activeTab" :options="['투자성향', '투자원칙']" />
@@ -512,35 +511,23 @@ onBeforeUnmount(() => {
 }
 
 .tendency-navigation {
-  position: sticky;
-  z-index: 81;
-  top: 0;
   display: flex;
-  min-height: 64px;
+  min-height: 52px;
   align-items: center;
-  margin: 0 -20px;
-  padding: 12px 18px 10px;
   background: #ffffff;
 }
 
-.tendency-navigation__brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.tendency-navigation__brand img {
-  width: 50px;
-  height: 26px;
-  object-fit: contain;
+.tendency-primary-header {
+  width: calc(100% + 40px);
+  margin: 0 -20px;
 }
 
 .tendency-navigation h1 {
   margin: 0;
   color: #181817;
   font-family: var(--font-heading);
-  font-size: 19px;
-  font-weight: 850;
+  font-size: var(--font-size-title-lg);
+  font-weight: 700;
   letter-spacing: -0.04em;
 }
 
@@ -596,7 +583,7 @@ onBeforeUnmount(() => {
 
 .analysis-locked__header p {
   color: #879194;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   line-height: 1.45;
 }
 
@@ -628,7 +615,7 @@ onBeforeUnmount(() => {
 
 .analysis-locked__eyebrow {
   color: #0a918c;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
 }
 
@@ -636,14 +623,14 @@ onBeforeUnmount(() => {
   margin-top: 6px;
   color: #263a3e;
   font-family: var(--font-heading);
-  font-size: 18px;
+  font-size: var(--font-size-body);
   letter-spacing: -0.04em;
 }
 
 .analysis-locked__card > p {
   margin-top: 8px;
   color: #7e8b8d;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   line-height: 1.55;
 }
 
@@ -664,14 +651,14 @@ onBeforeUnmount(() => {
 
 .analysis-locked__progress header {
   color: #526467;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 750;
 }
 
 .analysis-locked__progress header strong {
   color: #087f7c;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .analysis-locked__track {
@@ -716,7 +703,7 @@ onBeforeUnmount(() => {
 .analysis-locked__progress footer {
   color: #7c898b;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 
 .analysis-locked__progress footer span:last-child {
@@ -732,7 +719,7 @@ onBeforeUnmount(() => {
   border-radius: 9px;
   background: #fff;
   color: #617174;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -742,7 +729,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   gap: 5px;
   color: #919a9c;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 
 .analysis-progress {
@@ -816,7 +803,7 @@ onBeforeUnmount(() => {
 
 .analysis-progress__copy span {
   color: #0a918c;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
 }
 
@@ -828,13 +815,13 @@ onBeforeUnmount(() => {
 .analysis-progress__copy h1 {
   color: #23373b;
   font-family: var(--font-heading);
-  font-size: 20px;
+  font-size: var(--font-size-title-md);
   letter-spacing: -0.04em;
 }
 
 .analysis-progress__copy p {
   color: #818d8f;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   line-height: 1.55;
 }
 
@@ -884,14 +871,14 @@ onBeforeUnmount(() => {
 .analysis-header p,
 .principles-header p {
   color: #7c8587;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   line-height: 1.45;
 }
 
 .analysis-period {
   color: #869194;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 
 .analysis-guide {
@@ -923,21 +910,21 @@ onBeforeUnmount(() => {
 
 .analysis-guide strong {
   color: #294449;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   line-height: 1.4;
 }
 
 .analysis-guide p {
   margin: 3px 0 0;
   color: #637477;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   line-height: 1.45;
 }
 
 .analysis-guide small {
   margin-top: 5px;
   color: #078681;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   line-height: 1.4;
 }
@@ -960,21 +947,21 @@ onBeforeUnmount(() => {
 
 .history-card__header h2 {
   color: #24373d;
-  font-size: 13px;
+  font-size: var(--font-size-title-md);
   font-weight: 800;
 }
 
 .history-card__header p {
   margin-top: 4px;
   color: #8a9395;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   line-height: 1.4;
 }
 
 .history-card__header > span {
   color: #8b9496;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   white-space: nowrap;
 }
 
@@ -1011,7 +998,7 @@ onBeforeUnmount(() => {
 .history-item time {
   color: #8b9496;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 
 .history-item__content {
@@ -1022,13 +1009,13 @@ onBeforeUnmount(() => {
 
 .history-item__content strong {
   color: #2e3e42;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .history-item__content > span,
 .history-item__content li {
   color: #778184;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   line-height: 1.4;
 }
 
@@ -1054,7 +1041,7 @@ onBeforeUnmount(() => {
   border-radius: 50%;
   background: #e6f7f6;
   color: #087f7c;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
 }
 
@@ -1089,7 +1076,7 @@ onBeforeUnmount(() => {
 
 .principle-status header span {
   color: #6edbd5;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 750;
 }
 
@@ -1099,7 +1086,7 @@ onBeforeUnmount(() => {
   border-radius: 99px;
   background: #0b8f8b;
   color: #fff;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 
 .principle-status h2,
@@ -1110,14 +1097,14 @@ onBeforeUnmount(() => {
 }
 
 .principle-status h2 {
-  font-size: 16px;
+  font-size: var(--font-size-body);
   line-height: 1.4;
   letter-spacing: -0.035em;
 }
 
 .principle-status p {
   color: #b9ced1;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   line-height: 1.45;
 }
 
@@ -1133,12 +1120,12 @@ onBeforeUnmount(() => {
 
 .my-principles h2 {
   color: #24373d;
-  font-size: 16px;
+  font-size: var(--font-size-body);
 }
 
 .my-principles > header p {
   color: #8a9496;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 
 .principle-list {
@@ -1169,7 +1156,7 @@ onBeforeUnmount(() => {
   background: #0b9b96;
   color: #fff;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
 }
 
@@ -1180,14 +1167,14 @@ onBeforeUnmount(() => {
 
 .principle-card strong {
   color: #273a3f;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   line-height: 1.5;
 }
 
 .principle-card p {
   margin: 0;
   color: #9aa2a4;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   line-height: 1.4;
 }
 
@@ -1206,7 +1193,7 @@ onBeforeUnmount(() => {
   background: #fff;
   color: #58676a;
   cursor: pointer;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 750;
 }
 
@@ -1226,7 +1213,7 @@ onBeforeUnmount(() => {
 
 .empty-analysis-header p {
   color: #879194;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .analysis-empty-visual {
@@ -1269,7 +1256,7 @@ onBeforeUnmount(() => {
 }
 
 .analysis-orbit__center small {
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
 }
 
@@ -1291,13 +1278,13 @@ onBeforeUnmount(() => {
 
 .analysis-empty-visual > strong {
   color: #34484c;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .analysis-empty-visual > p {
   margin-top: 5px;
   color: #819092;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   line-height: 1.45;
 }
 
@@ -1336,12 +1323,12 @@ onBeforeUnmount(() => {
 
 .analysis-empty-benefits strong {
   color: #4a5b5e;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 
 .analysis-empty-benefits span {
   color: #929b9d;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
   line-height: 1.35;
 }
 
@@ -1351,7 +1338,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   gap: 5px;
   color: #919a9c;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 
 .principles-empty {
@@ -1382,14 +1369,14 @@ onBeforeUnmount(() => {
 
 .principles-empty h2 {
   color: #273b3f;
-  font-size: 14px;
+  font-size: var(--font-size-body);
   letter-spacing: -0.035em;
 }
 
 .principles-empty p {
   margin-top: 8px;
   color: #839093;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   line-height: 1.55;
 }
 
@@ -1410,11 +1397,11 @@ onBeforeUnmount(() => {
 
 .error-state strong {
   color: #263a43;
-  font-size: 14px;
+  font-size: var(--font-size-body);
 }
 
 .error-state p {
   margin: 0 0 8px;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 </style>

@@ -119,7 +119,7 @@ defineProps({
 
 .bottom-tab-bar__label {
   font-family: var(--font-sans);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 500;
   white-space: nowrap;
 }

@@ -94,20 +94,12 @@ onBeforeUnmount(() => {
 function openTransactions() {
   router.push(journalRoute)
 }
-
-function openSearch() {
-  router.push({ name: ROUTE_NAMES.JOURNAL })
-}
 </script>
 
 <template>
   <div class="home-page">
     <div v-if="homeStore.dashboard" class="home-page__content">
-      <HomeHeader
-        logo-src="/assets/logos/investory-logo.png"
-        :date-label="dateLabel"
-        @search="openSearch"
-      />
+      <HomeHeader logo-src="/assets/logos/investory-logo.png" :date-label="dateLabel" />
 
       <HomeConnectionSummary
         v-if="brokerStore.connectionCompleted && brokerStore.account"
@@ -170,7 +162,7 @@ function openSearch() {
 .home-page__error {
   margin: 40px 20px;
   color: #718087;
-  font-size: 13px;
+  font-size: var(--font-size-body);
   text-align: center;
 }
 

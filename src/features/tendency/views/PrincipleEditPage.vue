@@ -362,7 +362,7 @@ onBeforeUnmount(() => {
 
 .edit-app-bar strong {
   color: #24383d;
-  font-size: 14px;
+  font-size: var(--font-size-body);
   text-align: center;
 }
 
@@ -371,7 +371,7 @@ onBeforeUnmount(() => {
   border-radius: 7px;
   background: #e7f7f6;
   color: #087f7c;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
 }
 
@@ -397,13 +397,13 @@ onBeforeUnmount(() => {
 .edit-hero h1 {
   color: #1f3034;
   font-family: var(--font-heading);
-  font-size: 21px;
+  font-size: var(--font-size-title-md);
   letter-spacing: -0.045em;
 }
 
 .edit-hero p {
   color: #879194;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   line-height: 1.45;
 }
 
@@ -430,13 +430,14 @@ onBeforeUnmount(() => {
 
 .edit-guide strong {
   color: #314649;
-  font-size: 10px;
+  font-size: var(--font-size-body);
+  line-height: 1.4;
 }
 
 .edit-guide p {
   margin-top: 4px;
   color: #7b888a;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   line-height: 1.45;
 }
 
@@ -453,12 +454,12 @@ onBeforeUnmount(() => {
 
 .edit-section h2 {
   color: #34474b;
-  font-size: 10px;
+  font-size: var(--font-size-body);
 }
 
 .edit-section header span {
   color: #0a8c88;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   font-weight: 750;
 }
 
@@ -494,7 +495,7 @@ onBeforeUnmount(() => {
 .edit-principle strong,
 .available-principles strong {
   color: #35474b;
-  font-size: 9px;
+  font-size: var(--font-size-body);
   line-height: 1.45;
 }
 
@@ -505,7 +506,7 @@ onBeforeUnmount(() => {
   border-radius: 6px;
   background: #f4f6f6;
   color: #778486;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
 }
 
 .edit-principle textarea,
@@ -517,9 +518,9 @@ onBeforeUnmount(() => {
   background: #fff;
   color: #35474b;
   font: inherit;
-  font-size: 9px;
-  line-height: 1.5;
-  padding: 8px;
+  font-size: var(--font-size-body);
+  line-height: 1.55;
+  padding: 10px;
 }
 
 .edit-principle button,
@@ -575,7 +576,7 @@ onBeforeUnmount(() => {
   background: transparent;
   color: #687679;
   cursor: pointer;
-  font-size: 10px;
+  font-size: var(--font-size-body);
 }
 
 .custom-principle__form {
@@ -597,7 +598,7 @@ onBeforeUnmount(() => {
   background: #edf2f2;
   color: #657275;
   cursor: pointer;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 
 .custom-principle__form button:last-child {
@@ -612,7 +613,7 @@ onBeforeUnmount(() => {
 
 .save-error {
   color: #c14242;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   text-align: center;
 }
 

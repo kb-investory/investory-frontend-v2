@@ -81,13 +81,13 @@ function formatCurrency(value) {
 
 .account-summary__broker strong {
   color: #ffffff;
-  font-size: 12px;
+  font-size: var(--font-size-caption);
 }
 
 .account-summary__broker small,
 .account-summary__valuation > span {
   color: #dce6e9;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 500;
 }
 
@@ -107,7 +107,7 @@ function formatCurrency(value) {
   background: rgb(255 255 255 / 9%);
   color: #dce6e9;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -119,6 +119,6 @@ function formatCurrency(value) {
 .account-summary__valuation strong {
   color: #ffffff;
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--font-size-body);
 }
 </style>

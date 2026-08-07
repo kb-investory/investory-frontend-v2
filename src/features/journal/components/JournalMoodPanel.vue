@@ -120,15 +120,15 @@ function finishMoodDrag(event) {
   padding: 0;
   color: var(--text-primary);
   font-family: var(--font-heading);
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
 .mood-selector__description {
   margin: 2px 0 7px;
   color: var(--text-tertiary);
-  font-size: 10px;
-  line-height: 15px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
 }
 
 .mood-selector__control {
@@ -202,9 +202,9 @@ function finishMoodDrag(event) {
   align-items: center;
   gap: 4px;
   margin-left: 9px;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
-  line-height: 15px;
+  line-height: 1.4;
   white-space: nowrap;
 }
 

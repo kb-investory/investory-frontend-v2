@@ -46,7 +46,7 @@ defineProps({
 .list-row__title {
   color: #18272d;
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 700;
 }
 

@@ -47,14 +47,14 @@ defineProps({
 .status-badge-row__text {
   color: #087f7c;
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
 .status-badge-row__step {
   color: #666662;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
 }
 </style>

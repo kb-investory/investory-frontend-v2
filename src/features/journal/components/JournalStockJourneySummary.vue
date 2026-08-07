@@ -124,7 +124,7 @@ function formatMarkerDate(value) {
   overflow: hidden;
   margin: 0;
   font-family: var(--font-heading);
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -132,7 +132,7 @@ function formatMarkerDate(value) {
 
 .journey-summary__header span {
   flex: 0 0 auto;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
 }
 
@@ -187,13 +187,13 @@ function formatMarkerDate(value) {
 .journey-summary__marker time {
   color: rgba(255, 255, 255, 0.72);
   font-family: var(--font-mono);
-  font-size: 8.5px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
 }
 
 .journey-summary__marker small {
   color: rgba(255, 255, 255, 0.5);
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
 }
 
@@ -223,7 +223,7 @@ function formatMarkerDate(value) {
 .journey-summary__metrics dt {
   color: var(--text-tertiary, #94948e);
   font-family: var(--font-heading);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .journey-summary__metrics dd {
@@ -232,7 +232,7 @@ function formatMarkerDate(value) {
   margin: 0;
   color: #e34b4b;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;

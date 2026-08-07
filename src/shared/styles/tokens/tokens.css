@@ -44,6 +44,12 @@
   --font-mono: 'SUIT Variable', SUIT, system-ui, sans-serif;
   --font-brand: 'SUIT Variable', SUIT, system-ui, sans-serif;
 
+  /* Product typography scale */
+  --font-size-caption: 12px;
+  --font-size-body: 17px;
+  --font-size-title-md: 22px;
+  --font-size-title-lg: 28px;
+
   /* Radii */
   --radius-xs: 6px;
   --radius-sm: 8px;

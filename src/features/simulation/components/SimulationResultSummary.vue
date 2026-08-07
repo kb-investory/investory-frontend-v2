@@ -565,7 +565,7 @@ function goToPrinciplesEdit() {
 
 .eyebrow,
 .section-number {
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
   color: #0b8f8b;
   letter-spacing: 0.09em;
@@ -573,7 +573,7 @@ function goToPrinciplesEdit() {
 
 .report-intro h1 {
   margin: 7px 0 8px;
-  font-size: 24px;
+  font-size: var(--font-size-title-md);
   line-height: 1.28;
   letter-spacing: -0.04em;
 }
@@ -582,7 +582,7 @@ function goToPrinciplesEdit() {
 .section-heading p {
   margin: 0;
   color: #7c8d94;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   line-height: 1.45;
 }
 
@@ -604,11 +604,11 @@ function goToPrinciplesEdit() {
 
 .winner-chip span {
   color: #7c8d94;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 
 .winner-chip strong {
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .report-section {
@@ -629,7 +629,7 @@ function goToPrinciplesEdit() {
 
 .section-heading h2 {
   margin: 0 0 3px;
-  font-size: 18px;
+  font-size: var(--font-size-body);
   letter-spacing: -0.03em;
 }
 
@@ -649,7 +649,7 @@ function goToPrinciplesEdit() {
   background: transparent;
   color: #708087;
   font: inherit;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   cursor: pointer;
 }
@@ -680,7 +680,7 @@ function goToPrinciplesEdit() {
   justify-content: space-between;
   padding-bottom: 10px;
   color: #a1adb2;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 
 .line-chart svg {
@@ -707,7 +707,7 @@ function goToPrinciplesEdit() {
   justify-content: space-between;
   padding-left: 28px;
   color: #a1adb2;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 
 .chart-legend {
@@ -724,7 +724,7 @@ function goToPrinciplesEdit() {
   align-items: center;
   gap: 5px;
   color: #607178;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 
 .chart-legend i {
@@ -746,7 +746,7 @@ function goToPrinciplesEdit() {
   grid-template-columns: 58px 1fr 36px;
   align-items: center;
   gap: 8px;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .bar-row > span {
@@ -755,7 +755,7 @@ function goToPrinciplesEdit() {
 
 .bar-row strong {
   text-align: right;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .bar-track {
@@ -790,21 +790,21 @@ function goToPrinciplesEdit() {
   align-items: center;
   gap: 7px;
   margin-bottom: 8px;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
 .score-card > strong {
   display: block;
   margin-bottom: 4px;
-  font-size: 18px;
+  font-size: var(--font-size-body);
 }
 
 .score-card > div:last-child {
   display: flex;
   justify-content: space-between;
   color: #8a989e;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 
 .emotion-timeline {
@@ -863,7 +863,7 @@ function goToPrinciplesEdit() {
 
 .decision-date {
   color: #8a989e;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -872,7 +872,7 @@ function goToPrinciplesEdit() {
   border-radius: 6px;
   background: #fff0ed;
   color: #cf5a44;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
 }
 
@@ -889,12 +889,12 @@ function goToPrinciplesEdit() {
 .decision-result {
   margin-left: auto;
   color: #7b8790;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 
 .emotion-card h3 {
   margin: 9px 0;
-  font-size: 13px;
+  font-size: var(--font-size-body);
 }
 
 .bot-coach {
@@ -909,7 +909,7 @@ function goToPrinciplesEdit() {
 
 .bot-coach p {
   margin: 0;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   line-height: 1.45;
 }
 
@@ -929,7 +929,7 @@ function goToPrinciplesEdit() {
 .confidence-row {
   display: flex;
   justify-content: space-between;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 
 .confidence-row > span {
@@ -981,12 +981,12 @@ function goToPrinciplesEdit() {
   display: block;
   margin-bottom: 4px;
   color: #96a2a7;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 
 .evidence-flow strong {
   display: block;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   line-height: 1.35;
 }
 
@@ -1013,12 +1013,12 @@ function goToPrinciplesEdit() {
   display: block;
   margin-top: 13px;
   color: #a9bdc5;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .insight-hero h3 {
   margin: 4px 0 8px;
-  font-size: 17px;
+  font-size: var(--font-size-body);
   line-height: 1.45;
   letter-spacing: -0.025em;
 }
@@ -1026,7 +1026,7 @@ function goToPrinciplesEdit() {
 .insight-hero p {
   margin: 0;
   color: #bfd0d6;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .gap-card {
@@ -1044,12 +1044,12 @@ function goToPrinciplesEdit() {
 
 .gap-card span {
   color: #6e858b;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 
 .gap-card > div > strong {
   color: #087f7c;
-  font-size: 14px;
+  font-size: var(--font-size-body);
 }
 
 .gap-visual {
@@ -1074,7 +1074,7 @@ function goToPrinciplesEdit() {
 }
 
 .gap-visual b {
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 
 .recommendation-list {
@@ -1126,12 +1126,12 @@ function goToPrinciplesEdit() {
 }
 
 .recommendation-copy strong {
-  font-size: 12px;
+  font-size: var(--font-size-caption);
 }
 
 .recommendation-copy small {
   color: #809096;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   line-height: 1.35;
 }
 
@@ -1165,7 +1165,7 @@ function goToPrinciplesEdit() {
   gap: 7px;
   padding-bottom: 10px;
   border-bottom: 1px solid #dfe6e8;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .improvement-row {
@@ -1185,11 +1185,11 @@ function goToPrinciplesEdit() {
 
 .improvement-row strong {
   color: #40545c;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .improvement-row span {
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 
 .action-buttons {
@@ -1212,6 +1212,6 @@ function goToPrinciplesEdit() {
 
 .action-buttons :deep(.base-button--ghost) {
   height: 34px;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 </style>

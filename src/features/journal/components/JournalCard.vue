@@ -91,7 +91,7 @@ function formatMood(mood) {
 time {
   color: var(--color-text-muted);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
 }
 
@@ -102,7 +102,7 @@ ul {
 }
 
 h2 {
-  font-size: 16px;
+  font-size: var(--font-size-body);
   color: var(--color-heading);
 }
 
@@ -124,9 +124,9 @@ h2 {
 
 .journal-card__judgment p {
   flex: 1;
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   font-weight: 500;
-  line-height: 18px;
+  line-height: 1.4;
   color: var(--color-heading);
 }
 
@@ -136,14 +136,14 @@ h2 {
 }
 
 .journal-card__reasons strong {
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .journal-card__reasons ul {
   padding-left: 17px;
   color: var(--color-text-muted);
-  font-size: 11px;
-  line-height: 16px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
 }
 
 .journal-card__condition {
@@ -159,13 +159,13 @@ h2 {
 
 .journal-card__condition small {
   color: var(--color-text-subtle);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
 }
 
 .journal-card__condition strong {
   color: var(--color-heading);
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   font-weight: 500;
 }
 </style>

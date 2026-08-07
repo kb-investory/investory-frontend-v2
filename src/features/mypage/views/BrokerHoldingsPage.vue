@@ -146,15 +146,15 @@ function goNext() {
 .holdings-intro h2 {
   color: var(--color-heading);
   font-family: var(--font-heading);
-  font-size: 15px;
+  font-size: var(--font-size-body);
   letter-spacing: -0.2px;
 }
 
 .holdings-intro p {
   color: var(--color-text-muted);
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   font-weight: 500;
-  line-height: 16px;
+  line-height: 1.4;
 }
 
 .holdings-list {
@@ -176,13 +176,13 @@ function goNext() {
 }
 
 .holdings-action strong {
-  font-size: 12px;
+  font-size: var(--font-size-caption);
 }
 
 .holdings-action span {
   color: var(--brand-teal-deep);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -205,7 +205,7 @@ function goNext() {
 .holdings-state p,
 .holdings-empty {
   color: var(--color-text-muted);
-  font-size: 12px;
+  font-size: var(--font-size-caption);
 }
 
 .holdings-empty {

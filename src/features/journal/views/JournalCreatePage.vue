@@ -307,7 +307,7 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
   margin: 0 0 2px;
   color: var(--brand-teal-deep);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
   letter-spacing: 1.2px;
 }
@@ -316,7 +316,7 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
   margin: 0;
   color: var(--text-primary);
   font-family: var(--font-heading);
-  font-size: 24px;
+  font-size: var(--font-size-title-md);
   font-weight: 700;
   line-height: 1.25;
 }
@@ -330,7 +330,7 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
   border-radius: 14px;
   background: #c8f3ee;
   color: var(--teal-deep);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   white-space: nowrap;
 }
@@ -372,8 +372,8 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
 
 .journal-create-page__notice p {
   margin: 0;
-  font-size: 11px;
-  line-height: 15px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
 }
 
 .journal-create-page__message {
@@ -382,8 +382,8 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
   border-radius: 9px;
   background: var(--brand-teal-soft);
   color: var(--teal-deep);
-  font-size: 11px;
-  line-height: 16px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
 }
 
 .journal-create-page__message--error {
@@ -408,8 +408,8 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
 .journal-create-page__auto-save {
   color: var(--text-tertiary);
   font-family: var(--font-mono);
-  font-size: 10.5px;
-  line-height: 14px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
   text-align: center;
 }
 
@@ -425,7 +425,7 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
   }
 
   .journal-create-page__date h2 {
-    font-size: 21px;
+    font-size: var(--font-size-title-md);
   }
 }
 </style>

@@ -308,14 +308,14 @@ onBeforeUnmount(() => {
 
 .detail-app-bar strong {
   color: #24383d;
-  font-size: 14px;
+  font-size: var(--font-size-body);
   letter-spacing: -0.025em;
 }
 
 .detail-app-bar small,
 .detail-app-bar > div span {
   color: #90999b;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 
 .selection-count {
@@ -324,7 +324,7 @@ onBeforeUnmount(() => {
   border-radius: 7px;
   background: #e7f7f6;
   color: #087f7c;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
   text-align: center;
 }
@@ -375,13 +375,13 @@ onBeforeUnmount(() => {
 
 .tendency-summary__toggle strong {
   color: #33464a;
-  font-size: 10px;
+  font-size: var(--font-size-body);
   letter-spacing: -0.02em;
 }
 
 .tendency-summary__toggle small {
   color: #929b9d;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 
 .tendency-summary__action {
@@ -393,7 +393,7 @@ onBeforeUnmount(() => {
 
 .tendency-summary__action small {
   color: inherit;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   font-weight: 750;
 }
 
@@ -418,13 +418,12 @@ onBeforeUnmount(() => {
 }
 
 .tendency-summary__grid > div {
-  display: flex;
+  display: grid;
   min-width: 0;
-  align-items: center;
-  justify-content: space-between;
-  gap: 5px;
-  min-height: 31px;
-  padding: 7px 8px;
+  align-content: center;
+  gap: 3px;
+  min-height: 55px;
+  padding: 8px;
   background: transparent;
 }
 
@@ -436,12 +435,10 @@ onBeforeUnmount(() => {
   border-bottom: 1px solid #e6ecec;
 }
 
-.tendency-summary__grid span,
-.tendency-summary__grid strong {
-  overflow: hidden;
-  font-size: 8px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.tendency-summary__grid span {
+  font-size: var(--font-size-caption);
+  line-height: 1.3;
+  word-break: keep-all;
 }
 
 .tendency-summary__grid span {
@@ -450,6 +447,9 @@ onBeforeUnmount(() => {
 
 .tendency-summary__grid strong {
   color: #0a8c88;
+  font-size: var(--font-size-body);
+  line-height: 1.35;
+  word-break: keep-all;
 }
 
 .selection-section {
@@ -472,7 +472,7 @@ onBeforeUnmount(() => {
 .selection-section h1 {
   margin: 0;
   color: #263a43;
-  font-size: 12px;
+  font-size: var(--font-size-body);
   letter-spacing: -0.025em;
 }
 
@@ -481,7 +481,7 @@ onBeforeUnmount(() => {
   border-radius: 6px;
   background: #e8f7f6;
   color: #087f7c;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -492,7 +492,7 @@ onBeforeUnmount(() => {
   background: #e8f7f6;
   color: #087f7c;
   cursor: pointer;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -506,8 +506,8 @@ onBeforeUnmount(() => {
   grid-template-columns: 30px minmax(0, 1fr) 32px;
   align-items: center;
   gap: 9px;
-  min-height: 62px;
-  padding: 9px 10px;
+  min-height: 72px;
+  padding: 10px;
   border: 1px solid #e0e7e7;
   border-radius: 10px;
   background: #fff;
@@ -532,7 +532,7 @@ onBeforeUnmount(() => {
   background: #f1f5f5;
   color: #8a9698;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 
 .recommendation-card--selected .recommendation-card__index {
@@ -548,7 +548,7 @@ onBeforeUnmount(() => {
 
 .recommendation-card__content strong {
   color: #34464a;
-  font-size: 9px;
+  font-size: var(--font-size-body);
   font-weight: 650;
   line-height: 1.45;
   letter-spacing: -0.015em;
@@ -557,7 +557,7 @@ onBeforeUnmount(() => {
 .recommendation-card__content span {
   width: fit-content;
   color: #0a8c88;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -595,7 +595,7 @@ onBeforeUnmount(() => {
 .apply-error {
   margin: 0;
   color: #c14242;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   text-align: center;
 }
 
@@ -633,13 +633,13 @@ onBeforeUnmount(() => {
 
 .complete-state strong {
   color: #263a43;
-  font-size: 14px;
+  font-size: var(--font-size-body);
 }
 
 .complete-state p {
   margin: 0 0 10px;
   color: #7b8789;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .loading-wrapper {

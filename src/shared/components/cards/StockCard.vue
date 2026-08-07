@@ -67,7 +67,7 @@ defineProps({
 
 .stock-card__symbol {
   font-family: var(--font-heading);
-  font-size: 15px;
+  font-size: var(--font-size-body);
   font-weight: 700;
 }
 
@@ -81,7 +81,7 @@ defineProps({
   margin: 0;
   color: #18272d;
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 700;
 }
 
@@ -89,7 +89,7 @@ defineProps({
   margin: 0;
   color: #94948e;
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 
   .stock-card__valuation {
     margin-left: 6px;

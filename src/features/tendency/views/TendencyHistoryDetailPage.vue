@@ -136,7 +136,7 @@ onMounted(() => tendencyStore.fetchTendencies())
 
 .detail-app-bar strong {
   color: #263a43;
-  font-size: 14px;
+  font-size: var(--font-size-body);
   text-align: center;
 }
 
@@ -169,7 +169,7 @@ onMounted(() => tendencyStore.fetchTendencies())
 
 .detail-hero > span {
   color: #76dcd7;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -183,14 +183,14 @@ onMounted(() => tendencyStore.fetchTendencies())
 
 .detail-hero h1 {
   font-family: var(--font-heading);
-  font-size: 23px;
+  font-size: var(--font-size-title-md);
   letter-spacing: -0.04em;
 }
 
 .detail-hero p {
   color: #a8c7c8;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 
 .detail-hero__count {
@@ -204,13 +204,13 @@ onMounted(() => tendencyStore.fetchTendencies())
 
 .detail-hero__count strong {
   color: #58d8d1;
-  font-size: 34px;
+  font-size: var(--font-size-title-lg);
   line-height: 1;
 }
 
 .detail-hero__count span {
   color: #d4e5e6;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   line-height: 1.45;
 }
 
@@ -223,7 +223,7 @@ onMounted(() => tendencyStore.fetchTendencies())
 .change-section header > span,
 .current-overview header > span {
   color: #0b8f8b;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 750;
 }
 
@@ -231,7 +231,7 @@ onMounted(() => tendencyStore.fetchTendencies())
 .current-overview h2 {
   margin-top: 2px;
   color: #263a43;
-  font-size: 16px;
+  font-size: var(--font-size-body);
 }
 
 .change-card {
@@ -252,7 +252,7 @@ onMounted(() => tendencyStore.fetchTendencies())
 
 .change-card__header span {
   color: #6f7b7d;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -268,7 +268,7 @@ onMounted(() => tendencyStore.fetchTendencies())
 .change-card__types strong {
   padding: 8px;
   border-radius: 8px;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   text-align: center;
 }
 
@@ -285,7 +285,7 @@ onMounted(() => tendencyStore.fetchTendencies())
 
 .change-card p {
   color: #717d7f;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   line-height: 1.55;
 }
 
@@ -308,12 +308,12 @@ onMounted(() => tendencyStore.fetchTendencies())
 
 .current-overview article span {
   color: #849092;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 
 .current-overview article strong {
   color: #33474c;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .empty-change,
@@ -335,13 +335,13 @@ onMounted(() => tendencyStore.fetchTendencies())
 .empty-change strong,
 .not-found-state strong {
   color: #263a43;
-  font-size: 13px;
+  font-size: var(--font-size-body);
 }
 
 .empty-change p {
   margin: 0;
   color: #7f8b8d;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .not-found-state button {
@@ -349,7 +349,7 @@ onMounted(() => tendencyStore.fetchTendencies())
   background: transparent;
   color: #087f7c;
   cursor: pointer;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 

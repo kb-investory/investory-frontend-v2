@@ -54,12 +54,12 @@ defineEmits(['click'])
 }
 
 strong {
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 small {
   color: var(--color-text-muted);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 
 button {
@@ -72,7 +72,7 @@ button {
   border-radius: 8px;
   background: var(--color-primary);
   cursor: pointer;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 </style>

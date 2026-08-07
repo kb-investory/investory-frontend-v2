@@ -79,14 +79,14 @@ defineProps({
 .weekly-rhythm__header h2 {
   color: #181817;
   font-family: var(--font-heading);
-  font-size: 14px;
+  font-size: var(--font-size-title-md);
   font-weight: 700;
 }
 
 .weekly-rhythm__header p {
   margin-top: 3px;
   color: #718087;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .weekly-rhythm__streak {
@@ -99,7 +99,7 @@ defineProps({
   color: #087f7c;
   background: #e8f7f6;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   white-space: nowrap;
 }
@@ -116,7 +116,7 @@ defineProps({
   flex-direction: column;
   gap: 4px;
   color: #718087;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
 }
 
@@ -153,7 +153,7 @@ defineProps({
   border-radius: 10px;
   color: #087f7c;
   background: #f5fbfb;
-  font-size: 9.5px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
 }
 

@@ -182,7 +182,7 @@ function formatCurrency(value, { signed = false } = {}) {
 .journal-digest__date > strong {
   color: var(--brand-teal-deep, #087f7c);
   font-family: var(--font-mono);
-  font-size: 26px;
+  font-size: var(--font-size-title-lg);
   line-height: 1;
 }
 
@@ -195,8 +195,8 @@ function formatCurrency(value, { signed = false } = {}) {
 .journal-digest__date span,
 .journal-digest__date time {
   font-family: var(--font-sans);
-  font-size: 10px;
-  line-height: 15px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
 }
 
 .journal-digest__date span {
@@ -220,7 +220,7 @@ function formatCurrency(value, { signed = false } = {}) {
   color: var(--text-secondary, #666662);
   background: #ffffff;
   font-family: var(--font-heading);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   cursor: pointer;
 }
@@ -253,7 +253,7 @@ function formatCurrency(value, { signed = false } = {}) {
   justify-content: space-between;
   color: #5fd3ce;
   font-family: var(--font-sans);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -276,8 +276,8 @@ function formatCurrency(value, { signed = false } = {}) {
 .journal-digest__reflection h2 {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: 17px;
-  line-height: 23px;
+  font-size: var(--font-size-body);
+  line-height: 1.4;
 }
 
 .journal-digest__reflection p {
@@ -285,8 +285,8 @@ function formatCurrency(value, { signed = false } = {}) {
   overflow: hidden;
   margin: 0;
   font-family: var(--font-sans);
-  font-size: 11px;
-  line-height: 18px;
+  font-size: var(--font-size-body);
+  line-height: 1.55;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;
 }
@@ -300,7 +300,7 @@ function formatCurrency(value, { signed = false } = {}) {
   border-top: 1px solid #ecece7;
   color: var(--text-secondary, #666662);
   font-family: var(--font-heading);
-  font-size: 10px;
+  font-size: var(--font-size-body);
   font-weight: 700;
 }
 
@@ -338,14 +338,14 @@ function formatCurrency(value, { signed = false } = {}) {
 .journal-digest__summary dt {
   color: var(--text-tertiary, #94948e);
   font-family: var(--font-heading);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .journal-digest__summary dd {
   overflow: hidden;
   margin: 0;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -371,7 +371,7 @@ function formatCurrency(value, { signed = false } = {}) {
 
 .journal-digest__trades > header {
   display: flex;
-  height: 20px;
+  min-height: 24px;
   align-items: center;
   justify-content: space-between;
 }
@@ -380,13 +380,13 @@ function formatCurrency(value, { signed = false } = {}) {
   margin: 0;
   color: var(--text-primary, #181817);
   font-family: var(--font-heading);
-  font-size: 12px;
+  font-size: var(--font-size-body);
 }
 
 .journal-digest__trades > header span {
   color: var(--text-tertiary, #94948e);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
   letter-spacing: 0.6px;
 }
@@ -411,6 +411,6 @@ function formatCurrency(value, { signed = false } = {}) {
 .journal-digest__empty-trades p {
   margin: 0;
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: var(--font-size-body);
 }
 </style>

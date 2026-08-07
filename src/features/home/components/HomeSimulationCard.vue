@@ -62,14 +62,14 @@ defineProps({
 
 .simulation-card__copy strong {
   font-family: var(--font-heading);
-  font-size: 12px;
+  font-size: var(--font-size-body);
   font-weight: 700;
   line-height: 1.35;
 }
 
 .simulation-card__copy small {
   color: #bfd0d5;
-  font-size: 10.5px;
+  font-size: var(--font-size-caption);
   line-height: 1.35;
 }
 

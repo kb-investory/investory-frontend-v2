@@ -46,7 +46,7 @@ defineProps({
   border-radius: 12px;
   cursor: pointer;
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: var(--font-size-body);
   font-weight: 700;
   line-height: normal;
   text-decoration: none;

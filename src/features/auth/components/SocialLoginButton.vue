@@ -81,7 +81,7 @@ const buttonLabel = computed(() => {
   border: 1px solid transparent;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--font-size-body);
   font-weight: 700;
   transition:
     filter 160ms ease,
@@ -119,7 +119,7 @@ const buttonLabel = computed(() => {
   width: 22px;
   height: 22px;
   place-items: center;
-  font-size: 18px;
+  font-size: var(--font-size-body);
   font-weight: 800;
   line-height: 1;
 }

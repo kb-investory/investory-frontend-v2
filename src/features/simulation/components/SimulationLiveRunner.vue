@@ -467,7 +467,7 @@ function formatPeriodDate(date) {
 
 .speed-controls__label {
   color: #263a43;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -488,7 +488,7 @@ function formatPeriodDate(date) {
   border: none;
   background: none;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   color: #66777d;
   border-radius: 9px;
@@ -568,7 +568,7 @@ function formatPeriodDate(date) {
   align-items: center;
   gap: 5px;
   color: #078f90;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -577,7 +577,7 @@ function formatPeriodDate(date) {
   border-radius: 5px;
   background: #fee8e9;
   color: #df464e;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 
 .live-trade-alert__content small b.is-sell {
@@ -592,7 +592,7 @@ function formatPeriodDate(date) {
 .live-trade-alert__content strong {
   overflow: hidden;
   color: #182a30;
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -600,7 +600,7 @@ function formatPeriodDate(date) {
 .live-trade-alert__content > span {
   color: #819197;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 
 .live-trade-alert__reason {
@@ -608,7 +608,7 @@ function formatPeriodDate(date) {
   margin: 4px 0 0;
   overflow: hidden;
   color: #5f737b;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   line-height: 1.45;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -667,14 +667,14 @@ function formatPeriodDate(date) {
 
 .simulation-condition span {
   color: #87979d;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .simulation-condition strong {
   overflow: hidden;
   color: #182a30;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -692,7 +692,7 @@ function formatPeriodDate(date) {
 
 .rankings-title {
   margin: 0;
-  font-size: 15px;
+  font-size: var(--font-size-body);
   font-weight: 700;
   color: #263a43;
 }
@@ -706,7 +706,7 @@ function formatPeriodDate(date) {
 
 .rankings-box__header > span {
   color: #97a3a7;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .rankings-list {
@@ -734,7 +734,7 @@ function formatPeriodDate(date) {
   width: 24px;
   height: 24px;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   color: #69787e;
   background: #f1f2ef;
@@ -768,7 +768,7 @@ function formatPeriodDate(date) {
 .rank-name {
   overflow: hidden;
   color: #263a43;
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -780,13 +780,13 @@ function formatPeriodDate(date) {
   justify-content: flex-end;
   gap: 8px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
 .rank-performance strong {
   min-width: 42px;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   text-align: right;
 }
 
@@ -814,7 +814,7 @@ function formatPeriodDate(date) {
   border-radius: 14px;
   background: #263f48;
   color: #fff;
-  font-size: 14px;
+  font-size: var(--font-size-body);
   font-weight: 700;
   cursor: pointer;
   box-shadow: 0 8px 20px rgb(38 58 67 / 18%);

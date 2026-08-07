@@ -71,7 +71,7 @@ defineProps({
 .timeline-item__time {
   color: var(--color-text-subtle);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .timeline-item__line-col {
@@ -133,7 +133,7 @@ defineProps({
   padding: 3px 7px;
   border-radius: 5px;
   color: var(--color-heading);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
 }
 
@@ -152,7 +152,7 @@ defineProps({
 .timeline-item__title {
   margin: 0;
   color: var(--color-heading);
-  font-size: 14px;
+  font-size: var(--font-size-body);
   font-weight: 600;
   line-height: 1.3;
 }
@@ -161,7 +161,7 @@ defineProps({
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .timeline-item__unit-price {

@@ -72,7 +72,7 @@ watch(
   color: #384f59;
   background: #f7f8fa;
   font-family: var(--font-sans);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
 }
 

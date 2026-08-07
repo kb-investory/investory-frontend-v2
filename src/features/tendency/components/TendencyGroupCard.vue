@@ -98,14 +98,14 @@ defineEmits(['select'])
 .group-card__label {
   margin-bottom: 2px;
   color: #74746f;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   line-height: 1.3;
 }
 
 .group-card__summary {
   color: #181817;
   font-family: var(--font-heading);
-  font-size: 15.5px;
+  font-size: var(--font-size-body);
   font-weight: 750;
   line-height: 1.35;
   letter-spacing: -0.035em;
@@ -123,7 +123,8 @@ defineEmits(['select'])
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 8px 7px;
+  min-height: 76px;
+  padding: 9px 7px;
   border: 1px solid transparent;
   border-radius: 9px;
   cursor: pointer;
@@ -141,14 +142,16 @@ defineEmits(['select'])
 }
 
 .result-card__dimension {
-  overflow: hidden;
+  display: flex;
   width: 100%;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
   color: currentColor;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
   line-height: 1.3;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  word-break: keep-all;
 }
 
 .result-card__type {
@@ -156,11 +159,11 @@ defineEmits(['select'])
   width: 100%;
   margin-top: 4px;
   color: currentColor;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
   line-height: 1.25;
   letter-spacing: -0.04em;
-  white-space: nowrap;
+  word-break: keep-all;
 }
 
 .result-card--amber {

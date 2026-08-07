@@ -261,7 +261,7 @@ watch(securityCode, loadTimeline, { immediate: true })
 .stock-journal-page__app-bar h1 {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: 20px;
+  font-size: var(--font-size-title-md);
   font-weight: 700;
   text-align: center;
 }
@@ -297,7 +297,7 @@ watch(securityCode, loadTimeline, { immediate: true })
   overflow: hidden;
   margin: 0;
   font-family: var(--font-sans);
-  font-size: 19px;
+  font-size: var(--font-size-title-md);
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -307,14 +307,14 @@ watch(securityCode, loadTimeline, { immediate: true })
   margin: 2px 0 0;
   color: var(--text-tertiary, #94948e);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .stock-journal-page__stock-header > span {
   flex: 0 0 auto;
   color: var(--text-tertiary, #94948e);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
 }
 
@@ -362,14 +362,14 @@ watch(securityCode, loadTimeline, { immediate: true })
 .stock-journal-page__holding-main span,
 .stock-journal-page__holding-detail strong {
   color: #66777d;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
 }
 
 .stock-journal-page__holding-main strong {
   color: var(--slate-strong, #263a43);
   font-family: var(--font-heading);
-  font-size: 16px;
+  font-size: var(--font-size-body);
 }
 
 .stock-journal-page__holding-detail {
@@ -382,7 +382,7 @@ watch(securityCode, loadTimeline, { immediate: true })
 .stock-journal-page__holding-detail span {
   color: var(--brand-teal-deep, #087f7c);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
 }
 
@@ -406,7 +406,7 @@ watch(securityCode, loadTimeline, { immediate: true })
   color: var(--text-secondary, #666662);
   background: #ffffff;
   font-family: var(--font-heading);
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
   cursor: pointer;
 }
@@ -435,7 +435,7 @@ watch(securityCode, loadTimeline, { immediate: true })
 .stock-journal-page__timeline h2 {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--font-size-body);
   font-weight: 700;
 }
 
@@ -443,7 +443,7 @@ watch(securityCode, loadTimeline, { immediate: true })
   flex: 0 0 auto;
   color: var(--text-tertiary, #94948e);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .stock-journal-page__timeline-list {
@@ -468,7 +468,7 @@ watch(securityCode, loadTimeline, { immediate: true })
 
 .stock-journal-page__filter-empty p {
   margin: 0;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .stock-journal-page__state {
@@ -491,11 +491,11 @@ watch(securityCode, loadTimeline, { immediate: true })
 .stock-journal-page__state h2 {
   color: var(--text-primary, #181817);
   font-family: var(--font-heading);
-  font-size: 17px;
+  font-size: var(--font-size-body);
 }
 
 .stock-journal-page__state p {
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .stock-journal-page__state-actions {
@@ -511,7 +511,7 @@ watch(securityCode, loadTimeline, { immediate: true })
   border-radius: 10px;
   color: #ffffff;
   background: var(--brand-teal-deep, #087f7c);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   cursor: pointer;
 }

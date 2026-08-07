@@ -49,6 +49,9 @@ defineEmits(['back', 'close'])
 
 <style scoped>
 .app-bar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
   display: flex;
   width: 100%;
   height: 60px;
@@ -64,9 +67,9 @@ defineEmits(['back', 'close'])
   height: 44px;
   align-items: center;
   justify-content: center;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
+  border: 1px solid #e1e8e8;
+  border-radius: 50%;
+  background: #ffffff;
   color: #181817;
   cursor: pointer;
   transition: background-color 0.15s ease;
@@ -85,7 +88,7 @@ defineEmits(['back', 'close'])
   margin: 0;
   color: #181817;
   font-family: var(--font-heading);
-  font-size: 20px;
+  font-size: var(--font-size-title-md);
   font-weight: 700;
   line-height: normal;
   white-space: nowrap;
