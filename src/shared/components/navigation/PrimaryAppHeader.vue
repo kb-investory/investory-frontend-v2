@@ -6,7 +6,7 @@ import { ROUTE_NAMES } from '@/app/router/route-names'
 defineProps({
   logoSrc: {
     type: String,
-    default: '/assets/logos/investory-logo.png',
+    default: '/assets/logos/investory-logo-transparent.png',
   },
   logoAlt: {
     type: String,
