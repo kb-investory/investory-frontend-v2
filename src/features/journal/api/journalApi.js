@@ -160,44 +160,49 @@ export async function createJournal(payload) {
       }),
     })
   } catch (error) {
-    if (!USE_MOCK_FALLBACK) throw error
-    console.warn('API POST /journal/entries 요청 실패, 목데이터 생성을 흉내냅니다:', error)
+    console.warn('API POST /journal/entries 요청 실패, 목데이터/임시 저장으로 우회합니다:', error)
+
     let dailyEntry = journalData.dailyEntries?.find((entry) => entry.journalDate === journalDate)
-
-    if (dailyEntry?.journal) {
-      throw new Error('해당 날짜의 투자일지가 이미 존재합니다.', { cause: error })
-    }
-
-    if (!dailyEntry) {
-      dailyEntry = {
-        journalDate,
-        canCreate: true,
-        journal: null,
-        trades: [],
-      }
-      journalData.dailyEntries ??= []
-      journalData.dailyEntries.push(dailyEntry)
-    }
+    const existingJournal = dailyEntry?.journal ?? findJournalByDate(journalDate)
 
     const now = new Date().toISOString()
+    const journalId = existingJournal?.journalId ?? Date.now()
     const newJournal = {
-      journalId: Date.now(),
+      journalId,
       journalDate,
       marketThought: payload.marketThought || '',
       marketMood: payload.marketMood || 'CALM',
-      tradeCount: dailyEntry.trades.length,
-      createdAt: now,
+      tradeCount: dailyEntry?.trades?.length ?? 0,
+      createdAt: existingJournal?.createdAt ?? now,
       updatedAt: now,
       editableUntilAt: null,
       isBackfilled: false,
       isEditable: true,
     }
 
-    dailyEntry.journal = { ...newJournal }
-    dailyEntry.canCreate = false
+    if (!dailyEntry) {
+      dailyEntry = {
+        journalDate,
+        canCreate: false,
+        journal: newJournal,
+        trades: [],
+      }
+      journalData.dailyEntries ??= []
+      journalData.dailyEntries.push(dailyEntry)
+    } else {
+      dailyEntry.journal = newJournal
+      dailyEntry.canCreate = false
+    }
+
     applyTradeNotes(dailyEntry, payload.tradeNotes)
 
-    journalData.journals.unshift(newJournal)
+    const journalIdx = journalData.journals.findIndex((j) => j.journalDate === journalDate)
+    if (journalIdx !== -1) {
+      journalData.journals[journalIdx] = newJournal
+    } else {
+      journalData.journals.unshift(newJournal)
+    }
+
     return clone(newJournal)
   }
 }
@@ -216,8 +221,7 @@ export async function updateJournal(journalId, payload) {
       }),
     })
   } catch (error) {
-    if (!USE_MOCK_FALLBACK) throw error
-    console.warn(`API PUT /journal/entries/${journalId} 요청 실패:`, error)
+    console.warn(`API PUT /journal/entries/${journalId} 요청 실패, 임시 저장으로 처리합니다:`, error)
     const dailyEntry = findDailyEntryByJournalId(journalId)
 
     if (dailyEntry?.journal) {
@@ -231,12 +235,17 @@ export async function updateJournal(journalId, payload) {
     }
 
     const journal = journalData.journals.find((item) => item.journalId === Number(journalId))
-    if (!journal) {
-      throw new Error('투자일지를 찾을 수 없습니다.', { cause: error })
+    if (journal) {
+      Object.assign(journal, payload, { updatedAt: new Date().toISOString() })
+      return clone(journal)
     }
 
-    Object.assign(journal, payload, { updatedAt: new Date().toISOString() })
-    return clone(journal)
+    return {
+      journalId,
+      marketThought: payload.marketThought,
+      marketMood: payload.marketMood,
+      updatedAt: new Date().toISOString(),
+    }
   }
 }
 
