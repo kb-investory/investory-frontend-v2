@@ -48,7 +48,7 @@ function applyTradeNotes(entry, tradeNotes = []) {
 }
 
 export function getDefaultJournalDate() {
-  return formatUtcDate(new Date())
+  return formatLocalDate(new Date())
 }
 
 export async function getJournals() {
@@ -128,20 +128,6 @@ export async function getJournalEntryOnDate(journalDate = getDefaultJournalDate(
   try {
     return await request(`/journal/entries/on/${journalDate}`)
   } catch (error) {
-    const isFutureDateError =
-      error?.errorCode === 'JRN_002' || error?.message?.includes('미래 날짜')
-
-    if (isFutureDateError) {
-      const utcDate = formatUtcDate(new Date())
-      if (utcDate !== journalDate) {
-        try {
-          return await request(`/journal/entries/on/${utcDate}`)
-        } catch {
-          // ignore retry error
-        }
-      }
-    }
-
     if (!USE_MOCK_FALLBACK) throw error
     console.warn(`API /journal/entries/on/${journalDate} 요청 실패, 목데이터를 사용합니다:`, error)
     const entry = journalData.dailyEntries?.find((item) => item.journalDate === journalDate)
@@ -174,31 +160,8 @@ export async function createJournal(payload) {
       }),
     })
   } catch (error) {
-    // 백엔드 서버(UTC 타임존)와 KST 새벽 시차로 인해 JRN_002(미래 날짜) 발생 시,
-    // UTC 날짜로 자동 변환하여 1회 재시도합니다.
-    const isFutureDateError =
-      error?.errorCode === 'JRN_002' || error?.message?.includes('미래 날짜')
-
-    if (isFutureDateError) {
-      const utcDate = formatUtcDate(new Date())
-      if (utcDate !== journalDate) {
-        return await request('/journal/entries', {
-          method: 'POST',
-          body: JSON.stringify({
-            journalDate: utcDate,
-            marketThought: payload.marketThought || '',
-            marketMood: payload.marketMood || null,
-            tradeNotes: (payload.tradeNotes || []).map((note) => ({
-              tradeId: Number(note.tradeId),
-              rationaleText: note.rationaleText || '',
-            })),
-          }),
-        })
-      }
-    }
     if (!USE_MOCK_FALLBACK) throw error
     console.warn('API POST /journal/entries 요청 실패, 목데이터 생성을 흉내냅니다:', error)
-    const journalDate = payload.journalDate || getDefaultJournalDate()
     let dailyEntry = journalData.dailyEntries?.find((entry) => entry.journalDate === journalDate)
 
     if (dailyEntry?.journal) {
