@@ -111,13 +111,13 @@ defineEmits(['analyze', 'toggle'])
 
 .reanalysis-floating__body span {
   color: #f7d997;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
 }
 
 .reanalysis-floating__body strong {
   overflow: hidden;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   line-height: 1.4;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -127,7 +127,7 @@ defineEmits(['analyze', 'toggle'])
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 
 .reanalysis-floating__fold {

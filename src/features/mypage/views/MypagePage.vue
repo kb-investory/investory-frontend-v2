@@ -8,6 +8,7 @@ import { useMypageStore } from '@/features/mypage/stores/mypageStore'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
+import PrimaryAppHeader from '@/shared/components/navigation/PrimaryAppHeader.vue'
 
 const router = useRouter()
 const mypageStore = useMypageStore()
@@ -116,15 +117,15 @@ onMounted(async () => {
 
 <template>
   <div class="mypage-page">
-    <header class="mypage-header">
-      <div class="mypage-header__brand">
-        <img src="/assets/logos/investory-logo.png" alt="Investory 로고" />
-        <h1>마이페이지</h1>
-      </div>
-      <button type="button" aria-label="마이페이지 도움말" @click="modal = 'help'">
-        <AppIcon name="circle-help" :size="18" />
-      </button>
-    </header>
+    <PrimaryAppHeader>
+      <template #right>
+        <button type="button" aria-label="마이페이지 도움말" @click="modal = 'help'">
+          <AppIcon name="circle-help" :size="18" />
+        </button>
+      </template>
+    </PrimaryAppHeader>
+
+    <h1 class="mypage-title">마이페이지</h1>
 
     <BaseLoading v-if="mypageStore.loading && !mypageStore.profile" class="mypage-loading" />
 
@@ -179,7 +180,7 @@ onMounted(async () => {
           <div v-else class="summary-empty-state">
             <img src="/assets/icons/monkey-question.png" alt="" />
             <div class="summary-empty-state__copy">
-              <strong>아직 분석 전이에요</strong>
+              <strong>아직 결과가 없어요</strong>
               <p>나의 6가지 성향을<br />먼저 확인해보세요</p>
             </div>
           </div>
@@ -354,45 +355,11 @@ onMounted(async () => {
   color: #263a3f;
 }
 
-.mypage-header {
-  position: sticky;
-  z-index: 81;
-  top: 0;
-  display: flex;
-  min-height: 64px;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 18px 10px;
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(10px);
-}
-
-.mypage-header__brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.mypage-header__brand img {
-  width: 50px;
-  height: 26px;
-  object-fit: contain;
-}
-.mypage-header h1 {
-  margin: 0;
-  font-size: 19px;
-  font-weight: 850;
+.mypage-title {
+  margin: 10px 18px 4px;
+  font-size: var(--font-size-title-lg);
+  font-weight: 700;
   letter-spacing: -0.04em;
-}
-.mypage-header > button {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
-  border: 1px solid #dbe5e5;
-  border-radius: 50%;
-  background: #fff;
-  color: #526366;
-  cursor: pointer;
 }
 
 .mypage-loading {
@@ -431,25 +398,25 @@ onMounted(async () => {
 }
 .profile-summary h2 {
   margin: 0;
-  font-size: 14px;
+  font-size: var(--font-size-body);
 }
 .profile-summary__copy > div > span {
   padding: 3px 6px;
   border-radius: 5px;
   background: #0d8d88;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
 }
 .profile-summary p {
   margin: 3px 0;
   color: #d7e2e3;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 .profile-summary small {
   display: flex;
   align-items: center;
   gap: 4px;
   color: #d7e2e3;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
 }
 .provider-dot {
   display: grid;
@@ -482,18 +449,18 @@ onMounted(async () => {
 
 .mypage-highlights {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 7px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
 }
 .tendency-summary-card,
 .simulation-summary-card {
   display: flex;
   width: 100%;
-  min-height: 174px;
+  min-height: 148px;
   flex-direction: column;
   align-items: stretch;
   gap: 10px;
-  padding: 11px;
+  padding: 14px;
   border: 1px solid #cfe7e5;
   border-radius: 17px;
   background: #fff;
@@ -527,7 +494,7 @@ onMounted(async () => {
 .tendency-summary-card small,
 .simulation-summary-card small {
   color: #078d88;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
 }
 .summary-card__header--simulation small {
@@ -535,7 +502,7 @@ onMounted(async () => {
 }
 .summary-card__action {
   display: inline-flex;
-  min-height: 36px;
+  min-height: 44px;
   align-items: center;
   justify-content: center;
   gap: 3px;
@@ -544,7 +511,7 @@ onMounted(async () => {
   border-radius: 999px;
   background: #e6f7f5;
   color: #087f7b;
-  font-size: 7.2px;
+  font-size: var(--font-size-body);
   font-weight: 800;
   white-space: nowrap;
 }
@@ -573,7 +540,7 @@ onMounted(async () => {
   background: #1f5a86;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
   color: #ffffff;
-  font-size: 6.1px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
   line-height: 1;
   white-space: nowrap;
@@ -606,15 +573,15 @@ onMounted(async () => {
 }
 .summary-empty-state__copy strong {
   color: #2e3032;
-  font-size: 9px;
+  font-size: var(--font-size-body);
   font-weight: 800;
   line-height: 1.25;
-  white-space: nowrap;
+  word-break: keep-all;
 }
 .summary-empty-state__copy p {
   margin: 0;
   color: #7d8b8e;
-  font-size: 6.5px;
+  font-size: var(--font-size-caption);
   line-height: 1.45;
 }
 .summary-empty-state--simulation .summary-empty-state__copy p {
@@ -624,7 +591,7 @@ onMounted(async () => {
   min-height: 20px;
   margin: 0;
   color: #2e3032;
-  font-size: 10px;
+  font-size: var(--font-size-body);
   font-weight: 800;
   line-height: 1.45;
   text-align: center;
@@ -644,7 +611,7 @@ onMounted(async () => {
   border-radius: 8px;
   background: #e7eef1;
   color: #53666c;
-  font-size: 5.9px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
   line-height: 1.1;
   text-align: center;
@@ -676,7 +643,7 @@ onMounted(async () => {
 }
 .simulation-summary-card p:not(.simulation-summary-card__headline) {
   color: #68777a;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
 }
 
 .menu-section {
@@ -686,7 +653,7 @@ onMounted(async () => {
 .menu-section h2 {
   margin: 0;
   color: #607174;
-  font-size: 8px;
+  font-size: var(--font-size-body);
   font-weight: 700;
 }
 .menu-list {
@@ -699,7 +666,7 @@ onMounted(async () => {
 .account-actions button {
   display: grid;
   width: 100%;
-  min-height: 43px;
+  min-height: 52px;
   grid-template-columns: 22px minmax(0, 1fr) 16px;
   align-items: center;
   gap: 7px;
@@ -709,7 +676,7 @@ onMounted(async () => {
   background: #fff;
   color: #415356;
   cursor: pointer;
-  font-size: 9px;
+  font-size: var(--font-size-body);
   text-align: left;
 }
 .menu-list button:last-child {
@@ -733,7 +700,7 @@ onMounted(async () => {
   padding: 3px 0 0;
   color: #9aa4a6;
   font-family: var(--font-mono);
-  font-size: 6px;
+  font-size: var(--font-size-caption);
 }
 
 .confirm-overlay {
@@ -799,7 +766,7 @@ onMounted(async () => {
   border-radius: 9px;
   background: #f5f9f9;
   color: #526467;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   line-height: 1.45;
 }
 .help-dialog__list li::before {
@@ -812,12 +779,12 @@ onMounted(async () => {
 }
 .confirm-dialog h2 {
   margin: 0;
-  font-size: 17px;
+  font-size: var(--font-size-body);
 }
 .confirm-dialog > p,
 .confirm-dialog li {
   color: #718083;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   line-height: 1.6;
 }
 .confirm-dialog ul {
@@ -828,7 +795,7 @@ onMounted(async () => {
   display: grid;
   gap: 6px;
   color: #506063;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 .confirm-dialog input {
   height: 40px;

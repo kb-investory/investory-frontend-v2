@@ -110,7 +110,7 @@ defineEmits(['open-transactions'])
   margin-bottom: 3px;
   color: #087f7c;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   letter-spacing: 0.7px;
 }
@@ -118,7 +118,7 @@ defineEmits(['open-transactions'])
 .today-record__title {
   color: #181817;
   font-family: var(--font-heading);
-  font-size: 18px;
+  font-size: var(--font-size-title-md);
   font-weight: 700;
   line-height: 1.25;
 }
@@ -126,7 +126,7 @@ defineEmits(['open-transactions'])
 .today-record__description {
   margin-top: 4px;
   color: #5d6d73;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   line-height: 1.4;
 }
 
@@ -144,7 +144,7 @@ defineEmits(['open-transactions'])
 
 .today-record__metrics {
   display: grid;
-  min-height: 46px;
+  min-height: 54px;
   grid-template-columns: repeat(4, 1fr);
   margin: 0;
   border: 1px solid #d8e9e8;
@@ -179,13 +179,13 @@ defineEmits(['open-transactions'])
 .today-record__metric dd {
   color: #263a43;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--font-size-body);
   font-weight: 700;
 }
 
 .today-record__metric dt {
   color: #718087;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
 }
 
@@ -212,14 +212,14 @@ defineEmits(['open-transactions'])
   align-items: center;
   justify-content: space-between;
   color: #5d6d73;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
 }
 
 .today-record__deadline-heading strong {
   color: #263a43;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-body);
   letter-spacing: 0.3px;
 }
 
@@ -302,24 +302,29 @@ defineEmits(['open-transactions'])
   justify-content: space-between;
   color: #718087;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 500;
 }
 
 .today-record__button {
   display: flex;
   width: 100%;
-  min-height: 44px;
+  min-height: 52px;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   padding: 0 14px;
   border: 0;
   border-radius: 12px;
   color: #ffffff;
   background: #263a43;
   cursor: pointer;
-  font-size: 12px;
   font-weight: 700;
+}
+
+.today-record__button > span:first-child {
+  font-size: var(--font-size-body);
+  line-height: 1.35;
 }
 
 .today-record__button-meta {
@@ -328,7 +333,7 @@ defineEmits(['open-transactions'])
   gap: 4px;
   color: #bfd0d5;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .today-record__button:focus-visible {

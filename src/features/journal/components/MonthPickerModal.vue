@@ -211,7 +211,7 @@ function applySelection() {
   margin: 0;
   color: #181817;
   font-family: var(--font-sans);
-  font-size: 19px;
+  font-size: var(--font-size-title-md);
   font-weight: 700;
 }
 
@@ -219,7 +219,7 @@ function applySelection() {
   margin: 0;
   color: #94948e;
   font-family: var(--font-sans);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .close-btn {
@@ -258,7 +258,7 @@ function applySelection() {
 .year-text {
   color: #181817;
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--font-size-body);
   font-weight: 700;
 }
 
@@ -338,7 +338,7 @@ function applySelection() {
 .guide-text {
   color: #94948e;
   font-family: var(--font-sans);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 500;
 }
 
@@ -363,7 +363,7 @@ function applySelection() {
   background: #ffffff;
   color: #666662;
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 600;
   cursor: pointer;
 }
@@ -379,7 +379,7 @@ function applySelection() {
   background: #e8b931;
   color: #181817;
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 700;
   cursor: pointer;
   transition: opacity 0.15s ease;

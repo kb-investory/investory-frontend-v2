@@ -68,15 +68,15 @@ function formatCurrency(value) {
 .connection-summary p {
   margin: 0;
   color: #dce6e9;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .connection-summary strong {
-  font-size: 14px;
+  font-size: var(--font-size-body);
 }
 
 .connection-summary span:last-child {
   color: #dce6e9;
-  font-size: 12px;
+  font-size: var(--font-size-caption);
 }
 </style>

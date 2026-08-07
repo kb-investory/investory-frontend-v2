@@ -293,7 +293,7 @@ function handlePrimaryAction() {
   gap: 6px;
   color: #087f7c;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -301,7 +301,7 @@ function handlePrimaryAction() {
   margin: 0;
   color: #181817;
   font-family: var(--font-heading);
-  font-size: 24px;
+  font-size: var(--font-size-title-md);
   font-weight: 800;
   letter-spacing: -0.6px;
 }
@@ -309,7 +309,7 @@ function handlePrimaryAction() {
 .challenger-intro p {
   margin: 0;
   color: #94948e;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .player-card {
@@ -345,19 +345,19 @@ function handlePrimaryAction() {
 .player-card__info > span {
   color: #e8b931;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
 .player-card__info strong {
-  font-size: 15px;
+  font-size: var(--font-size-body);
   font-weight: 800;
 }
 
 .player-card__info small {
   overflow: hidden;
   color: #c9d6da;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -367,7 +367,7 @@ function handlePrimaryAction() {
   padding: 7px 9px;
   border-radius: 10px;
   background: rgb(255 255 255 / 10%);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -393,7 +393,7 @@ function handlePrimaryAction() {
   background: #0b8f8b;
   color: #fff;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .roster-header {
@@ -404,7 +404,7 @@ function handlePrimaryAction() {
 
 .roster-header strong {
   color: #181817;
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 800;
 }
 
@@ -413,7 +413,7 @@ function handlePrimaryAction() {
   border: 1px solid #dce6e9;
   border-radius: 10px;
   color: #384f59;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -495,7 +495,7 @@ function handlePrimaryAction() {
 
 .roster-card__avatar > span {
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -510,7 +510,7 @@ function handlePrimaryAction() {
 .roster-card__class {
   color: #263a43;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -524,7 +524,7 @@ function handlePrimaryAction() {
 
 .roster-card__content > strong {
   color: #181817;
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 800;
 }
 
@@ -539,7 +539,7 @@ function handlePrimaryAction() {
 .roster-card__content > small {
   overflow: hidden;
   color: #666662;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -554,7 +554,7 @@ function handlePrimaryAction() {
   border-radius: 6px;
   background: #edf1f2;
   color: #384f59;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -572,7 +572,7 @@ function handlePrimaryAction() {
   display: inline-flex;
   align-items: center;
   color: #384f59;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -700,7 +700,7 @@ function handlePrimaryAction() {
 .bot-modal__avatar strong {
   color: #40545b;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 
 .bot-modal__identity {
@@ -717,7 +717,7 @@ function handlePrimaryAction() {
   background: #edf1f2;
   color: #40545b;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -735,7 +735,7 @@ function handlePrimaryAction() {
   margin: 0;
   color: #181817;
   font-family: var(--font-heading);
-  font-size: 19px;
+  font-size: var(--font-size-title-md);
   font-weight: 800;
 }
 
@@ -743,7 +743,7 @@ function handlePrimaryAction() {
   margin: 0;
   overflow: hidden;
   color: #94948e;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -761,7 +761,7 @@ function handlePrimaryAction() {
 
 .bot-modal__summary strong {
   color: #263a43;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   line-height: 1.55;
 }
 
@@ -784,14 +784,14 @@ function handlePrimaryAction() {
 
 .bot-modal__section-title strong {
   color: #263a43;
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
 }
 
 .bot-modal__section-title span {
   color: #a0a09a;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 
 .bot-modal__principles ol {
@@ -820,7 +820,7 @@ function handlePrimaryAction() {
   background: #f2f5f5;
   color: #40545b;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -832,7 +832,7 @@ function handlePrimaryAction() {
 .bot-modal__principles p {
   margin: 0;
   color: #263a43;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   line-height: 1.45;
 }
 
@@ -856,13 +856,13 @@ function handlePrimaryAction() {
 
 .bot-modal__rules dt {
   color: #a0a09a;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .bot-modal__rules dd {
   margin: 0;
   color: #263a43;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
   text-align: right;
 }
@@ -886,12 +886,12 @@ function handlePrimaryAction() {
 
 .bot-modal__data strong {
   color: #263a43;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .bot-modal__data span {
   color: #78888e;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 
 .bot-modal__select-button {
@@ -906,7 +906,7 @@ function handlePrimaryAction() {
   background: #263a43;
   color: #fff;
   font-family: inherit;
-  font-size: 14px;
+  font-size: var(--font-size-body);
   font-weight: 800;
 }
 

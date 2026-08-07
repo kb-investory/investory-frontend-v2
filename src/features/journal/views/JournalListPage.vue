@@ -9,6 +9,7 @@ import JournalMonthNavigator from '@/features/journal/components/JournalMonthNav
 import { useJournalStore } from '@/features/journal/stores/journalStore'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
+import PrimaryAppHeader from '@/shared/components/navigation/PrimaryAppHeader.vue'
 
 const router = useRouter()
 const journalStore = useJournalStore()
@@ -65,13 +66,8 @@ function writeTodayJournal() {
 
 <template>
   <div class="journal-calendar-page">
-    <main class="journal-calendar-page__content">
-      <header class="journal-calendar-page__header">
-        <div>
-          <h1>투자 일지</h1>
-          <p>밑줄이 있는 날짜를 선택해 일지를 확인하세요</p>
-        </div>
-
+    <PrimaryAppHeader>
+      <template #right>
         <button
           class="journal-calendar-page__search"
           type="button"
@@ -80,6 +76,15 @@ function writeTodayJournal() {
         >
           <AppIcon name="search" :size="20" />
         </button>
+      </template>
+    </PrimaryAppHeader>
+
+    <main class="journal-calendar-page__content">
+      <header class="journal-calendar-page__header">
+        <div>
+          <h1>투자 일지</h1>
+          <p>밑줄이 있는 날짜를 선택해 일지를 확인하세요</p>
+        </div>
       </header>
 
       <JournalMonthNavigator
@@ -140,8 +145,7 @@ function writeTodayJournal() {
 
 .journal-calendar-page__header {
   display: flex;
-  height: 60px;
-  flex: 0 0 60px;
+  min-height: 72px;
   align-items: center;
   justify-content: space-between;
 }
@@ -149,7 +153,7 @@ function writeTodayJournal() {
 .journal-calendar-page__header h1 {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: 20px;
+  font-size: var(--font-size-title-lg);
   font-weight: 700;
   line-height: 1.2;
 }
@@ -158,22 +162,12 @@ function writeTodayJournal() {
   margin: 4px 0 0;
   color: var(--text-secondary, #666662);
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: var(--font-size-body);
   line-height: 1.4;
 }
 
 .journal-calendar-page__search {
-  display: grid;
-  width: 44px;
-  height: 44px;
-  flex: 0 0 44px;
-  place-items: center;
-  padding: 0;
-  border: 1px solid var(--border-default, #e5e5e0);
-  border-radius: 9999px;
   color: var(--slate-strong, #263a43);
-  background: #ffffff;
-  cursor: pointer;
 }
 
 .journal-calendar-page__search:hover {
@@ -204,7 +198,7 @@ function writeTodayJournal() {
   align-content: center;
   gap: 8px;
   color: var(--text-secondary, #666662);
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   text-align: center;
 }
 
@@ -244,7 +238,7 @@ function writeTodayJournal() {
   color: #ffffff;
   background: var(--teal-deep, #075f5a);
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 700;
   cursor: pointer;
 }

@@ -81,7 +81,7 @@ defineEmits(['close'])
   margin: 0;
   color: #18272d;
   font-family: var(--font-heading);
-  font-size: 16px;
+  font-size: var(--font-size-body);
   font-weight: 700;
 }
 
@@ -89,7 +89,7 @@ defineEmits(['close'])
   margin: 0;
   color: #94948e;
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .bottom-sheet__close {

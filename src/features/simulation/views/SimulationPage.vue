@@ -245,7 +245,7 @@ function goBack() {
   gap: 8px;
   padding: 64px 20px;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: var(--font-size-body);
 }
 
 .spin {
@@ -303,6 +303,6 @@ function goBack() {
 }
 
 .simulation-floating-header :deep(.app-bar__title) {
-  font-size: 16px;
+  font-size: var(--font-size-body);
 }
 </style>

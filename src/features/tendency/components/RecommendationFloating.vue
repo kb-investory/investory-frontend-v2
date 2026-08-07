@@ -117,13 +117,13 @@ defineEmits(['navigate', 'toggle'])
 
 .recommendation-floating__body span {
   color: #a9f0ed;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
 .recommendation-floating__body strong {
   overflow: hidden;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   line-height: 1.4;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -133,7 +133,7 @@ defineEmits(['navigate', 'toggle'])
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 
 .recommendation-floating__fold,

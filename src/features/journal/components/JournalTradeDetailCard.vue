@@ -115,7 +115,7 @@ function formatCurrency(value) {
   gap: 5px;
   color: var(--brand-teal-deep, #087f7c);
   font-family: var(--font-heading);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -123,9 +123,9 @@ function formatCurrency(value) {
   margin: 0;
   color: var(--text-primary, #181817);
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
-  line-height: 16px;
+  line-height: 1.4;
 }
 
 .trade-detail-card__info {
@@ -154,7 +154,7 @@ function formatCurrency(value) {
   overflow: hidden;
   color: var(--text-primary, #181817);
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -175,7 +175,7 @@ function formatCurrency(value) {
 .trade-detail-card__side {
   color: #e34b4b;
   font-family: var(--font-sans);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -186,7 +186,7 @@ function formatCurrency(value) {
 .trade-detail-card__identity time {
   color: var(--text-tertiary, #94948e);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
 }
 
@@ -206,7 +206,7 @@ function formatCurrency(value) {
   margin-bottom: 3px;
   color: var(--text-tertiary, #94948e);
   font-family: var(--font-heading);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 500;
   white-space: nowrap;
 }
@@ -216,7 +216,7 @@ function formatCurrency(value) {
   margin: 0;
   color: var(--text-primary, #181817);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;

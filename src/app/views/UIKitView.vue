@@ -197,7 +197,7 @@ const navTabs = [
   margin: 0;
   color: #ffffff;
   font-family: var(--font-heading);
-  font-size: 30px;
+  font-size: var(--font-size-title-lg);
   font-weight: 700;
   line-height: normal;
 }
@@ -206,7 +206,7 @@ const navTabs = [
   margin: 0;
   color: #dce6e9;
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   font-weight: 500;
   line-height: normal;
 }
@@ -214,7 +214,7 @@ const navTabs = [
 .ui-kit__version {
   color: #7fe0d9;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   line-height: normal;
 }
@@ -251,7 +251,7 @@ const navTabs = [
 .ui-kit__section-category {
   color: #087f7c;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   letter-spacing: 0;
   line-height: normal;
@@ -261,7 +261,7 @@ const navTabs = [
   margin: 0;
   color: #18272d;
   font-family: var(--font-heading);
-  font-size: 20px;
+  font-size: var(--font-size-title-md);
   font-weight: 700;
   line-height: normal;
 }

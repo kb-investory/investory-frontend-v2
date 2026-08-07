@@ -205,7 +205,7 @@ function formatPercent(val) {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   color: #087f7c;
 }
@@ -216,7 +216,7 @@ function formatPercent(val) {
 
 .hero-title {
   margin: 0;
-  font-size: 21px;
+  font-size: var(--font-size-title-md);
   font-weight: 800;
   line-height: 1.25;
   color: #181817;
@@ -224,7 +224,7 @@ function formatPercent(val) {
 
 .hero-description {
   margin: 0;
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   line-height: 1.5;
   color: #666662;
 }
@@ -235,7 +235,7 @@ function formatPercent(val) {
   border-radius: 10px;
   background: rgb(255 255 255 / 80%);
   color: var(--text-secondary);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   line-height: 1.5;
 }
 
@@ -253,7 +253,7 @@ function formatPercent(val) {
   padding: 6px 10px;
   background: #ffffff;
   border-radius: 10px;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
   color: #666662;
 }
@@ -282,7 +282,7 @@ function formatPercent(val) {
 
 .history-title {
   margin: 0;
-  font-size: 15px;
+  font-size: var(--font-size-body);
   font-weight: 700;
   color: #181817;
 }
@@ -290,7 +290,7 @@ function formatPercent(val) {
 .compare-link {
   border: none;
   background: none;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   color: #384f59;
   cursor: pointer;
@@ -321,7 +321,7 @@ function formatPercent(val) {
 
 .v-badge {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   color: #087f7c;
   background: #f5fbfb;
@@ -343,13 +343,13 @@ function formatPercent(val) {
 
 .item-date {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 600;
   color: #181817;
 }
 
 .item-period {
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   color: #94948e;
 }
 
@@ -361,7 +361,7 @@ function formatPercent(val) {
 
 .return-text {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 700;
 }
 

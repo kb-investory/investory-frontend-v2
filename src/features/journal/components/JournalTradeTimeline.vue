@@ -131,7 +131,7 @@ function formatPrice(value) {
   margin: 0;
   color: var(--text-primary);
   font-family: var(--font-heading);
-  font-size: 15px;
+  font-size: var(--font-size-body);
   font-weight: 700;
 }
 
@@ -141,7 +141,7 @@ function formatPrice(value) {
   background: #f1f1ed;
   color: var(--text-secondary);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
 }
 
@@ -156,7 +156,7 @@ function formatPrice(value) {
   background: #ffffff;
   color: var(--brand-teal-deep);
   cursor: pointer;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -184,14 +184,14 @@ function formatPrice(value) {
 .trade-timeline__guide strong {
   color: var(--slate-strong);
   font-family: var(--font-heading);
-  font-size: 12px;
+  font-size: var(--font-size-caption);
 }
 
 .trade-timeline__guide p {
   margin: 2px 0 0;
   color: var(--text-tertiary);
-  font-size: 10px;
-  line-height: 14px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
 }
 
 .trade-timeline__list {
@@ -221,7 +221,7 @@ function formatPrice(value) {
 .trade-timeline__time {
   color: var(--text-tertiary);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   text-align: right;
 }
 
@@ -267,14 +267,14 @@ function formatPrice(value) {
 .trade-timeline__security strong {
   overflow: hidden;
   color: var(--text-primary);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .trade-timeline__side {
   flex: 0 0 auto;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -291,7 +291,7 @@ function formatPrice(value) {
   margin-top: 3px;
   overflow: hidden;
   color: var(--text-tertiary);
-  font-size: 9.5px;
+  font-size: var(--font-size-caption);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -314,7 +314,7 @@ function formatPrice(value) {
   border: 0;
   background: transparent;
   color: var(--slate-strong);
-  font-size: 10.5px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
   outline: 0;
   text-overflow: ellipsis;
@@ -333,8 +333,8 @@ function formatPrice(value) {
   border: 1px dashed #d9e7e8;
   border-radius: 13px;
   color: var(--text-tertiary);
-  font-size: 11px;
-  line-height: 17px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
   text-align: center;
 }
 </style>

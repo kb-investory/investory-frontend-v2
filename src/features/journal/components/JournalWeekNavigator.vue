@@ -169,7 +169,7 @@ function getDateAriaLabel(day) {
   min-width: 0;
   overflow: hidden;
   font-family: var(--font-heading);
-  font-size: 15px;
+  font-size: var(--font-size-body);
   font-weight: 700;
   text-align: center;
   text-overflow: ellipsis;
@@ -197,7 +197,7 @@ function getDateAriaLabel(day) {
   color: var(--slate-primary, #384f59);
   background: #f7f8fa;
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
   text-align: center;
 }
@@ -216,7 +216,7 @@ function getDateAriaLabel(day) {
   color: var(--text-primary, #181817);
   background: transparent;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
   cursor: pointer;
 }

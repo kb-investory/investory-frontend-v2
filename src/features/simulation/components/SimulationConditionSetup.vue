@@ -378,7 +378,7 @@ function startSimulation() {
 .pending-card__eyebrow {
   color: #0b8f8b;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
   letter-spacing: 0.1em;
 }
@@ -472,7 +472,7 @@ function startSimulation() {
 .pending-card h3 {
   margin: 0;
   color: #263a43;
-  font-size: 17px;
+  font-size: var(--font-size-body);
   font-weight: 800;
   letter-spacing: -0.035em;
 }
@@ -480,7 +480,7 @@ function startSimulation() {
 .pending-card > p {
   margin: 7px 0 17px;
   color: #77898f;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   line-height: 1.55;
 }
 
@@ -497,7 +497,7 @@ function startSimulation() {
   align-items: center;
   gap: 4px;
   color: #a0adb1;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   white-space: nowrap;
 }
@@ -550,7 +550,7 @@ function startSimulation() {
 
 .pending-card > small {
   color: #98a5a9;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 
 .pending-fade-enter-active,
@@ -641,7 +641,7 @@ function startSimulation() {
   gap: 6px;
   color: #087f7c;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -649,7 +649,7 @@ function startSimulation() {
   margin: 0;
   color: #181817;
   font-family: var(--font-heading);
-  font-size: 22px;
+  font-size: var(--font-size-title-md);
   font-weight: 800;
   letter-spacing: -0.5px;
 }
@@ -657,7 +657,7 @@ function startSimulation() {
 .setup-intro p {
   margin: 0;
   color: #8c8c87;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .participants-panel {
@@ -678,7 +678,7 @@ function startSimulation() {
 .participants-panel__header > span {
   color: #a8bdc5;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -688,7 +688,7 @@ function startSimulation() {
   background: #34515c;
   color: #74d3cf;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 
 .participant-list {
@@ -760,7 +760,7 @@ function startSimulation() {
 .participant-card > span {
   color: #263a43;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -782,7 +782,7 @@ function startSimulation() {
   overflow: hidden;
   max-width: calc(100% - 8px);
   color: #181817;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -792,7 +792,7 @@ function startSimulation() {
   align-items: center;
   gap: 3px;
   color: #8a999e;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   white-space: nowrap;
 }
 
@@ -821,14 +821,14 @@ function startSimulation() {
 .period-card__header h3 {
   margin: 0 0 5px;
   color: #263a43;
-  font-size: 14px;
+  font-size: var(--font-size-body);
   font-weight: 800;
 }
 
 .period-card__header p {
   margin: 0;
   color: #94948e;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 
 .period-card__header > strong {
@@ -836,7 +836,7 @@ function startSimulation() {
   border-radius: 10px;
   background: #effaf9;
   color: #087f7c;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
 }
 
 .date-summary {
@@ -865,7 +865,7 @@ function startSimulation() {
   align-items: center;
   gap: 5px;
   color: #6f7f85;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -877,7 +877,7 @@ function startSimulation() {
   overflow: hidden;
   color: #181817;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -885,7 +885,7 @@ function startSimulation() {
 .date-summary__item small {
   overflow: hidden;
   color: #a0a09a;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -955,7 +955,7 @@ function startSimulation() {
   justify-content: space-between;
   color: #a0a09a;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 
 .period-hint {
@@ -967,7 +967,7 @@ function startSimulation() {
   border-radius: 9px;
   background: #f6f8f9;
   color: #89969a;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 
 .same-condition {
@@ -1002,13 +1002,13 @@ function startSimulation() {
 
 .same-condition strong {
   color: #263a43;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .same-condition span {
   overflow: hidden;
   color: #77868b;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   text-overflow: ellipsis;
   white-space: nowrap;
 }

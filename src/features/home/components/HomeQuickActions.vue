@@ -99,7 +99,7 @@ defineProps({
 .quick-action__status {
   color: #087f7c;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -109,14 +109,14 @@ defineProps({
 
 .quick-action strong {
   font-family: var(--font-heading);
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 700;
 }
 
 .quick-action p {
   margin: 0;
   color: #66777d;
-  font-size: 10px;
+  font-size: var(--font-size-caption);
   line-height: 1.45;
 }
 

@@ -1,6 +1,6 @@
 <script setup>
 import { ShieldCheck, TriangleAlert } from '@lucide/vue'
-import { useRouter } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
 import LoginForm from '@/features/auth/components/LoginForm.vue'
@@ -23,7 +23,13 @@ async function handleSocialLogin(provider) {
     <div class="login-shell">
       <main class="login-content">
         <div class="brand-intro">
-          <img class="brand-logo" src="/assets/logos/investory-logo.png" alt="Investory" />
+          <RouterLink class="brand-logo-link" :to="{ name: ROUTE_NAMES.HOME }">
+            <img
+              class="brand-logo"
+              src="/assets/logos/investory-logo.png"
+              alt="Investory 홈으로 이동"
+            />
+          </RouterLink>
 
           <div class="welcome-message">
             <span class="welcome-message__line" aria-hidden="true" />
@@ -111,6 +117,17 @@ async function handleSocialLogin(provider) {
   object-position: center;
 }
 
+.brand-logo-link {
+  display: block;
+  width: fit-content;
+  border-radius: 8px;
+}
+
+.brand-logo-link:focus-visible {
+  outline: 2px solid var(--brand-teal-deep);
+  outline-offset: 2px;
+}
+
 .welcome-message {
   display: flex;
   min-height: 132px;
@@ -147,17 +164,17 @@ async function handleSocialLogin(provider) {
 .welcome-message h1 {
   color: #ffffff;
   font-family: var(--font-heading);
-  font-size: 22px;
+  font-size: var(--font-size-title-md);
   font-weight: 700;
   letter-spacing: -0.3px;
-  line-height: 28px;
+  line-height: 1.4;
 }
 
 .welcome-message p {
   margin-top: 8px;
   color: #dce6e9;
-  font-size: 13px;
-  line-height: 19px;
+  font-size: var(--font-size-body);
+  line-height: 1.4;
 }
 
 .social-login {
@@ -173,13 +190,13 @@ async function handleSocialLogin(provider) {
 
 .social-login__header h2 {
   font-family: var(--font-heading);
-  font-size: 18px;
+  font-size: var(--font-size-body);
   letter-spacing: -0.2px;
 }
 
 .social-login__header p {
   color: var(--color-text-muted);
-  font-size: 12px;
+  font-size: var(--font-size-caption);
 }
 
 .login-status {
@@ -190,8 +207,8 @@ async function handleSocialLogin(provider) {
   border-radius: 8px;
   background: var(--brand-red-soft);
   color: #d33a45;
-  font-size: 11.5px;
-  line-height: 17px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
 }
 
 .security-notice {
@@ -202,7 +219,7 @@ async function handleSocialLogin(provider) {
   border-radius: 8px;
   background: var(--brand-mist);
   color: var(--color-text-muted);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .security-notice svg {
@@ -211,8 +228,8 @@ async function handleSocialLogin(provider) {
 
 .terms-notice {
   color: var(--color-text-subtle);
-  font-size: 10.5px;
-  line-height: 16px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
   text-align: center;
 }
 

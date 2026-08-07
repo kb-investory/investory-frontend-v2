@@ -265,7 +265,7 @@ onMounted(async () => {
   cursor: pointer;
 }
 .accounts-app-bar strong {
-  font-size: 14px;
+  font-size: var(--font-size-body);
   text-align: center;
 }
 .accounts-loading {
@@ -278,13 +278,13 @@ onMounted(async () => {
 }
 .accounts-hero h1 {
   margin: 0;
-  font-size: 17px;
+  font-size: var(--font-size-body);
   letter-spacing: -0.04em;
 }
 .accounts-hero p {
   margin: 5px 0 0;
   color: #849194;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 .account-summary {
   overflow: hidden;
@@ -304,7 +304,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 .account-summary > header i {
   width: 6px;
@@ -332,18 +332,18 @@ onMounted(async () => {
 }
 .account-summary dt {
   color: #c6d3d5;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
 }
 .account-summary dd {
   margin: 4px 0 0;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 750;
 }
 .account-summary > p {
   margin: 0;
   padding: 7px 10px;
   background: rgba(10, 142, 136, 0.2);
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   text-align: center;
 }
 .spinning {
@@ -365,11 +365,11 @@ onMounted(async () => {
 }
 .account-list-section h2 {
   margin: 0;
-  font-size: 9px;
+  font-size: var(--font-size-body);
 }
 .account-list-section header span {
   color: #78878a;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
 }
 .account-list {
   overflow: hidden;
@@ -406,14 +406,14 @@ onMounted(async () => {
   gap: 6px;
 }
 .account-card__main strong {
-  font-size: 9px;
+  font-size: var(--font-size-body);
 }
 .account-card__main > div:first-child span {
   padding: 3px 5px;
   border-radius: 5px;
   background: #dff5f2;
   color: #078d88;
-  font-size: 6px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
 }
 .account-card--sync_error .account-card__main > div:first-child span,
@@ -424,19 +424,19 @@ onMounted(async () => {
 .account-card p {
   margin: 4px 0 0;
   color: #68777a;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
 }
 .account-card small {
   display: block;
   margin-top: 3px;
   color: #97a1a3;
-  font-size: 6px;
+  font-size: var(--font-size-caption);
 }
 .account-card em {
   display: block;
   margin-top: 5px;
   color: #d85e4f;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
   font-style: normal;
 }
 .account-card__actions {
@@ -449,7 +449,7 @@ onMounted(async () => {
   background: #e9f7f6;
   color: #087f7c;
   cursor: pointer;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
 }
 .account-card__right {
   display: grid;
@@ -467,7 +467,7 @@ onMounted(async () => {
   background: #f8fafa;
   color: #078d88;
   cursor: pointer;
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 750;
 }
 .security-notice {
@@ -481,12 +481,12 @@ onMounted(async () => {
   color: #078d88;
 }
 .security-notice strong {
-  font-size: 8px;
+  font-size: var(--font-size-body);
 }
 .security-notice p {
   margin: 4px 0 0;
   color: #718184;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
   line-height: 1.5;
 }
 .accounts-empty {
@@ -512,12 +512,12 @@ onMounted(async () => {
 }
 .accounts-empty h2 {
   margin: 13px 0 5px;
-  font-size: 14px;
+  font-size: var(--font-size-body);
 }
 .accounts-empty p {
   margin: 0;
   color: #7c8b8e;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   line-height: 1.55;
 }
 .accounts-empty button {
@@ -536,7 +536,7 @@ onMounted(async () => {
 .account-notice {
   margin: 0;
   color: #078d88;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   text-align: center;
 }
 </style>

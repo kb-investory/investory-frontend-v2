@@ -1,4 +1,6 @@
 <script setup>
+import PrimaryAppHeader from '@/shared/components/navigation/PrimaryAppHeader.vue'
+
 defineProps({
   subtitle: {
     type: String,
@@ -8,15 +10,11 @@ defineProps({
 </script>
 
 <template>
-  <header class="simulation-header">
-    <div class="header-top">
-      <h1 class="header-title">시뮬레이션</h1>
-      <div class="logo-wrapper">
-        <img src="/assets/logos/investory-logo.png" alt="Investory" class="header-logo" />
-      </div>
-    </div>
+  <div class="simulation-header">
+    <PrimaryAppHeader class="simulation-header__primary" />
+    <h1 class="header-title">시뮬레이션</h1>
     <p class="header-subtitle">{{ subtitle }}</p>
-  </header>
+  </div>
 </template>
 
 <style scoped>
@@ -27,48 +25,33 @@ defineProps({
   display: flex;
   flex-direction: column;
   gap: 5px;
-  width: 100%;
-  padding: 12px 0 4px;
+  width: calc(100% + 40px);
+  margin: -8px -20px 0;
+  padding: 0 20px 8px;
   background: #ffffff;
   box-sizing: border-box;
 }
 
-.header-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
+.simulation-header__primary {
+  position: static;
+  width: calc(100% + 40px);
+  margin: 0 -20px;
 }
 
 .header-title {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: 22px;
-  font-weight: 800;
+  font-size: var(--font-size-title-lg);
+  font-weight: 700;
   letter-spacing: -0.4px;
   color: #181817;
   line-height: 1.2;
 }
 
-.logo-wrapper {
-  width: 88px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  overflow: hidden;
-}
-
-.header-logo {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-}
-
 .header-subtitle {
   margin: 0;
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: var(--font-size-body);
   font-weight: 500;
   color: #666662;
   line-height: 1.4;

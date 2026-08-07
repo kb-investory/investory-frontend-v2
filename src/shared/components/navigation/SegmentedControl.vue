@@ -52,7 +52,7 @@ defineEmits(['update:modelValue'])
   color: #666662;
   cursor: pointer;
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 500;
   transition: all 0.15s ease;
 }

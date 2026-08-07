@@ -238,7 +238,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', handleBeforeUnl
   cursor: pointer;
 }
 .profile-app-bar strong {
-  font-size: 14px;
+  font-size: var(--font-size-body);
   text-align: center;
 }
 .profile-edit-loading {
@@ -288,18 +288,18 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', handleBeforeUnl
 .profile-preview small {
   color: #078d88;
   font-family: var(--font-mono);
-  font-size: 7px;
+  font-size: var(--font-size-caption);
   font-weight: 800;
   letter-spacing: 0.12em;
 }
 .profile-preview h1 {
   margin: 5px 0 2px;
-  font-size: 18px;
+  font-size: var(--font-size-body);
 }
 .profile-preview p {
   margin: 0;
   color: #7f8d90;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 .profile-form {
   padding: 12px;
@@ -309,7 +309,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', handleBeforeUnl
 .profile-form h2 {
   margin: 0 0 9px;
   color: #67777a;
-  font-size: 8px;
+  font-size: var(--font-size-body);
 }
 .profile-form label {
   display: grid;
@@ -321,7 +321,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', handleBeforeUnl
 }
 .profile-form label > span {
   color: #708083;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
 }
 .profile-input {
   display: grid;
@@ -341,7 +341,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', handleBeforeUnl
   background: transparent;
   color: #2d4044;
   font: inherit;
-  font-size: 11px;
+  font-size: var(--font-size-body);
   font-weight: 700;
 }
 .profile-input--readonly input {
@@ -352,7 +352,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', handleBeforeUnl
   padding: 4px 6px;
   border-radius: 6px;
   background: #e5f7f5;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
 }
 .profile-input--error {
   border-color: #e56368;
@@ -360,7 +360,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', handleBeforeUnl
 .profile-form label > small {
   justify-self: end;
   color: #8a9698;
-  font-size: 7px;
+  font-size: var(--font-size-caption);
 }
 .profile-form .field-error {
   justify-self: start;
@@ -369,7 +369,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', handleBeforeUnl
 .form-error {
   margin: 0;
   color: #dc4e54;
-  font-size: 8px;
+  font-size: var(--font-size-caption);
   text-align: center;
 }
 .profile-save-bar {
@@ -424,7 +424,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', handleBeforeUnl
 }
 .image-menu h2 {
   margin: 0 0 5px;
-  font-size: 15px;
+  font-size: var(--font-size-body);
 }
 .image-menu button {
   display: flex;

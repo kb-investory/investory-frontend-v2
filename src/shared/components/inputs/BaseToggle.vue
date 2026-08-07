@@ -55,14 +55,14 @@ defineEmits(['update:modelValue'])
 .base-toggle__label {
   color: #181817;
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 700;
 }
 
 .base-toggle__description {
   color: #94948e;
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .base-toggle__switch {

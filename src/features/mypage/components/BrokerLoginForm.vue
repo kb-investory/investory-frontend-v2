@@ -245,7 +245,7 @@ function handleSubmit() {
 
 .form-field__label {
   color: var(--color-heading);
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 700;
 }
 
@@ -263,7 +263,7 @@ function handleSubmit() {
   padding: 0 14px;
   outline: 0;
   color: var(--color-text);
-  font-size: 14px;
+  font-size: var(--font-size-body);
 }
 
 .form-field__password input {
@@ -301,7 +301,7 @@ function handleSubmit() {
 .form-field small,
 .agreement__error {
   color: #d33a45;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .security-keyboard {
@@ -314,7 +314,7 @@ function handleSubmit() {
   border-radius: 6px;
   background: transparent;
   color: var(--brand-teal-deep);
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 700;
   cursor: pointer;
 }
@@ -372,7 +372,7 @@ function handleSubmit() {
 }
 
 .agreement__copy strong {
-  font-size: 11.5px;
+  font-size: var(--font-size-caption);
 }
 
 .agreement__copy em {
@@ -383,7 +383,7 @@ function handleSubmit() {
 
 .agreement__copy small {
   color: var(--color-text-muted);
-  font-size: 9.5px;
+  font-size: var(--font-size-caption);
 }
 
 .agreement__row > :last-child {
@@ -414,12 +414,12 @@ function handleSubmit() {
 }
 
 .security-notice strong {
-  font-size: 11.5px;
+  font-size: var(--font-size-caption);
 }
 
 .security-notice p span {
   color: var(--color-text-muted);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .request-status {
@@ -428,7 +428,7 @@ function handleSubmit() {
   gap: 8px;
   padding: 10px 12px;
   border-radius: 8px;
-  font-size: 11.5px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
 }
 
@@ -470,7 +470,7 @@ function handleSubmit() {
   background: var(--slate-strong);
   color: #ffffff;
   cursor: pointer;
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 700;
 }
 
@@ -482,7 +482,7 @@ function handleSubmit() {
 .broker-login-form__action p {
   margin: 0;
   color: var(--color-text-subtle);
-  font-size: 10.5px;
+  font-size: var(--font-size-caption);
   text-align: center;
 }
 

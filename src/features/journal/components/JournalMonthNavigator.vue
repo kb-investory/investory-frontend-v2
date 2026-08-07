@@ -174,7 +174,7 @@ function selectMonth(month) {
   color: inherit;
   background: transparent;
   font-family: var(--font-heading);
-  font-size: 15px;
+  font-size: var(--font-size-body);
   font-weight: 700;
   cursor: pointer;
 }
@@ -219,7 +219,7 @@ function selectMonth(month) {
 .month-picker__year strong {
   color: var(--text-primary, #181817);
   font-family: var(--font-heading);
-  font-size: 15px;
+  font-size: var(--font-size-body);
   text-align: center;
 }
 
@@ -254,7 +254,7 @@ function selectMonth(month) {
   color: var(--text-secondary, #666662);
   background: #f7f8fa;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
   cursor: pointer;
 }

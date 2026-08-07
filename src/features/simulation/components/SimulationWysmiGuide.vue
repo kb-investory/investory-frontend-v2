@@ -174,14 +174,14 @@ function goToJournalNew() {
 
 .hero-title {
   margin: 4px 0 0 0;
-  font-size: 18px;
+  font-size: var(--font-size-body);
   font-weight: 800;
   color: #181817;
 }
 
 .hero-description {
   margin: 0;
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   line-height: 1.5;
   color: #666662;
 }
@@ -210,19 +210,19 @@ function goToJournalNew() {
 
 .card-title {
   margin: 0;
-  font-size: 14px;
+  font-size: var(--font-size-body);
   font-weight: 800;
   color: #181817;
 }
 
 .card-subtitle {
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   color: #94948e;
 }
 
 .progress-count {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 600;
   color: #384f59;
 }
@@ -253,7 +253,7 @@ function goToJournalNew() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .item-left {
@@ -294,12 +294,12 @@ function goToJournalNew() {
 }
 
 .item-subtext {
-  font-size: 9.5px;
+  font-size: var(--font-size-caption);
   color: #94948e;
 }
 
 .item-status {
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   color: #94948e;
 }
 
@@ -337,14 +337,14 @@ function goToJournalNew() {
 
 .tip-title {
   margin: 0;
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   color: #181817;
 }
 
 .tip-desc {
   margin: 0;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   line-height: 1.4;
   color: #666662;
 }

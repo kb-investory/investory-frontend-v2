@@ -22,7 +22,7 @@ defineProps({
   background: var(--color-primary-soft);
   color: var(--color-primary);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 </style>

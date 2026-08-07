@@ -31,6 +31,9 @@ defineEmits(['back'])
 
 <style scoped>
 .onboarding-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
   display: grid;
   width: 100%;
   height: 54px;
@@ -47,8 +50,9 @@ defineEmits(['back'])
   height: 40px;
   place-items: center;
   padding: 0;
-  border: 0;
-  background: transparent;
+  border: 1px solid #e1e8e8;
+  border-radius: 50%;
+  background: #ffffff;
   cursor: pointer;
 }
 
@@ -61,7 +65,7 @@ defineEmits(['back'])
   margin: 0;
   color: var(--color-heading);
   font-family: var(--font-heading);
-  font-size: 18px;
+  font-size: var(--font-size-title-md);
   font-weight: 700;
   text-align: center;
 }
@@ -73,9 +77,9 @@ defineEmits(['back'])
   background: var(--slate-strong);
   color: #ffffff;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
-  line-height: 16px;
+  line-height: 1.4;
   letter-spacing: 0.4px;
   white-space: nowrap;
 }
