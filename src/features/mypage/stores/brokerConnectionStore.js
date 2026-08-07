@@ -97,6 +97,7 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
         brokerId: selectedBroker.value.brokerId,
         ...credentials,
       })
+
       connectionStatus.value = 'success'
       return connection.value
     } catch (requestError) {
@@ -120,6 +121,7 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
 
     try {
       const response = await getConnectedHoldings({
+        connectionId: connection.value?.connectionId,
         brokerId: selectedBroker.value.brokerId,
       })
       account.value = response.account

@@ -36,11 +36,7 @@ const journalDate = computed(() => String(route.query.date || getDefaultJournalD
 const draftStorageKey = computed(() => `${DRAFT_KEY_PREFIX}${journalDate.value}`)
 const isEditMode = computed(() => Boolean(journalStore.dailyEntry?.journal))
 const canSubmit = computed(
-  () =>
-    form.marketMood &&
-    form.marketThought.trim().length > 0 &&
-    !journalStore.loading &&
-    (isEditMode.value || journalStore.dailyEntry?.canCreate !== false),
+  () => Boolean(form.marketMood) && form.marketThought.trim().length > 0 && !journalStore.loading,
 )
 const dateLabel = computed(() => {
   const date = new Date(`${journalDate.value}T00:00:00`)
@@ -161,8 +157,8 @@ async function handleSubmit() {
       ? '오늘의 투자 일기를 저장했어요. 이어서 수정할 수 있습니다.'
       : '오늘의 투자 일기를 저장했어요.'
     autoSaveStatus.value = '저장 완료 · 방금 전'
-  } catch {
-    resultMessage.value = '일기를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.'
+  } catch (err) {
+    resultMessage.value = err?.message || journalStore.error || '일기를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.'
   }
 }
 
