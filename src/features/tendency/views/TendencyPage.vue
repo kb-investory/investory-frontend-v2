@@ -182,7 +182,7 @@ onBeforeUnmount(() => {
       </BaseButton>
     </section>
 
-    <section v-else-if="tendencyStore.isAnalysisLocked" class="analysis-locked">
+    <section v-else-if="tendencyStore.isAnalysisLocked && activeTab === '투자성향'" class="analysis-locked">
       <header class="analysis-locked__header">
         <p>
           {{

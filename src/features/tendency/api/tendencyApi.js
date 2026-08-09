@@ -25,10 +25,68 @@ function addDays(dateKey, days) {
 }
 
 function createInitialFlowState() {
+  const defaultPrinciples = [
+    {
+      principleId: 1,
+      content: '분할 매수 시 단기 변동에 흔들리지 않고 미리 정한 목표 비중을 준수한다.',
+      originalContent: '분할 매수 시 단기 변동에 흔들리지 않고 미리 정한 목표 비중을 준수한다.',
+      category: 'PORTFOLIO_RISK_ALLOCATION',
+      isActive: true,
+      isUserModified: true,
+      sortOrder: 1,
+      appliedDate: formatDateKey(getDateBefore(30)),
+      recommendationSource: { type: 'USER_CREATED', label: '나의 투자원칙' },
+    },
+    {
+      principleId: 2,
+      content: '목표 수익률(+15%~20%) 도달 시 30% 수량을 기계적으로 분할 차익실현한다.',
+      originalContent: '목표 수익률(+15%~20%) 도달 시 30% 수량을 기계적으로 분할 차익실현한다.',
+      category: 'PROFIT_RESPONSE',
+      isActive: true,
+      isUserModified: true,
+      sortOrder: 2,
+      appliedDate: formatDateKey(getDateBefore(30)),
+      recommendationSource: { type: 'USER_CREATED', label: '나의 투자원칙' },
+    },
+    {
+      principleId: 3,
+      content: '기업 펀더멘털 근거가 유지되면 단기 변동성 손실 구간에서도 우직하게 보유한다.',
+      originalContent: '기업 펀더멘털 근거가 유지되면 단기 변동성 손실 구간에서도 우직하게 보유한다.',
+      category: 'LOSS_RESPONSE',
+      isActive: true,
+      isUserModified: true,
+      sortOrder: 3,
+      appliedDate: formatDateKey(getDateBefore(30)),
+      recommendationSource: { type: 'USER_CREATED', label: '나의 투자원칙' },
+    },
+    {
+      principleId: 4,
+      content: '상위 우량 3개 종목 비중을 60% 이상으로 유지하며 가치 투자를 이행한다.',
+      originalContent: '상위 우량 3개 종목 비중을 60% 이상으로 유지하며 가치 투자를 이행한다.',
+      category: 'BUY_JUDGMENT_BASIS',
+      isActive: true,
+      isUserModified: true,
+      sortOrder: 4,
+      appliedDate: formatDateKey(getDateBefore(30)),
+      recommendationSource: { type: 'USER_CREATED', label: '나의 투자원칙' },
+    },
+    {
+      principleId: 5,
+      content: '매매 전 작성한 원칙 수칙을 반드시 점검하고 일지에 근거를 기록한다.',
+      originalContent: '매매 전 작성한 원칙 수칙을 반드시 점검하고 일지에 근거를 기록한다.',
+      category: 'PRINCIPLE_FULFILLMENT',
+      isActive: true,
+      isUserModified: true,
+      sortOrder: 5,
+      appliedDate: formatDateKey(getDateBefore(30)),
+      recommendationSource: { type: 'USER_CREATED', label: '나의 투자원칙' },
+    },
+  ]
+
   return {
     serviceStartedDate: formatDateKey(getDateBefore(MINIMUM_RECORD_DAYS + 1)),
-    analysis: null,
-    principles: [],
+    analysis: tendencyData,
+    principles: defaultPrinciples,
   }
 }
 
