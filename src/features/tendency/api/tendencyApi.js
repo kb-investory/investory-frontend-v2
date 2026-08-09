@@ -161,20 +161,13 @@ export async function getTendencyAccessStatus() {
   }
 }
 
-const USE_MOCK_FALLBACK = import.meta.env.VITE_USE_MOCK_FALLBACK !== 'false'
-
 export async function getRecommendedPrinciples() {
-  try {
-    const data = await request('/api/v1/principles/recommendations')
-    return data
-  } catch (error) {
-    if (!USE_MOCK_FALLBACK) throw error
-    console.warn('API /api/v1/principles/recommendations 요청 실패, 목데이터를 사용합니다:', error)
-    return {
-      recommendations: tendencyData.suggestedPrinciples,
-    }
+  return {
+    recommendations: tendencyData.suggestedPrinciples || [],
   }
 }
+
+const USE_MOCK_FALLBACK = import.meta.env.VITE_USE_MOCK_FALLBACK !== 'false'
 
 export async function saveUserPrinciples({ principles }) {
   try {
