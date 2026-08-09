@@ -170,14 +170,6 @@ onBeforeRouteLeave(() => {
 
 onMounted(async () => {
   await tendencyStore.fetchTendencies()
-  if (tendencyStore.isAnalysisLocked) {
-    await router.replace({
-      name: ROUTE_NAMES.TENDENCY,
-      query: { tab: 'principles' },
-    })
-    return
-  }
-
   window.addEventListener('beforeunload', handleBeforeUnload)
 })
 
