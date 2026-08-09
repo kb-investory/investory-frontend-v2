@@ -39,12 +39,12 @@ const canSubmit = computed(
   () => Boolean(form.marketMood) && form.marketThought.trim().length > 0 && !journalStore.loading,
 )
 const dateLabel = computed(() => {
-  const date = route.query.date ? new Date(`${route.query.date}T00:00:00`) : new Date()
+  const date = new Date(`${journalDate.value}T00:00:00`)
   const weekday = new Intl.DateTimeFormat('ko-KR', { weekday: 'long' }).format(date)
   return `${date.getMonth() + 1}월 ${date.getDate()}일, ${weekday}`
 })
 const monthLabel = computed(() => {
-  const date = route.query.date ? new Date(`${route.query.date}T00:00:00`) : new Date()
+  const date = new Date(`${journalDate.value}T00:00:00`)
   return new Intl.DateTimeFormat('ko-KR', { month: '2-digit' })
     .format(date)
     .replace(/\D/g, '')
