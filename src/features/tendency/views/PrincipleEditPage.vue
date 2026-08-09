@@ -153,10 +153,10 @@ function handleBeforeUnload(event) {
 }
 
 watch(
-  [() => tendencyStore.analysis, () => tendencyStore.principles],
-  ([analysis, principles]) => {
-    if (initialized.value || !analysis) return
-    draftPrinciples.value = clonePrinciples(principles)
+  [() => tendencyStore.principles, () => tendencyStore.analysis],
+  ([principles]) => {
+    if (initialized.value) return
+    draftPrinciples.value = clonePrinciples(principles || [])
     initialSnapshot.value = currentSnapshot.value
     initialized.value = true
   },
