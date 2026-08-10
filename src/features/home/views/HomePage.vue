@@ -81,7 +81,7 @@ watch(
 )
 
 onMounted(async () => {
-  await Promise.allSettled([homeStore.fetchDashboard(), tendencyStore.fetchTendencies()])
+  await Promise.allSettled([homeStore.fetchDashboard(), tendencyStore.fetchLatestAnalysis()])
   tendencyStore.refreshAnalysisDate()
   scheduleMidnightRefresh()
 })

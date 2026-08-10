@@ -51,8 +51,7 @@ const podiumParticipants = computed(() => {
   const participatingTypes = new Set(participants.map((participant) => participant.variantType))
   const unselectedParticipants = Object.entries(SIMULATION_PARTICIPANT_META)
     .filter(
-      ([variantType]) =>
-        variantType !== 'ACTUAL_USER' && !participatingTypes.has(variantType),
+      ([variantType]) => variantType !== 'ACTUAL_USER' && !participatingTypes.has(variantType),
     )
     .map(([variantType, meta]) => ({ variantType, ...meta }))
   let unselectedIndex = 0
@@ -96,31 +95,12 @@ function goToSimulation() {
   router.push({ name: ROUTE_NAMES.SIMULATION })
 }
 
-function clearAuthStorage({ allMemberData = false } = {}) {
-  window.sessionStorage.clear()
-  if (allMemberData) {
-    Object.keys(window.localStorage)
-      .filter((key) => key.startsWith('investory:'))
-      .forEach((key) => window.localStorage.removeItem(key))
-    return
-  }
-
-  ;[
-    'accessToken',
-    'refreshToken',
-    'investory:auth',
-    'investory:oauth-session',
-    'investory:mock:oauth-provider',
-  ].forEach((key) => window.localStorage.removeItem(key))
-}
-
 async function confirmLogout() {
   if (processing.value) return
   processing.value = true
   actionError.value = ''
   try {
     await authStore.signOut()
-    clearAuthStorage()
     await router.replace({ name: ROUTE_NAMES.LOGIN })
   } catch {
     actionError.value = '로그아웃하지 못했어요. 다시 시도해주세요.'
@@ -142,7 +122,6 @@ async function confirmWithdrawal() {
     }
     await withdrawMember()
     await authStore.signOut()
-    clearAuthStorage({ allMemberData: true })
     await router.replace({ name: ROUTE_NAMES.LOGIN })
   } catch {
     actionError.value = '회원 탈퇴를 처리하지 못했어요. 다시 시도해주세요.'
@@ -160,7 +139,7 @@ function closeModal() {
 
 onMounted(async () => {
   if (!authStore.user) await authStore.fetchUser()
-  await mypageStore.fetchOverview({ force: true, authUser: authStore.user })
+  await mypageStore.fetchOverview({ authUser: authStore.user })
 })
 </script>
 
@@ -282,7 +261,8 @@ onMounted(async () => {
                   v-if="participant.rank === 1 && !participant.empty"
                   class="simulation-podium__crown"
                   aria-label="1위"
-                >👑</span>
+                  >👑</span
+                >
                 <span v-else class="simulation-podium__crown-placeholder" aria-hidden="true" />
                 <img v-if="participant.image" :src="participant.image" :alt="participant.label" />
                 <span v-else class="simulation-podium__empty-image" aria-hidden="true" />
