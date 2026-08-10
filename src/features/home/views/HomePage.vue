@@ -25,7 +25,10 @@ const tendencyStore = useTendencyStore()
 const reanalysisNoticeCollapsed = ref(true)
 let reanalysisMidnightTimer
 
-const journalRoute = { name: ROUTE_NAMES.JOURNAL_CREATE }
+const journalRoute = {
+  name: ROUTE_NAMES.JOURNAL_CREATE,
+  query: { from: 'home' },
+}
 const tendencyRoute = { name: ROUTE_NAMES.TENDENCY }
 const simulationRoute = { name: ROUTE_NAMES.SIMULATION }
 const { dateLabel, currentTime, remainingTime, dayProgressPercent } = useHomeClock()

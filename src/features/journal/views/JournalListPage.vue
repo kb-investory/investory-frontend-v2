@@ -59,7 +59,7 @@ function openJournal({ date }) {
 function writeTodayJournal() {
   router.push({
     name: ROUTE_NAMES.JOURNAL_CREATE,
-    query: { date: todayDate },
+    query: { date: todayDate, from: 'journal' },
   })
 }
 </script>
