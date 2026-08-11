@@ -487,7 +487,7 @@ onBeforeUnmount(() => {
 .edit-principle strong,
 .available-principles strong {
   color: #35474b;
-  font-size: var(--font-size-body);
+  font-size: 14px;
   line-height: 1.45;
 }
 
@@ -510,7 +510,7 @@ onBeforeUnmount(() => {
   background: #fff;
   color: #35474b;
   font: inherit;
-  font-size: var(--font-size-body);
+  font-size: 14px;
   line-height: 1.55;
   padding: 10px;
 }

@@ -1,7 +1,7 @@
 import tendencyData from '@/mocks/data/tendency.json'
 import { request } from '@/shared/api/client'
 
-const FLOW_STORAGE_KEY = 'investory:mock:tendency-flow:v6-analysis-empty'
+const FLOW_STORAGE_KEY = 'investory:mock:tendency-flow:v9-pre-analysis'
 const MINIMUM_RECORD_DAYS = 90
 
 function formatDateKey(date = new Date()) {
@@ -134,8 +134,7 @@ function readFlowState() {
   return writeFlowState(createInitialFlowState())
 }
 
-function createAnalysisResponse(previousAnalysis = null) {
-  const analyzedAt = getDateBefore(0)
+function createAnalysisResponse(previousAnalysis = null, analyzedAt = getDateBefore(0)) {
   const analyzedDate = formatDateKey(analyzedAt)
   const isReanalysis = Boolean(previousAnalysis)
   const analysisRunId = isReanalysis
