@@ -337,9 +337,10 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
 
 .journal-create-page__reflection {
   display: flex;
-  min-height: 220px;
-  align-items: center;
-  gap: 12px;
+  min-height: 316px;
+  align-items: stretch;
+  flex-direction: column;
+  gap: 16px;
   padding: 12px;
   border: 1px solid #e4e9ea;
   border-radius: 16px;
@@ -349,7 +350,7 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
 
 .journal-create-page__reflection :deep(.base-textarea) {
   min-width: 0;
-  flex: 1 1 0;
+  width: 100%;
 }
 
 .journal-create-page__reflection :deep(.base-textarea__field-wrapper) {
@@ -357,7 +358,7 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
 }
 
 .journal-create-page__reflection :deep(.base-textarea__field) {
-  min-height: 152px;
+  min-height: 132px;
   resize: none;
 }
 
@@ -420,7 +421,7 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
   }
 
   .journal-create-page__reflection {
-    gap: 8px;
+    gap: 14px;
     padding: 10px;
   }
 

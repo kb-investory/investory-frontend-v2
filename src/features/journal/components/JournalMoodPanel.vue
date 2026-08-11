@@ -24,7 +24,7 @@ function selectMood(mood) {
   emit('update:modelValue', mood)
 }
 
-function selectNearestMood(clientY) {
+function selectNearestMood(clientX) {
   const optionElements = controlRef.value?.querySelectorAll('.mood-selector__option')
 
   if (!optionElements?.length) return
@@ -34,7 +34,7 @@ function selectNearestMood(clientY) {
 
   optionElements.forEach((optionElement, index) => {
     const optionRect = optionElement.getBoundingClientRect()
-    const distance = Math.abs(clientY - (optionRect.top + optionRect.height / 2))
+    const distance = Math.abs(clientX - (optionRect.left + optionRect.width / 2))
 
     if (distance < nearestDistance) {
       nearestIndex = index
@@ -52,19 +52,19 @@ function selectNearestMood(clientY) {
 function startMoodDrag(event) {
   draggingPointerId.value = event.pointerId
   event.currentTarget.setPointerCapture?.(event.pointerId)
-  selectNearestMood(event.clientY)
+  selectNearestMood(event.clientX)
 }
 
 function moveMoodDrag(event) {
   if (draggingPointerId.value !== event.pointerId) return
 
-  selectNearestMood(event.clientY)
+  selectNearestMood(event.clientX)
 }
 
 function finishMoodDrag(event) {
   if (draggingPointerId.value !== event.pointerId) return
 
-  selectNearestMood(event.clientY)
+  selectNearestMood(event.clientX)
   event.currentTarget.releasePointerCapture?.(event.pointerId)
   draggingPointerId.value = null
 }
@@ -109,10 +109,9 @@ function finishMoodDrag(event) {
 
 <style scoped>
 .mood-selector {
-  width: 118px;
-  min-width: 118px;
+  width: 100%;
   margin: 0;
-  padding: 4px 2px;
+  padding: 2px 0 4px;
   border: 0;
 }
 
@@ -125,7 +124,7 @@ function finishMoodDrag(event) {
 }
 
 .mood-selector__description {
-  margin: 2px 0 7px;
+  margin: 2px 0 14px;
   color: var(--text-tertiary);
   font-size: var(--font-size-caption);
   line-height: 1.4;
@@ -133,29 +132,31 @@ function finishMoodDrag(event) {
 
 .mood-selector__control {
   position: relative;
-  display: flex;
-  height: 118px;
-  flex-direction: column;
-  justify-content: space-between;
-  padding-left: 27px;
+  display: grid;
+  min-height: 62px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: start;
 }
 
 .mood-selector__rail {
   position: absolute;
-  top: 6px;
-  bottom: 6px;
-  left: 8px;
-  width: 12px;
+  top: 10px;
+  right: calc(12.5% - 8px);
+  left: calc(12.5% - 8px);
+  height: 12px;
   border-radius: 6px;
-  background: linear-gradient(180deg, #e34b4b 0%, #e58b2d 34%, #4bb7c5 68%, #3976d9 100%);
+  background: linear-gradient(90deg, #e34b4b 0%, #e58b2d 34%, #4bb7c5 68%, #3976d9 100%);
 }
 
 .mood-selector__option {
   position: relative;
   display: flex;
-  min-height: 22px;
+  min-width: 0;
+  min-height: 62px;
   align-items: center;
-  gap: 5px;
+  justify-content: flex-end;
+  flex-direction: column;
+  gap: 8px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -165,9 +166,8 @@ function finishMoodDrag(event) {
 }
 
 .mood-selector__handle {
-  position: absolute;
-  top: 50%;
-  left: -29px;
+  position: relative;
+  z-index: 1;
   display: grid;
   width: 32px;
   height: 32px;
@@ -178,7 +178,7 @@ function finishMoodDrag(event) {
   color: transparent;
   cursor: grab;
   touch-action: none;
-  transform: translateY(-50%);
+  transform: translateY(-5px);
   transition:
     border-color 0.15s ease,
     background-color 0.15s ease,
@@ -201,7 +201,6 @@ function finishMoodDrag(event) {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-left: 9px;
   font-size: var(--font-size-caption);
   font-weight: 600;
   line-height: 1.4;
