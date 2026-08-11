@@ -67,7 +67,11 @@ export const useMypageStore = defineStore('mypage', () => {
       const overview =
         overviewRes.status === 'fulfilled' && overviewRes.value
           ? overviewRes.value
-          : { profile: { nickname: '사용자', email: 'user@investory.com' }, accounts: [], appInfo: {} }
+          : {
+              profile: { nickname: '사용자', email: 'user@investory.com' },
+              accounts: [],
+              appInfo: {},
+            }
       const analysis = analysisRes.status === 'fulfilled' ? analysisRes.value : null
       const journalResponse =
         journalRes.status === 'fulfilled' && journalRes.value ? journalRes.value : { entries: [] }

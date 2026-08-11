@@ -100,7 +100,8 @@ export async function getHomeDashboard(today = new Date()) {
 
     const entries = entriesRes.status === 'fulfilled' ? entriesRes.value?.entries || [] : []
     const todayData = todayRes.status === 'fulfilled' ? todayRes.value || {} : {}
-    const connections = connectionsRes.status === 'fulfilled' ? connectionsRes.value?.connections || [] : []
+    const connections =
+      connectionsRes.status === 'fulfilled' ? connectionsRes.value?.connections || [] : []
 
     const trades = todayData.trades || []
     const buyTrades = trades.filter((t) => t.tradeSide === 'BUY').length
@@ -121,7 +122,9 @@ export async function getHomeDashboard(today = new Date()) {
 
     const dashboard = {
       today: {
-        title: isTodayJournalWritten ? '오늘의 기록이 완성되었습니다' : '오늘의 선택을 기록으로 이어가요',
+        title: isTodayJournalWritten
+          ? '오늘의 기록이 완성되었습니다'
+          : '오늘의 선택을 기록으로 이어가요',
         totalTrades: trades.length ? trades.length : defaultToday.totalTrades,
         buyTrades: trades.length ? buyTrades : defaultToday.buyTrades,
         sellTrades: trades.length ? sellTrades : defaultToday.sellTrades,

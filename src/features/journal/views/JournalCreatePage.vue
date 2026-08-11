@@ -45,9 +45,7 @@ const dateLabel = computed(() => {
 })
 const monthLabel = computed(() => {
   const date = new Date(`${journalDate.value}T00:00:00`)
-  return new Intl.DateTimeFormat('ko-KR', { month: '2-digit' })
-    .format(date)
-    .replace(/\D/g, '')
+  return new Intl.DateTimeFormat('ko-KR', { month: '2-digit' }).format(date).replace(/\D/g, '')
 })
 const sortedTrades = computed(() => {
   const trades = [...(journalStore.dailyEntry?.trades ?? [])]
@@ -159,7 +157,8 @@ async function handleSubmit() {
       : '오늘의 투자 일기를 저장했어요.'
     autoSaveStatus.value = '저장 완료 · 방금 전'
   } catch (err) {
-    resultMessage.value = err?.message || journalStore.error || '일기를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.'
+    resultMessage.value =
+      err?.message || journalStore.error || '일기를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.'
   }
 }
 

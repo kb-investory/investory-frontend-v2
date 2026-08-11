@@ -51,7 +51,8 @@ function createInitialFlowState() {
     {
       principleId: 3,
       content: '기업 펀더멘털 근거가 유지되면 단기 변동성 손실 구간에서도 우직하게 보유한다.',
-      originalContent: '기업 펀더멘털 근거가 유지되면 단기 변동성 손실 구간에서도 우직하게 보유한다.',
+      originalContent:
+        '기업 펀더멘털 근거가 유지되면 단기 변동성 손실 구간에서도 우직하게 보유한다.',
       category: 'LOSS_RESPONSE',
       isActive: true,
       isUserModified: true,
