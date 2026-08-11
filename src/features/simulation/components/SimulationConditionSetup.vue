@@ -1,13 +1,9 @@
 <script setup>
-import { computed, onUnmounted, ref, watch } from 'vue'
-import { queryClient } from '@/app/providers/queryClient'
-import { getInitialCapital } from '@/features/simulation/api/simulationApi'
 import SimulationParticipantAvatar from '@/features/simulation/components/SimulationParticipantAvatar.vue'
+import { useSimulationConditions } from '@/features/simulation/composables/useSimulationConditions'
+import { useSimulationStore } from '@/features/simulation/stores/simulationStore'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
-import { queryKeys } from '@/shared/api/queryKeys'
-
-const DAY_IN_MS = 24 * 60 * 60 * 1000
 
 const props = defineProps({
   periodStart: {
@@ -37,145 +33,31 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['start'])
-
-const startOffset = ref(0)
-const endOffset = ref(1)
-const currentInitialCapital = ref(props.initialCapital ?? 5000000)
-
-const maxOffset = computed(() => {
-  const start = new Date(`${props.periodStart}T00:00:00`)
-  const end = new Date(`${props.periodEnd}T00:00:00`)
-  return Math.max(1, Math.round((end - start) / DAY_IN_MS))
-})
-
-watch(
+const simulationStore = useSimulationStore()
+const {
+  startOffset,
+  endOffset,
+  currentInitialCapital,
   maxOffset,
-  (value) => {
-    startOffset.value = 0
-    endOffset.value = value
-  },
-  { immediate: true },
-)
-
-const participants = computed(() => {
-  const items = [
-    { type: 'ACTUAL_USER', className: 'PLAYER', name: '실제 나', tone: 'actual' },
-    { type: 'PERSONAL_BOT', className: 'PERSONAL', name: '나의 봇 v3', tone: 'personal' },
-  ]
-
-  if (props.selectedBotTypes.includes('FAMOUS_STRATEGY')) {
-    items.push({
-      type: 'FAMOUS_STRATEGY',
-      className: 'LEGEND',
-      name: '유명 투자자',
-      tone: 'legend',
-    })
-  }
-  if (props.selectedBotTypes.includes('RANDOM_BOT')) {
-    items.push({ type: 'RANDOM_BOT', className: 'WILD', name: '원숭이', tone: 'wild' })
-  }
-  return items
-})
-
-const participantCount = computed(() => participants.value.length)
-const selectedDays = computed(() => endOffset.value - startOffset.value + 1)
-const startPercent = computed(() => (startOffset.value / maxOffset.value) * 100)
-const endPercent = computed(() => (endOffset.value / maxOffset.value) * 100)
-
-function dateAtOffset(offset) {
-  const date = new Date(`${props.periodStart}T00:00:00`)
-  date.setDate(date.getDate() + offset)
-  return date
-}
-
-function formatDate(date) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}. ${month}. ${day}`
-}
-
-function toApiDate(date) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-const selectedStartDate = computed(() => dateAtOffset(startOffset.value))
-const selectedEndDate = computed(() => dateAtOffset(endOffset.value))
-const selectedStartDateStr = computed(() => toApiDate(selectedStartDate.value))
-
-let debounceTimer = null
-let isFirstCall = true
-let capitalRequestId = 0
-
-watch(
-  selectedStartDateStr,
-  (newApiDate) => {
-    if (!newApiDate) return
-
-    if (debounceTimer) {
-      clearTimeout(debounceTimer)
-      debounceTimer = null
-    }
-
-    if (isFirstCall) {
-      isFirstCall = false
-      if (Number(props.initialCapital) > 0) return
-    }
-
-    const requestId = ++capitalRequestId
-    const fetchCapital = async () => {
-      try {
-        const res = await queryClient.fetchQuery({
-          queryKey: queryKeys.simulation.initialCapital(newApiDate),
-          queryFn: () => getInitialCapital(newApiDate),
-          staleTime: 5 * 60 * 1000,
-        })
-        if (requestId !== capitalRequestId) return
-        const capital =
-          res?.totalInitialCapital ?? res?.recommendedInitialCapital ?? res?.total_initial_capital
-        if (typeof capital === 'number' && capital > 0) {
-          currentInitialCapital.value = capital
-        }
-      } catch (e) {
-        console.warn('Failed to fetch initial capital for date:', e)
-      }
-    }
-
-    debounceTimer = setTimeout(fetchCapital, 300)
-  },
-  { immediate: true },
-)
-
-onUnmounted(() => {
-  capitalRequestId += 1
-  if (debounceTimer) {
-    clearTimeout(debounceTimer)
-  }
-})
-
-function updateStart(event) {
-  startOffset.value = Math.min(Number(event.target.value), endOffset.value - 1)
-}
-
-function updateEnd(event) {
-  endOffset.value = Math.max(Number(event.target.value), startOffset.value + 1)
-}
-
-function formatCurrency(value) {
-  return new Intl.NumberFormat('ko-KR').format(value)
-}
+  participants,
+  participantCount,
+  selectedDays,
+  startPercent,
+  endPercent,
+  selectedStartDate,
+  selectedEndDate,
+  dateAtOffset,
+  updateStart,
+  updateEnd,
+  formatDate,
+  formatCurrency,
+  getConditions,
+} = useSimulationConditions(props, simulationStore.fetchInitialCapital)
 
 function startSimulation() {
   if (props.isPending) return
 
-  emit('start', {
-    periodStart: toApiDate(selectedStartDate.value),
-    periodEnd: toApiDate(selectedEndDate.value),
-    initialCapital: currentInitialCapital.value,
-  })
+  emit('start', getConditions())
 }
 </script>
 

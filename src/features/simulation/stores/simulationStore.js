@@ -4,6 +4,7 @@ import { computed, ref } from 'vue'
 import { queryClient } from '@/app/providers/queryClient'
 import {
   compileSimulationBot,
+  getInitialCapital,
   getLatestSimulationResult,
   getSimulationBotCompileJob,
   getSimulationComparators,
@@ -30,6 +31,9 @@ export const useSimulationStore = defineStore('simulation', () => {
   const comparators = ref([])
   const selectedComparatorTypes = ref(['FAMOUS_STRATEGY', 'RANDOM_BOT'])
   const simulationConditions = ref(null)
+  const initialCapital = ref(null)
+  const initialCapitalLoading = ref(false)
+  const initialCapitalError = ref(null)
   const loading = ref(false)
   const comparatorsLoading = ref(false)
   const comparatorsError = ref(null)
@@ -166,6 +170,27 @@ export const useSimulationStore = defineStore('simulation', () => {
       console.error('Failed to fetch simulation comparators:', error)
     } finally {
       comparatorsLoading.value = false
+    }
+  }
+
+  async function fetchInitialCapital(startDate) {
+    initialCapitalLoading.value = true
+    initialCapitalError.value = null
+
+    try {
+      const response = await getInitialCapital(startDate)
+      const capital =
+        response?.totalInitialCapital ??
+        response?.recommendedInitialCapital ??
+        response?.total_initial_capital
+
+      initialCapital.value = typeof capital === 'number' && capital > 0 ? capital : null
+      return initialCapital.value
+    } catch (error) {
+      initialCapitalError.value = error
+      return null
+    } finally {
+      initialCapitalLoading.value = false
     }
   }
 
@@ -391,6 +416,9 @@ export const useSimulationStore = defineStore('simulation', () => {
     comparators,
     selectedComparatorTypes,
     simulationConditions,
+    initialCapital,
+    initialCapitalLoading,
+    initialCapitalError,
     loading,
     comparatorsLoading,
     comparatorsError,
@@ -411,6 +439,7 @@ export const useSimulationStore = defineStore('simulation', () => {
     MIN_REQUIRED_DAYS,
     fetchOverview,
     fetchComparators,
+    fetchInitialCapital,
     fetchSimulationReport,
     compilePersonalBot,
     cancelBotCompilation,
