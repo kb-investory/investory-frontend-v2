@@ -118,7 +118,32 @@ export async function getJournalById(journalId) {
 
 export async function getJournalEntryOnDate(journalDate = getDefaultJournalDate()) {
   try {
-    return await request(`/journal/entries/on/${journalDate}`)
+    const entryData = await request(`/journal/entries/on/${journalDate}`)
+
+    if (entryData && (!entryData.trades || entryData.trades.length === 0)) {
+      try {
+        const ledgerTradesData = await request(
+          `/ledger/trades?from=${journalDate}&to=${journalDate}&size=100`,
+        )
+        if (ledgerTradesData?.content && ledgerTradesData.content.length > 0) {
+          entryData.trades = ledgerTradesData.content.map((t) => ({
+            tradeId: t.tradeId,
+            securityId: t.securityId,
+            securityCode: t.securityCode,
+            securityName: t.securityName,
+            tradeSide: t.tradeSide,
+            quantity: t.quantity,
+            unitPrice: t.unitPrice,
+            tradedAt: t.tradedAt,
+            note: null,
+          }))
+        }
+      } catch (err) {
+        console.warn(`일자별 /ledger/trades 조회 보정 실패 (${journalDate}):`, err)
+      }
+    }
+
+    return entryData
   } catch (error) {
     if (!USE_MOCK_FALLBACK) throw error
     console.warn(`API /journal/entries/on/${journalDate} 요청 실패, 목데이터를 사용합니다:`, error)
