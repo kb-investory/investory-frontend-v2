@@ -7,7 +7,7 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const javaBackendUrl = env.VITE_API_TARGET_URL || 'http://investory.duckdns.org/api/v1'
+  const javaBackendUrl = env.VITE_API_TARGET_URL || 'http://localhost:8080/api/v1'
   const pythonAiUrl = env.VITE_AI_TARGET_URL || 'http://localhost:8000'
 
   return {
