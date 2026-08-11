@@ -160,20 +160,79 @@ export async function updateBrokerAccountName(accountId, accountName) {
   }
 }
 
-export async function getConnectedHoldings({ brokerId }) {
-  const provider = onboardingData.providers.find((item) => item.brokerId === Number(brokerId))
+export async function getConnectedHoldings({ connectionId, brokerId, accountId } = {}) {
+  try {
+    const searchParams = new URLSearchParams()
+    if (accountId) searchParams.set('accountId', accountId)
+    const query = searchParams.toString()
+    const ledgerHoldingsData = await request(`/ledger/holdings${query ? `?${query}` : ''}`)
 
-  const holdings = clone(onboardingData.holdings)
+    let accountInfo = null
+    if (connectionId) {
+      try {
+        accountInfo = await request(`/broker/connections/${connectionId}/accounts`)
+      } catch (err) {
+        console.warn(`API /broker/connections/${connectionId}/accounts 조회 실패:`, err)
+      }
+    }
 
-  return {
-    account: {
-      brokerId: provider?.brokerId ?? Number(brokerId),
-      brokerCode: provider?.brokerCode ?? 'KB',
-      brokerName: provider?.brokerName ?? 'KB증권',
-      accountCount: onboardingData.account.accountCount,
-    },
-    reasonCount: onboardingData.account.reasonCount,
-    totalValuation: holdings.reduce((total, holding) => total + holding.valuationAmount, 0),
-    holdings,
+    const provider = onboardingData.providers.find((item) => item.brokerId === Number(brokerId))
+    const holdings = ledgerHoldingsData?.holdings || []
+
+    return {
+      account: {
+        brokerId: provider?.brokerId ?? Number(brokerId),
+        brokerCode: provider?.brokerCode ?? accountInfo?.brokerCode ?? 'KB',
+        brokerName: provider?.brokerName ?? accountInfo?.brokerName ?? 'KB증권',
+        accountCount: accountInfo?.accounts?.length ?? onboardingData.account.accountCount,
+      },
+      reasonCount: holdings.length,
+      snapshotDate: ledgerHoldingsData?.snapshotDate || null,
+      totalValuation:
+        ledgerHoldingsData?.summary?.totalMarketValue ??
+        holdings.reduce((total, h) => total + (h.valuationAmount || h.marketValue || 0), 0),
+      holdings: holdings.map((h) => {
+        const name = h.securityName || h.stockName || h.name || '종목명 없음'
+        const code = h.securityCode || h.stockCode || ''
+        const avgCost = h.averagePurchasePrice ?? h.avgPrice ?? h.averageCost ?? 0
+        const valuationAmount =
+          h.valuationAmount ?? h.marketValue ?? h.quantity * (h.currentPrice || 0)
+
+        return {
+          securityId: h.securityId,
+          securityCode: code,
+          securityName: name,
+          stockCode: code,
+          stockName: name,
+          name: name,
+          quantity: h.quantity,
+          averagePurchasePrice: avgCost,
+          avgCost: avgCost,
+          currentPrice: h.currentPrice ?? 0,
+          valuationAmount: valuationAmount,
+          marketValue: valuationAmount,
+          unrealizedProfitLoss: h.unrealizedProfitLoss ?? h.profitLossAmount ?? 0,
+          returnRate: h.returnRate ?? h.profitRate ?? 0,
+        }
+      }),
+    }
+  } catch (error) {
+    if (!USE_MOCK_FALLBACK) throw error
+    console.warn('API /ledger/holdings 요청 실패, 온보딩 목데이터를 사용합니다:', error)
+    const provider = onboardingData.providers.find((item) => item.brokerId === Number(brokerId))
+
+    const holdings = clone(onboardingData.holdings)
+
+    return {
+      account: {
+        brokerId: provider?.brokerId ?? Number(brokerId),
+        brokerCode: provider?.brokerCode ?? 'KB',
+        brokerName: provider?.brokerName ?? 'KB증권',
+        accountCount: onboardingData.account.accountCount,
+      },
+      reasonCount: onboardingData.account.reasonCount,
+      totalValuation: holdings.reduce((total, holding) => total + holding.valuationAmount, 0),
+      holdings,
+    }
   }
 }
