@@ -12,7 +12,6 @@ const router = useRouter()
 const tendencyStore = useTendencyStore()
 const selectedIds = ref([])
 const initialSelectedIds = ref([])
-const tendencySummaryOpen = ref(true)
 const applying = ref(false)
 const applyError = ref('')
 const selectionInitialized = ref(false)
@@ -122,11 +121,7 @@ onBeforeUnmount(() => {
       <button type="button" aria-label="이전 화면으로 돌아가기" @click="router.back()">
         <AppIcon name="chevron-left" :size="20" />
       </button>
-      <div>
-        <strong>추천 원칙 선택</strong>
-        <span>필요한 원칙만 골라 담아보세요</span>
-      </div>
-      <span class="selection-count">{{ selectedCount }}개 선택</span>
+      <h1>추천 원칙 선택</h1>
     </header>
 
     <div v-if="tendencyStore.loading || tendencyStore.isAnalysisLocked" class="loading-wrapper">
@@ -134,45 +129,22 @@ onBeforeUnmount(() => {
     </div>
 
     <main v-else-if="recommendations.length" class="recommendation-content">
-      <section class="tendency-summary">
-        <button
-          type="button"
-          class="tendency-summary__toggle"
-          :aria-expanded="tendencySummaryOpen"
-          aria-controls="recommendation-tendency-summary"
-          @click="tendencySummaryOpen = !tendencySummaryOpen"
-        >
-          <span class="tendency-summary__icon">
-            <AppIcon name="sparkles" :size="15" />
-          </span>
-          <span>
-            <strong>추천에 반영된 나의 성향</strong>
-            <small>최근 90일 분석 결과</small>
-          </span>
-          <span class="tendency-summary__action">
-            <small>{{ tendencySummaryOpen ? '접기' : '열기' }}</small>
-            <AppIcon
-              name="chevron-down"
-              :size="15"
-              class="tendency-summary__chevron"
-              :class="{ 'tendency-summary__chevron--open': tendencySummaryOpen }"
-            />
-          </span>
-        </button>
-
-        <div
-          v-show="tendencySummaryOpen"
-          id="recommendation-tendency-summary"
-          class="tendency-summary__grid"
-        >
-          <div
-            v-for="result in tendencyStore.analysis?.analysisResults"
-            :key="result.dimension.code"
-          >
-            <span>{{ result.dimension.name }}</span>
-            <strong>{{ result.type.name }}</strong>
-          </div>
+      <section class="recommendation-intro">
+        <div class="recommendation-intro__eyebrow">
+          <AppIcon name="sparkles" :size="14" />
+          <span>성향 기반 추천</span>
         </div>
+        <span class="recommendation-intro__badge">{{ selectedCount }}개 선택 중</span>
+        <strong>필요한 원칙만<br /><em>골라 담아보세요.</em></strong>
+        <p>
+          최근 90일의 투자성향을 바탕으로 준비했어요.<br />지금 필요한 원칙만 선택해 적용해보세요.
+        </p>
+        <img
+          class="recommendation-intro__monkey"
+          src="/assets/images/recommendation-guide-monkey-v2.png"
+          alt=""
+          aria-hidden="true"
+        />
       </section>
 
       <section class="selection-section">
@@ -200,8 +172,8 @@ onBeforeUnmount(() => {
             </span>
 
             <div class="recommendation-card__content">
-              <strong>{{ recommendation.recommendationText }}</strong>
               <span>{{ recommendation.analysisType.name }} 기반</span>
+              <strong>{{ recommendation.recommendationText }}</strong>
             </div>
 
             <button
@@ -277,56 +249,42 @@ onBeforeUnmount(() => {
   top: 0;
   z-index: 30;
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr) auto;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
   align-items: center;
-  gap: 8px;
-  min-height: 54px;
+  min-height: 66px;
   margin: -20px -20px 0;
-  padding: 10px 20px 7px;
-  border-bottom: 1px solid rgba(222, 229, 229, 0.78);
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(10px);
+  padding: 0 16px;
+  background: #ffffff;
 }
 
 .detail-app-bar > button {
   display: inline-flex;
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   align-items: center;
   justify-content: center;
-  border: 0;
+  padding: 0;
+  border: 1px solid #e1e8e8;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.72);
-  color: #526164;
+  background: #ffffff;
+  color: #263a43;
   cursor: pointer;
 }
 
-.detail-app-bar > div {
-  display: grid;
-  gap: 2px;
+.detail-app-bar > button:hover {
+  background: #f3f6f6;
 }
 
-.detail-app-bar strong {
-  color: #24383d;
-  font-size: var(--font-size-body);
-  letter-spacing: -0.025em;
-}
-
-.detail-app-bar small,
-.detail-app-bar > div span {
-  color: #90999b;
-  font-size: var(--font-size-caption);
-}
-
-.selection-count {
-  min-width: 44px;
-  padding: 5px 7px;
-  border-radius: 7px;
-  background: #e7f7f6;
-  color: #087f7c;
-  font-size: var(--font-size-caption);
-  font-weight: 800;
+.detail-app-bar h1 {
+  margin: 0;
+  overflow: hidden;
+  color: #181817;
+  font-family: var(--font-heading);
+  font-size: var(--font-size-title-md);
+  font-weight: 700;
   text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .recommendation-content {
@@ -335,125 +293,98 @@ onBeforeUnmount(() => {
   padding-bottom: 92px;
 }
 
-.tendency-summary {
-  overflow: hidden;
-  border: 1px solid #d7e5e4;
-  border-radius: 13px;
-  background: #fff;
-  box-shadow: 0 3px 12px rgba(34, 68, 70, 0.035);
-}
-
-.tendency-summary__toggle {
+.recommendation-intro {
+  position: relative;
   display: grid;
-  grid-template-columns: 30px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 9px;
-  width: 100%;
-  min-height: 58px;
-  padding: 10px 11px;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  text-align: left;
-}
-
-.tendency-summary__icon {
-  display: inline-flex;
-  width: 30px;
-  height: 30px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  background: #e4f7f5;
-  color: #0a928d;
-}
-
-.tendency-summary__toggle > span:nth-child(2) {
-  display: grid;
-  gap: 2px;
-}
-
-.tendency-summary__toggle strong {
-  color: #33464a;
-  font-size: var(--font-size-body);
-  letter-spacing: -0.02em;
-}
-
-.tendency-summary__toggle small {
-  color: #929b9d;
-  font-size: var(--font-size-caption);
-}
-
-.tendency-summary__action {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  color: #0a8c88;
-}
-
-.tendency-summary__action small {
-  color: inherit;
-  font-size: var(--font-size-caption);
-  font-weight: 750;
-}
-
-.tendency-summary__chevron {
-  color: #768386;
-  transition: transform 0.18s ease;
-}
-
-.tendency-summary__chevron--open {
-  transform: rotate(180deg);
-}
-
-.tendency-summary__grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0;
-  margin: 0 11px 11px;
-  overflow: hidden;
-  border: 1px solid #e6ecec;
-  border-radius: 8px;
-  background: #f8fafa;
-}
-
-.tendency-summary__grid > div {
-  display: grid;
-  min-width: 0;
+  min-height: 158px;
+  margin-top: 22px;
   align-content: center;
-  gap: 3px;
-  min-height: 55px;
-  padding: 8px;
-  background: transparent;
+  gap: 8px;
+  overflow: hidden;
+  padding: 20px 92px 20px 18px;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 92% 12%, rgba(26, 189, 179, 0.22), transparent 36%),
+    linear-gradient(135deg, #263a43 0%, #18333c 100%);
+  box-shadow: 0 9px 22px rgba(28, 48, 56, 0.18);
+  color: #ffffff;
 }
 
-.tendency-summary__grid > div:nth-child(odd) {
-  border-right: 1px solid #e6ecec;
+.recommendation-intro::after {
+  position: absolute;
+  right: -22px;
+  bottom: -40px;
+  width: 130px;
+  height: 130px;
+  border: 1px solid rgba(94, 224, 215, 0.18);
+  border-radius: 50%;
+  box-shadow: 0 0 0 18px rgba(94, 224, 215, 0.04);
+  content: '';
 }
 
-.tendency-summary__grid > div:nth-child(-n + 4) {
-  border-bottom: 1px solid #e6ecec;
-}
-
-.tendency-summary__grid span {
+.recommendation-intro__eyebrow {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 5px;
+  color: #70ddd6;
   font-size: var(--font-size-caption);
-  line-height: 1.3;
-  word-break: keep-all;
+  font-weight: 800;
 }
 
-.tendency-summary__grid span {
-  color: #8a9496;
+.recommendation-intro__badge {
+  position: absolute;
+  z-index: 3;
+  top: 14px;
+  right: 14px;
+  padding: 6px 9px;
+  border: 1px solid rgba(112, 221, 214, 0.36);
+  border-radius: 999px;
+  background: #0b8f8b;
+  color: #ffffff;
+  font-size: var(--font-size-caption);
+  font-weight: 800;
 }
 
-.tendency-summary__grid strong {
-  color: #0a8c88;
-  font-size: var(--font-size-body);
+.recommendation-intro > strong {
+  position: relative;
+  z-index: 2;
+  font-size: 19px;
+  font-weight: 900;
   line-height: 1.35;
-  word-break: keep-all;
+  letter-spacing: -0.035em;
+}
+
+.recommendation-intro > strong em {
+  color: #65d9d2;
+  font-style: normal;
+}
+
+.recommendation-intro > p {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  color: #c8d6d9;
+  font-size: var(--font-size-caption);
+  line-height: 1.55;
+}
+
+.recommendation-intro__monkey {
+  position: absolute;
+  z-index: 1;
+  right: 4px;
+  bottom: -6px;
+  width: 88px;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
 }
 
 .selection-section {
   display: grid;
+  margin-top: 15px;
   gap: 8px;
 }
 
@@ -548,9 +479,9 @@ onBeforeUnmount(() => {
 
 .recommendation-card__content strong {
   color: #34464a;
-  font-size: var(--font-size-body);
+  font-size: 14px; /* 추천 원칙 글씨 크기 조정 */
   font-weight: 650;
-  line-height: 1.45;
+  line-height: 1.4;
   letter-spacing: -0.015em;
 }
 
@@ -586,7 +517,6 @@ onBeforeUnmount(() => {
 }
 
 .recommendation-card__toggle:focus-visible,
-.tendency-summary__toggle:focus-visible,
 .detail-app-bar button:focus-visible {
   outline: 2px solid #0b8f8b;
   outline-offset: 2px;
@@ -651,7 +581,11 @@ onBeforeUnmount(() => {
 
 @media (max-width: 440px) {
   .recommendation-page {
-    padding-top: 54px;
+    padding-top: 66px;
+  }
+
+  .recommendation-content {
+    padding-top: 14px;
   }
 
   .detail-app-bar {
