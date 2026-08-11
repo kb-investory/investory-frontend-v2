@@ -100,14 +100,14 @@
     },
     {
       "journalId": 108,
-      "journalDate": "2026-08-08",
+      "journalDate": "2026-08-05",
       "marketThought": "매매 횟수가 늘어난 이유를 복기하고 다음 주 기준을 다시 세웠다.",
       "marketMood": "CAUTIOUS",
       "tradeCount": 3,
       "tradeNoteCount": 2,
       "complianceRate": 82,
-      "createdAt": "2026-08-08T12:00:00Z",
-      "editableUntilAt": "2026-08-09T00:00:00Z",
+      "createdAt": "2026-08-05T12:00:00Z",
+      "editableUntilAt": "2026-08-06T00:00:00Z",
       "isBackfilled": true,
       "isEditable": false,
       "trades": []

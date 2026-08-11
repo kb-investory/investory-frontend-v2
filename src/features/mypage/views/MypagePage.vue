@@ -51,8 +51,7 @@ const podiumParticipants = computed(() => {
   const participatingTypes = new Set(participants.map((participant) => participant.variantType))
   const unselectedParticipants = Object.entries(SIMULATION_PARTICIPANT_META)
     .filter(
-      ([variantType]) =>
-        variantType !== 'ACTUAL_USER' && !participatingTypes.has(variantType),
+      ([variantType]) => variantType !== 'ACTUAL_USER' && !participatingTypes.has(variantType),
     )
     .map(([variantType, meta]) => ({ variantType, ...meta }))
   let unselectedIndex = 0
@@ -282,7 +281,8 @@ onMounted(async () => {
                   v-if="participant.rank === 1 && !participant.empty"
                   class="simulation-podium__crown"
                   aria-label="1위"
-                >👑</span>
+                  >👑</span
+                >
                 <span v-else class="simulation-podium__crown-placeholder" aria-hidden="true" />
                 <img v-if="participant.image" :src="participant.image" :alt="participant.label" />
                 <span v-else class="simulation-podium__empty-image" aria-hidden="true" />

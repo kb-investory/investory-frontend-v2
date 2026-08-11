@@ -1,5 +1,8 @@
 import stockSearchData from '@/mocks/data/journal-stock-search.json'
 import stockTimelineData from '@/mocks/data/journal-stock-timeline.json'
+import { request } from '@/shared/api/client'
+
+const USE_MOCK_FALLBACK = import.meta.env.VITE_USE_MOCK_FALLBACK !== 'false'
 
 const RECENT_STOCKS_KEY = 'investory-journal-recent-stocks'
 
@@ -68,12 +71,31 @@ export async function saveRecentJournalStock(securityCode) {
 }
 
 export async function getJournalStockTimeline({
+  securityId,
   securityCode,
   startDate,
   endDate,
   page = 0,
   size = 20,
 }) {
+  try {
+    const targetSecurityId =
+      securityId || stockSearchData.stocks.find((s) => s.securityCode === securityCode)?.securityId
+    if (targetSecurityId) {
+      const searchParams = new URLSearchParams()
+      searchParams.set('securityId', targetSecurityId)
+      if (startDate) searchParams.set('startDate', startDate)
+      if (endDate) searchParams.set('endDate', endDate)
+      searchParams.set('page', page)
+      searchParams.set('size', size)
+
+      return await request(`/journal/trades?${searchParams.toString()}`)
+    }
+  } catch (error) {
+    if (!USE_MOCK_FALLBACK) throw error
+    console.warn('API /journal/trades 요청 실패, 목데이터 타임라인을 사용합니다:', error)
+  }
+
   const stock = stockSearchData.stocks.find((item) => item.securityCode === securityCode)
   const timeline = stockTimelineData.stockTimelines[securityCode]
 

@@ -57,25 +57,39 @@ export const useMypageStore = defineStore('mypage', () => {
     error.value = null
 
     try {
-      const [overview, analysis, journalResponse, simulationResult] = await Promise.all([
+      const [overviewRes, analysisRes, journalRes, simulationRes] = await Promise.allSettled([
         getMypageOverview(),
         getLatestTendencyAnalysis(),
         getJournalEntries(),
         getLatestCompletedSimulationResult(),
       ])
+
+      const overview =
+        overviewRes.status === 'fulfilled' && overviewRes.value
+          ? overviewRes.value
+          : {
+              profile: { nickname: '사용자', email: 'user@investory.com' },
+              accounts: [],
+              appInfo: {},
+            }
+      const analysis = analysisRes.status === 'fulfilled' ? analysisRes.value : null
+      const journalResponse =
+        journalRes.status === 'fulfilled' && journalRes.value ? journalRes.value : { entries: [] }
+      const simulationResult = simulationRes.status === 'fulfilled' ? simulationRes.value : null
+
       const oauthProvider = String(
-        authUser?.oauthProvider || authUser?.socialType || overview.profile.oauthProvider || '',
+        authUser?.oauthProvider || authUser?.socialType || overview.profile?.oauthProvider || '',
       ).toUpperCase()
       profile.value = {
         ...overview.profile,
         ...(authUser
           ? {
-              email: authUser.email || overview.profile.email,
+              email: authUser.email || overview.profile?.email,
             }
           : {}),
         oauthProvider,
         oauthProviderLabel: OAUTH_PROVIDER_LABELS[oauthProvider] || '소셜',
-        totalJournalsCount: journalResponse.entries.length,
+        totalJournalsCount: journalResponse?.entries?.length ?? 0,
       }
       tendencyBadges.value = (analysis?.analysisResults || []).map((result) => ({
         code: result.dimension.code,
@@ -103,8 +117,8 @@ export const useMypageStore = defineStore('mypage', () => {
             })),
           }
         : null
-      accounts.value = overview.accounts
-      appInfo.value = overview.appInfo
+      accounts.value = overview.accounts || []
+      appInfo.value = overview.appInfo || {}
       hasTendencyAnalysis.value = Boolean(analysis)
     } catch (requestError) {
       error.value = requestError
