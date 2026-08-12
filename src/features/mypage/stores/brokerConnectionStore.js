@@ -7,7 +7,6 @@ import {
   getBrokerProviders,
   getConnectedHoldings,
 } from '@/features/mypage/api/brokerConnectionApi'
-import { addConnectedBrokerAccounts } from '@/features/mypage/api/mypageApi'
 import { queryKeys } from '@/shared/api/queryKeys'
 
 const CONNECTION_SESSION_KEY = 'investory:broker-connection'
@@ -29,7 +28,6 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
   const connection = ref(savedConnection?.connection ?? null)
   const account = ref(savedConnection?.account ?? null)
   const holdings = ref(savedConnection?.holdings ?? [])
-  const reasonCount = ref(savedConnection?.reasonCount ?? 0)
   const loading = ref(false)
   const error = ref(null)
   const connectionStatus = ref('idle')
@@ -52,7 +50,7 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
   const hasLoadedHoldings = computed(() => hasVerifiedConnection.value && Boolean(account.value))
 
   const totalValuation = computed(() =>
-    holdings.value.reduce((total, holding) => total + holding.valuationAmount, 0),
+    holdings.value.reduce((total, holding) => total + Number(holding.valuationAmount || 0), 0),
   )
 
   async function fetchProviders(query = '') {
@@ -139,10 +137,11 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
       const response = await getConnectedHoldings({
         connectionId: connection.value?.connectionId,
         brokerId: selectedBroker.value.brokerId,
+        brokerCode: selectedBroker.value.brokerCode,
+        brokerName: selectedBroker.value.brokerName,
       })
       account.value = response.account
       holdings.value = response.holdings
-      reasonCount.value = response.reasonCount
       return response
     } catch (requestError) {
       holdingsError.value = requestError
@@ -163,11 +162,6 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
       throw new Error('보유 종목 확인을 완료한 후 계좌 연결을 마쳐 주세요.')
     }
 
-    await addConnectedBrokerAccounts({
-      connection: connection.value,
-      account: account.value,
-      holdings: holdings.value,
-    })
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: queryKeys.mypage.all }),
       queryClient.invalidateQueries({ queryKey: queryKeys.home.all }),
@@ -181,7 +175,6 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
           connection: connection.value,
           account: account.value,
           holdings: holdings.value,
-          reasonCount: reasonCount.value,
         }),
       )
     } catch {
@@ -196,7 +189,6 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
     connection.value = null
     account.value = null
     holdings.value = []
-    reasonCount.value = 0
     loading.value = false
     error.value = null
     connectionStatus.value = 'idle'
@@ -219,7 +211,6 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
     connection,
     account,
     holdings,
-    reasonCount,
     loading,
     error,
     connectionStatus,
