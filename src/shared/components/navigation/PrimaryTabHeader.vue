@@ -46,8 +46,8 @@ defineProps({
   position: relative;
   overflow: hidden;
   width: 100%;
-  min-height: 220px;
-  padding-bottom: 44px;
+  min-height: 192px;
+  padding-bottom: 32px;
   background:
     radial-gradient(circle at 88% 24%, rgb(13 154 153 / 20%), transparent 31%),
     linear-gradient(145deg, #02141d 0%, #03232c 62%, #06404a 100%);
@@ -66,7 +66,7 @@ defineProps({
 }
 
 .primary-tab-header--flat-bottom {
-  padding-bottom: 44px;
+  padding-bottom: 32px;
 }
 
 .primary-tab-header--flat-bottom::after {
@@ -119,10 +119,12 @@ defineProps({
   position: absolute;
   z-index: 2;
   right: 14px;
-  bottom: 29px;
+  bottom: 16px;
   width: 178px;
   height: 118px;
   opacity: 0.68;
+  transform: scale(0.9);
+  transform-origin: right bottom;
 }
 
 .primary-tab-header__orbit {
@@ -168,12 +170,12 @@ defineProps({
   position: relative;
   z-index: 3;
   display: flex;
-  min-height: 90px;
+  min-height: 68px;
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-end;
-  gap: 14px;
-  padding: 8px 26px 0;
+  gap: 10px;
+  padding: 0 26px;
 }
 
 .primary-tab-header__title h1 {
