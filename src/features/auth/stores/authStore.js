@@ -7,6 +7,26 @@ import { getMe, loginWithOAuth, logout as logoutApi } from '@/features/auth/api/
 import { refreshAccessToken } from '@/modules/auth/services/authService'
 import { queryKeys } from '@/shared/api/queryKeys'
 
+const USE_TEST_AUTH = import.meta.env.DEV || import.meta.env.VITE_USE_TEST_AUTH === 'true'
+const TEST_AUTH_SESSION_KEY = 'investory:test-auth-user'
+
+function readTestUser() {
+  try {
+    const storedUser = JSON.parse(window.sessionStorage.getItem(TEST_AUTH_SESSION_KEY) || 'null')
+    return Number(storedUser?.userId) === 1 ? storedUser : null
+  } catch {
+    return null
+  }
+}
+
+function writeTestUser(user) {
+  window.sessionStorage.setItem(TEST_AUTH_SESSION_KEY, JSON.stringify(user))
+}
+
+function clearTestUser() {
+  window.sessionStorage.removeItem(TEST_AUTH_SESSION_KEY)
+}
+
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const isAuthenticated = ref(false)
@@ -29,6 +49,12 @@ export const useAuthStore = defineStore('auth', () => {
   async function fetchUser({ force = false } = {}) {
     loading.value = true
     try {
+      if (USE_TEST_AUTH) {
+        user.value = readTestUser()
+        isAuthenticated.value = Boolean(user.value)
+        return user.value
+      }
+
       if (force) {
         await queryClient.invalidateQueries({ queryKey: queryKeys.auth.currentUser(), exact: true })
       }
@@ -91,6 +117,23 @@ export const useAuthStore = defineStore('auth', () => {
     oauthMessage.value = `${providerName} 로그인을 진행하고 있어요.`
 
     try {
+      if (USE_TEST_AUTH) {
+        const testUser = {
+          userId: 1,
+          oauthProvider: provider.toUpperCase(),
+          email: 'tester@investory.local',
+          nickname: '테스트 사용자',
+          userStatus: 'ACTIVE',
+        }
+        writeTestUser(testUser)
+        user.value = testUser
+        isAuthenticated.value = true
+        initialized.value = true
+        oauthStatus.value = 'success'
+        oauthMessage.value = '테스트 로그인으로 시작합니다.'
+        return { testMode: true, user: testUser }
+      }
+
       const response = await loginWithOAuth(provider)
       oauthStatus.value = 'success'
       oauthMessage.value = `${providerName} 로그인 페이지로 이동합니다.`
@@ -108,6 +151,14 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function signOut() {
+    if (USE_TEST_AUTH) {
+      clearTestUser()
+      await resetUserSession()
+      resetAuthState()
+      initialized.value = true
+      return
+    }
+
     try {
       await logoutApi()
     } finally {
