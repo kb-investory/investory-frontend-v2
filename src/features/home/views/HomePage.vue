@@ -104,7 +104,14 @@ function openTransactions() {
 <template>
   <div class="home-page">
     <div v-if="homeStore.dashboard" class="home-page__content">
-      <HomeHeader logo-src="/assets/logos/investory-logo-transparent.png" :date-label="dateLabel" />
+      <div class="home-page__hero">
+        <HomeHeader
+          logo-src="/assets/logos/investory-logo-transparent.png"
+          :date-label="dateLabel"
+          dark
+        />
+        <TodayRecordHero :today="liveToday" @open-transactions="openTransactions" />
+      </div>
 
       <HomeConnectionSummary
         v-if="brokerStore.connectionCompleted && brokerStore.account"
@@ -113,8 +120,6 @@ function openTransactions() {
         :holding-count="brokerStore.holdings.length"
         :total-valuation="brokerStore.totalValuation"
       />
-
-      <TodayRecordHero :today="liveToday" @open-transactions="openTransactions" />
 
       <HomeQuickActions
         :journal-to="journalRoute"
@@ -147,14 +152,23 @@ function openTransactions() {
 <style scoped>
 .home-page {
   min-height: 100%;
-  background: #ffffff;
+  background: linear-gradient(180deg, #f4f8f8 0%, #ffffff 42%);
 }
 
 .home-page__content {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 0 20px 16px;
+  gap: 16px;
+  padding: 0 16px 24px;
+}
+
+.home-page__hero {
+  overflow: hidden;
+  width: calc(100% + 32px);
+  margin: 0 -16px;
+  border-radius: 0 0 30px 30px;
+  background: #ffffff;
+  box-shadow: 0 14px 30px rgba(31, 58, 67, 0.1);
 }
 
 .home-page__loading {

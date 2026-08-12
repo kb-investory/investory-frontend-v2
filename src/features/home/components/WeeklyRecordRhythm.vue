@@ -54,14 +54,15 @@ defineProps({
 <style scoped>
 .weekly-rhythm {
   display: flex;
-  min-height: 180px;
+  min-height: 210px;
   flex-direction: column;
   justify-content: space-between;
   gap: 10px;
-  padding: 12px;
-  border: 1px solid #e4e9ea;
-  border-radius: 16px;
+  padding: 18px 16px;
+  border: 1px solid #dce8e9;
+  border-radius: 22px;
   background: #ffffff;
+  box-shadow: 0 10px 24px rgba(40, 74, 82, 0.08);
 }
 
 .weekly-rhythm__header {
@@ -122,8 +123,8 @@ defineProps({
 
 .weekly-rhythm__day-state {
   display: inline-flex;
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
@@ -131,7 +132,8 @@ defineProps({
 }
 
 .weekly-rhythm__day-state--teal {
-  background: #0b8f8b;
+  background: linear-gradient(145deg, #10a39e, #087873);
+  box-shadow: 0 5px 12px rgba(11, 143, 139, 0.24);
 }
 
 .weekly-rhythm__day-state--blue {
@@ -152,7 +154,8 @@ defineProps({
   padding: 0 10px;
   border-radius: 10px;
   color: #087f7c;
-  background: #f5fbfb;
+  border: 1px solid #e0f1f0;
+  background: linear-gradient(90deg, #f1fbfa, #f8fcfc);
   font-size: var(--font-size-caption);
   font-weight: 600;
 }
