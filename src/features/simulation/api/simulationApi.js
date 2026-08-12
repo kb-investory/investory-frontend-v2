@@ -52,20 +52,20 @@ export async function getSimulationHistory() {
   return await request('/api/v1/simulations/history')
 }
 
-export async function getInitialCapital(startDate) {
+export async function getInitialCapital(startDate, accountId, { signal } = {}) {
   const query = new URLSearchParams({
-    start_date: startDate ?? '2026-03-01',
-    account_id: 1,
+    start_date: startDate,
+    account_id: accountId,
   }).toString()
-  return await request(`/api/v1/simulations/initial-capital?${query}`)
+  return await request(`/api/v1/simulations/initial-capital?${query}`, { signal })
 }
 
 export async function getSimulationOverview(params = {}) {
-  const query = new URLSearchParams({
-    start_date: params.startDate ?? '2026-03-01',
-    account_id: params.accountId ?? 1,
-  }).toString()
-  return await request(`/api/v1/simulations/overview?${query}`)
+  const searchParams = new URLSearchParams()
+  if (params.startDate) searchParams.set('start_date', params.startDate)
+  if (params.accountId) searchParams.set('account_id', params.accountId)
+  const query = searchParams.toString()
+  return await request(`/api/v1/simulations/overview${query ? `?${query}` : ''}`)
 }
 
 export async function getLatestSimulationResult() {
