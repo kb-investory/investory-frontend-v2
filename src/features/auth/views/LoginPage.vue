@@ -1,20 +1,15 @@
 <script setup>
 import { ShieldCheck, TriangleAlert } from '@lucide/vue'
-import { RouterLink, useRouter } from 'vue-router'
+import { RouterLink } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
 import LoginForm from '@/features/auth/components/LoginForm.vue'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 
-const router = useRouter()
 const authStore = useAuthStore()
 
 async function handleSocialLogin(provider) {
-  const response = await authStore.startOauthLogin(provider)
-
-  if (response) {
-    router.push({ name: ROUTE_NAMES.BROKER_CONNECT })
-  }
+  await authStore.startOauthLogin(provider)
 }
 </script>
 

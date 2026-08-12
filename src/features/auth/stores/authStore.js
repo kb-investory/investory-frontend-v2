@@ -4,6 +4,7 @@ import { ref } from 'vue'
 import { queryClient } from '@/app/providers/queryClient'
 import { resetUserSession } from '@/app/services/resetUserSession'
 import { getMe, loginWithOAuth, logout as logoutApi } from '@/features/auth/api/authApi'
+import { refreshAccessToken } from '@/modules/auth/services/authService'
 import { queryKeys } from '@/shared/api/queryKeys'
 
 export const useAuthStore = defineStore('auth', () => {
@@ -32,9 +33,18 @@ export const useAuthStore = defineStore('auth', () => {
         await queryClient.invalidateQueries({ queryKey: queryKeys.auth.currentUser(), exact: true })
       }
 
+      const fetchCurrentUser = async () => {
+        try {
+          return await getMe()
+        } catch (error) {
+          if (error?.status !== 401) throw error
+          await refreshAccessToken()
+          return await getMe()
+        }
+      }
       user.value = await queryClient.fetchQuery({
         queryKey: queryKeys.auth.currentUser(),
-        queryFn: getMe,
+        queryFn: fetchCurrentUser,
         staleTime: 5 * 60 * 1000,
       })
       isAuthenticated.value = true
@@ -82,12 +92,9 @@ export const useAuthStore = defineStore('auth', () => {
 
     try {
       const response = await loginWithOAuth(provider)
-      user.value = response.user
-      isAuthenticated.value = true
-      initialized.value = true
-      queryClient.setQueryData(queryKeys.auth.currentUser(), response.user)
       oauthStatus.value = 'success'
-      oauthMessage.value = `${providerName} 로그인이 완료되었습니다.`
+      oauthMessage.value = `${providerName} 로그인 페이지로 이동합니다.`
+      window.location.assign(response.authorizationUrl)
       return response
     } catch {
       user.value = null
