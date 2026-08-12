@@ -204,8 +204,12 @@ export async function runTendencyAnalysis() {
 }
 
 export async function getUserPrinciples() {
+  const response = await request('/api/v1/principles/recommendations')
+
   return {
-    principles: readFlowState().principles,
+    principles: (response.recommendations || []).map((principle, index) =>
+      normalizePersistedPrinciple(principle, index),
+    ),
   }
 }
 
@@ -220,51 +224,55 @@ export async function getTendencyAccessStatus() {
 }
 
 export async function getRecommendedPrinciples() {
+  return await request('/api/v1/principles/recommendations')
+}
+
+function normalizePersistedPrinciple(principle, index) {
+  const content = principle.principleText ?? principle.content ?? ''
+  const principleId =
+    principle.principleSetItemId ?? principle.principleId ?? principle.recommendationId ?? index + 1
+  const recommendationId = principle.principleRecommendationId ?? null
+
   return {
-    recommendations: tendencyData.suggestedPrinciples || [],
+    principleId,
+    recommendationId,
+    content,
+    originalContent: content,
+    category: principle.principleType ?? principle.ruleJson?.ruleType ?? 'CUSTOM',
+    ruleJson: principle.ruleJson ?? {},
+    isActive: principle.isActive ?? true,
+    isUserModified: recommendationId === null,
+    sortOrder: principle.sortOrder ?? index + 1,
+    recommendationSource:
+      recommendationId === null
+        ? { type: 'USER_CREATED', label: '나의 투자원칙' }
+        : { type: 'TENDENCY_ANALYSIS', label: '투자성향 기반 추천' },
   }
 }
 
-const USE_MOCK_FALLBACK = import.meta.env.VITE_USE_MOCK_FALLBACK !== 'false'
-
 export async function saveUserPrinciples({ principles }) {
-  try {
-    const payload = {
-      principles: (principles || []).map((p, idx) => ({
-        recommendationId: p.recommendationId ?? p.recommendationSource?.analysisRunId ?? idx + 1,
-        principleText: p.content ?? p.principleText ?? '',
-        ruleJson: p.ruleJson ?? { holding: { minimumDays: 90 } },
-        sortOrder: p.sortOrder ?? idx + 1,
-      })),
-    }
+  const payload = {
+    principles: (principles || []).map((principle, index) => ({
+      recommendationId:
+        principle.recommendationSource?.type === 'USER_CREATED'
+          ? null
+          : (principle.recommendationId ?? principle.principleRecommendationId ?? null),
+      principleText: principle.content ?? principle.principleText ?? '',
+      ruleJson: principle.ruleJson ?? {},
+      sortOrder: principle.sortOrder ?? index + 1,
+    })),
+  }
 
-    const response = await request('/api/v1/principles', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    })
+  const response = await request('/api/v1/principles', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
 
-    const flowState = readFlowState()
-    writeFlowState({
-      ...flowState,
-      principles,
-    })
-
-    return {
-      ...response,
-      principles: response.principles ?? principles,
-    }
-  } catch (error) {
-    if (!USE_MOCK_FALLBACK) throw error
-    console.warn('API /api/v1/principles 요청 실패, 목데이터를 사용합니다:', error)
-    const flowState = readFlowState()
-    writeFlowState({
-      ...flowState,
-      principles,
-    })
-
-    return {
-      principles,
-    }
+  return {
+    ...response,
+    principles: (response.principles || []).map((principle, index) =>
+      normalizePersistedPrinciple(principle, index),
+    ),
   }
 }
 

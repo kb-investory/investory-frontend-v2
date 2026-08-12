@@ -1,60 +1,45 @@
-import stockSearchData from '@/mocks/data/journal-stock-search.json'
-import stockTimelineData from '@/mocks/data/journal-stock-timeline.json'
+import { getLedgerHoldings } from '@/features/ledger/api/ledgerApi'
+import { searchSecurities } from '@/features/market/api/marketApi'
 import { request } from '@/shared/api/client'
-
-const USE_MOCK_FALLBACK = import.meta.env.VITE_USE_MOCK_FALLBACK !== 'false'
 
 const RECENT_STOCKS_KEY = 'investory-journal-recent-stocks'
 
-function clone(value) {
-  return JSON.parse(JSON.stringify(value))
-}
-
-function normalizeKeyword(keyword) {
-  return keyword.trim().toLocaleLowerCase('ko-KR').replaceAll(' ', '')
-}
-
 function readRecentSecurityCodes() {
   if (typeof window === 'undefined') {
-    return stockSearchData.recentSecurityCodes
+    return []
   }
 
   try {
     const storedCodes = JSON.parse(window.sessionStorage.getItem(RECENT_STOCKS_KEY))
-    return Array.isArray(storedCodes) ? storedCodes : stockSearchData.recentSecurityCodes
+    return Array.isArray(storedCodes) ? storedCodes : []
   } catch {
-    return stockSearchData.recentSecurityCodes
+    return []
   }
 }
 
 export async function getJournalStockSearchData() {
-  return clone({
-    stocks: stockSearchData.stocks,
+  const [securityData, holdingsData] = await Promise.all([
+    searchSecurities({ size: 100 }),
+    getLedgerHoldings(),
+  ])
+  const holdingMap = new Map(
+    (holdingsData?.holdings || []).map((holding) => [holding.securityId, holding.quantity]),
+  )
+
+  return {
+    stocks: (securityData?.securities || []).map((security) => ({
+      ...security,
+      holdingQuantity: holdingMap.get(security.securityId),
+    })),
     recentSecurityCodes: readRecentSecurityCodes(),
-  })
+  }
 }
 
 export async function searchJournalStocks(keyword) {
-  const normalizedKeyword = normalizeKeyword(keyword)
+  if (!keyword.trim()) return []
 
-  if (!normalizedKeyword) {
-    return []
-  }
-
-  return clone(
-    stockSearchData.stocks.filter((stock) => {
-      const searchableText = [
-        stock.securityName,
-        stock.securityCode,
-        ...(stock.searchAliases ?? []),
-      ]
-        .join('')
-        .toLocaleLowerCase('ko-KR')
-        .replaceAll(' ', '')
-
-      return searchableText.includes(normalizedKeyword)
-    }),
-  )
+  const response = await searchSecurities({ keyword: keyword.trim(), size: 50 })
+  return response?.securities || []
 }
 
 export async function saveRecentJournalStock(securityCode) {
@@ -67,7 +52,7 @@ export async function saveRecentJournalStock(securityCode) {
     window.sessionStorage.setItem(RECENT_STOCKS_KEY, JSON.stringify(nextCodes))
   }
 
-  return clone(nextCodes)
+  return nextCodes
 }
 
 export async function getJournalStockTimeline({
@@ -78,67 +63,21 @@ export async function getJournalStockTimeline({
   page = 0,
   size = 20,
 }) {
-  try {
-    const targetSecurityId =
-      securityId || stockSearchData.stocks.find((s) => s.securityCode === securityCode)?.securityId
-    if (targetSecurityId) {
-      const searchParams = new URLSearchParams()
-      searchParams.set('securityId', targetSecurityId)
-      if (startDate) searchParams.set('startDate', startDate)
-      if (endDate) searchParams.set('endDate', endDate)
-      searchParams.set('page', page)
-      searchParams.set('size', size)
-
-      return await request(`/journal/trades?${searchParams.toString()}`)
-    }
-  } catch (error) {
-    if (!USE_MOCK_FALLBACK) throw error
-    console.warn('API /journal/trades 요청 실패, 목데이터 타임라인을 사용합니다:', error)
+  let targetSecurityId = securityId
+  if (!targetSecurityId && securityCode) {
+    const securityData = await searchSecurities({ keyword: securityCode, size: 20 })
+    targetSecurityId = securityData?.securities?.find(
+      (security) => security.securityCode === securityCode,
+    )?.securityId
   }
+  if (!targetSecurityId) throw new Error('종목 정보를 찾을 수 없습니다.')
 
-  const stock = stockSearchData.stocks.find((item) => item.securityCode === securityCode)
-  const timeline = stockTimelineData.stockTimelines[securityCode]
+  const searchParams = new URLSearchParams()
+  searchParams.set('securityId', targetSecurityId)
+  if (startDate) searchParams.set('startDate', startDate)
+  if (endDate) searchParams.set('endDate', endDate)
+  searchParams.set('page', page)
+  searchParams.set('size', size)
 
-  if (!stock || !timeline) {
-    throw new Error('종목 거래 일지를 찾을 수 없습니다.')
-  }
-
-  const filteredTrades = timeline.trades
-    .filter((trade) => {
-      const tradeDate = trade.tradedAt.slice(0, 10)
-
-      if (startDate && tradeDate < startDate) {
-        return false
-      }
-
-      if (endDate && tradeDate > endDate) {
-        return false
-      }
-
-      return true
-    })
-    .sort((a, b) => b.tradedAt.localeCompare(a.tradedAt))
-
-  const startIndex = page * size
-  const pagedTrades = filteredTrades.slice(startIndex, startIndex + size)
-
-  return clone({
-    security: {
-      securityId: stock.securityId,
-      securityCode: stock.securityCode,
-      securityName: stock.securityName,
-      marketType: stock.marketType ?? 'KOSPI',
-      brandKey: stock.brandKey,
-    },
-    holding: {
-      firstPurchasedAt: timeline.firstPurchasedAt,
-      currentQuantity: timeline.currentQuantity,
-      cumulativeProfitAmount: timeline.cumulativeProfitAmount,
-    },
-    trades: pagedTrades,
-    page,
-    size,
-    totalElements: filteredTrades.length,
-    totalPages: Math.ceil(filteredTrades.length / size),
-  })
+  return await request(`/journal/trades?${searchParams.toString()}`)
 }

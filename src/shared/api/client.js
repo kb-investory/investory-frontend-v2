@@ -10,6 +10,10 @@ export function getAccessToken() {
   return currentAccessToken
 }
 
+export function getApiUrl(endpoint) {
+  return `${API_BASE_URL}${endpoint}`
+}
+
 export class ApiError extends Error {
   constructor(status, errorData) {
     const message = errorData?.message || `API 요청에 실패했습니다. (${status})`
@@ -43,7 +47,7 @@ export async function request(endpoint, options = {}) {
     delete fetchOptions.withCredentials
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, fetchOptions)
+  const response = await fetch(getApiUrl(endpoint), fetchOptions)
 
   if (!response.ok) {
     let errorData = null
