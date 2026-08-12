@@ -74,10 +74,7 @@ async function retryAccount(account) {
   notice.value = `${account.brokerName} 계좌 동기화를 완료했어요.`
 }
 
-onMounted(async () => {
-  await mypageStore.fetchOverview()
-  await mypageStore.fetchAccounts()
-})
+onMounted(() => mypageStore.fetchAccounts())
 </script>
 
 <template>

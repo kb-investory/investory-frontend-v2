@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
+import { queryClient } from '@/app/providers/queryClient'
 import {
   deleteJournal as deleteJournalApi,
   getCalendarActivity,
@@ -10,6 +11,23 @@ import {
   saveJournal as saveJournalApi,
   updateJournal as updateJournalApi,
 } from '@/features/journal/api/journalApi'
+import { queryKeys } from '@/shared/api/queryKeys'
+
+const JOURNAL_STALE_TIME = 30 * 1000
+
+async function invalidateJournalWriteQueries() {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: queryKeys.journal.all }),
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.home.dashboard(),
+      exact: true,
+    }),
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.mypage.overview(),
+      exact: true,
+    }),
+  ])
+}
 
 export const useJournalStore = defineStore('journal', () => {
   const entries = ref([])
@@ -25,7 +43,11 @@ export const useJournalStore = defineStore('journal', () => {
     loading.value = true
     error.value = ''
     try {
-      const response = await getJournalEntries(params)
+      const response = await queryClient.fetchQuery({
+        queryKey: queryKeys.journal.entries(params),
+        queryFn: () => getJournalEntries(params),
+        staleTime: JOURNAL_STALE_TIME,
+      })
       entries.value = response.entries
     } catch (requestError) {
       error.value = requestError.message
@@ -42,10 +64,18 @@ export const useJournalStore = defineStore('journal', () => {
     error.value = ''
 
     try {
-      const [journalResponse, activityResponse] = await Promise.all([
-        getJournalEntries({ startDate, endDate }),
-        getCalendarActivity({ startDate, endDate }),
-      ])
+      const { journalResponse, activityResponse } = await queryClient.fetchQuery({
+        queryKey: queryKeys.journal.calendar(startDate, endDate),
+        queryFn: async () => {
+          const [journals, activities] = await Promise.all([
+            getJournalEntries({ startDate, endDate }),
+            getCalendarActivity({ startDate, endDate }),
+          ])
+
+          return { journalResponse: journals, activityResponse: activities }
+        },
+        staleTime: JOURNAL_STALE_TIME,
+      })
 
       if (requestId === latestCalendarRequestId) {
         entries.value = journalResponse.entries
@@ -73,7 +103,11 @@ export const useJournalStore = defineStore('journal', () => {
     loading.value = true
     error.value = ''
     try {
-      selectedDetail.value = await getJournalDetail(journalId)
+      selectedDetail.value = await queryClient.fetchQuery({
+        queryKey: queryKeys.journal.detail(journalId),
+        queryFn: () => getJournalDetail(journalId),
+        staleTime: JOURNAL_STALE_TIME,
+      })
     } catch (requestError) {
       error.value = requestError.message
       throw requestError
@@ -88,7 +122,11 @@ export const useJournalStore = defineStore('journal', () => {
     loading.value = true
     error.value = ''
     try {
-      const response = await getJournalEntryOnDate(journalDate)
+      const response = await queryClient.fetchQuery({
+        queryKey: queryKeys.journal.daily(journalDate),
+        queryFn: () => getJournalEntryOnDate(journalDate),
+        staleTime: JOURNAL_STALE_TIME,
+      })
 
       if (requestId === latestDailyEntryRequestId) {
         dailyEntry.value = response
@@ -112,6 +150,7 @@ export const useJournalStore = defineStore('journal', () => {
     error.value = ''
     try {
       const newJournal = await saveJournalApi(payload)
+      await invalidateJournalWriteQueries()
       await fetchJournals()
       return newJournal
     } catch (requestError) {
@@ -127,6 +166,7 @@ export const useJournalStore = defineStore('journal', () => {
     error.value = ''
     try {
       const result = await updateJournalApi(journalId, payload)
+      await invalidateJournalWriteQueries()
       await fetchJournals()
       return result
     } catch (requestError) {
@@ -152,7 +192,11 @@ export const useJournalStore = defineStore('journal', () => {
         await saveJournalApi(payload)
       }
 
-      dailyEntry.value = await getJournalEntryOnDate(payload.journalDate)
+      await invalidateJournalWriteQueries()
+      dailyEntry.value = await queryClient.fetchQuery({
+        queryKey: queryKeys.journal.daily(payload.journalDate),
+        queryFn: () => getJournalEntryOnDate(payload.journalDate),
+      })
       return dailyEntry.value
     } catch (requestError) {
       error.value = requestError.message
@@ -168,12 +212,25 @@ export const useJournalStore = defineStore('journal', () => {
     try {
       await deleteJournalApi(journalId)
       entries.value = entries.value.filter((e) => e.journalId !== journalId)
+      await invalidateJournalWriteQueries()
     } catch (requestError) {
       error.value = requestError.message
       throw requestError
     } finally {
       loading.value = false
     }
+  }
+
+  function reset() {
+    latestCalendarRequestId += 1
+    latestDailyEntryRequestId += 1
+    entries.value = []
+    calendarActivities.value = []
+    selectedDetail.value = null
+    dailyEntry.value = null
+    loading.value = false
+    error.value = ''
+    queryClient.removeQueries({ queryKey: queryKeys.journal.all })
   }
 
   return {
@@ -193,5 +250,6 @@ export const useJournalStore = defineStore('journal', () => {
     editJournal,
     saveDailyJournal,
     removeJournal,
+    reset,
   }
 })

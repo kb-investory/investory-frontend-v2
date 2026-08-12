@@ -11,7 +11,7 @@ import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
 import SearchInput from '@/shared/components/inputs/SearchInput.vue'
 
-const SEARCH_DELAY_MS = 160
+const SEARCH_DELAY_MS = 300
 
 const route = useRoute()
 const router = useRouter()

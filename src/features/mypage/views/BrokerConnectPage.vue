@@ -37,7 +37,19 @@ function goToLogin() {
   })
 }
 
-watch(searchQuery, (query) => loadBrokers(query), { immediate: true })
+watch(
+  searchQuery,
+  (query, _, onCleanup) => {
+    if (!query.trim()) {
+      void loadBrokers()
+      return
+    }
+
+    const timer = window.setTimeout(() => loadBrokers(query), 300)
+    onCleanup(() => window.clearTimeout(timer))
+  },
+  { immediate: true },
+)
 </script>
 
 <template>

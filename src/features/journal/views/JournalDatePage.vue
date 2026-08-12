@@ -111,7 +111,7 @@ function goToJournal() {
 function openEditor() {
   router.push({
     name: ROUTE_NAMES.JOURNAL_CREATE,
-    query: { date: selectedDate.value },
+    query: { date: selectedDate.value, from: 'journal' },
   })
 }
 

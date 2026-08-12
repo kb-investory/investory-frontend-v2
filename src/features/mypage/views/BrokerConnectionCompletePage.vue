@@ -5,12 +5,10 @@ import { useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
 import { useBrokerConnectionStore } from '@/features/mypage/stores/brokerConnectionStore'
-import { useMypageStore } from '@/features/mypage/stores/mypageStore'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
 
 const router = useRouter()
 const brokerStore = useBrokerConnectionStore()
-const mypageStore = useMypageStore()
 const completing = ref(false)
 const completionError = ref('')
 
@@ -21,7 +19,6 @@ async function goHome() {
   completionError.value = ''
   try {
     await brokerStore.completeConnection()
-    await mypageStore.fetchAccounts()
     await router.push({ name: ROUTE_NAMES.HOME })
   } catch (error) {
     completionError.value =

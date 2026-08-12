@@ -1,28 +1,66 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
+import { queryClient } from '@/app/providers/queryClient'
+import { resetUserSession } from '@/app/services/resetUserSession'
 import { getMe, loginWithOAuth, logout as logoutApi } from '@/features/auth/api/authApi'
-import { useBrokerConnectionStore } from '@/features/mypage/stores/brokerConnectionStore'
+import { queryKeys } from '@/shared/api/queryKeys'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const isAuthenticated = ref(false)
+  const initialized = ref(false)
   const loading = ref(false)
   const activeProvider = ref(null)
   const oauthStatus = ref('idle')
   const oauthMessage = ref('')
 
-  async function fetchUser() {
+  let initializationPromise = null
+
+  function resetAuthState() {
+    user.value = null
+    isAuthenticated.value = false
+    activeProvider.value = null
+    oauthStatus.value = 'idle'
+    oauthMessage.value = ''
+  }
+
+  async function fetchUser({ force = false } = {}) {
     loading.value = true
     try {
-      user.value = await getMe()
+      if (force) {
+        await queryClient.invalidateQueries({ queryKey: queryKeys.auth.currentUser(), exact: true })
+      }
+
+      user.value = await queryClient.fetchQuery({
+        queryKey: queryKeys.auth.currentUser(),
+        queryFn: getMe,
+        staleTime: 5 * 60 * 1000,
+      })
       isAuthenticated.value = true
+      return user.value
     } catch {
-      user.value = null
-      isAuthenticated.value = false
+      resetAuthState()
+      return null
     } finally {
       loading.value = false
+      initialized.value = true
     }
+  }
+
+  async function initialize() {
+    if (initialized.value) {
+      return isAuthenticated.value
+    }
+
+    if (!initializationPromise) {
+      initializationPromise = fetchUser().finally(() => {
+        initializationPromise = null
+      })
+    }
+
+    await initializationPromise
+    return isAuthenticated.value
   }
 
   async function startOauthLogin(provider) {
@@ -46,6 +84,8 @@ export const useAuthStore = defineStore('auth', () => {
       const response = await loginWithOAuth(provider)
       user.value = response.user
       isAuthenticated.value = true
+      initialized.value = true
+      queryClient.setQueryData(queryKeys.auth.currentUser(), response.user)
       oauthStatus.value = 'success'
       oauthMessage.value = `${providerName} 로그인이 완료되었습니다.`
       return response
@@ -64,25 +104,22 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       await logoutApi()
     } finally {
-      const brokerStore = useBrokerConnectionStore()
-
-      brokerStore.reset()
-      user.value = null
-      isAuthenticated.value = false
-      activeProvider.value = null
-      oauthStatus.value = 'idle'
-      oauthMessage.value = ''
+      await resetUserSession()
+      resetAuthState()
+      initialized.value = true
     }
   }
 
   return {
     user,
     isAuthenticated,
+    initialized,
     loading,
     activeProvider,
     oauthStatus,
     oauthMessage,
     fetchUser,
+    initialize,
     startOauthLogin,
     signOut,
   }

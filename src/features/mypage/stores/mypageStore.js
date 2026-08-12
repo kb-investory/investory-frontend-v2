@@ -1,11 +1,13 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 
+import { queryClient } from '@/app/providers/queryClient'
 import {
   disconnectBroker as disconnectBrokerApi,
   getConnectedAccounts,
   getConnectedAccountDetail,
   getMypageOverview,
+  getProfile,
   retryAccountSync,
   syncConnectedAccounts,
   syncConnectedAccount,
@@ -14,6 +16,16 @@ import {
 import { getJournalEntries } from '@/features/journal/api/journalApi'
 import { getLatestCompletedSimulationResult } from '@/features/simulation/api/simulationApi'
 import { getLatestTendencyAnalysis } from '@/features/tendency/api/tendencyApi'
+import { queryKeys } from '@/shared/api/queryKeys'
+
+const MYPAGE_STALE_TIME = 60 * 1000
+
+async function invalidateAccountQueries() {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: queryKeys.mypage.overview(), exact: true }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.home.all }),
+  ])
+}
 
 const OAUTH_PROVIDER_LABELS = Object.freeze({
   KAKAO: '카카오',
@@ -52,30 +64,80 @@ export const useMypageStore = defineStore('mypage', () => {
   })
 
   async function fetchOverview({ force = false, authUser = null } = {}) {
-    if (profile.value && !force) return
     loading.value = true
     error.value = null
 
     try {
-      const [overview, analysis, journalResponse, simulationResult] = await Promise.all([
-        getMypageOverview(),
-        getLatestTendencyAnalysis(),
-        getJournalEntries(),
-        getLatestCompletedSimulationResult(),
+      if (force) {
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.mypage.overview(),
+            exact: true,
+          }),
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.tendency.analysis(),
+            exact: true,
+          }),
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.journal.entries(),
+            exact: true,
+          }),
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.simulation.latestCompleted(),
+            exact: true,
+          }),
+        ])
+      }
+
+      const [overviewRes, analysisRes, journalRes, simulationRes] = await Promise.allSettled([
+        queryClient.fetchQuery({
+          queryKey: queryKeys.mypage.overview(),
+          queryFn: getMypageOverview,
+          staleTime: MYPAGE_STALE_TIME,
+        }),
+        queryClient.fetchQuery({
+          queryKey: queryKeys.tendency.analysis(),
+          queryFn: getLatestTendencyAnalysis,
+          staleTime: MYPAGE_STALE_TIME,
+        }),
+        queryClient.fetchQuery({
+          queryKey: queryKeys.journal.entries(),
+          queryFn: () => getJournalEntries(),
+          staleTime: MYPAGE_STALE_TIME,
+        }),
+        queryClient.fetchQuery({
+          queryKey: queryKeys.simulation.latestCompleted(),
+          queryFn: getLatestCompletedSimulationResult,
+          staleTime: MYPAGE_STALE_TIME,
+        }),
       ])
+
+      const overview =
+        overviewRes.status === 'fulfilled' && overviewRes.value
+          ? overviewRes.value
+          : {
+              profile: { nickname: '사용자', email: 'user@investory.com' },
+              accounts: [],
+              appInfo: {},
+            }
+      const analysis = analysisRes.status === 'fulfilled' ? analysisRes.value : null
+      const journalResponse =
+        journalRes.status === 'fulfilled' && journalRes.value ? journalRes.value : { entries: [] }
+      const simulationResult = simulationRes.status === 'fulfilled' ? simulationRes.value : null
+
       const oauthProvider = String(
-        authUser?.oauthProvider || authUser?.socialType || overview.profile.oauthProvider || '',
+        authUser?.oauthProvider || authUser?.socialType || overview.profile?.oauthProvider || '',
       ).toUpperCase()
       profile.value = {
         ...overview.profile,
         ...(authUser
           ? {
-              email: authUser.email || overview.profile.email,
+              email: authUser.email || overview.profile?.email,
             }
           : {}),
         oauthProvider,
         oauthProviderLabel: OAUTH_PROVIDER_LABELS[oauthProvider] || '소셜',
-        totalJournalsCount: journalResponse.entries.length,
+        totalJournalsCount: journalResponse?.entries?.length ?? 0,
       }
       tendencyBadges.value = (analysis?.analysisResults || []).map((result) => ({
         code: result.dimension.code,
@@ -103,8 +165,8 @@ export const useMypageStore = defineStore('mypage', () => {
             })),
           }
         : null
-      accounts.value = overview.accounts
-      appInfo.value = overview.appInfo
+      accounts.value = overview.accounts || []
+      appInfo.value = overview.appInfo || {}
       hasTendencyAnalysis.value = Boolean(analysis)
     } catch (requestError) {
       error.value = requestError
@@ -113,8 +175,17 @@ export const useMypageStore = defineStore('mypage', () => {
     }
   }
 
-  async function fetchProfile() {
-    await fetchOverview({ force: true })
+  async function fetchProfile({ force = false } = {}) {
+    if (force) {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.mypage.profile(), exact: true })
+    }
+
+    profile.value = await queryClient.fetchQuery({
+      queryKey: queryKeys.mypage.profile(),
+      queryFn: getProfile,
+      staleTime: MYPAGE_STALE_TIME,
+    })
+    return profile.value
   }
 
   async function saveProfile(payload) {
@@ -122,6 +193,8 @@ export const useMypageStore = defineStore('mypage', () => {
     error.value = null
     try {
       profile.value = await updateUserProfile(payload)
+      queryClient.setQueryData(queryKeys.mypage.profile(), profile.value)
+      await queryClient.invalidateQueries({ queryKey: queryKeys.mypage.overview(), exact: true })
       return profile.value
     } finally {
       savingProfile.value = false
@@ -129,7 +202,11 @@ export const useMypageStore = defineStore('mypage', () => {
   }
 
   async function fetchAccounts() {
-    const response = await getConnectedAccounts()
+    const response = await queryClient.fetchQuery({
+      queryKey: queryKeys.mypage.accounts(),
+      queryFn: getConnectedAccounts,
+      staleTime: MYPAGE_STALE_TIME,
+    })
     accounts.value = response.accounts
   }
 
@@ -137,7 +214,11 @@ export const useMypageStore = defineStore('mypage', () => {
     loadingAccountDetail.value = true
     error.value = null
     try {
-      accountDetail.value = await getConnectedAccountDetail(accountId)
+      accountDetail.value = await queryClient.fetchQuery({
+        queryKey: queryKeys.mypage.accountDetail(accountId),
+        queryFn: () => getConnectedAccountDetail(accountId),
+        staleTime: MYPAGE_STALE_TIME,
+      })
       return accountDetail.value
     } catch (requestError) {
       error.value = requestError
@@ -153,7 +234,20 @@ export const useMypageStore = defineStore('mypage', () => {
     error.value = null
     try {
       accountDetail.value = await syncConnectedAccount(accountId)
-      await fetchAccounts()
+      accounts.value = accounts.value.map((account) =>
+        account.accountId === Number(accountId)
+          ? {
+              ...account,
+              status: accountDetail.value.status,
+              statusLabel: accountDetail.value.statusLabel,
+              lastSyncedAt: accountDetail.value.lastSyncedAt,
+              syncErrorReason: accountDetail.value.syncErrorReason,
+            }
+          : account,
+      )
+      queryClient.setQueryData(queryKeys.mypage.accountDetail(accountId), accountDetail.value)
+      queryClient.setQueryData(queryKeys.mypage.accounts(), { accounts: accounts.value })
+      await invalidateAccountQueries()
       return accountDetail.value
     } catch (requestError) {
       error.value = requestError
@@ -170,7 +264,9 @@ export const useMypageStore = defineStore('mypage', () => {
     try {
       const response = await syncConnectedAccounts()
       accounts.value = response.accounts
+      queryClient.setQueryData(queryKeys.mypage.accounts(), { accounts: accounts.value })
       lastSyncResult.value = response
+      await invalidateAccountQueries()
     } catch (requestError) {
       error.value = requestError
     } finally {
@@ -184,6 +280,8 @@ export const useMypageStore = defineStore('mypage', () => {
     try {
       const response = await retryAccountSync(accountId)
       accounts.value = response.accounts
+      queryClient.setQueryData(queryKeys.mypage.accounts(), { accounts: accounts.value })
+      await invalidateAccountQueries()
     } finally {
       retryingAccountId.value = null
     }
@@ -192,7 +290,28 @@ export const useMypageStore = defineStore('mypage', () => {
   async function disconnectBroker(brokerId) {
     const response = await disconnectBrokerApi(brokerId)
     accounts.value = response.accounts
+    queryClient.setQueryData(queryKeys.mypage.accounts(), { accounts: accounts.value })
+    await invalidateAccountQueries()
     return response
+  }
+
+  function reset() {
+    profile.value = null
+    tendencyBadges.value = []
+    recentSimulation.value = null
+    accounts.value = []
+    accountDetail.value = null
+    appInfo.value = null
+    hasTendencyAnalysis.value = false
+    loading.value = false
+    savingProfile.value = false
+    syncing.value = false
+    loadingAccountDetail.value = false
+    syncingAccountDetail.value = false
+    retryingAccountId.value = null
+    lastSyncResult.value = null
+    error.value = null
+    queryClient.removeQueries({ queryKey: queryKeys.mypage.all })
   }
 
   return {
@@ -223,5 +342,6 @@ export const useMypageStore = defineStore('mypage', () => {
     syncAllAccounts,
     retryAccount,
     disconnectBroker,
+    reset,
   }
 })

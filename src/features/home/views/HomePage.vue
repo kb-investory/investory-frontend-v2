@@ -16,7 +16,7 @@ import ReanalysisFloating from '@/features/tendency/components/ReanalysisFloatin
 import { useTendencyStore } from '@/features/tendency/stores/tendencyStore'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
 
-const REANALYSIS_NOTICE_COLLAPSED_KEY = 'investory:reanalysis-notice-collapsed:v3'
+const REANALYSIS_NOTICE_COLLAPSED_KEY = 'investory:reanalysis-notice-collapsed:v8'
 
 const router = useRouter()
 const homeStore = useHomeStore()
@@ -25,7 +25,10 @@ const tendencyStore = useTendencyStore()
 const reanalysisNoticeCollapsed = ref(true)
 let reanalysisMidnightTimer
 
-const journalRoute = { name: ROUTE_NAMES.JOURNAL_CREATE }
+const journalRoute = {
+  name: ROUTE_NAMES.JOURNAL_CREATE,
+  query: { from: 'home' },
+}
 const tendencyRoute = { name: ROUTE_NAMES.TENDENCY }
 const simulationRoute = { name: ROUTE_NAMES.SIMULATION }
 const { dateLabel, currentTime, remainingTime, dayProgressPercent } = useHomeClock()
@@ -74,14 +77,17 @@ watch(
       return
     }
 
+    const storedCollapsedState = window.localStorage.getItem(
+      `${REANALYSIS_NOTICE_COLLAPSED_KEY}:${analysisRunId}`,
+    )
     reanalysisNoticeCollapsed.value =
-      window.localStorage.getItem(`${REANALYSIS_NOTICE_COLLAPSED_KEY}:${analysisRunId}`) !== 'false'
+      storedCollapsedState === null ? false : storedCollapsedState !== 'false'
   },
   { immediate: true },
 )
 
 onMounted(async () => {
-  await Promise.allSettled([homeStore.fetchDashboard(), tendencyStore.fetchTendencies()])
+  await Promise.allSettled([homeStore.fetchDashboard(), tendencyStore.fetchLatestAnalysis()])
   tendencyStore.refreshAnalysisDate()
   scheduleMidnightRefresh()
 })
