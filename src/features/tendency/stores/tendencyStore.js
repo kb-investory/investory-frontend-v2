@@ -1,6 +1,7 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 
+import { queryClient } from '@/app/providers/queryClient'
 import {
   getLatestTendencyAnalysis,
   getRecommendedPrinciples,
@@ -9,9 +10,11 @@ import {
   runTendencyAnalysis,
   saveUserPrinciples,
 } from '@/features/tendency/api/tendencyApi'
+import { queryKeys } from '@/shared/api/queryKeys'
 
 const APPLIED_RECOMMENDATIONS_KEY = 'investory:applied-recommendations'
 const DAY_IN_MS = 24 * 60 * 60 * 1000
+const TENDENCY_STALE_TIME = 5 * 60 * 1000
 
 function readStoredIds(key) {
   try {
@@ -150,6 +153,20 @@ export const useTendencyStore = defineStore('tendency', () => {
     )
   }
 
+  async function fetchLatestAnalysis({ force = false } = {}) {
+    if (force) {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.tendency.analysis(), exact: true })
+    }
+
+    const analysisData = await queryClient.fetchQuery({
+      queryKey: queryKeys.tendency.analysis(),
+      queryFn: getLatestTendencyAnalysis,
+      staleTime: TENDENCY_STALE_TIME,
+    })
+    updateAnalysis(analysisData)
+    return analysisData
+  }
+
   async function fetchTendencies({ force = false } = {}) {
     if (loaded.value && !force) return
 
@@ -157,11 +174,31 @@ export const useTendencyStore = defineStore('tendency', () => {
     error.value = null
 
     try {
+      if (force) {
+        await queryClient.invalidateQueries({ queryKey: queryKeys.tendency.all })
+      }
+
       const [analysisData, principleData, recommendationData, accessData] = await Promise.all([
-        getLatestTendencyAnalysis(),
-        getUserPrinciples(),
-        getRecommendedPrinciples(),
-        getTendencyAccessStatus(),
+        queryClient.fetchQuery({
+          queryKey: queryKeys.tendency.analysis(),
+          queryFn: getLatestTendencyAnalysis,
+          staleTime: TENDENCY_STALE_TIME,
+        }),
+        queryClient.fetchQuery({
+          queryKey: queryKeys.tendency.principles(),
+          queryFn: getUserPrinciples,
+          staleTime: TENDENCY_STALE_TIME,
+        }),
+        queryClient.fetchQuery({
+          queryKey: queryKeys.tendency.recommendations(),
+          queryFn: getRecommendedPrinciples,
+          staleTime: TENDENCY_STALE_TIME,
+        }),
+        queryClient.fetchQuery({
+          queryKey: queryKeys.tendency.access(),
+          queryFn: getTendencyAccessStatus,
+          staleTime: TENDENCY_STALE_TIME,
+        }),
       ])
 
       updateAnalysis(analysisData)
@@ -185,6 +222,8 @@ export const useTendencyStore = defineStore('tendency', () => {
     try {
       const analysisData = await runTendencyAnalysis()
       updateAnalysis(analysisData)
+      queryClient.setQueryData(queryKeys.tendency.analysis(), analysisData)
+      await queryClient.invalidateQueries({ queryKey: queryKeys.mypage.overview(), exact: true })
     } catch (analysisError) {
       error.value = analysisError
     } finally {
@@ -224,6 +263,9 @@ export const useTendencyStore = defineStore('tendency', () => {
     })
 
     principles.value = response.principles
+    queryClient.setQueryData(queryKeys.tendency.principles(), {
+      principles: principles.value,
+    })
     appliedRecommendationIds.value = [
       ...new Set([...appliedRecommendationIds.value, ...recommendationIds]),
     ]
@@ -254,6 +296,9 @@ export const useTendencyStore = defineStore('tendency', () => {
     })
 
     principles.value = response.principles
+    queryClient.setQueryData(queryKeys.tendency.principles(), {
+      principles: principles.value,
+    })
     appliedRecommendationIds.value = recommendations.value
       .filter((recommendation) =>
         normalizedPrinciples.some(
@@ -266,6 +311,21 @@ export const useTendencyStore = defineStore('tendency', () => {
       APPLIED_RECOMMENDATIONS_KEY,
       JSON.stringify(appliedRecommendationIds.value),
     )
+  }
+
+  function reset() {
+    analysis.value = null
+    history.value = []
+    principles.value = []
+    recommendations.value = []
+    analysisAccess.value = null
+    loading.value = false
+    analyzing.value = false
+    loaded.value = false
+    error.value = null
+    todayTimestamp.value = getTodayTimestamp()
+    appliedRecommendationIds.value = []
+    queryClient.removeQueries({ queryKey: queryKeys.tendency.all })
   }
 
   return {
@@ -285,11 +345,13 @@ export const useTendencyStore = defineStore('tendency', () => {
     isAnalysisLocked,
     daysUntilAnalysis,
     recordedDays,
+    fetchLatestAnalysis,
     fetchTendencies,
     analyzeTendencies,
     refreshAnalysisDate,
     getHistoryById,
     applyRecommendations,
     savePrincipleEdits,
+    reset,
   }
 })

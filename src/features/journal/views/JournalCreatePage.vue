@@ -116,7 +116,8 @@ function scheduleAutoSave() {
 }
 
 function handleBack() {
-  router.push({ name: ROUTE_NAMES.JOURNAL })
+  const destination = route.query.from === 'home' ? ROUTE_NAMES.HOME : ROUTE_NAMES.JOURNAL
+  router.push({ name: destination })
 }
 
 function updateTradeNote({ tradeId, value }) {

@@ -1,11 +1,15 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 
+import { queryClient } from '@/app/providers/queryClient'
 import {
   getJournalStockSearchData,
   saveRecentJournalStock,
   searchJournalStocks,
 } from '@/features/journal/api/journalStockApi'
+import { queryKeys } from '@/shared/api/queryKeys'
+
+const STOCK_SEARCH_STALE_TIME = 5 * 60 * 1000
 
 export const useJournalStockSearchStore = defineStore('journal-stock-search', () => {
   const stocks = ref([])
@@ -26,7 +30,11 @@ export const useJournalStockSearchStore = defineStore('journal-stock-search', ()
   )
 
   async function initialize() {
-    const response = await getJournalStockSearchData()
+    const response = await queryClient.fetchQuery({
+      queryKey: queryKeys.journal.stockSearchData(),
+      queryFn: getJournalStockSearchData,
+      staleTime: STOCK_SEARCH_STALE_TIME,
+    })
     stocks.value = response.stocks
     recentSecurityCodes.value = response.recentSecurityCodes
   }
@@ -45,7 +53,12 @@ export const useJournalStockSearchStore = defineStore('journal-stock-search', ()
     error.value = ''
 
     try {
-      const response = await searchJournalStocks(keyword)
+      const normalizedKeyword = keyword.trim().toLocaleLowerCase('ko-KR').replaceAll(' ', '')
+      const response = await queryClient.fetchQuery({
+        queryKey: queryKeys.journal.stockSearch(normalizedKeyword),
+        queryFn: () => searchJournalStocks(keyword),
+        staleTime: STOCK_SEARCH_STALE_TIME,
+      })
       if (requestId === latestSearchRequestId) {
         searchResults.value = response
       }
@@ -63,10 +76,25 @@ export const useJournalStockSearchStore = defineStore('journal-stock-search', ()
 
   async function rememberStock(securityCode) {
     recentSecurityCodes.value = await saveRecentJournalStock(securityCode)
+    queryClient.setQueryData(queryKeys.journal.stockSearchData(), {
+      stocks: stocks.value,
+      recentSecurityCodes: recentSecurityCodes.value,
+    })
   }
 
   function findStock(securityCode) {
     return stocks.value.find((stock) => stock.securityCode === securityCode) ?? null
+  }
+
+  function reset() {
+    latestSearchRequestId += 1
+    stocks.value = []
+    recentSecurityCodes.value = []
+    searchResults.value = []
+    isLoading.value = false
+    error.value = ''
+    queryClient.removeQueries({ queryKey: queryKeys.journal.stockSearchData() })
+    queryClient.removeQueries({ queryKey: ['journal', 'stock-search'] })
   }
 
   return {
@@ -80,5 +108,6 @@ export const useJournalStockSearchStore = defineStore('journal-stock-search', ()
     search,
     rememberStock,
     findStock,
+    reset,
   }
 })

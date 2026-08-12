@@ -1,6 +1,6 @@
 <script setup>
 import { storeToRefs } from 'pinia'
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import SimulationComparatorSelect from '@/features/simulation/components/SimulationComparatorSelect.vue'
@@ -71,6 +71,10 @@ onMounted(async () => {
   if (currentStep.value === 'comparator_select') {
     void simulationStore.compilePersonalBot()
   }
+})
+
+onBeforeUnmount(() => {
+  simulationStore.cancelBotCompilation()
 })
 
 watch(currentStep, async (step) => {

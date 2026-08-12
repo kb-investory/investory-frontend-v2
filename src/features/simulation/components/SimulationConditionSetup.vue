@@ -1,9 +1,11 @@
 <script setup>
 import { computed, onUnmounted, ref, watch } from 'vue'
+import { queryClient } from '@/app/providers/queryClient'
 import { getInitialCapital } from '@/features/simulation/api/simulationApi'
 import SimulationParticipantAvatar from '@/features/simulation/components/SimulationParticipantAvatar.vue'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
+import { queryKeys } from '@/shared/api/queryKeys'
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000
 
@@ -106,6 +108,7 @@ const selectedStartDateStr = computed(() => toApiDate(selectedStartDate.value))
 
 let debounceTimer = null
 let isFirstCall = true
+let capitalRequestId = 0
 
 watch(
   selectedStartDateStr,
@@ -117,9 +120,20 @@ watch(
       debounceTimer = null
     }
 
+    if (isFirstCall) {
+      isFirstCall = false
+      if (Number(props.initialCapital) > 0) return
+    }
+
+    const requestId = ++capitalRequestId
     const fetchCapital = async () => {
       try {
-        const res = await getInitialCapital(newApiDate)
+        const res = await queryClient.fetchQuery({
+          queryKey: queryKeys.simulation.initialCapital(newApiDate),
+          queryFn: () => getInitialCapital(newApiDate),
+          staleTime: 5 * 60 * 1000,
+        })
+        if (requestId !== capitalRequestId) return
         const capital =
           res?.totalInitialCapital ?? res?.recommendedInitialCapital ?? res?.total_initial_capital
         if (typeof capital === 'number' && capital > 0) {
@@ -130,17 +144,13 @@ watch(
       }
     }
 
-    if (isFirstCall) {
-      isFirstCall = false
-      fetchCapital()
-    } else {
-      debounceTimer = setTimeout(fetchCapital, 300)
-    }
+    debounceTimer = setTimeout(fetchCapital, 300)
   },
   { immediate: true },
 )
 
 onUnmounted(() => {
+  capitalRequestId += 1
   if (debounceTimer) {
     clearTimeout(debounceTimer)
   }

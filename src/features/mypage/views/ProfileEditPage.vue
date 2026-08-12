@@ -108,7 +108,7 @@ onBeforeRouteLeave(() => {
 })
 
 onMounted(async () => {
-  await mypageStore.fetchOverview()
+  await mypageStore.fetchProfile()
   initializeForm()
   window.addEventListener('beforeunload', handleBeforeUnload)
 })
