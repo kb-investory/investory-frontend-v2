@@ -4,6 +4,7 @@ import { computed, ref } from 'vue'
 import { queryClient } from '@/app/providers/queryClient'
 import {
   compileSimulationBot,
+  getInitialCapital,
   getLatestSimulationResult,
   getSimulationBotCompileJob,
   getSimulationComparators,
@@ -30,6 +31,9 @@ export const useSimulationStore = defineStore('simulation', () => {
   const comparators = ref([])
   const selectedComparatorTypes = ref(['FAMOUS_STRATEGY', 'RANDOM_BOT'])
   const simulationConditions = ref(null)
+  const initialCapital = ref(null)
+  const initialCapitalLoading = ref(false)
+  const initialCapitalError = ref(null)
   const loading = ref(false)
   const comparatorsLoading = ref(false)
   const comparatorsError = ref(null)
@@ -38,11 +42,15 @@ export const useSimulationStore = defineStore('simulation', () => {
   const botCompileJobId = ref(null)
   const botCompileError = ref(null)
   let compileRequestId = 0
+  let initialCapitalRequestId = 0
 
   // Minimum required days for simulation qualification is 7 days
   const MIN_REQUIRED_DAYS = 7
 
   const eligibleDays = computed(() => overview.value?.eligiblePeriod?.totalDays ?? 0)
+  const simulationAccountId = computed(
+    () => overview.value?.initialCapitalBreakdown?.accountId ?? overview.value?.accountId ?? null,
+  )
 
   const isReady = computed(() => {
     if (!overview.value) return false
@@ -166,6 +174,53 @@ export const useSimulationStore = defineStore('simulation', () => {
       console.error('Failed to fetch simulation comparators:', error)
     } finally {
       comparatorsLoading.value = false
+    }
+  }
+
+  async function fetchInitialCapital(startDate, accountId, { signal } = {}) {
+    const requestId = ++initialCapitalRequestId
+    initialCapitalLoading.value = true
+    initialCapitalError.value = null
+    initialCapital.value = null
+
+    try {
+      const response = await queryClient.fetchQuery({
+        queryKey: queryKeys.simulation.initialCapital(startDate, accountId),
+        queryFn: ({ signal: querySignal }) =>
+          getInitialCapital(startDate, accountId, { signal: signal ?? querySignal }),
+        staleTime: 5 * 60 * 1000,
+      })
+      const responseStartDate = response?.startDate
+      const snapshotDate = response?.snapshotDate
+
+      if (responseStartDate !== startDate || !snapshotDate || snapshotDate >= responseStartDate) {
+        const validationError = new Error('올바른 직전 보유 데이터를 찾지 못했습니다.')
+        validationError.errorCode = 'INITIAL_SNAPSHOT_NOT_BEFORE_START'
+        throw validationError
+      }
+
+      const capital = Number(response.totalInitialCapital)
+      if (!Number.isFinite(capital) || capital < 0) {
+        throw new Error('초기자금 응답이 올바르지 않습니다.')
+      }
+
+      if (requestId === initialCapitalRequestId) {
+        initialCapital.value = capital
+      }
+      return {
+        ...response,
+        totalInitialCapital: capital,
+        holdings: Array.isArray(response.holdings) ? response.holdings : [],
+      }
+    } catch (error) {
+      if (requestId === initialCapitalRequestId) {
+        initialCapitalError.value = error
+      }
+      throw error
+    } finally {
+      if (requestId === initialCapitalRequestId) {
+        initialCapitalLoading.value = false
+      }
     }
   }
 
@@ -374,6 +429,10 @@ export const useSimulationStore = defineStore('simulation', () => {
     comparators.value = []
     selectedComparatorTypes.value = ['FAMOUS_STRATEGY', 'RANDOM_BOT']
     simulationConditions.value = null
+    initialCapital.value = null
+    initialCapitalLoading.value = false
+    initialCapitalError.value = null
+    initialCapitalRequestId += 1
     loading.value = false
     comparatorsLoading.value = false
     comparatorsError.value = null
@@ -391,6 +450,9 @@ export const useSimulationStore = defineStore('simulation', () => {
     comparators,
     selectedComparatorTypes,
     simulationConditions,
+    initialCapital,
+    initialCapitalLoading,
+    initialCapitalError,
     loading,
     comparatorsLoading,
     comparatorsError,
@@ -399,6 +461,7 @@ export const useSimulationStore = defineStore('simulation', () => {
     botCompileJobId,
     botCompileError,
     eligibleDays,
+    simulationAccountId,
     isReady,
     actualParticipant,
     comparatorRoster,
@@ -411,6 +474,7 @@ export const useSimulationStore = defineStore('simulation', () => {
     MIN_REQUIRED_DAYS,
     fetchOverview,
     fetchComparators,
+    fetchInitialCapital,
     fetchSimulationReport,
     compilePersonalBot,
     cancelBotCompilation,
