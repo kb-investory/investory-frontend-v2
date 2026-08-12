@@ -1,7 +1,6 @@
 import tendencyData from '@/mocks/data/tendency.json'
-import { request } from '@/shared/api/client'
 
-const FLOW_STORAGE_KEY = 'investory:mock:tendency-flow:v9-pre-analysis'
+const FLOW_STORAGE_KEY = 'investory:mock:tendency-flow:v10-json-restored'
 const MINIMUM_RECORD_DAYS = 90
 
 function formatDateKey(date = new Date()) {
@@ -204,12 +203,8 @@ export async function runTendencyAnalysis() {
 }
 
 export async function getUserPrinciples() {
-  const response = await request('/api/v1/principles/recommendations')
-
   return {
-    principles: (response.recommendations || []).map((principle, index) =>
-      normalizePersistedPrinciple(principle, index),
-    ),
+    principles: readFlowState().principles,
   }
 }
 
@@ -224,55 +219,22 @@ export async function getTendencyAccessStatus() {
 }
 
 export async function getRecommendedPrinciples() {
-  return await request('/api/v1/principles/recommendations')
-}
-
-function normalizePersistedPrinciple(principle, index) {
-  const content = principle.principleText ?? principle.content ?? ''
-  const principleId =
-    principle.principleSetItemId ?? principle.principleId ?? principle.recommendationId ?? index + 1
-  const recommendationId = principle.principleRecommendationId ?? null
-
   return {
-    principleId,
-    recommendationId,
-    content,
-    originalContent: content,
-    category: principle.principleType ?? principle.ruleJson?.ruleType ?? 'CUSTOM',
-    ruleJson: principle.ruleJson ?? {},
-    isActive: principle.isActive ?? true,
-    isUserModified: recommendationId === null,
-    sortOrder: principle.sortOrder ?? index + 1,
-    recommendationSource:
-      recommendationId === null
-        ? { type: 'USER_CREATED', label: '나의 투자원칙' }
-        : { type: 'TENDENCY_ANALYSIS', label: '투자성향 기반 추천' },
+    recommendations: tendencyData.suggestedPrinciples || [],
   }
 }
 
 export async function saveUserPrinciples({ principles }) {
-  const payload = {
-    principles: (principles || []).map((principle, index) => ({
-      recommendationId:
-        principle.recommendationSource?.type === 'USER_CREATED'
-          ? null
-          : (principle.recommendationId ?? principle.principleRecommendationId ?? null),
-      principleText: principle.content ?? principle.principleText ?? '',
-      ruleJson: principle.ruleJson ?? {},
-      sortOrder: principle.sortOrder ?? index + 1,
-    })),
-  }
+  const flowState = readFlowState()
+  const nextPrinciples = principles || []
 
-  const response = await request('/api/v1/principles', {
-    method: 'POST',
-    body: JSON.stringify(payload),
+  writeFlowState({
+    ...flowState,
+    principles: nextPrinciples,
   })
 
   return {
-    ...response,
-    principles: (response.principles || []).map((principle, index) =>
-      normalizePersistedPrinciple(principle, index),
-    ),
+    principles: nextPrinciples,
   }
 }
 
