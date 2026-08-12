@@ -63,6 +63,8 @@ async function disconnectSelectedBroker() {
     await mypageStore.disconnectBroker(account.brokerId)
     detailOpen.value = false
     notice.value = `${account.brokerName} 연결을 해제했어요. 기존 투자 일지는 보존됩니다.`
+  } catch (error) {
+    notice.value = error instanceof Error ? error.message : '증권사 연결을 해제하지 못했어요.'
   } finally {
     disconnecting.value = false
   }
@@ -74,10 +76,7 @@ async function retryAccount(account) {
   notice.value = `${account.brokerName} 계좌 동기화를 완료했어요.`
 }
 
-onMounted(async () => {
-  await mypageStore.fetchOverview()
-  await mypageStore.fetchAccounts()
-})
+onMounted(() => mypageStore.fetchAccounts())
 </script>
 
 <template>

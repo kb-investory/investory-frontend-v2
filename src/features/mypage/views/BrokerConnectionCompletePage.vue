@@ -5,12 +5,10 @@ import { useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
 import { useBrokerConnectionStore } from '@/features/mypage/stores/brokerConnectionStore'
-import { useMypageStore } from '@/features/mypage/stores/mypageStore'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
 
 const router = useRouter()
 const brokerStore = useBrokerConnectionStore()
-const mypageStore = useMypageStore()
 const completing = ref(false)
 const completionError = ref('')
 
@@ -21,7 +19,6 @@ async function goHome() {
   completionError.value = ''
   try {
     await brokerStore.completeConnection()
-    await mypageStore.fetchAccounts()
     await router.push({ name: ROUTE_NAMES.HOME })
   } catch (error) {
     completionError.value =
@@ -67,8 +64,8 @@ async function goHome() {
               <dd class="complete-summary__number">{{ brokerStore.holdings.length }}개</dd>
             </div>
             <div>
-              <dt>입력한 보유 근거</dt>
-              <dd>{{ brokerStore.reasonCount }}개</dd>
+              <dt>총 평가금액</dt>
+              <dd>{{ new Intl.NumberFormat('ko-KR').format(brokerStore.totalValuation) }}원</dd>
             </div>
           </dl>
 

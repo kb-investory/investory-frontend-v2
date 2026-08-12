@@ -1,14 +1,16 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 
+import { queryClient } from '@/app/providers/queryClient'
 import {
   createBrokerConnection,
   getBrokerProviders,
   getConnectedHoldings,
 } from '@/features/mypage/api/brokerConnectionApi'
-import { addConnectedBrokerAccounts } from '@/features/mypage/api/mypageApi'
+import { queryKeys } from '@/shared/api/queryKeys'
 
 const CONNECTION_SESSION_KEY = 'investory:broker-connection'
+const PROVIDER_STALE_TIME = 5 * 60 * 1000
 
 function readSavedConnection() {
   try {
@@ -26,7 +28,6 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
   const connection = ref(savedConnection?.connection ?? null)
   const account = ref(savedConnection?.account ?? null)
   const holdings = ref(savedConnection?.holdings ?? [])
-  const reasonCount = ref(savedConnection?.reasonCount ?? 0)
   const loading = ref(false)
   const error = ref(null)
   const connectionStatus = ref('idle')
@@ -38,6 +39,7 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
       savedConnection?.connection?.connectionStatus === 'CONNECTED') &&
       Boolean(savedConnection?.account),
   )
+  let latestProviderRequestId = 0
 
   const hasVerifiedConnection = computed(() => {
     const status = connection.value?.status || connection.value?.connectionStatus
@@ -48,15 +50,23 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
   const hasLoadedHoldings = computed(() => hasVerifiedConnection.value && Boolean(account.value))
 
   const totalValuation = computed(() =>
-    holdings.value.reduce((total, holding) => total + holding.valuationAmount, 0),
+    holdings.value.reduce((total, holding) => total + Number(holding.valuationAmount || 0), 0),
   )
 
   async function fetchProviders(query = '') {
+    const requestId = ++latestProviderRequestId
     loading.value = true
     error.value = null
 
     try {
-      const response = await getBrokerProviders({ query })
+      const normalizedQuery = query.trim().toLocaleLowerCase('ko-KR')
+      const response = await queryClient.fetchQuery({
+        queryKey: queryKeys.mypage.brokerProviders(normalizedQuery),
+        queryFn: () => getBrokerProviders({ query: normalizedQuery }),
+        staleTime: PROVIDER_STALE_TIME,
+      })
+      if (requestId !== latestProviderRequestId) return response
+
       providers.value = response.providers
 
       if (selectedBroker.value) {
@@ -68,10 +78,14 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
 
       return response
     } catch (requestError) {
-      error.value = requestError
+      if (requestId === latestProviderRequestId) {
+        error.value = requestError
+      }
       throw requestError
     } finally {
-      loading.value = false
+      if (requestId === latestProviderRequestId) {
+        loading.value = false
+      }
     }
   }
 
@@ -123,10 +137,11 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
       const response = await getConnectedHoldings({
         connectionId: connection.value?.connectionId,
         brokerId: selectedBroker.value.brokerId,
+        brokerCode: selectedBroker.value.brokerCode,
+        brokerName: selectedBroker.value.brokerName,
       })
       account.value = response.account
       holdings.value = response.holdings
-      reasonCount.value = response.reasonCount
       return response
     } catch (requestError) {
       holdingsError.value = requestError
@@ -147,11 +162,10 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
       throw new Error('보유 종목 확인을 완료한 후 계좌 연결을 마쳐 주세요.')
     }
 
-    await addConnectedBrokerAccounts({
-      connection: connection.value,
-      account: account.value,
-      holdings: holdings.value,
-    })
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.mypage.all }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.home.all }),
+    ])
     connectionCompleted.value = true
 
     try {
@@ -161,7 +175,6 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
           connection: connection.value,
           account: account.value,
           holdings: holdings.value,
-          reasonCount: reasonCount.value,
         }),
       )
     } catch {
@@ -170,12 +183,12 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
   }
 
   function reset() {
+    latestProviderRequestId += 1
     providers.value = []
     selectedBroker.value = null
     connection.value = null
     account.value = null
     holdings.value = []
-    reasonCount.value = 0
     loading.value = false
     error.value = null
     connectionStatus.value = 'idle'
@@ -183,6 +196,7 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
     holdingsLoading.value = false
     holdingsError.value = null
     connectionCompleted.value = false
+    queryClient.removeQueries({ queryKey: ['mypage', 'broker-providers'] })
 
     try {
       sessionStorage.removeItem(CONNECTION_SESSION_KEY)
@@ -197,7 +211,6 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
     connection,
     account,
     holdings,
-    reasonCount,
     loading,
     error,
     connectionStatus,
