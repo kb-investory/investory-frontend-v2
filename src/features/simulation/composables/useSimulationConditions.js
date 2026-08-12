@@ -18,7 +18,11 @@ function toApiDate(date) {
 export function useSimulationConditions(props, fetchInitialCapital) {
   const startOffset = ref(0)
   const endOffset = ref(1)
-  const currentInitialCapital = ref(props.initialCapital ?? 5000000)
+  const currentInitialCapital = ref(null)
+  const capitalLoading = ref(false)
+  const capitalError = ref('')
+  const snapshotDate = ref(null)
+  const initialHoldings = ref([])
 
   const maxOffset = computed(() => {
     const start = new Date(`${props.periodStart}T00:00:00`)
@@ -65,30 +69,62 @@ export function useSimulationConditions(props, fetchInitialCapital) {
   const selectedStartDateStr = computed(() => toApiDate(selectedStartDate.value))
 
   let debounceTimer = null
-  let isFirstCall = true
   let capitalRequestId = 0
+  let capitalAbortController = null
+
+  function getCapitalErrorMessage(error) {
+    const errorCode = error?.errorCode || error?.data?.detail?.code || error?.data?.code
+    if (errorCode === 'INITIAL_SNAPSHOT_NOT_FOUND') {
+      return '선택일 이전의 보유 데이터가 없습니다.'
+    }
+    if (errorCode === 'INITIAL_SNAPSHOT_NOT_BEFORE_START') {
+      return '올바른 직전 보유 데이터를 찾지 못했습니다.'
+    }
+    return '초기자금을 계산하지 못했습니다. 다시 시도해 주세요.'
+  }
 
   watch(
-    selectedStartDateStr,
-    (newApiDate) => {
-      if (!newApiDate) return
+    [selectedStartDateStr, () => props.accountId],
+    ([newApiDate, accountId]) => {
+      const requestId = ++capitalRequestId
+      capitalAbortController?.abort()
+      capitalAbortController = null
 
       if (debounceTimer) {
         clearTimeout(debounceTimer)
         debounceTimer = null
       }
 
-      if (isFirstCall) {
-        isFirstCall = false
-        if (Number(props.initialCapital) > 0) return
+      currentInitialCapital.value = null
+      snapshotDate.value = null
+      initialHoldings.value = []
+      capitalError.value = ''
+
+      if (!newApiDate || !accountId) {
+        capitalLoading.value = false
+        capitalError.value = '초기자금 조회에 필요한 계좌 정보를 찾지 못했습니다.'
+        return
       }
 
-      const requestId = ++capitalRequestId
+      capitalLoading.value = true
       const updateInitialCapital = async () => {
-        const capital = await fetchInitialCapital(newApiDate)
-        if (requestId !== capitalRequestId) return
-        if (typeof capital === 'number' && capital > 0) {
-          currentInitialCapital.value = capital
+        capitalAbortController = new AbortController()
+        try {
+          const response = await fetchInitialCapital(newApiDate, accountId, {
+            signal: capitalAbortController.signal,
+          })
+          if (requestId !== capitalRequestId) return
+
+          currentInitialCapital.value = response.totalInitialCapital
+          snapshotDate.value = response.snapshotDate
+          initialHoldings.value = response.holdings
+        } catch (error) {
+          if (requestId !== capitalRequestId || error?.name === 'AbortError') return
+          capitalError.value = getCapitalErrorMessage(error)
+        } finally {
+          if (requestId === capitalRequestId) {
+            capitalLoading.value = false
+          }
         }
       }
 
@@ -97,17 +133,9 @@ export function useSimulationConditions(props, fetchInitialCapital) {
     { immediate: true },
   )
 
-  watch(
-    () => props.initialCapital,
-    (capital) => {
-      if (typeof capital === 'number' && capital > 0) {
-        currentInitialCapital.value = capital
-      }
-    },
-  )
-
   onUnmounted(() => {
     capitalRequestId += 1
+    capitalAbortController?.abort()
     if (debounceTimer) clearTimeout(debounceTimer)
   })
 
@@ -142,6 +170,10 @@ export function useSimulationConditions(props, fetchInitialCapital) {
     startOffset,
     endOffset,
     currentInitialCapital,
+    capitalLoading,
+    capitalError,
+    snapshotDate,
+    initialHoldings,
     maxOffset,
     participants,
     participantCount,

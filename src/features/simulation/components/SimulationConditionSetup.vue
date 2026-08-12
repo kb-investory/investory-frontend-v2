@@ -8,19 +8,19 @@ import BaseButton from '@/shared/components/buttons/BaseButton.vue'
 const props = defineProps({
   periodStart: {
     type: String,
-    default: '2026-03-01',
+    required: true,
   },
   periodEnd: {
     type: String,
-    default: '2026-07-29',
+    required: true,
   },
   totalDays: {
     type: Number,
     default: 150,
   },
-  initialCapital: {
+  accountId: {
     type: Number,
-    default: 5000000,
+    required: true,
   },
   selectedBotTypes: {
     type: Array,
@@ -38,6 +38,10 @@ const {
   startOffset,
   endOffset,
   currentInitialCapital,
+  capitalLoading,
+  capitalError,
+  snapshotDate,
+  initialHoldings,
   maxOffset,
   participants,
   participantCount,
@@ -55,9 +59,21 @@ const {
 } = useSimulationConditions(props, simulationStore.fetchInitialCapital)
 
 function startSimulation() {
-  if (props.isPending) return
+  if (
+    props.isPending ||
+    capitalLoading.value ||
+    capitalError.value ||
+    !currentInitialCapital.value
+  ) {
+    return
+  }
 
   emit('start', getConditions())
+}
+
+function formatDateKey(value) {
+  if (!value) return ''
+  return value.replaceAll('-', '. ')
 }
 </script>
 
@@ -158,17 +174,40 @@ function startSimulation() {
       </div>
       <div>
         <strong>{{ participantCount }}명 · 같은 시점 · 같은 투자금</strong>
-        <span>
-          실제 나 + 투자봇 {{ participantCount - 1 }}명 · ₩{{
-            formatCurrency(currentInitialCapital)
-          }}
+        <span v-if="capitalLoading" class="capital-status capital-status--loading" role="status">
+          <AppIcon name="loader-circle" :size="13" class="pending-spinner" />
+          초기자금 갱신 중
         </span>
+        <span v-else-if="capitalError" class="capital-status capital-status--error" role="alert">
+          {{ capitalError }}
+        </span>
+        <template v-else-if="currentInitialCapital !== null">
+          <span>
+            실제 나 + 투자봇 {{ participantCount - 1 }}명 · ₩{{
+              formatCurrency(currentInitialCapital)
+            }}
+          </span>
+          <small
+            >보유 기준 {{ formatDateKey(snapshotDate) }} · {{ initialHoldings.length }}종목</small
+          >
+        </template>
       </div>
-      <AppIcon name="circle-check" :size="17" />
+      <AppIcon
+        v-if="!capitalLoading && !capitalError && currentInitialCapital !== null"
+        name="circle-check"
+        :size="17"
+      />
     </section>
 
     <div class="setup-action">
-      <BaseButton variant="primary" full-width :disabled="isPending" @click="startSimulation">
+      <BaseButton
+        variant="primary"
+        full-width
+        :disabled="
+          isPending || capitalLoading || Boolean(capitalError) || currentInitialCapital === null
+        "
+        @click="startSimulation"
+      >
         <template v-if="isPending">
           <AppIcon name="loader-circle" :size="17" class="pending-spinner" />
           <span>시뮬레이션 준비 중</span>
@@ -903,6 +942,29 @@ function startSimulation() {
   font-size: var(--font-size-caption);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.same-condition small {
+  color: #8b999d;
+  font-size: var(--font-size-caption);
+}
+
+.same-condition .capital-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.same-condition .capital-status--loading {
+  color: #087f7c;
+}
+
+.same-condition .capital-status--error {
+  overflow: visible;
+  color: #c35050;
+  line-height: 1.4;
+  text-overflow: unset;
+  white-space: normal;
 }
 
 .setup-action {

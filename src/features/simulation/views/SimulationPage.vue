@@ -80,7 +80,7 @@ const {
           :period-start="simulationStore.overview?.eligiblePeriod?.startDate"
           :period-end="simulationStore.overview?.eligiblePeriod?.endDate"
           :total-days="simulationStore.overview?.eligiblePeriod?.totalDays"
-          :initial-capital="simulationStore.overview?.recommendedInitialCapital"
+          :account-id="simulationStore.simulationAccountId"
           :selected-bot-types="selectedComparators"
           :is-pending="simulationStore.loading"
           @start="startLiveSimulation"
