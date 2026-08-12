@@ -79,7 +79,8 @@ defineProps({
   display: grid;
   width: 100%;
   grid-template-columns: minmax(0, 1fr) 44px;
-  padding: 0 26px;
+  /* 홈 헤더와 동일한 좌우 기준선에 로고와 우측 액션을 배치한다. */
+  padding: 0 20px;
   background: transparent;
 }
 

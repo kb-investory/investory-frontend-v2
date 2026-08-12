@@ -140,11 +140,20 @@ function writeTodayJournal() {
 }
 
 .journal-calendar-page__search {
-  color: var(--slate-strong, #263a43);
+  border-color: rgb(67 222 217 / 34%) !important;
+  background: rgb(5 45 56 / 76%) !important;
+  color: #ffffff !important;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
 }
 
 .journal-calendar-page__search:hover {
-  background: var(--brand-mist, #f5fbfb);
+  border-color: rgb(86 235 229 / 72%) !important;
+  background: #075863 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 20px rgb(22 201 196 / 22%) !important;
 }
 
 .journal-calendar-page__search:focus-visible {
