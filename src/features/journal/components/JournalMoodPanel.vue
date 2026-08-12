@@ -1,12 +1,35 @@
 <script setup>
-import { ref } from 'vue'
-import { Frown, Laugh, Meh, Smile } from '@lucide/vue'
+import { computed } from 'vue'
 
 const moodOptions = [
-  { value: 'ANXIOUS', label: '불안', color: '#e34b4b', icon: Frown },
-  { value: 'CAUTIOUS', label: '경계', color: '#e58b2d', icon: Meh },
-  { value: 'CALM', label: '차분', color: '#3d9fb6', icon: Smile },
-  { value: 'CONFIDENT', label: '확신', color: '#3976d9', icon: Laugh },
+  {
+    value: 'ANXIOUS',
+    label: '불안',
+    color: '#3976d9',
+    softColor: '#eaf2ff',
+    image: '/assets/images/journal-moods/anxious.png',
+  },
+  {
+    value: 'CAUTIOUS',
+    label: '경계',
+    color: '#e0a012',
+    softColor: '#fff7dc',
+    image: '/assets/images/journal-moods/cautious.png',
+  },
+  {
+    value: 'CALM',
+    label: '차분',
+    color: '#139c83',
+    softColor: '#e8f8f4',
+    image: '/assets/images/journal-moods/calm.png',
+  },
+  {
+    value: 'CONFIDENT',
+    label: '확신',
+    color: '#e84a5f',
+    softColor: '#fff0f2',
+    image: '/assets/images/journal-moods/confident.png',
+  },
 ]
 
 const props = defineProps({
@@ -17,65 +40,32 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue'])
-const controlRef = ref(null)
-const draggingPointerId = ref(null)
+
+const selectedMood = computed(
+  () => moodOptions.find((option) => option.value === props.modelValue) ?? moodOptions[2],
+)
 
 function selectMood(mood) {
   emit('update:modelValue', mood)
-}
-
-function selectNearestMood(clientY) {
-  const optionElements = controlRef.value?.querySelectorAll('.mood-selector__option')
-
-  if (!optionElements?.length) return
-
-  let nearestIndex = 0
-  let nearestDistance = Number.POSITIVE_INFINITY
-
-  optionElements.forEach((optionElement, index) => {
-    const optionRect = optionElement.getBoundingClientRect()
-    const distance = Math.abs(clientY - (optionRect.top + optionRect.height / 2))
-
-    if (distance < nearestDistance) {
-      nearestIndex = index
-      nearestDistance = distance
-    }
-  })
-
-  const nearestMood = moodOptions[nearestIndex]?.value
-
-  if (nearestMood && nearestMood !== props.modelValue) {
-    selectMood(nearestMood)
-  }
-}
-
-function startMoodDrag(event) {
-  draggingPointerId.value = event.pointerId
-  event.currentTarget.setPointerCapture?.(event.pointerId)
-  selectNearestMood(event.clientY)
-}
-
-function moveMoodDrag(event) {
-  if (draggingPointerId.value !== event.pointerId) return
-
-  selectNearestMood(event.clientY)
-}
-
-function finishMoodDrag(event) {
-  if (draggingPointerId.value !== event.pointerId) return
-
-  selectNearestMood(event.clientY)
-  event.currentTarget.releasePointerCapture?.(event.pointerId)
-  draggingPointerId.value = null
 }
 </script>
 
 <template>
   <fieldset class="mood-selector">
-    <legend class="mood-selector__title">판단의 온도</legend>
-    <p class="mood-selector__description">움직이면 표정이 바뀌어요</p>
+    <legend class="mood-selector__title">오늘 시장을 보며 느낀 감정 선택</legend>
 
-    <div ref="controlRef" class="mood-selector__control">
+    <div class="mood-selector__character" aria-live="polite">
+      <Transition name="mood-character" mode="out-in">
+        <img
+          :key="selectedMood.value"
+          :src="selectedMood.image"
+          :alt="`${selectedMood.label}한 표정의 원숭이`"
+          class="mood-selector__character-image"
+        />
+      </Transition>
+    </div>
+
+    <div class="mood-selector__control">
       <div class="mood-selector__rail" aria-hidden="true" />
 
       <button
@@ -84,24 +74,12 @@ function finishMoodDrag(event) {
         type="button"
         class="mood-selector__option"
         :class="{ 'mood-selector__option--active': modelValue === option.value }"
-        :style="{ '--mood-color': option.color }"
+        :style="{ '--mood-color': option.color, '--mood-soft-color': option.softColor }"
         :aria-pressed="modelValue === option.value"
         @click="selectMood(option.value)"
       >
-        <span
-          class="mood-selector__handle"
-          @click.stop.prevent
-          @pointerdown.stop.prevent="startMoodDrag"
-          @pointermove.stop.prevent="moveMoodDrag"
-          @pointerup.stop.prevent="finishMoodDrag"
-          @pointercancel.stop.prevent="finishMoodDrag"
-        >
-          <component :is="option.icon" :size="16" :stroke-width="1.8" aria-hidden="true" />
-        </span>
-        <span class="mood-selector__label">
-          <component :is="option.icon" :size="12" :stroke-width="1.8" aria-hidden="true" />
-          {{ option.label }}
-        </span>
+        <span class="mood-selector__dot" aria-hidden="true" />
+        <span class="mood-selector__label">{{ option.label }}</span>
       </button>
     </div>
   </fieldset>
@@ -109,53 +87,67 @@ function finishMoodDrag(event) {
 
 <style scoped>
 .mood-selector {
-  width: 118px;
-  min-width: 118px;
+  width: 100%;
+  min-width: 0;
   margin: 0;
-  padding: 4px 2px;
+  padding: 0;
   border: 0;
 }
 
 .mood-selector__title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
   padding: 0;
-  color: var(--text-primary);
-  font-family: var(--font-heading);
-  font-size: var(--font-size-caption);
-  font-weight: 700;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
 }
 
-.mood-selector__description {
-  margin: 2px 0 7px;
-  color: var(--text-tertiary);
-  font-size: var(--font-size-caption);
-  line-height: 1.4;
+.mood-selector__character {
+  display: grid;
+  height: 116px;
+  margin: 2px 0 -7px;
+  place-items: end center;
+  overflow: visible;
+}
+
+.mood-selector__character-image {
+  display: block;
+  width: 112px;
+  height: 112px;
+  object-fit: contain;
+  transform-origin: center bottom;
+  animation: mood-float 2.4s ease-in-out infinite;
+  filter: drop-shadow(0 5px 5px rgba(31, 41, 55, 0.12));
 }
 
 .mood-selector__control {
   position: relative;
-  display: flex;
-  height: 118px;
-  flex-direction: column;
-  justify-content: space-between;
-  padding-left: 27px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding-top: 5px;
 }
 
 .mood-selector__rail {
   position: absolute;
-  top: 6px;
-  bottom: 6px;
-  left: 8px;
-  width: 12px;
-  border-radius: 6px;
-  background: linear-gradient(180deg, #e34b4b 0%, #e58b2d 34%, #4bb7c5 68%, #3976d9 100%);
+  top: 14px;
+  right: 12.5%;
+  left: 12.5%;
+  height: 5px;
+  border-radius: 999px;
+  background: #24364a;
 }
 
 .mood-selector__option {
   position: relative;
+  z-index: 1;
   display: flex;
-  min-height: 22px;
+  min-width: 0;
   align-items: center;
-  gap: 5px;
+  flex-direction: column;
+  gap: 6px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -164,57 +156,87 @@ function finishMoodDrag(event) {
   font-family: var(--font-heading);
 }
 
-.mood-selector__handle {
-  position: absolute;
-  top: 50%;
-  left: -29px;
-  display: grid;
-  width: 32px;
-  height: 32px;
-  place-items: center;
-  border: 3px solid transparent;
+.mood-selector__dot {
+  width: 18px;
+  height: 18px;
+  border: 4px solid #ffffff;
   border-radius: 50%;
-  background: transparent;
-  color: transparent;
-  cursor: grab;
-  touch-action: none;
-  transform: translateY(-50%);
+  background: var(--mood-color);
+  box-shadow: 0 0 0 1px rgba(36, 54, 74, 0.08);
   transition:
-    border-color 0.15s ease,
-    background-color 0.15s ease,
-    color 0.15s ease,
-    box-shadow 0.15s ease;
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
-.mood-selector__handle:active {
-  cursor: grabbing;
-}
-
-.mood-selector__option--active .mood-selector__handle {
-  border-color: var(--mood-color);
-  background: #ffffff;
-  color: var(--mood-color);
-  box-shadow: 0 2px 7px rgba(24, 24, 23, 0.14);
+.mood-selector__option--active .mood-selector__dot {
+  transform: scale(1.28);
+  box-shadow:
+    0 0 0 3px var(--mood-soft-color),
+    0 2px 5px rgba(36, 54, 74, 0.18);
 }
 
 .mood-selector__label {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-left: 9px;
+  display: inline-flex;
+  min-width: 42px;
+  justify-content: center;
+  padding: 3px 7px;
+  border-radius: 999px;
   font-size: var(--font-size-caption);
-  font-weight: 600;
-  line-height: 1.4;
-  white-space: nowrap;
+  font-weight: 700;
+  line-height: 1.3;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease;
 }
 
 .mood-selector__option--active .mood-selector__label {
+  background: var(--mood-soft-color);
+  color: var(--mood-color);
   font-weight: 800;
 }
 
 .mood-selector__option:focus-visible {
-  border-radius: 4px;
+  border-radius: 8px;
   outline: 2px solid var(--brand-teal);
-  outline-offset: 3px;
+  outline-offset: 4px;
+}
+
+.mood-character-enter-active,
+.mood-character-leave-active {
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
+}
+
+.mood-character-enter-from {
+  opacity: 0;
+  transform: translateY(8px) scale(0.92);
+}
+
+.mood-character-leave-to {
+  opacity: 0;
+  transform: translateY(-5px) scale(0.96);
+}
+
+@keyframes mood-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mood-selector__character-image {
+    animation: none;
+  }
+
+  .mood-character-enter-active,
+  .mood-character-leave-active {
+    transition: none;
+  }
 }
 </style>
