@@ -69,54 +69,75 @@ export const useMypageStore = defineStore('mypage', () => {
 
     try {
       if (force) {
-        await queryClient.invalidateQueries({ queryKey: queryKeys.mypage.overview(), exact: true })
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.mypage.overview(),
+            exact: true,
+          }),
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.tendency.analysis(),
+            exact: true,
+          }),
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.journal.entries(),
+            exact: true,
+          }),
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.simulation.latestCompleted(),
+            exact: true,
+          }),
+        ])
       }
 
-      const { overview, analysis, journalResponse, simulationResult } =
-        await queryClient.fetchQuery({
+      const [overviewRes, analysisRes, journalRes, simulationRes] = await Promise.allSettled([
+        queryClient.fetchQuery({
           queryKey: queryKeys.mypage.overview(),
-          queryFn: async () => {
-            const [overviewData, analysisData, journalsData, simulationData] = await Promise.all([
-              getMypageOverview(),
-              queryClient.fetchQuery({
-                queryKey: queryKeys.tendency.analysis(),
-                queryFn: getLatestTendencyAnalysis,
-                staleTime: MYPAGE_STALE_TIME,
-              }),
-              queryClient.fetchQuery({
-                queryKey: queryKeys.journal.entries(),
-                queryFn: () => getJournalEntries(),
-                staleTime: MYPAGE_STALE_TIME,
-              }),
-              queryClient.fetchQuery({
-                queryKey: queryKeys.simulation.latestCompleted(),
-                queryFn: getLatestCompletedSimulationResult,
-                staleTime: MYPAGE_STALE_TIME,
-              }),
-            ])
-
-            return {
-              overview: overviewData,
-              analysis: analysisData,
-              journalResponse: journalsData,
-              simulationResult: simulationData,
-            }
-          },
+          queryFn: getMypageOverview,
           staleTime: MYPAGE_STALE_TIME,
-        })
+        }),
+        queryClient.fetchQuery({
+          queryKey: queryKeys.tendency.analysis(),
+          queryFn: getLatestTendencyAnalysis,
+          staleTime: MYPAGE_STALE_TIME,
+        }),
+        queryClient.fetchQuery({
+          queryKey: queryKeys.journal.entries(),
+          queryFn: () => getJournalEntries(),
+          staleTime: MYPAGE_STALE_TIME,
+        }),
+        queryClient.fetchQuery({
+          queryKey: queryKeys.simulation.latestCompleted(),
+          queryFn: getLatestCompletedSimulationResult,
+          staleTime: MYPAGE_STALE_TIME,
+        }),
+      ])
+
+      const overview =
+        overviewRes.status === 'fulfilled' && overviewRes.value
+          ? overviewRes.value
+          : {
+              profile: { nickname: '사용자', email: 'user@investory.com' },
+              accounts: [],
+              appInfo: {},
+            }
+      const analysis = analysisRes.status === 'fulfilled' ? analysisRes.value : null
+      const journalResponse =
+        journalRes.status === 'fulfilled' && journalRes.value ? journalRes.value : { entries: [] }
+      const simulationResult = simulationRes.status === 'fulfilled' ? simulationRes.value : null
+
       const oauthProvider = String(
-        authUser?.oauthProvider || authUser?.socialType || overview.profile.oauthProvider || '',
+        authUser?.oauthProvider || authUser?.socialType || overview.profile?.oauthProvider || '',
       ).toUpperCase()
       profile.value = {
         ...overview.profile,
         ...(authUser
           ? {
-              email: authUser.email || overview.profile.email,
+              email: authUser.email || overview.profile?.email,
             }
           : {}),
         oauthProvider,
         oauthProviderLabel: OAUTH_PROVIDER_LABELS[oauthProvider] || '소셜',
-        totalJournalsCount: journalResponse.entries.length,
+        totalJournalsCount: journalResponse?.entries?.length ?? 0,
       }
       tendencyBadges.value = (analysis?.analysisResults || []).map((result) => ({
         code: result.dimension.code,
@@ -144,8 +165,8 @@ export const useMypageStore = defineStore('mypage', () => {
             })),
           }
         : null
-      accounts.value = overview.accounts
-      appInfo.value = overview.appInfo
+      accounts.value = overview.accounts || []
+      appInfo.value = overview.appInfo || {}
       hasTendencyAnalysis.value = Boolean(analysis)
     } catch (requestError) {
       error.value = requestError

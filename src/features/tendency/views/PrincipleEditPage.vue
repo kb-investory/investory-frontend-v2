@@ -153,10 +153,10 @@ function handleBeforeUnload(event) {
 }
 
 watch(
-  [() => tendencyStore.analysis, () => tendencyStore.principles],
-  ([analysis, principles]) => {
-    if (initialized.value || !analysis) return
-    draftPrinciples.value = clonePrinciples(principles)
+  [() => tendencyStore.principles, () => tendencyStore.analysis],
+  ([principles]) => {
+    if (initialized.value) return
+    draftPrinciples.value = clonePrinciples(principles || [])
     initialSnapshot.value = currentSnapshot.value
     initialized.value = true
   },
@@ -170,14 +170,6 @@ onBeforeRouteLeave(() => {
 
 onMounted(async () => {
   await tendencyStore.fetchTendencies()
-  if (tendencyStore.isAnalysisLocked) {
-    await router.replace({
-      name: ROUTE_NAMES.TENDENCY,
-      query: { tab: 'principles' },
-    })
-    return
-  }
-
   window.addEventListener('beforeunload', handleBeforeUnload)
 })
 
@@ -495,7 +487,7 @@ onBeforeUnmount(() => {
 .edit-principle strong,
 .available-principles strong {
   color: #35474b;
-  font-size: var(--font-size-body);
+  font-size: 14px;
   line-height: 1.45;
 }
 
@@ -518,7 +510,7 @@ onBeforeUnmount(() => {
   background: #fff;
   color: #35474b;
   font: inherit;
-  font-size: var(--font-size-body);
+  font-size: 14px;
   line-height: 1.55;
   padding: 10px;
 }

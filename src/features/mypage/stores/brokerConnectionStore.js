@@ -37,15 +37,18 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
   const holdingsLoading = ref(false)
   const holdingsError = ref(null)
   const connectionCompleted = ref(
-    savedConnection?.connection?.status === 'CONNECTED' && Boolean(savedConnection?.account),
+    (savedConnection?.connection?.status === 'CONNECTED' ||
+      savedConnection?.connection?.connectionStatus === 'CONNECTED') &&
+      Boolean(savedConnection?.account),
   )
   let latestProviderRequestId = 0
 
-  const hasVerifiedConnection = computed(
-    () =>
-      connection.value?.status === 'CONNECTED' &&
-      connection.value.brokerId === selectedBroker.value?.brokerId,
-  )
+  const hasVerifiedConnection = computed(() => {
+    const status = connection.value?.status || connection.value?.connectionStatus
+    const connectionBrokerId = Number(connection.value?.brokerId)
+    const selectedId = Number(selectedBroker.value?.brokerId)
+    return status === 'CONNECTED' && connectionBrokerId === selectedId
+  })
   const hasLoadedHoldings = computed(() => hasVerifiedConnection.value && Boolean(account.value))
 
   const totalValuation = computed(() =>
@@ -110,6 +113,7 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
         brokerId: selectedBroker.value.brokerId,
         ...credentials,
       })
+
       connectionStatus.value = 'success'
       return connection.value
     } catch (requestError) {
@@ -133,6 +137,7 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
 
     try {
       const response = await getConnectedHoldings({
+        connectionId: connection.value?.connectionId,
         brokerId: selectedBroker.value.brokerId,
       })
       account.value = response.account

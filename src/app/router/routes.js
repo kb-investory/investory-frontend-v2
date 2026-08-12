@@ -3,6 +3,10 @@ import { ROUTE_NAMES } from './route-names'
 export const routes = [
   {
     path: '/',
+    redirect: '/login',
+  },
+  {
+    path: '/home',
     name: ROUTE_NAMES.HOME,
     component: () => import('@/features/home/views/HomePage.vue'),
     meta: {

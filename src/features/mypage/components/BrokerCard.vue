@@ -39,7 +39,7 @@ const brokerMark = computed(
     class="broker-card"
     :class="{ 'broker-card--selected': selected }"
     type="button"
-    :disabled="!broker.active"
+    :disabled="broker.active === false"
     :aria-pressed="selected"
     :aria-label="`${broker.brokerName} 선택`"
     @click="$emit('select', broker)"
