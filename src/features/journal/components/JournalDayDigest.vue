@@ -1,5 +1,5 @@
 <script setup>
-import { Frown, Laugh, Lightbulb, Meh, Smile } from '@lucide/vue'
+import { Lightbulb } from '@lucide/vue'
 import { computed } from 'vue'
 
 import JournalTradeDetailCard from '@/features/journal/components/JournalTradeDetailCard.vue'
@@ -15,10 +15,26 @@ const props = defineProps({
 const emit = defineEmits(['edit'])
 
 const moodOptions = {
-  ANXIOUS: { label: '불안', sentence: '오늘은 마음이 흔들린 하루였어요', icon: Frown },
-  CAUTIOUS: { label: '경계', sentence: '오늘은 신중하게 살핀 하루였어요', icon: Meh },
-  CALM: { label: '차분', sentence: '오늘은 차분한 하루였어요', icon: Smile },
-  CONFIDENT: { label: '확신', sentence: '오늘은 확신을 지킨 하루였어요', icon: Laugh },
+  ANXIOUS: {
+    label: '불안',
+    sentence: '오늘은 마음이 흔들린 하루였어요',
+    image: '/assets/images/journal-moods/anxious.png',
+  },
+  CAUTIOUS: {
+    label: '경계',
+    sentence: '오늘은 신중하게 살핀 하루였어요',
+    image: '/assets/images/journal-moods/cautious.png',
+  },
+  CALM: {
+    label: '차분',
+    sentence: '오늘은 차분한 하루였어요',
+    image: '/assets/images/journal-moods/calm.png',
+  },
+  CONFIDENT: {
+    label: '확신',
+    sentence: '오늘은 확신을 지킨 하루였어요',
+    image: '/assets/images/journal-moods/confident.png',
+  },
 }
 
 const journal = computed(() => props.entry.journal)
@@ -99,12 +115,15 @@ function formatCurrency(value, { signed = false } = {}) {
     <section class="journal-digest__reflection" aria-label="선택 날짜 판단 기록">
       <div class="journal-digest__reflection-meta">
         <span>오늘의 판단 기록</span>
-        <span class="journal-digest__mood">
-          <component :is="mood.icon" :size="16" :stroke-width="1.8" aria-hidden="true" />
-          {{ mood.label }}
-        </span>
       </div>
-      <h2>{{ mood.sentence }}</h2>
+      <div class="journal-digest__headline">
+        <h2>{{ mood.sentence }}</h2>
+        <img
+          :src="mood.image"
+          :alt="`${mood.label}한 표정의 원숭이`"
+          class="journal-digest__mood-image"
+        />
+      </div>
       <p>{{ journal.marketThought }}</p>
     </section>
 
@@ -237,10 +256,9 @@ function formatCurrency(value, { signed = false } = {}) {
 
 .journal-digest__reflection {
   display: flex;
-  min-height: 150px;
   flex-direction: column;
-  gap: 7px;
-  padding: 11px 12px;
+  gap: 5px;
+  padding: 9px 11px 10px;
   border-radius: 12px;
   color: #ffffff;
   background: var(--slate-strong, #263a43);
@@ -248,7 +266,7 @@ function formatCurrency(value, { signed = false } = {}) {
 
 .journal-digest__reflection-meta {
   display: flex;
-  min-height: 28px;
+  min-height: 20px;
   align-items: center;
   justify-content: space-between;
   color: #5fd3ce;
@@ -257,35 +275,43 @@ function formatCurrency(value, { signed = false } = {}) {
   font-weight: 700;
 }
 
-.journal-digest__mood {
-  display: flex;
-  height: 30px;
+.journal-digest__headline {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) 72px;
   align-items: center;
-  gap: 5px;
-  padding: 0 9px;
-  border-radius: 6px;
-  color: var(--text-primary, #181817);
-  background: #c8f3ee;
-  font-family: var(--font-heading);
+  gap: 8px;
 }
 
-.journal-digest__mood :deep(svg) {
-  color: #3976d9;
+.journal-digest__mood-image {
+  width: 77px;
+  height: 77px;
+  object-fit: contain;
+  justify-self: end;
 }
 
 .journal-digest__reflection h2 {
+  min-width: 0;
   margin: 0;
   font-family: var(--font-heading);
-  font-size: var(--font-size-body);
-  line-height: 1.4;
+  font-size: var(--font-size-body-sm);
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: -0.35px;
+  white-space: nowrap;
 }
 
 .journal-digest__reflection p {
   display: -webkit-box;
   overflow: hidden;
   margin: 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(95, 211, 206, 0.18);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.11);
+  color: #f5fafa;
   font-family: var(--font-sans);
-  font-size: var(--font-size-body);
+  font-size: var(--font-size-caption);
   line-height: 1.55;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;

@@ -36,6 +36,7 @@ const OAUTH_PROVIDER_LABELS = Object.freeze({
 export const useMypageStore = defineStore('mypage', () => {
   const profile = ref(null)
   const tendencyBadges = ref([])
+  const tendencyHistory = ref([])
   const recentSimulation = ref(null)
   const accounts = ref([])
   const accountDetail = ref(null)
@@ -146,6 +147,9 @@ export const useMypageStore = defineStore('mypage', () => {
         label: result.type.name,
         group: result.dimension.group,
       }))
+      tendencyHistory.value = [...(analysis?.history || [])].sort(
+        (first, second) => new Date(first.analyzedDate) - new Date(second.analyzedDate),
+      )
       const rankedParticipants = [...(simulationResult?.participantSummary || [])].sort(
         (first, second) => second.cumulativeReturnPercent - first.cumulativeReturnPercent,
       )
@@ -300,6 +304,7 @@ export const useMypageStore = defineStore('mypage', () => {
   function reset() {
     profile.value = null
     tendencyBadges.value = []
+    tendencyHistory.value = []
     recentSimulation.value = null
     accounts.value = []
     accountDetail.value = null
@@ -319,6 +324,7 @@ export const useMypageStore = defineStore('mypage', () => {
   return {
     profile,
     tendencyBadges,
+    tendencyHistory,
     recentSimulation,
     accounts,
     accountDetail,

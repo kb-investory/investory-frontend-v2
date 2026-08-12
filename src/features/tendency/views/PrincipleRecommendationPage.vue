@@ -244,6 +244,10 @@ onBeforeUnmount(() => {
   box-shadow: 0 0 0 20px #ffffff;
 }
 
+:global(.mobile-main:has(.recommendation-page)) {
+  background: #ffffff;
+}
+
 .detail-app-bar {
   position: sticky;
   top: 0;
