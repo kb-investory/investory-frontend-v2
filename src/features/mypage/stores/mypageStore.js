@@ -132,6 +132,8 @@ export const useMypageStore = defineStore('mypage', () => {
         ...overview.profile,
         ...(authUser
           ? {
+              userId: authUser.userId ?? overview.profile?.userId,
+              name: authUser.nickname || overview.profile?.name,
               email: authUser.email || overview.profile?.email,
             }
           : {}),

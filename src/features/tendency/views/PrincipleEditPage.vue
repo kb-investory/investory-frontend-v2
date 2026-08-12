@@ -55,7 +55,16 @@ function clonePrinciples(principles) {
 }
 
 function getSourceLabel(principle) {
-  return principle.recommendationSource?.tendency?.name ?? principle.title ?? '직접 작성'
+  if (principle.recommendationSource?.type === 'USER_CREATED') {
+    return '직접 작성'
+  }
+
+  const tendencyName = principle.recommendationSource?.tendency?.name
+  if (tendencyName) {
+    return `${tendencyName} 기반`
+  }
+
+  return principle.recommendationSource?.label ?? principle.title ?? '직접 작성'
 }
 
 function getLocalDateKey(date = new Date()) {
@@ -229,7 +238,7 @@ onBeforeUnmount(() => {
                 :aria-label="`${getSourceLabel(principle)} 원칙 문구 수정`"
               />
               <strong v-else>{{ principle.content }}</strong>
-              <span>{{ getSourceLabel(principle) }} 기반</span>
+              <span>{{ getSourceLabel(principle) }}</span>
             </div>
             <button
               type="button"

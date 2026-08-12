@@ -11,7 +11,6 @@ import TodayRecordHero from '@/features/home/components/TodayRecordHero.vue'
 import WeeklyRecordRhythm from '@/features/home/components/WeeklyRecordRhythm.vue'
 import { useHomeClock } from '@/features/home/composables/useHomeClock'
 import { useHomeStore } from '@/features/home/stores/homeStore'
-import { useBrokerConnectionStore } from '@/features/mypage/stores/brokerConnectionStore'
 import ReanalysisFloating from '@/features/tendency/components/ReanalysisFloating.vue'
 import { useTendencyStore } from '@/features/tendency/stores/tendencyStore'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
@@ -20,7 +19,6 @@ const REANALYSIS_NOTICE_COLLAPSED_KEY = 'investory:reanalysis-notice-collapsed:v
 
 const router = useRouter()
 const homeStore = useHomeStore()
-const brokerStore = useBrokerConnectionStore()
 const tendencyStore = useTendencyStore()
 const reanalysisNoticeCollapsed = ref(true)
 let reanalysisMidnightTimer
@@ -39,6 +37,17 @@ const liveToday = computed(() => ({
   remainingTime: remainingTime.value,
   dayProgressPercent: dayProgressPercent.value,
 }))
+const connectedAssetSummary = computed(() => {
+  const firstAccount = homeStore.accounts[0]
+  if (!firstAccount || !homeStore.summary) return null
+
+  return {
+    brokerName: firstAccount.brokerName,
+    accountCount: homeStore.accounts.length,
+    holdingCount: homeStore.holdings.length,
+    totalValuation: homeStore.summary.totalMarketValue,
+  }
+})
 
 function toggleReanalysisNotice() {
   const analysisRunId = tendencyStore.analysis?.analysisRunId
@@ -87,7 +96,11 @@ watch(
 )
 
 onMounted(async () => {
-  await Promise.allSettled([homeStore.fetchDashboard(), tendencyStore.fetchLatestAnalysis()])
+  await Promise.allSettled([
+    homeStore.fetchDashboard(),
+    homeStore.fetchSummary(),
+    tendencyStore.fetchLatestAnalysis(),
+  ])
   tendencyStore.refreshAnalysisDate()
   scheduleMidnightRefresh()
 })
@@ -110,11 +123,11 @@ function openTransactions() {
       </div>
 
       <HomeConnectionSummary
-        v-if="brokerStore.connectionCompleted && brokerStore.account"
-        :broker-name="brokerStore.account.brokerName"
-        :account-count="brokerStore.account.accountCount"
-        :holding-count="brokerStore.holdings.length"
-        :total-valuation="brokerStore.totalValuation"
+        v-if="connectedAssetSummary"
+        :broker-name="connectedAssetSummary.brokerName"
+        :account-count="connectedAssetSummary.accountCount"
+        :holding-count="connectedAssetSummary.holdingCount"
+        :total-valuation="connectedAssetSummary.totalValuation"
       />
 
       <HomeQuickActions

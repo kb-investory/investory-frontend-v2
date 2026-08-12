@@ -1,4 +1,12 @@
 import mypageData from '@/mocks/data/mypage.json'
+import {
+  getBrokerAccountDetail,
+  getBrokerAccounts,
+  getBrokerConnectionDetail,
+  getBrokerConnections,
+  syncBrokerConnection,
+} from '@/features/mypage/api/brokerConnectionApi'
+import { getLedgerTrades } from '@/features/ledger/api/ledgerApi'
 
 const MYPAGE_STORAGE_KEY = 'investory:mock:mypage:v5'
 const MOCK_DELAY = 450
@@ -14,9 +22,6 @@ function wait(delay = MOCK_DELAY) {
 function getInitialState() {
   return {
     profile: clone(mypageData.profile),
-    recentSimulation: clone(mypageData.recentSimulation),
-    accounts: clone(mypageData.accounts),
-    accountDetails: clone(mypageData.accountDetails),
     appInfo: clone(mypageData.appInfo),
   }
 }
@@ -29,7 +34,7 @@ function writeState(state) {
 function readState() {
   try {
     const stored = JSON.parse(window.localStorage.getItem(MYPAGE_STORAGE_KEY) || 'null')
-    if (stored?.profile && Array.isArray(stored.accounts)) return stored
+    if (stored?.profile && stored?.appInfo) return stored
   } catch {
     // 손상된 목 데이터는 초기 상태로 복구합니다.
   }
@@ -37,15 +42,72 @@ function readState() {
   return writeState(getInitialState())
 }
 
-function getLocalIsoString() {
-  const now = new Date()
-  const offset = now.getTimezoneOffset() * 60 * 1000
-  return new Date(now.getTime() - offset).toISOString().replace('Z', '+09:00')
+const ACCOUNT_TYPE_LABELS = Object.freeze({
+  STOCK: '주식',
+  ISA: 'ISA',
+  PENSION: '연금',
+  ETC: '기타',
+})
+
+function normalizeConnectionStatus(connection) {
+  if (!connection || connection.connectionStatus === 'CONNECTED') {
+    return { status: 'CONNECTED', statusLabel: '연결됨', syncErrorReason: '' }
+  }
+
+  if (connection.connectionStatus === 'ERROR') {
+    return {
+      status: 'SYNC_ERROR',
+      statusLabel: '동기화 오류',
+      syncErrorReason: connection.latestSync?.errorMessage || '계좌 동기화에 실패했어요.',
+    }
+  }
+
+  return {
+    status: connection.connectionStatus,
+    statusLabel: connection.connectionStatus === 'PENDING' ? '연결 중' : '연결 해제됨',
+    syncErrorReason: '',
+  }
+}
+
+function normalizeAccount(account, connectionsById) {
+  const connection = connectionsById.get(Number(account.connectionId))
+  return {
+    ...account,
+    accountType: ACCOUNT_TYPE_LABELS[account.accountType] || account.accountType || '계좌',
+    accountNumber: account.accountNoMasked || '',
+    ...normalizeConnectionStatus(connection),
+    lastSyncedAt: account.lastSyncedAt || connection?.lastSyncedAt || null,
+    sourceConnectionId: account.connectionId,
+  }
+}
+
+async function getNormalizedAccounts() {
+  const [accountsData, connectionsData] = await Promise.all([
+    getBrokerAccounts(),
+    getBrokerConnections(),
+  ])
+  const connectionsById = new Map(
+    (connectionsData?.connections || []).map((connection) => [
+      Number(connection.connectionId),
+      connection,
+    ]),
+  )
+
+  return {
+    summary: accountsData?.summary || {},
+    accounts: (accountsData?.accounts || []).map((account) =>
+      normalizeAccount(account, connectionsById),
+    ),
+  }
 }
 
 export async function getMypageOverview() {
-  await wait(180)
-  return clone(readState())
+  const [{ accounts }, profile, appInfo] = await Promise.all([
+    getNormalizedAccounts(),
+    getProfile(),
+    getAppInfo(),
+  ])
+  return { profile, accounts, appInfo }
 }
 
 export async function getProfile() {
@@ -67,168 +129,77 @@ export async function updateUserProfile({ name, profileImageUrl }) {
 }
 
 export async function getConnectedAccounts() {
-  await wait(180)
-  return { accounts: clone(readState().accounts) }
-}
-
-export async function addConnectedBrokerAccounts({ connection, account, holdings = [] }) {
-  await wait(180)
-
-  if (!connection?.connectionId || !account?.brokerId) {
-    throw new Error('추가할 연결 계좌 정보를 확인할 수 없어요.')
-  }
-
-  const state = readState()
-  const accountCount = Math.max(1, Number(account.accountCount) || 1)
-  const existingAccounts = state.accounts.filter(
-    (item) => item.sourceConnectionId === connection.connectionId,
-  )
-
-  if (existingAccounts.length === accountCount) {
-    return { accounts: clone(state.accounts), addedAccounts: clone(existingAccounts) }
-  }
-
-  const syncedAt = getLocalIsoString()
-  const marketValue = holdings.reduce(
-    (total, holding) => total + Number(holding.valuationAmount || 0),
-    0,
-  )
-  state.accountDetails ||= {}
-  let nextAccountId = Math.max(0, ...state.accounts.map((item) => Number(item.accountId) || 0)) + 1
-  const addedAccounts = []
-
-  for (let index = existingAccounts.length; index < accountCount; index += 1) {
-    const accountId = nextAccountId
-    nextAccountId += 1
-    const numberSeed = String(Number(connection.connectionId) + index)
-      .slice(-4)
-      .padStart(4, '0')
-    const connectedAccount = {
-      accountId,
-      brokerId: account.brokerId,
-      brokerCode: account.brokerCode,
-      brokerName: account.brokerName,
-      accountType: accountCount > 1 ? `종합매매 ${index + 1}` : '종합매매',
-      accountNumber: `•••• ${numberSeed}`,
-      status: 'CONNECTED',
-      statusLabel: '연결됨',
-      lastSyncedAt: syncedAt,
-      syncErrorReason: '',
-      sourceConnectionId: connection.connectionId,
-    }
-
-    state.accounts.push(connectedAccount)
-    state.accountDetails[String(accountId)] = {
-      marketValue,
-      holdingCount: holdings.length,
-      latestTrade: null,
-      holdingSnapshot: {
-        holdingCount: holdings.length,
-        marketValue,
-        reflectedAt: syncedAt,
-      },
-    }
-    addedAccounts.push(connectedAccount)
-  }
-
-  writeState(state)
-  return { accounts: clone(state.accounts), addedAccounts: clone(addedAccounts) }
+  return await getNormalizedAccounts()
 }
 
 export async function getConnectedAccountDetail(accountId) {
-  await wait(180)
-  const state = readState()
-  const account = state.accounts.find((item) => item.accountId === Number(accountId))
-  if (!account) return null
+  const detail = await getBrokerAccountDetail(accountId)
+  if (!detail) return null
+
+  const [connection, tradesData] = await Promise.all([
+    getBrokerConnectionDetail(detail.connectionId),
+    getLedgerTrades({ accountId, page: 0, size: 1 }),
+  ])
+  const account = normalizeAccount(detail, new Map([[Number(detail.connectionId), connection]]))
+  const latestTrade = tradesData?.content?.[0] || null
+  const marketValue = detail.summary?.totalMarketValue ?? 0
+  const holdingCount = detail.summary?.holdingCount ?? detail.holdings?.length ?? 0
 
   return {
-    ...clone(account),
-    ...clone(state.accountDetails?.[String(account.accountId)] || {}),
+    ...account,
+    marketValue,
+    holdingCount,
+    latestTrade: latestTrade
+      ? {
+          ...latestTrade,
+          side: latestTrade.tradeSide,
+        }
+      : null,
+    holdingSnapshot: {
+      holdingCount,
+      marketValue,
+      reflectedAt: account.lastSyncedAt,
+    },
+    holdings: detail.holdings || [],
   }
 }
 
 export async function syncConnectedAccount(accountId) {
-  await wait(850)
-  const state = readState()
-  const numericAccountId = Number(accountId)
-  const syncedAt = getLocalIsoString()
-
-  state.accounts = state.accounts.map((account) =>
-    account.accountId === numericAccountId
-      ? {
-          ...account,
-          status: 'CONNECTED',
-          statusLabel: '연결됨',
-          lastSyncedAt: syncedAt,
-          syncErrorReason: '',
-        }
-      : account,
-  )
-
-  const detailKey = String(numericAccountId)
-  if (state.accountDetails?.[detailKey]) {
-    state.accountDetails[detailKey] = {
-      ...state.accountDetails[detailKey],
-      holdingSnapshot: {
-        ...state.accountDetails[detailKey].holdingSnapshot,
-        reflectedAt: syncedAt,
-      },
-    }
-  }
-
-  writeState(state)
-  return getConnectedAccountDetail(numericAccountId)
+  const detail = await getBrokerAccountDetail(accountId)
+  await syncBrokerConnection(detail.connectionId)
+  return await getConnectedAccountDetail(accountId)
 }
 
 export async function syncConnectedAccounts() {
-  await wait(950)
-  const state = readState()
-  const syncedAt = getLocalIsoString()
-
-  state.accounts = state.accounts.map((account) =>
-    account.status === 'AUTH_EXPIRED'
-      ? account
-      : {
-          ...account,
-          status: 'CONNECTED',
-          statusLabel: '연결됨',
-          lastSyncedAt: syncedAt,
-          syncErrorReason: '',
-        },
+  const connectionsData = await getBrokerConnections()
+  const connected = (connectionsData?.connections || []).filter(
+    (connection) => connection.connectionStatus !== 'DISCONNECTED',
   )
-  writeState(state)
+  const syncResults = await Promise.all(
+    connected.map((connection) => syncBrokerConnection(connection.connectionId)),
+  )
+  const { accounts } = await getNormalizedAccounts()
+  const syncedAt = accounts
+    .map((account) => account.lastSyncedAt)
+    .filter(Boolean)
+    .sort()
+    .at(-1)
+
   return {
-    accounts: clone(state.accounts),
+    accounts,
     syncedAt,
-    assetsRefreshed: true,
-    transactionsRefreshed: true,
+    assetsRefreshed: syncResults.every((result) => result.syncStatus === 'SUCCESS'),
+    transactionsRefreshed: syncResults.every((result) => result.syncStatus === 'SUCCESS'),
   }
 }
 
 export async function retryAccountSync(accountId) {
-  await wait(700)
-  const state = readState()
-  state.accounts = state.accounts.map((account) =>
-    account.accountId === accountId && account.status !== 'AUTH_EXPIRED'
-      ? {
-          ...account,
-          status: 'CONNECTED',
-          statusLabel: '연결됨',
-          lastSyncedAt: getLocalIsoString(),
-          syncErrorReason: '',
-        }
-      : account,
-  )
-  writeState(state)
-  return { accounts: clone(state.accounts) }
+  await syncConnectedAccount(accountId)
+  return await getNormalizedAccounts()
 }
 
-export async function disconnectBroker(brokerId) {
-  await wait()
-  const state = readState()
-  state.accounts = state.accounts.filter((account) => account.brokerId !== Number(brokerId))
-  writeState(state)
-  return { accounts: clone(state.accounts), journalsPreserved: true }
+export async function disconnectBroker() {
+  throw new Error('증권사 연결 해제 API가 아직 제공되지 않아요.')
 }
 
 export async function disconnectSocialAccount() {
@@ -247,7 +218,8 @@ export async function getAppInfo() {
 }
 
 export async function getConnectedBrokerages() {
-  return clone(readState().accounts)
+  const { accounts } = await getNormalizedAccounts()
+  return accounts
 }
 
 export async function getNotifications() {

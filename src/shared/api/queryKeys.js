@@ -40,6 +40,12 @@ export const queryKeys = Object.freeze({
     latestCompleted: () => ['simulation', 'latest-completed'],
     comparators: () => ['simulation', 'comparators'],
     report: (simulationId) => ['simulation', 'report', simulationId],
-    initialCapital: (startDate) => ['simulation', 'initial-capital', startDate],
+    initialCapitalAll: () => ['simulation', 'initial-capital'],
+    initialCapital: (startDate, accountId) => [
+      'simulation',
+      'initial-capital',
+      startDate,
+      accountId,
+    ],
   },
 })

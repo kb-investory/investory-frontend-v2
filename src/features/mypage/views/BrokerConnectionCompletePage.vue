@@ -64,8 +64,8 @@ async function goHome() {
               <dd class="complete-summary__number">{{ brokerStore.holdings.length }}개</dd>
             </div>
             <div>
-              <dt>입력한 보유 근거</dt>
-              <dd>{{ brokerStore.reasonCount }}개</dd>
+              <dt>총 평가금액</dt>
+              <dd>{{ new Intl.NumberFormat('ko-KR').format(brokerStore.totalValuation) }}원</dd>
             </div>
           </dl>
 

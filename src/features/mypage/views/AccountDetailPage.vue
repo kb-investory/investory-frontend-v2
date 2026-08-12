@@ -66,6 +66,9 @@ async function disconnectBroker() {
   try {
     await mypageStore.disconnectBroker(account.value.brokerId)
     await router.replace({ name: ROUTE_NAMES.MYPAGE_ACCOUNTS })
+  } catch (error) {
+    syncNotice.value = error instanceof Error ? error.message : '증권사 연결을 해제하지 못했어요.'
+    disconnectOpen.value = false
   } finally {
     disconnecting.value = false
   }
@@ -141,7 +144,7 @@ onMounted(() => mypageStore.fetchAccountDetail(accountId.value))
           <span>최신 거래 · 보유 스냅샷</span>
         </header>
         <div class="recent-list">
-          <article>
+          <article v-if="account.latestTrade">
             <span><AppIcon name="arrow-right" :size="16" /></span>
             <div>
               <strong>최근 거래</strong>
@@ -150,6 +153,13 @@ onMounted(() => mypageStore.fetchAccountDetail(accountId.value))
                 {{ account.latestTrade?.securityName }} {{ account.latestTrade?.quantity }}주
                 {{ account.latestTrade?.side === 'SELL' ? '매도' : '매수' }}
               </p>
+            </div>
+          </article>
+          <article v-else>
+            <span><AppIcon name="arrow-right" :size="16" /></span>
+            <div>
+              <strong>최근 거래</strong>
+              <p>최근 거래 내역이 아직 없어요.</p>
             </div>
           </article>
           <article>

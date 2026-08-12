@@ -1,7 +1,6 @@
 import tendencyData from '@/mocks/data/tendency.json'
-import { request } from '@/shared/api/client'
 
-const FLOW_STORAGE_KEY = 'investory:mock:tendency-flow:v9-pre-analysis'
+const FLOW_STORAGE_KEY = 'investory:mock:tendency-flow:v10-json-restored'
 const MINIMUM_RECORD_DAYS = 90
 
 function formatDateKey(date = new Date()) {
@@ -225,46 +224,17 @@ export async function getRecommendedPrinciples() {
   }
 }
 
-const USE_MOCK_FALLBACK = import.meta.env.VITE_USE_MOCK_FALLBACK !== 'false'
-
 export async function saveUserPrinciples({ principles }) {
-  try {
-    const payload = {
-      principles: (principles || []).map((p, idx) => ({
-        recommendationId: p.recommendationId ?? p.recommendationSource?.analysisRunId ?? idx + 1,
-        principleText: p.content ?? p.principleText ?? '',
-        ruleJson: p.ruleJson ?? { holding: { minimumDays: 90 } },
-        sortOrder: p.sortOrder ?? idx + 1,
-      })),
-    }
+  const flowState = readFlowState()
+  const nextPrinciples = principles || []
 
-    const response = await request('/api/v1/principles', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    })
+  writeFlowState({
+    ...flowState,
+    principles: nextPrinciples,
+  })
 
-    const flowState = readFlowState()
-    writeFlowState({
-      ...flowState,
-      principles,
-    })
-
-    return {
-      ...response,
-      principles: response.principles ?? principles,
-    }
-  } catch (error) {
-    if (!USE_MOCK_FALLBACK) throw error
-    console.warn('API /api/v1/principles 요청 실패, 목데이터를 사용합니다:', error)
-    const flowState = readFlowState()
-    writeFlowState({
-      ...flowState,
-      principles,
-    })
-
-    return {
-      principles,
-    }
+  return {
+    principles: nextPrinciples,
   }
 }
 
