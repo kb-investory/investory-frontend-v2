@@ -9,7 +9,7 @@ import JournalMonthNavigator from '@/features/journal/components/JournalMonthNav
 import { useJournalStore } from '@/features/journal/stores/journalStore'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
-import PrimaryAppHeader from '@/shared/components/navigation/PrimaryAppHeader.vue'
+import PrimaryTabHeader from '@/shared/components/navigation/PrimaryTabHeader.vue'
 
 const router = useRouter()
 const journalStore = useJournalStore()
@@ -66,7 +66,7 @@ function writeTodayJournal() {
 
 <template>
   <div class="journal-calendar-page">
-    <PrimaryAppHeader>
+    <PrimaryTabHeader title="투자 일지" flat-bottom>
       <template #right>
         <button
           class="journal-calendar-page__search"
@@ -77,16 +77,9 @@ function writeTodayJournal() {
           <AppIcon name="search" :size="20" />
         </button>
       </template>
-    </PrimaryAppHeader>
+    </PrimaryTabHeader>
 
     <main class="journal-calendar-page__content">
-      <header class="journal-calendar-page__header">
-        <div>
-          <h1>투자 일지</h1>
-          <p>밑줄이 있는 날짜를 선택해 일지를 확인하세요</p>
-        </div>
-      </header>
-
       <JournalMonthNavigator
         :year="visibleYear"
         :month="visibleMonth"
@@ -136,34 +129,14 @@ function writeTodayJournal() {
 }
 
 .journal-calendar-page__content {
+  position: relative;
+  z-index: 4;
   display: flex;
   flex: 0 0 auto;
   flex-direction: column;
   gap: 12px;
+  margin-top: -24px;
   padding: 0 20px 10px;
-}
-
-.journal-calendar-page__header {
-  display: flex;
-  min-height: 72px;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.journal-calendar-page__header h1 {
-  margin: 0;
-  font-family: var(--font-heading);
-  font-size: var(--font-size-title-lg);
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.journal-calendar-page__header p {
-  margin: 4px 0 0;
-  color: var(--text-secondary, #666662);
-  font-family: var(--font-sans);
-  font-size: var(--font-size-body);
-  line-height: 1.4;
 }
 
 .journal-calendar-page__search {
@@ -236,15 +209,16 @@ function writeTodayJournal() {
   border: 0;
   border-radius: 12px;
   color: #ffffff;
-  background: var(--teal-deep, #075f5a);
+  background: linear-gradient(135deg, #053b46 0%, #087f7c 100%);
   font-family: var(--font-sans);
   font-size: var(--font-size-body);
   font-weight: 700;
+  box-shadow: 0 8px 18px rgb(5 75 82 / 22%);
   cursor: pointer;
 }
 
 .journal-calendar-page__cta button:hover {
-  background: var(--brand-teal-deep, #087f7c);
+  background: linear-gradient(135deg, #064752 0%, #0b918c 100%);
 }
 
 .journal-calendar-page__cta button:focus-visible {

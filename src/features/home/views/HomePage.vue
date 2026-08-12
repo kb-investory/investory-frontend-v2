@@ -31,7 +31,7 @@ const journalRoute = {
 }
 const tendencyRoute = { name: ROUTE_NAMES.TENDENCY }
 const simulationRoute = { name: ROUTE_NAMES.SIMULATION }
-const { dateLabel, currentTime, remainingTime, dayProgressPercent } = useHomeClock()
+const { currentTime, remainingTime, dayProgressPercent } = useHomeClock()
 
 const liveToday = computed(() => ({
   ...homeStore.dashboard?.today,
@@ -105,11 +105,7 @@ function openTransactions() {
   <div class="home-page">
     <div v-if="homeStore.dashboard" class="home-page__content">
       <div class="home-page__hero">
-        <HomeHeader
-          logo-src="/assets/logos/investory-logo-transparent.png"
-          :date-label="dateLabel"
-          dark
-        />
+        <HomeHeader logo-src="/assets/logos/investory-logo-dark.png" dark />
         <TodayRecordHero :today="liveToday" @open-transactions="openTransactions" />
       </div>
 
@@ -158,7 +154,7 @@ function openTransactions() {
 .home-page__content {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   padding: 0 16px 24px;
 }
 

@@ -26,7 +26,7 @@ defineProps({
   <section class="quick-actions" aria-label="기록 바로가기">
     <RouterLink class="quick-action quick-action--journal" :to="journalTo">
       <div class="quick-action__top">
-        <span class="quick-action__icon"><NotebookPen :size="18" :stroke-width="1.9" /></span>
+        <span class="quick-action__icon"><NotebookPen :size="20" :stroke-width="2.2" /></span>
         <span class="quick-action__status">{{ journalStatus }}</span>
       </div>
       <strong>오늘의 일지 작성</strong>
@@ -36,7 +36,7 @@ defineProps({
 
     <RouterLink class="quick-action quick-action--tendency" :to="tendencyTo">
       <div class="quick-action__top">
-        <span class="quick-action__icon"><ScanSearch :size="18" :stroke-width="1.9" /></span>
+        <span class="quick-action__icon"><ScanSearch :size="20" :stroke-width="2.2" /></span>
         <span class="quick-action__status">{{ tendencyProgress }}</span>
       </div>
       <strong>투자 패턴 점검</strong>
@@ -92,13 +92,19 @@ defineProps({
   align-items: center;
   justify-content: center;
   border-radius: 12px;
-  color: #087f7c;
-  background: #e8f7f6;
+  color: #ffffff;
+  background: linear-gradient(145deg, #12a9a4, #087f7c);
+  box-shadow:
+    0 6px 12px rgba(8, 127, 124, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .quick-action--tendency .quick-action__icon {
-  color: #0b63ce;
-  background: #edf5ff;
+  color: #ffffff;
+  background: linear-gradient(145deg, #4386e6, #0b63ce);
+  box-shadow:
+    0 6px 12px rgba(11, 99, 206, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .quick-action__status {

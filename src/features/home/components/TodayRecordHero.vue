@@ -118,18 +118,18 @@ const titleParts = computed(() => {
 .today-record {
   position: relative;
   display: flex;
-  min-height: 408px;
+  min-height: 360px;
   flex-direction: column;
   gap: 0;
-  padding-bottom: 16px;
+  padding-bottom: 4px;
   background: #ffffff;
 }
 
 .today-record__intro {
   position: relative;
   overflow: hidden;
-  min-height: 210px;
-  padding: 24px 24px 76px;
+  min-height: 168px;
+  padding: 8px 24px 58px;
   color: #ffffff;
   background:
     radial-gradient(circle at 80% 70%, rgba(16, 198, 193, 0.2), transparent 40%),
@@ -163,7 +163,7 @@ const titleParts = computed(() => {
 }
 
 .today-record__eyebrow {
-  margin-bottom: 10px;
+  margin-bottom: 6px;
   color: #41ded7;
   font-family: var(--font-mono);
   font-size: var(--font-size-caption);
@@ -191,7 +191,7 @@ const titleParts = computed(() => {
 }
 
 .today-record__description {
-  margin-top: 4px;
+  margin-top: 2px;
   color: #c0d1d5;
   font-size: 14px;
   line-height: 1.4;
@@ -200,7 +200,7 @@ const titleParts = computed(() => {
 .today-record__graph {
   position: absolute;
   right: -8px;
-  bottom: 20px;
+  bottom: 4px;
   z-index: 1;
   width: 210px;
   opacity: 0.72;
@@ -229,9 +229,9 @@ const titleParts = computed(() => {
   position: relative;
   z-index: 3;
   display: grid;
-  min-height: 86px;
+  min-height: 80px;
   grid-template-columns: repeat(4, 1fr);
-  margin: -52px 16px 0;
+  margin: -40px 16px 0;
   border: 1px solid #b8e7e4;
   border-radius: 22px;
   background: #ffffff;

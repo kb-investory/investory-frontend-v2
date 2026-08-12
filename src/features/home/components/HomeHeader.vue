@@ -8,10 +8,6 @@ defineProps({
     type: String,
     required: true,
   },
-  dateLabel: {
-    type: String,
-    required: true,
-  },
   dark: {
     type: Boolean,
     default: false,
@@ -35,7 +31,6 @@ defineEmits(['notification'])
         </button>
       </template>
     </PrimaryAppHeader>
-    <time class="home-header__date">{{ dateLabel }}</time>
   </div>
 </template>
 
@@ -59,7 +54,7 @@ defineEmits(['notification'])
 
 .home-header--dark :deep(.primary-app-header) {
   grid-template-columns: minmax(0, 1fr) 44px;
-  padding: 0 24px;
+  padding: 0 20px;
   background: transparent;
 }
 
@@ -68,16 +63,15 @@ defineEmits(['notification'])
 }
 
 .home-header--dark :deep(.primary-app-header__logo-link) {
-  width: 156px;
+  width: 154px;
   justify-self: start;
   padding: 0;
   background: transparent;
 }
 
 .home-header--dark :deep(.primary-app-header__logo) {
-  width: 150px;
-  filter: drop-shadow(0 0 0.7px rgba(255, 255, 255, 0.9))
-    drop-shadow(0 0 4px rgba(255, 255, 255, 0.24));
+  width: 146px;
+  filter: drop-shadow(0 0 5px rgba(45, 225, 217, 0.16));
   object-position: left center;
 }
 
@@ -86,21 +80,6 @@ defineEmits(['notification'])
   color: #ffffff;
   background: rgba(5, 45, 56, 0.76);
   box-shadow: 0 0 18px rgba(15, 207, 200, 0.12);
-}
-
-.home-header__date {
-  display: block;
-  padding: 0 24px 10px;
-  color: #718087;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
-  font-weight: 600;
-  letter-spacing: 0.3px;
-}
-
-.home-header--dark .home-header__date {
-  color: #b9cbd0;
-  background: #031f28;
 }
 
 .home-header__button {

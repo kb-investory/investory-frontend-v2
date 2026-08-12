@@ -38,29 +38,35 @@ const cssSize = computed(() => (typeof props.size === 'number' ? `${props.size}p
 .running-monkey__speed-lines::after {
   position: absolute;
   z-index: 0;
-  left: -13px;
-  height: 2px;
+  left: -19px;
   border-radius: 999px;
-  background: linear-gradient(90deg, transparent, rgb(242 183 40 / 92%));
   content: '';
 }
 
 .running-monkey__speed-lines {
-  top: 10px;
-  width: 20px;
-  animation: monkey-speed-lines 300ms ease-out infinite alternate;
+  top: 17px;
+  width: 23px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgb(84 232 224 / 28%), #8cfbf4);
+  box-shadow: 0 0 5px rgb(73 237 227 / 72%);
+  animation: monkey-speed-lines 460ms ease-in-out infinite alternate;
 }
 
 .running-monkey__speed-lines::before {
-  top: 6px;
-  left: 2px;
+  top: -9px;
+  left: 4px;
   width: 16px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(255 215 83 / 85%));
+  box-shadow: 0 0 3px rgb(255 202 45 / 58%);
 }
 
 .running-monkey__speed-lines::after {
-  top: 12px;
-  left: 4px;
-  width: 12px;
+  top: -5px;
+  left: 9px;
+  width: 11px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(255 225 109 / 72%));
 }
 
 .running-monkey__dust,
@@ -68,31 +74,35 @@ const cssSize = computed(() => (typeof props.size === 'number' ? `${props.size}p
 .running-monkey__dust::after {
   position: absolute;
   z-index: 0;
-  border: 1px solid rgb(218 105 43 / 65%);
-  border-radius: 50%;
+  background: #ffd54f;
+  box-shadow: 0 0 5px rgb(255 204 40 / 76%);
   content: '';
 }
 
 .running-monkey__dust {
   bottom: 5px;
-  left: -2px;
-  width: 4px;
-  height: 4px;
-  animation: monkey-dust-puff 600ms ease-out infinite;
+  left: -8px;
+  width: 2px;
+  height: 9px;
+  animation: monkey-sparkle 820ms ease-in-out infinite;
 }
 
 .running-monkey__dust::before {
-  top: -3px;
-  left: -4px;
-  width: 3px;
-  height: 3px;
+  top: 3px;
+  left: -3px;
+  width: 8px;
+  height: 2px;
 }
 
 .running-monkey__dust::after {
-  top: 3px;
-  left: 2px;
-  width: 2px;
-  height: 2px;
+  top: 2px;
+  left: -2px;
+  width: 6px;
+  height: 6px;
+  background: transparent;
+  box-shadow:
+    5px 5px 0 -2px rgb(255 210 60 / 82%),
+    -5px 7px 0 -2px rgb(255 225 104 / 62%);
 }
 
 .running-monkey__viewport {
@@ -126,8 +136,8 @@ const cssSize = computed(() => (typeof props.size === 'number' ? `${props.size}p
 
 @keyframes monkey-speed-lines {
   from {
-    opacity: 0.45;
-    transform: translateX(4px) scaleX(0.65);
+    opacity: 0.58;
+    transform: translateX(4px) scaleX(0.76);
   }
 
   to {
@@ -136,19 +146,20 @@ const cssSize = computed(() => (typeof props.size === 'number' ? `${props.size}p
   }
 }
 
-@keyframes monkey-dust-puff {
+@keyframes monkey-sparkle {
   0% {
-    opacity: 0;
-    transform: translate(5px, 1px) scale(0.4);
+    opacity: 0.35;
+    transform: translate(3px, 1px) scale(0.65) rotate(0deg);
   }
 
-  35% {
-    opacity: 0.8;
+  48% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(90deg);
   }
 
   100% {
-    opacity: 0;
-    transform: translate(-5px, -2px) scale(1.2);
+    opacity: 0.25;
+    transform: translate(-3px, -1px) scale(0.72) rotate(180deg);
   }
 }
 
