@@ -1,4 +1,17 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
+function normalizeApiBaseUrl(value) {
+  const baseUrl = String(value ?? '')
+    .trim()
+    .replace(/\/$/, '')
+
+  if (!baseUrl || baseUrl.startsWith('/') || /^[a-z][a-z\d+.-]*:\/\//i.test(baseUrl)) {
+    return baseUrl
+  }
+
+  const protocol = typeof window !== 'undefined' ? window.location.protocol : 'https:'
+  return `${protocol}//${baseUrl.replace(/^\/\//, '')}`
+}
+
+const API_BASE_URL = normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL)
 
 let currentAccessToken = null
 
@@ -11,7 +24,8 @@ export function getAccessToken() {
 }
 
 export function getApiUrl(endpoint) {
-  return `${API_BASE_URL}${endpoint}`
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
+  return `${API_BASE_URL}${normalizedEndpoint}`
 }
 
 export class ApiError extends Error {
