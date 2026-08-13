@@ -12,6 +12,7 @@ import {
   getSimulationOverview,
   getSimulationReport,
   getSimulationSessions,
+  isSimulationReportEnrichmentPending,
   runSimulation as runSimulationApi,
   saveLatestCompletedSimulationResult,
   sendSimulationPrompt,
@@ -20,6 +21,8 @@ import { queryKeys } from '@/shared/api/queryKeys'
 
 const SIMULATION_STALE_TIME = 60 * 1000
 const COMPARATOR_STALE_TIME = 10 * 60 * 1000
+const REPORT_REFRESH_INTERVAL = 5000
+const REPORT_REFRESH_LIMIT = 12
 
 export const useSimulationStore = defineStore('simulation', () => {
   const overview = ref(null)
@@ -42,9 +45,13 @@ export const useSimulationStore = defineStore('simulation', () => {
   const botCompileStatus = ref('IDLE')
   const botCompileProgress = ref(0)
   const botCompileJobId = ref(null)
+  const personalBotId = ref(null)
   const botCompileError = ref(null)
   let compileRequestId = 0
   let initialCapitalRequestId = 0
+  let reportRefreshTimer = null
+  let reportRefreshCount = 0
+  let reportRefreshGeneration = 0
 
   // Minimum required record days for simulation qualification
   const MIN_REQUIRED_DAYS = 90
@@ -237,7 +244,7 @@ export const useSimulationStore = defineStore('simulation', () => {
     }
   }
 
-  async function fetchSimulationReport(simulationId) {
+  async function fetchSimulationReport(simulationId, { background = false, force = false } = {}) {
     const resolvedId =
       simulationId ??
       latestResult.value?.simulationRunId ??
@@ -251,22 +258,58 @@ export const useSimulationStore = defineStore('simulation', () => {
       return null
     }
 
-    simulationReportLoading.value = true
+    if (!background) simulationReportLoading.value = true
     simulationReportError.value = null
     try {
-      simulationReport.value = await queryClient.fetchQuery({
-        queryKey: queryKeys.simulation.report(resolvedId),
-        queryFn: () => getSimulationReport(resolvedId),
-        staleTime: SIMULATION_STALE_TIME,
-      })
+      if (force) {
+        simulationReport.value = await getSimulationReport(resolvedId)
+        queryClient.setQueryData(queryKeys.simulation.report(resolvedId), simulationReport.value)
+      } else {
+        simulationReport.value = await queryClient.fetchQuery({
+          queryKey: queryKeys.simulation.report(resolvedId),
+          queryFn: () => getSimulationReport(resolvedId),
+          staleTime: SIMULATION_STALE_TIME,
+        })
+      }
       return simulationReport.value
     } catch (error) {
-      simulationReportError.value = error
+      if (!background) simulationReportError.value = error
       console.error('Failed to fetch simulation report:', error)
       return null
     } finally {
-      simulationReportLoading.value = false
+      if (!background) simulationReportLoading.value = false
     }
+  }
+
+  function stopSimulationReportRefresh() {
+    if (reportRefreshTimer) clearTimeout(reportRefreshTimer)
+    reportRefreshTimer = null
+    reportRefreshCount = 0
+    reportRefreshGeneration += 1
+  }
+
+  async function startSimulationReportRefresh(simulationId) {
+    stopSimulationReportRefresh()
+    const refreshGeneration = reportRefreshGeneration
+    const report = await fetchSimulationReport(simulationId, { force: true })
+    if (refreshGeneration !== reportRefreshGeneration) return report
+    if (!isSimulationReportEnrichmentPending(report)) return report
+
+    const refresh = async () => {
+      if (refreshGeneration !== reportRefreshGeneration) return
+      if (reportRefreshCount >= REPORT_REFRESH_LIMIT) return
+      reportRefreshCount += 1
+      const refreshed = await fetchSimulationReport(simulationId, { background: true, force: true })
+      if (refreshGeneration !== reportRefreshGeneration) return
+      if (!isSimulationReportEnrichmentPending(refreshed)) {
+        stopSimulationReportRefresh()
+        return
+      }
+      reportRefreshTimer = setTimeout(refresh, REPORT_REFRESH_INTERVAL)
+    }
+
+    reportRefreshTimer = setTimeout(refresh, REPORT_REFRESH_INTERVAL)
+    return report
   }
 
   async function compilePersonalBot() {
@@ -301,6 +344,7 @@ export const useSimulationStore = defineStore('simulation', () => {
       if (botCompileStatus.value !== 'COMPLETED') {
         throw new Error('투자봇 생성이 완료되지 않았습니다.')
       }
+      personalBotId.value = job.personalBotId ?? null
     } catch (error) {
       if (requestId !== compileRequestId) return
       botCompileStatus.value = 'FAILED'
@@ -314,6 +358,7 @@ export const useSimulationStore = defineStore('simulation', () => {
     botCompileStatus.value = 'IDLE'
     botCompileProgress.value = 0
     botCompileJobId.value = null
+    personalBotId.value = null
     botCompileError.value = null
   }
 
@@ -365,9 +410,9 @@ export const useSimulationStore = defineStore('simulation', () => {
       const result = await runSimulationApi({
         periodStart: activeConditions?.periodStart,
         periodEnd: activeConditions?.periodEnd,
-        initialCapital: activeConditions?.initialCapital,
-        principles: activeConditions?.principles,
         participantTypes: activeParticipantTypes.value,
+        personalBotId: personalBotId.value,
+        accountId: simulationAccountId.value,
       })
       latestResult.value = filterResultBySelectedParticipants(result)
       simulationReport.value = null
@@ -447,6 +492,7 @@ export const useSimulationStore = defineStore('simulation', () => {
 
   function reset() {
     cancelBotCompilation()
+    stopSimulationReportRefresh()
     overview.value = null
     latestResult.value = null
     historyRecords.value = []
@@ -490,6 +536,7 @@ export const useSimulationStore = defineStore('simulation', () => {
     botCompileStatus,
     botCompileProgress,
     botCompileJobId,
+    personalBotId,
     botCompileError,
     eligibleDays,
     simulationAccountId,
@@ -507,6 +554,8 @@ export const useSimulationStore = defineStore('simulation', () => {
     fetchComparators,
     fetchInitialCapital,
     fetchSimulationReport,
+    startSimulationReportRefresh,
+    stopSimulationReportRefresh,
     compilePersonalBot,
     cancelBotCompilation,
     resetBotCompilation,

@@ -42,9 +42,7 @@ const hiddenRuleLabels = new Set([
 ])
 
 const displayedRules = computed(() =>
-  (activeBot.value?.rules ?? [])
-    .filter((rule) => !hiddenRuleLabels.has(rule.label))
-    .slice(0, 4),
+  (activeBot.value?.rules ?? []).filter((rule) => !hiddenRuleLabels.has(rule.label)).slice(0, 4),
 )
 
 function getBotTone(bot) {
@@ -247,65 +245,70 @@ function handlePrimaryAction() {
           <AppIcon name="x" :size="18" />
         </button>
 
-        <header class="bot-modal__header">
-          <div class="bot-modal__avatar">
-            <SimulationParticipantAvatar :variant-type="activeBot.variantType" :size="54" />
-          </div>
-          <div class="bot-modal__identity">
-            <span
-              class="bot-modal__class"
-              :class="`bot-modal__class--${getBotTone(activeBot)}`"
-            >
-              {{ botTypeLabel }}
-            </span>
-            <h3>{{ activeBot.variantName }}</h3>
-            <p>{{ activeBot.description }}</p>
-          </div>
-        </header>
-
-        <div class="bot-modal__summary">
-          <AppIcon name="sparkles" :size="18" />
-          <div>
-            <span>한 줄 요약</span>
-            <strong>{{ activeBot.summary }}</strong>
-          </div>
-        </div>
-
-        <section v-if="activeBot.traits?.length" class="bot-modal__traits" aria-label="전략 특징">
-          <span v-for="trait in activeBot.traits" :key="trait">{{ trait }}</span>
-        </section>
-
-        <section v-if="displayedPrinciples.length" class="bot-modal__section bot-modal__principles">
-          <div class="bot-modal__section-title">
-            <AppIcon name="compass" :size="17" />
-            <strong>이렇게 투자해요</strong>
-          </div>
-          <ul>
-            <li v-for="principle in displayedPrinciples" :key="principle.principleId ?? principle.text">
-              <AppIcon name="check" :size="14" />
-              <p>{{ principle.text ?? principle }}</p>
-            </li>
-          </ul>
-        </section>
-
-        <section v-if="displayedRules.length" class="bot-modal__section bot-modal__rules">
-          <div class="bot-modal__section-title">
-            <AppIcon name="sliders-horizontal" :size="17" />
-            <strong>핵심 기준</strong>
-          </div>
-          <dl>
-            <div v-for="rule in displayedRules" :key="rule.key ?? rule.label">
-              <dt>{{ rule.label }}</dt>
-              <dd>{{ rule.value }}</dd>
+        <div class="bot-modal__content">
+          <header class="bot-modal__header">
+            <div class="bot-modal__avatar">
+              <SimulationParticipantAvatar :variant-type="activeBot.variantType" :size="54" />
             </div>
-          </dl>
-        </section>
+            <div class="bot-modal__identity">
+              <span class="bot-modal__class" :class="`bot-modal__class--${getBotTone(activeBot)}`">
+                {{ botTypeLabel }}
+              </span>
+              <h3>{{ activeBot.variantName }}</h3>
+              <p>{{ activeBot.description }}</p>
+            </div>
+          </header>
 
-        <div v-if="activeBot.dataEvidence" class="bot-modal__data">
-          <AppIcon name="database" :size="17" />
-          <div>
-            <strong>{{ activeBot.dataEvidence.title }}</strong>
-            <span>{{ activeBot.dataEvidence.summary }}</span>
+          <div class="bot-modal__summary">
+            <AppIcon name="sparkles" :size="18" />
+            <div>
+              <span>한 줄 요약</span>
+              <strong>{{ activeBot.summary }}</strong>
+            </div>
+          </div>
+
+          <section v-if="activeBot.traits?.length" class="bot-modal__traits" aria-label="전략 특징">
+            <span v-for="trait in activeBot.traits" :key="trait">{{ trait }}</span>
+          </section>
+
+          <section
+            v-if="displayedPrinciples.length"
+            class="bot-modal__section bot-modal__principles"
+          >
+            <div class="bot-modal__section-title">
+              <AppIcon name="compass" :size="17" />
+              <strong>이렇게 투자해요</strong>
+            </div>
+            <ul>
+              <li
+                v-for="principle in displayedPrinciples"
+                :key="principle.principleId ?? principle.text"
+              >
+                <AppIcon name="check" :size="14" />
+                <p>{{ principle.text ?? principle }}</p>
+              </li>
+            </ul>
+          </section>
+
+          <section v-if="displayedRules.length" class="bot-modal__section bot-modal__rules">
+            <div class="bot-modal__section-title">
+              <AppIcon name="sliders-horizontal" :size="17" />
+              <strong>핵심 기준</strong>
+            </div>
+            <dl>
+              <div v-for="rule in displayedRules" :key="rule.key ?? rule.label">
+                <dt>{{ rule.label }}</dt>
+                <dd>{{ rule.value }}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <div v-if="activeBot.dataEvidence" class="bot-modal__data">
+            <AppIcon name="database" :size="17" />
+            <div>
+              <strong>{{ activeBot.dataEvidence.title }}</strong>
+              <span>{{ activeBot.dataEvidence.summary }}</span>
+            </div>
           </div>
         </div>
 
@@ -697,7 +700,7 @@ function handlePrimaryAction() {
   flex-direction: column;
   gap: 14px;
   padding: 26px 20px max(20px, env(safe-area-inset-bottom));
-  overflow-y: auto;
+  overflow: hidden;
   border-radius: 26px 26px 0 0;
   background: #fbfcfc;
   box-shadow: 0 -18px 50px rgb(0 0 0 / 24%);
@@ -705,7 +708,22 @@ function handlePrimaryAction() {
   scrollbar-width: none;
 }
 
-.bot-modal::-webkit-scrollbar {
+.bot-modal__content {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.bot-modal__content > * {
+  flex: 0 0 auto;
+}
+
+.bot-modal__content::-webkit-scrollbar {
   display: none;
 }
 
@@ -981,6 +999,7 @@ function handlePrimaryAction() {
   font-family: inherit;
   font-size: var(--font-size-body);
   font-weight: 800;
+  flex: 0 0 auto;
 }
 
 .bot-modal__select-button.is-selected {

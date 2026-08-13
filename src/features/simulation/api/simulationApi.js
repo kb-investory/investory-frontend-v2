@@ -80,16 +80,38 @@ async function enrichSecurityDetails(items) {
 async function normalizeSimulationReport(data) {
   if (!data) return data
 
-  const [decisionReviews, evidenceReviews] = await Promise.all([
+  const rawKeyTradeReviews = data.keyTradeReviews ?? data.decisionReviews ?? []
+  const [keyTradeReviews, decisionReviews, evidenceReviews] = await Promise.all([
+    enrichSecurityDetails(rawKeyTradeReviews),
     enrichSecurityDetails(data.decisionReviews),
     enrichSecurityDetails(data.evidenceReviews),
   ])
 
   return {
     ...data,
-    decisionReviews,
+    keyTradeReviews,
+    decisionReviews: decisionReviews?.length ? decisionReviews : keyTradeReviews,
     evidenceReviews,
   }
+}
+
+export function isSimulationReportEnrichmentPending(report) {
+  if (!report) return false
+
+  const metadata = report.generationMetadata ?? {}
+  if (metadata.narrativeStatus === 'PENDING') return true
+
+  const terminalThesisStatuses = new Set(['NOT_CONFIGURED', 'COMPLETED', 'PARTIAL', 'FAILED'])
+  if (terminalThesisStatuses.has(metadata.thesisVerificationStatus)) return false
+
+  const reviews = report.keyTradeReviews ?? report.decisionReviews ?? []
+  return reviews.some((review) => {
+    const thesis = review.thesisOutcome
+    return (
+      !thesis ||
+      (thesis.verdict === 'UNCONFIRMED' && thesis.verificationStatus === 'WEB_SEARCH_NOT_RUN')
+    )
+  })
 }
 
 function normalizeSnapshot(snapshot) {
@@ -248,16 +270,11 @@ export async function getSimulationComparators() {
 
 export async function runSimulation(payload = {}) {
   const requestBody = {
-    simulationRunId: payload.simulationRunId ?? 101,
-    periodStart: payload.periodStart ?? '2026-03-01',
-    periodEnd: payload.periodEnd ?? '2026-07-29',
-    initialCapital: payload.initialCapital ?? 5000000.0,
-    principles: payload.principles ?? ['익절 +20% 달성 시 이익 실현하고 손절률 -10% 도달 시 손절'],
-    participantTypes: payload.participantTypes ?? [
-      'ACTUAL_USER',
-      'PERSONAL_BOT',
-      'FAMOUS_STRATEGY',
-    ],
+    periodStart: payload.periodStart,
+    periodEnd: payload.periodEnd,
+    participantTypes: payload.participantTypes,
+    personalBotId: payload.personalBotId,
+    accountId: payload.accountId,
   }
   const response = await request('/api/v1/simulations/run', {
     method: 'POST',
@@ -275,6 +292,13 @@ export async function getSimulationDetail(simulationId) {
 export async function getSimulationReport(simulationId) {
   const response = await request(`/api/v1/simulations/${simulationId}/report`)
   return await normalizeSimulationReport(response)
+}
+
+export async function acceptSimulationPrincipleProposal(simulationId, recommendationId) {
+  return await request('/api/v1/principles/proposals/accept', {
+    method: 'POST',
+    body: JSON.stringify({ simulationId, recommendationId }),
+  })
 }
 
 export async function getSimulationMessages() {

@@ -4,6 +4,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import SimulationLiveReturnChart from '@/features/simulation/components/SimulationLiveReturnChart.vue'
 import SimulationParticipantAvatar from '@/features/simulation/components/SimulationParticipantAvatar.vue'
+import { getDecisionReasonText } from '@/features/simulation/utils/decisionReason'
 import { getSecurityDisplayName } from '@/features/simulation/utils/securityDisplayName'
 
 const props = defineProps({
@@ -296,12 +297,14 @@ function formatPeriodDate(date) {
 }
 
 function getTradeSideLabel(tradeSide) {
-  return {
-    BUY: '매수',
-    SELL: '매도',
-    ADD: '추가 매수',
-    REDUCE: '비중 축소',
-  }[tradeSide] ?? tradeSide
+  return (
+    {
+      BUY: '매수',
+      SELL: '매도',
+      ADD: '추가 매수',
+      REDUCE: '비중 축소',
+    }[tradeSide] ?? tradeSide
+  )
 }
 
 function getTradeDirection(tradeSide) {
@@ -367,7 +370,7 @@ function getTradeDirection(tradeSide) {
         <span v-if="latestTrade"> 주당 {{ formatCurrency(latestTrade.unitPrice) }} </span>
         <p v-if="latestTrade" class="live-trade-alert__reason">
           <b>판단 근거</b>
-          {{ latestTrade.decisionReason }}
+          {{ getDecisionReasonText(latestTrade.decisionReason) }}
         </p>
       </span>
     </button>
@@ -523,6 +526,9 @@ function getTradeDirection(tradeSide) {
   display: grid;
   grid-template-columns: 40px minmax(0, 1fr);
   width: 100%;
+  height: 132px;
+  box-sizing: border-box;
+  overflow: hidden;
   align-items: center;
   gap: 11px;
   padding: 12px 13px;
@@ -612,6 +618,7 @@ function getTradeDirection(tradeSide) {
   line-height: 1.45;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  min-height: calc(1.45em * 2);
 }
 
 .live-trade-alert__reason b {
@@ -808,6 +815,7 @@ function getTradeDirection(tradeSide) {
   justify-content: center;
   gap: 8px;
   width: min(calc(100% - 40px), 350px);
+  height: 48px;
   min-height: 48px;
   padding: 12px 18px;
   border: 0;
@@ -816,6 +824,8 @@ function getTradeDirection(tradeSide) {
   color: #fff;
   font-size: var(--font-size-body);
   font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
   cursor: pointer;
   box-shadow: 0 8px 20px rgb(38 58 67 / 18%);
   transform: translateX(-50%);

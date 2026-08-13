@@ -56,7 +56,9 @@ export function useSimulationFlow(simulationStore, pageRoot) {
     }
 
     if (step === 'result') {
-      void simulationStore.fetchSimulationReport()
+      void simulationStore.startSimulationReportRefresh()
+    } else {
+      simulationStore.stopSimulationReportRefresh()
     }
   }
 
@@ -67,6 +69,7 @@ export function useSimulationFlow(simulationStore, pageRoot) {
 
   onBeforeUnmount(() => {
     simulationStore.cancelBotCompilation()
+    simulationStore.stopSimulationReportRefresh()
   })
 
   watch(currentStep, async (step) => {

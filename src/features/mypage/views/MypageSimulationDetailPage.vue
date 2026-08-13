@@ -1,11 +1,15 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
 import SimulationFlowHeader from '@/features/simulation/components/SimulationFlowHeader.vue'
 import SimulationResultSummary from '@/features/simulation/components/SimulationResultSummary.vue'
-import { getSimulationDetail, getSimulationReport } from '@/features/simulation/api/simulationApi'
+import {
+  getSimulationDetail,
+  getSimulationReport,
+  isSimulationReportEnrichmentPending,
+} from '@/features/simulation/api/simulationApi'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
 
 const route = useRoute()
@@ -17,28 +21,68 @@ const loading = ref(true)
 const reportLoading = ref(false)
 const error = ref(null)
 const reportError = ref(null)
+let reportRefreshTimer = null
+let reportRefreshCount = 0
+let reportRefreshActive = true
+
+const REPORT_REFRESH_INTERVAL = 5000
+const REPORT_REFRESH_LIMIT = 12
+
+function stopReportRefresh() {
+  reportRefreshActive = false
+  if (reportRefreshTimer) clearTimeout(reportRefreshTimer)
+  reportRefreshTimer = null
+}
+
+function scheduleReportRefresh(simulationId) {
+  if (!reportRefreshActive) return
+  if (!isSimulationReportEnrichmentPending(simulationReport.value)) return
+  if (reportRefreshCount >= REPORT_REFRESH_LIMIT) return
+
+  reportRefreshTimer = setTimeout(async () => {
+    reportRefreshCount += 1
+    try {
+      simulationReport.value = await getSimulationReport(simulationId)
+      scheduleReportRefresh(simulationId)
+    } catch {
+      scheduleReportRefresh(simulationId)
+    }
+  }, REPORT_REFRESH_INTERVAL)
+}
 
 onMounted(async () => {
   const simulationId = route.params.simulationId
   loading.value = true
+  reportLoading.value = true
   error.value = null
+  reportError.value = null
 
-  try {
-    simulationResult.value = await getSimulationDetail(simulationId)
-    reportLoading.value = true
-    try {
-      simulationReport.value = await getSimulationReport(simulationId)
-    } catch (requestError) {
-      reportError.value = requestError
-    } finally {
-      reportLoading.value = false
-    }
-  } catch (requestError) {
-    error.value = requestError
-  } finally {
-    loading.value = false
-  }
+  await Promise.all([
+    getSimulationDetail(simulationId)
+      .then((result) => {
+        simulationResult.value = result
+      })
+      .catch((requestError) => {
+        error.value = requestError
+      })
+      .finally(() => {
+        loading.value = false
+      }),
+    getSimulationReport(simulationId)
+      .then((report) => {
+        simulationReport.value = report
+        scheduleReportRefresh(simulationId)
+      })
+      .catch((requestError) => {
+        reportError.value = requestError
+      })
+      .finally(() => {
+        reportLoading.value = false
+      }),
+  ])
 })
+
+onBeforeUnmount(stopReportRefresh)
 
 function goBack() {
   router.push({ name: ROUTE_NAMES.MYPAGE })

@@ -6,6 +6,7 @@ import { GridComponent, MarkPointComponent, TooltipComponent } from 'echarts/com
 import { SVGRenderer } from 'echarts/renderers'
 
 import AppIcon from '@/shared/components/AppIcon.vue'
+import { getDecisionReasonText } from '@/features/simulation/utils/decisionReason'
 import { getSecurityDisplayName } from '@/features/simulation/utils/securityDisplayName'
 import StockLogo from '@/shared/components/StockLogo.vue'
 
@@ -290,7 +291,7 @@ const tradeMarkerSeries = computed(() => {
             securityName: getSecurityDisplayName(trade),
             quantity: trade.quantity,
             unitPrice: trade.unitPrice,
-            decisionReason: trade.decisionReason,
+            decisionReason: getDecisionReasonText(trade.decisionReason),
           }
         })
         .filter(Boolean)
@@ -1128,7 +1129,7 @@ onBeforeUnmount(() => {
             </p>
             <p class="trade-timeline__reason">
               <b>판단 근거</b>
-              {{ trade.decisionReason }}
+              {{ getDecisionReasonText(trade.decisionReason) }}
             </p>
           </div>
           <AppIcon name="chevron-down" :size="13" />
