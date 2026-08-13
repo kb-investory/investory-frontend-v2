@@ -19,8 +19,8 @@ export default defineConfig(({ mode }) => {
           target: pythonAiUrl,
           changeOrigin: true,
         },
-        // 자바 코어 백엔드 서버 도메인 경로 (/auth, /broker, /journal, /ledger, /market, /markets)
-        '^/(auth|broker|journal|ledger|market|markets)': {
+        // 자바 코어 백엔드 서버 도메인 경로
+        '^/(auth|broker|journal|ledger|market|markets|tendency)': {
           target: javaBackendUrl,
           changeOrigin: true,
           secure: false,
