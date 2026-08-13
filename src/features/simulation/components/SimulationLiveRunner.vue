@@ -4,6 +4,8 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import SimulationLiveReturnChart from '@/features/simulation/components/SimulationLiveReturnChart.vue'
 import SimulationParticipantAvatar from '@/features/simulation/components/SimulationParticipantAvatar.vue'
+import { getDecisionReasonText } from '@/features/simulation/utils/decisionReason'
+import { getSecurityDisplayName } from '@/features/simulation/utils/securityDisplayName'
 
 const props = defineProps({
   participants: {
@@ -64,6 +66,10 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  positionSnapshots: {
+    type: Array,
+    default: null,
+  },
   periodStart: {
     type: String,
     default: '',
@@ -86,21 +92,6 @@ const isPlaying = ref(true)
 const liveChart = ref(null)
 let timer = null
 let lastFrameTime = null
-
-const securityNameById = {
-  101: '삼성전자',
-  102: 'SK하이닉스',
-  103: 'NAVER',
-  104: '카카오',
-  105: '현대차',
-
-  // 레거시 목데이터 종목 ID 호환 지원
-  202: '삼성전자',
-  303: 'NAVER',
-  404: '카카오',
-  505: '현대차',
-  606: '셀트리온',
-}
 
 const timelineDates = computed(() =>
   [
@@ -304,6 +295,21 @@ function formatPeriodDate(date) {
   const [year, month, day] = date.split('-')
   return `${year.slice(-2)}.${month}.${day}.`
 }
+
+function getTradeSideLabel(tradeSide) {
+  return (
+    {
+      BUY: '매수',
+      SELL: '매도',
+      ADD: '추가 매수',
+      REDUCE: '비중 축소',
+    }[tradeSide] ?? tradeSide
+  )
+}
+
+function getTradeDirection(tradeSide) {
+  return ['BUY', 'ADD'].includes(tradeSide) ? 'buy' : 'sell'
+}
 </script>
 
 <template>
@@ -350,25 +356,21 @@ function formatPeriodDate(date) {
       </span>
       <span class="live-trade-alert__content">
         <small v-if="latestTrade">
-          <b :class="`is-${latestTrade.tradeSide.toLowerCase()}`">
-            {{ latestTrade.tradeSide === 'BUY' ? '매수' : '매도' }}
+          <b :class="`is-${getTradeDirection(latestTrade.tradeSide)}`">
+            {{ getTradeSideLabel(latestTrade.tradeSide) }}
           </b>
           {{ latestTradeParticipant?.variantName ?? '참가자' }}
         </small>
         <small v-else>거래 신호를 기다리고 있어요</small>
         <strong v-if="latestTrade">
-          {{
-            latestTrade.securityName ??
-            securityNameById[latestTrade.securityId] ??
-            `종목 ${latestTrade.securityId}`
-          }}
+          {{ getSecurityDisplayName(latestTrade) }}
           {{ latestTrade.quantity }}주
         </strong>
         <strong v-else>매수·매도가 발생하면 바로 알려드릴게요</strong>
         <span v-if="latestTrade"> 주당 {{ formatCurrency(latestTrade.unitPrice) }} </span>
         <p v-if="latestTrade" class="live-trade-alert__reason">
           <b>판단 근거</b>
-          {{ latestTrade.decisionReason }}
+          {{ getDecisionReasonText(latestTrade.decisionReason) }}
         </p>
       </span>
     </button>
@@ -378,6 +380,7 @@ function formatPeriodDate(date) {
       :participants="participants"
       :daily-performance="dailyPerformance"
       :simulated-trades="simulatedTrades"
+      :position-snapshots="positionSnapshots"
       :initial-capital="initialCapital"
       :progress="progress"
       :speed="speed"
@@ -523,6 +526,9 @@ function formatPeriodDate(date) {
   display: grid;
   grid-template-columns: 40px minmax(0, 1fr);
   width: 100%;
+  height: 132px;
+  box-sizing: border-box;
+  overflow: hidden;
   align-items: center;
   gap: 11px;
   padding: 12px 13px;
@@ -612,6 +618,7 @@ function formatPeriodDate(date) {
   line-height: 1.45;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  min-height: calc(1.45em * 2);
 }
 
 .live-trade-alert__reason b {
@@ -808,6 +815,7 @@ function formatPeriodDate(date) {
   justify-content: center;
   gap: 8px;
   width: min(calc(100% - 40px), 350px);
+  height: 48px;
   min-height: 48px;
   padding: 12px 18px;
   border: 0;
@@ -816,6 +824,8 @@ function formatPeriodDate(date) {
   color: #fff;
   font-size: var(--font-size-body);
   font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
   cursor: pointer;
   box-shadow: 0 8px 20px rgb(38 58 67 / 18%);
   transform: translateX(-50%);

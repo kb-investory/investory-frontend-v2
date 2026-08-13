@@ -8,6 +8,7 @@ import {
   getJournalEntryOnDate,
   getJournalDetail,
   getJournalEntries,
+  getJournalMonthRange,
   saveJournal as saveJournalApi,
   updateJournal as updateJournalApi,
 } from '@/features/journal/api/journalApi'
@@ -38,14 +39,21 @@ export const useJournalStore = defineStore('journal', () => {
   const error = ref('')
   let latestCalendarRequestId = 0
   let latestDailyEntryRequestId = 0
+  let lastJournalRange = null
 
-  async function fetchJournals(params) {
+  async function fetchJournals(params = lastJournalRange ?? getJournalMonthRange()) {
+    const fallbackRange = getJournalMonthRange(params?.startDate || params?.endDate)
+    const range = {
+      startDate: params?.startDate || fallbackRange.startDate,
+      endDate: params?.endDate || fallbackRange.endDate,
+    }
+    lastJournalRange = range
     loading.value = true
     error.value = ''
     try {
       const response = await queryClient.fetchQuery({
-        queryKey: queryKeys.journal.entries(params),
-        queryFn: () => getJournalEntries(params),
+        queryKey: queryKeys.journal.entries(range),
+        queryFn: () => getJournalEntries(range),
         staleTime: JOURNAL_STALE_TIME,
       })
       entries.value = response.entries
@@ -59,6 +67,7 @@ export const useJournalStore = defineStore('journal', () => {
 
   async function fetchCalendarRange(startDate, endDate) {
     const requestId = ++latestCalendarRequestId
+    lastJournalRange = { startDate, endDate }
 
     loading.value = true
     error.value = ''
@@ -151,7 +160,7 @@ export const useJournalStore = defineStore('journal', () => {
     try {
       const newJournal = await saveJournalApi(payload)
       await invalidateJournalWriteQueries()
-      await fetchJournals()
+      await fetchJournals(lastJournalRange ?? getJournalMonthRange(payload.journalDate))
       return newJournal
     } catch (requestError) {
       error.value = requestError.message
@@ -167,7 +176,7 @@ export const useJournalStore = defineStore('journal', () => {
     try {
       const result = await updateJournalApi(journalId, payload)
       await invalidateJournalWriteQueries()
-      await fetchJournals()
+      await fetchJournals(lastJournalRange ?? getJournalMonthRange(dailyEntry.value?.journalDate))
       return result
     } catch (requestError) {
       error.value = requestError.message
@@ -224,6 +233,7 @@ export const useJournalStore = defineStore('journal', () => {
   function reset() {
     latestCalendarRequestId += 1
     latestDailyEntryRequestId += 1
+    lastJournalRange = null
     entries.value = []
     calendarActivities.value = []
     selectedDetail.value = null

@@ -15,7 +15,8 @@ const historyItem = computed(() => tendencyStore.getHistoryById(route.params.ana
 const isCurrentAnalysis = computed(
   () => String(tendencyStore.analysis?.analysisRunId) === String(route.params.analysisRunId),
 )
-const isFirstAnalysis = computed(() => historyItem.value?.changedCount === 0)
+const isFirstAnalysis = computed(() => historyItem.value?.label === '첫 분석')
+const displayPeriod = computed(() => historyItem.value?.period ?? tendencyStore.analysis?.period)
 
 function formatDate(date) {
   return date?.replaceAll('-', '. ') || ''
@@ -44,10 +45,9 @@ onMounted(() => tendencyStore.fetchTendencies())
           isCurrentAnalysis && !isFirstAnalysis ? '현재 투자성향' : historyItem.label
         }}</span>
         <h1>{{ formatDate(historyItem.analyzedDate) }} 분석</h1>
-        <p v-if="isCurrentAnalysis && tendencyStore.analysis?.period">
-          {{ formatDate(tendencyStore.analysis.period.startDate) }} ~
-          {{ formatDate(tendencyStore.analysis.period.endDate) }} · 최근
-          {{ tendencyStore.analysis.period.days }}일
+        <p v-if="displayPeriod">
+          {{ formatDate(displayPeriod.startDate) }} ~ {{ formatDate(displayPeriod.endDate) }} · 최근
+          {{ displayPeriod.days }}일
         </p>
         <div class="detail-hero__count">
           <strong>{{ historyItem.changedCount }}</strong>

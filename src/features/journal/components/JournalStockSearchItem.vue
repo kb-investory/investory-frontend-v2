@@ -12,7 +12,11 @@ defineProps({
 defineEmits(['select'])
 
 function formatRecentDate(dateKey) {
+  if (!dateKey) return ''
+
   const [, month, day] = dateKey.split('-').map(Number)
+  if (!month || !day) return ''
+
   return `${month}월 ${day}일`
 }
 </script>
@@ -31,11 +35,17 @@ function formatRecentDate(dateKey) {
         <strong>{{ stock.securityName }}</strong>
         <span>{{ stock.securityCode }}</span>
       </span>
-      <span class="stock-search-item__stats">
+      <span
+        v-if="stock.journalDays != null && stock.buyCount != null && stock.sellCount != null"
+        class="stock-search-item__stats"
+      >
         {{ stock.journalDays }}일의 일지 · 매수 {{ stock.buyCount }} · 매도
         {{ stock.sellCount }}
       </span>
-      <span class="stock-search-item__recent">
+      <span v-else class="stock-search-item__stats">
+        {{ stock.marketType }}<template v-if="stock.sectorName"> · {{ stock.sectorName }}</template>
+      </span>
+      <span v-if="formatRecentDate(stock.recentJournalDate)" class="stock-search-item__recent">
         최근 기록 {{ formatRecentDate(stock.recentJournalDate) }}
       </span>
     </span>

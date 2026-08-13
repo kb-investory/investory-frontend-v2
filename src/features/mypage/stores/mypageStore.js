@@ -13,7 +13,7 @@ import {
   syncConnectedAccount,
   updateUserProfile,
 } from '@/features/mypage/api/mypageApi'
-import { getJournalEntries } from '@/features/journal/api/journalApi'
+import { getDefaultJournalDate, getJournalEntries } from '@/features/journal/api/journalApi'
 import { getLatestCompletedSimulationResult } from '@/features/simulation/api/simulationApi'
 import { getLatestTendencyAnalysis } from '@/features/tendency/api/tendencyApi'
 import { queryKeys } from '@/shared/api/queryKeys'
@@ -67,6 +67,10 @@ export const useMypageStore = defineStore('mypage', () => {
   async function fetchOverview({ force = false, authUser = null } = {}) {
     loading.value = true
     error.value = null
+    const journalRange = {
+      startDate: authUser?.createdAt?.slice(0, 10) || '1970-01-01',
+      endDate: getDefaultJournalDate(),
+    }
 
     try {
       if (force) {
@@ -80,8 +84,7 @@ export const useMypageStore = defineStore('mypage', () => {
             exact: true,
           }),
           queryClient.invalidateQueries({
-            queryKey: queryKeys.journal.entries(),
-            exact: true,
+            queryKey: queryKeys.journal.all,
           }),
           queryClient.invalidateQueries({
             queryKey: queryKeys.simulation.latestCompleted(),
@@ -102,8 +105,8 @@ export const useMypageStore = defineStore('mypage', () => {
           staleTime: MYPAGE_STALE_TIME,
         }),
         queryClient.fetchQuery({
-          queryKey: queryKeys.journal.entries(),
-          queryFn: () => getJournalEntries(),
+          queryKey: queryKeys.journal.entries(journalRange),
+          queryFn: () => getJournalEntries(journalRange),
           staleTime: MYPAGE_STALE_TIME,
         }),
         queryClient.fetchQuery({
@@ -159,7 +162,8 @@ export const useMypageStore = defineStore('mypage', () => {
       const actualUser = rankedParticipants[actualUserIndex]
       recentSimulation.value = actualUser
         ? {
-            simulationId: simulationResult.simulationRun?.simulationRunId,
+            simulationId:
+              simulationResult.simulationRunId ?? simulationResult.simulationRun?.simulationRunId,
             rank: actualUserIndex + 1,
             participantCount: rankedParticipants.length,
             participants: rankedParticipants.map((participant, index) => ({

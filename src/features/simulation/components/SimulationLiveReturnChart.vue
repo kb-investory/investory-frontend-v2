@@ -6,6 +6,9 @@ import { GridComponent, MarkPointComponent, TooltipComponent } from 'echarts/com
 import { SVGRenderer } from 'echarts/renderers'
 
 import AppIcon from '@/shared/components/AppIcon.vue'
+import { getDecisionReasonText } from '@/features/simulation/utils/decisionReason'
+import { getSecurityDisplayName } from '@/features/simulation/utils/securityDisplayName'
+import StockLogo from '@/shared/components/StockLogo.vue'
 
 echarts.use([
   GridComponent,
@@ -28,6 +31,10 @@ const props = defineProps({
   simulatedTrades: {
     type: Array,
     default: () => [],
+  },
+  positionSnapshots: {
+    type: Array,
+    default: null,
   },
   initialCapital: {
     type: Number,
@@ -94,23 +101,6 @@ const shortLabelByVariantType = {
   PERSONAL_BOT: '투자봇',
   FAMOUS_STRATEGY: '유명',
   RANDOM_BOT: '원숭이',
-}
-
-// 백엔드 종목 응답이 연결되면 이 메타데이터만 API 필드로 교체한다.
-// 백엔드 종목 응답 및 프론트엔드 목데이터 호환 종목 메타데이터
-const securityMetaById = {
-  101: { name: '삼성전자', ticker: '005930', currentPrice: 82000 },
-  102: { name: 'SK하이닉스', ticker: '000660', currentPrice: 182000 },
-  103: { name: 'NAVER', ticker: '035420', currentPrice: 195000 },
-  104: { name: '카카오', ticker: '035720', currentPrice: 53500 },
-  105: { name: '현대차', ticker: '005380', currentPrice: 255000 },
-
-  // 레거시 목데이터 종목 ID 호환 지원
-  202: { name: '삼성전자', ticker: '005930', currentPrice: 82000 },
-  303: { name: 'NAVER', ticker: '035420', currentPrice: 195000 },
-  404: { name: '카카오', ticker: '035720', currentPrice: 53500 },
-  505: { name: '현대차', ticker: '005380', currentPrice: 255000 },
-  606: { name: '셀트리온', ticker: '068270', currentPrice: 190000 },
 }
 
 const timelineDates = computed(() =>
@@ -281,9 +271,9 @@ const tradeMarkerSeries = computed(() => {
   })
 
   return ['BUY', 'SELL']
-    .map((tradeSide) => {
+    .map((tradeDirection) => {
       const data = completedTrades
-        .filter((trade) => trade.tradeSide === tradeSide)
+        .filter((trade) => getTradeDirection(trade.tradeSide) === tradeDirection)
         .map((trade) => {
           const timestamp = new Date(trade.tradedAt).getTime()
           const participantSeries = chartSeries.value.find(
@@ -298,41 +288,41 @@ const tradeMarkerSeries = computed(() => {
             value: [timestamp, returnPercent],
             tradeId: trade.simulatedTradeId,
             variantId: String(trade.simulationVariantId),
-            securityName: getSecurityMeta(trade.securityId).name,
+            securityName: getSecurityDisplayName(trade),
             quantity: trade.quantity,
             unitPrice: trade.unitPrice,
-            decisionReason: trade.decisionReason,
+            decisionReason: getDecisionReasonText(trade.decisionReason),
           }
         })
         .filter(Boolean)
 
       return {
-        id: `trade-markers-${tradeSide.toLowerCase()}`,
-        name: tradeSide === 'BUY' ? '매수' : '매도',
+        id: `trade-markers-${tradeDirection.toLowerCase()}`,
+        name: tradeDirection === 'BUY' ? '매수' : '매도',
         type: 'scatter',
         data,
         symbol: 'triangle',
-        symbolRotate: tradeSide === 'SELL' ? 180 : 0,
+        symbolRotate: tradeDirection === 'SELL' ? 180 : 0,
         symbolSize: cameraFocus.value.mode === 'full' ? 8 : 11,
         z: 8,
         itemStyle: {
-          color: tradeSide === 'BUY' ? '#F04F55' : '#3478D4',
+          color: tradeDirection === 'BUY' ? '#F04F55' : '#3478D4',
           borderColor: '#F7FAFB',
           borderWidth: 1,
         },
         label: {
           show: cameraFocus.value.mode === 'focus',
-          position: tradeSide === 'BUY' ? 'top' : 'bottom',
+          position: tradeDirection === 'BUY' ? 'top' : 'bottom',
           distance: 4,
-          color: tradeSide === 'BUY' ? '#FAD6D8' : '#CFE2FA',
+          color: tradeDirection === 'BUY' ? '#FAD6D8' : '#CFE2FA',
           fontSize: 7,
           fontWeight: 700,
-          formatter: tradeSide === 'BUY' ? '매수' : '매도',
+          formatter: tradeDirection === 'BUY' ? '매수' : '매도',
         },
         tooltip: {
           trigger: 'item',
           formatter: ({ data: item }) =>
-            `<strong>${tradeSide === 'BUY' ? '매수' : '매도'} · ${item.securityName}</strong><br/>${item.quantity}주 · ${formatCurrency(item.unitPrice)}<br/>${item.decisionReason}`,
+            `<strong>${tradeDirection === 'BUY' ? '매수' : '매도'} · ${item.securityName}</strong><br/>${item.quantity}주 · ${formatCurrency(item.unitPrice)}<br/>${item.decisionReason}`,
         },
       }
     })
@@ -394,6 +384,21 @@ const transactionParticipants = computed(() =>
   })),
 )
 
+function getTradeDirection(tradeSide) {
+  return ['BUY', 'ADD'].includes(tradeSide) ? 'BUY' : 'SELL'
+}
+
+function getTradeSideLabel(tradeSide) {
+  return (
+    {
+      BUY: '매수',
+      SELL: '매도',
+      ADD: '추가 매수',
+      REDUCE: '비중 축소',
+    }[tradeSide] ?? tradeSide
+  )
+}
+
 const visibleTransactions = computed(() =>
   props.simulatedTrades
     .filter((trade) => {
@@ -406,20 +411,64 @@ const visibleTransactions = computed(() =>
     .sort((a, b) => new Date(b.tradedAt).getTime() - new Date(a.tradedAt).getTime()),
 )
 
+const selectedPositionSnapshotDate = computed(
+  () =>
+    performanceByVariant.value
+      .get(Number(selectedTradeParticipantId.value))
+      ?.filter(
+        (snapshot) =>
+          new Date(`${snapshot.snapshotDate || snapshot.performanceDate}T23:59:59`).getTime() <=
+          currentSimulationTimestamp.value,
+      )
+      .at(-1)?.snapshotDate,
+)
+
 const currentHoldings = computed(() => {
+  if (Array.isArray(props.positionSnapshots)) {
+    const snapshotDate = selectedPositionSnapshotDate.value
+    const holdings = props.positionSnapshots
+      .filter(
+        (snapshot) =>
+          String(snapshot.simulationVariantId) === String(selectedTradeParticipantId.value) &&
+          snapshot.snapshotDate === snapshotDate,
+      )
+      .map((snapshot) => ({
+        ...snapshot,
+        displayName: getSecurityDisplayName(snapshot),
+        valuation: Number(snapshot.marketValue) || 0,
+        averagePrice: Number(snapshot.averagePrice) || 0,
+        currentPrice: Number(snapshot.currentPrice) || 0,
+        returnPercent: Number(snapshot.returnPercent) || 0,
+      }))
+      .sort((a, b) => b.valuation - a.valuation)
+
+    const totalValuation = holdings.reduce((total, holding) => total + holding.valuation, 0)
+    return holdings.map((holding) => ({
+      ...holding,
+      allocationPercent: totalValuation ? (holding.valuation / totalValuation) * 100 : 0,
+    }))
+  }
+
+  // positionSnapshots가 없는 과거 응답만 체결 내역 기반 추정값을 사용한다.
   const holdingsBySecurity = new Map()
 
   ;[...visibleTransactions.value].reverse().forEach((trade) => {
-    const securityId = Number(trade.securityId)
-    const holding = holdingsBySecurity.get(securityId) ?? {
-      securityId,
+    const securityKey = trade.securityId ?? trade.securityCode
+    const holding = holdingsBySecurity.get(securityKey) ?? {
+      securityId: trade.securityId,
+      securityCode: trade.securityCode,
+      securityName: trade.securityName,
       quantity: 0,
       costBasis: 0,
+      currentPrice: 0,
     }
     const quantity = Number(trade.quantity) || 0
     const unitPrice = Number(trade.unitPrice) || 0
+    holding.securityCode = trade.securityCode || holding.securityCode
+    holding.securityName = trade.securityName || holding.securityName
+    holding.currentPrice = unitPrice || holding.currentPrice
 
-    if (trade.tradeSide === 'BUY') {
+    if (getTradeDirection(trade.tradeSide) === 'BUY') {
       holding.quantity += quantity
       holding.costBasis += quantity * unitPrice
     } else if (holding.quantity > 0) {
@@ -429,26 +478,21 @@ const currentHoldings = computed(() => {
       holding.costBasis -= averagePrice * soldQuantity
     }
 
-    holdingsBySecurity.set(securityId, holding)
+    holdingsBySecurity.set(securityKey, holding)
   })
 
   const holdings = [...holdingsBySecurity.values()]
     .filter((holding) => holding.quantity > 0)
     .map((holding) => {
-      const meta = securityMetaById[holding.securityId] ?? {
-        name: holding.securityName || `종목 ${holding.securityId}`,
-        ticker: '-',
-        currentPrice: holding.costBasis / holding.quantity,
-      }
       const averagePrice = holding.costBasis / holding.quantity
-      const valuation = meta.currentPrice * holding.quantity
-      const returnPercent = averagePrice
-        ? ((meta.currentPrice - averagePrice) / averagePrice) * 100
-        : 0
+      const currentPrice = holding.currentPrice || averagePrice
+      const valuation = currentPrice * holding.quantity
+      const returnPercent = averagePrice ? ((currentPrice - averagePrice) / averagePrice) * 100 : 0
 
       return {
         ...holding,
-        ...meta,
+        displayName: getSecurityDisplayName(holding),
+        currentPrice,
         averagePrice,
         valuation,
         returnPercent,
@@ -525,16 +569,6 @@ defineExpose({ openTradeView })
 
 function toggleTradeDetails(tradeId) {
   expandedTradeId.value = expandedTradeId.value === tradeId ? null : tradeId
-}
-
-function getSecurityMeta(securityId) {
-  return (
-    securityMetaById[Number(securityId)] ?? {
-      name: `종목 ${securityId}`,
-      ticker: '-',
-      currentPrice: 0,
-    }
-  )
 }
 
 function formatTradeDate(value) {
@@ -1076,7 +1110,7 @@ onBeforeUnmount(() => {
           type="button"
           class="trade-timeline__item"
           :class="[
-            `is-${trade.tradeSide.toLowerCase()}`,
+            `is-${getTradeDirection(trade.tradeSide).toLowerCase()}`,
             { 'is-expanded': expandedTradeId === trade.simulatedTradeId },
           ]"
           @click="toggleTradeDetails(trade.simulatedTradeId)"
@@ -1085,8 +1119,9 @@ onBeforeUnmount(() => {
           <i></i>
           <div class="trade-timeline__body">
             <div class="trade-timeline__title">
-              <strong>{{ getSecurityMeta(trade.securityId).name }}</strong>
-              <span>{{ trade.tradeSide === 'BUY' ? '매수' : '매도' }}</span>
+              <StockLogo :stock="trade" :size="24" />
+              <strong>{{ getSecurityDisplayName(trade) }}</strong>
+              <span>{{ getTradeSideLabel(trade.tradeSide) }}</span>
               <em>{{ formatCurrency(trade.unitPrice * trade.quantity) }}</em>
             </div>
             <p class="trade-timeline__numbers">
@@ -1094,7 +1129,7 @@ onBeforeUnmount(() => {
             </p>
             <p class="trade-timeline__reason">
               <b>판단 근거</b>
-              {{ trade.decisionReason }}
+              {{ getDecisionReasonText(trade.decisionReason) }}
             </p>
           </div>
           <AppIcon name="chevron-down" :size="13" />
@@ -1108,9 +1143,12 @@ onBeforeUnmount(() => {
       <div v-else class="holding-list" role="tabpanel">
         <article v-for="holding in currentHoldings" :key="holding.securityId" class="holding-card">
           <div class="holding-card__top">
-            <div>
-              <strong>{{ holding.name }}</strong>
-              <span>{{ holding.ticker }} · {{ holding.quantity }}주</span>
+            <div class="holding-card__identity">
+              <StockLogo :stock="holding" :size="30" />
+              <div class="holding-card__copy">
+                <strong>{{ holding.displayName }}</strong>
+                <span>{{ holding.quantity }}주</span>
+              </div>
             </div>
             <strong
               :class="{ positive: holding.returnPercent > 0, negative: holding.returnPercent < 0 }"
@@ -1740,7 +1778,14 @@ onBeforeUnmount(() => {
   gap: 10px;
 }
 
-.holding-card__top > div {
+.holding-card__identity {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.holding-card__copy {
   display: flex;
   min-width: 0;
   flex-direction: column;

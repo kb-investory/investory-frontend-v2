@@ -111,7 +111,7 @@ export const useTendencyStore = defineStore('tendency', () => {
   const activeRecommendations = computed(() =>
     recommendations.value.filter(
       (recommendation) =>
-        recommendation.recommendationStatus === 'NEW' &&
+        ['NEW', 'SUGGESTED'].includes(recommendation.recommendationStatus) &&
         (principles.value.length === 0 ||
           !appliedRecommendationIds.value.includes(recommendation.recommendationId)),
     ),
@@ -223,6 +223,14 @@ export const useTendencyStore = defineStore('tendency', () => {
       const analysisData = await runTendencyAnalysis()
       updateAnalysis(analysisData)
       queryClient.setQueryData(queryKeys.tendency.analysis(), analysisData)
+      const [recommendationData, accessData] = await Promise.all([
+        getRecommendedPrinciples(),
+        getTendencyAccessStatus(),
+      ])
+      recommendations.value = recommendationData.recommendations || []
+      analysisAccess.value = accessData
+      queryClient.setQueryData(queryKeys.tendency.recommendations(), recommendationData)
+      queryClient.setQueryData(queryKeys.tendency.access(), accessData)
       await queryClient.invalidateQueries({ queryKey: queryKeys.mypage.overview(), exact: true })
     } catch (analysisError) {
       error.value = analysisError

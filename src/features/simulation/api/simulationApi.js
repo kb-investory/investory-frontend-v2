@@ -1,4 +1,5 @@
 import simulationData from '@/mocks/data/simulation.json'
+import { getSecurityDetailById } from '@/features/market/api/marketApi'
 import { request } from '@/shared/api/client'
 
 function clone(value) {
@@ -11,6 +12,106 @@ const DEFAULT_HARDCODED_PROFILE = {
   quality: 0.2,
   trend: 0.15,
   disclosure: 0.1,
+}
+
+const securityDetailCache = new Map()
+
+function isPlaceholderSecurityName(name, securityId) {
+  if (!name?.trim()) return true
+
+  const normalizedName = name.trim()
+  return (
+    /^종목\s*#?\d+$/u.test(normalizedName) ||
+    (securityId != null && normalizedName === String(securityId))
+  )
+}
+
+function resolveSecurityId(item) {
+  if (item?.securityId != null) return item.securityId
+
+  const placeholderText = [item?.securityName, item?.action].find((value) =>
+    /^종목\s*#?\d+/u.test(value?.trim()),
+  )
+  return placeholderText?.trim().match(/^종목\s*#?(\d+)/u)?.[1] ?? null
+}
+
+async function getCachedSecurityDetail(securityId) {
+  if (securityId == null) return null
+
+  const cacheKey = String(securityId)
+  if (!securityDetailCache.has(cacheKey)) {
+    securityDetailCache.set(
+      cacheKey,
+      getSecurityDetailById(securityId).catch(() => {
+        securityDetailCache.delete(cacheKey)
+        return null
+      }),
+    )
+  }
+
+  return await securityDetailCache.get(cacheKey)
+}
+
+async function enrichSecurityDetails(items) {
+  if (!Array.isArray(items) || !items.length) return items
+
+  return await Promise.all(
+    items.map(async (item) => {
+      const securityId = resolveSecurityId(item)
+      if (!securityId || !isPlaceholderSecurityName(item.securityName, securityId)) {
+        return item
+      }
+
+      const security = await getCachedSecurityDetail(securityId)
+      if (!security) return item
+      const resolvedName = security.securityName ?? security.securityCode
+
+      return {
+        ...item,
+        securityId: security.securityId ?? securityId,
+        securityCode: security.securityCode ?? item.securityCode,
+        securityName: security.securityName ?? item.securityName,
+        action: resolvedName ? item.action?.replace(/^종목\s*#?\d+/u, resolvedName) : item.action,
+      }
+    }),
+  )
+}
+
+async function normalizeSimulationReport(data) {
+  if (!data) return data
+
+  const rawKeyTradeReviews = data.keyTradeReviews ?? data.decisionReviews ?? []
+  const [keyTradeReviews, decisionReviews, evidenceReviews] = await Promise.all([
+    enrichSecurityDetails(rawKeyTradeReviews),
+    enrichSecurityDetails(data.decisionReviews),
+    enrichSecurityDetails(data.evidenceReviews),
+  ])
+
+  return {
+    ...data,
+    keyTradeReviews,
+    decisionReviews: decisionReviews?.length ? decisionReviews : keyTradeReviews,
+    evidenceReviews,
+  }
+}
+
+export function isSimulationReportEnrichmentPending(report) {
+  if (!report) return false
+
+  const metadata = report.generationMetadata ?? {}
+  if (metadata.narrativeStatus === 'PENDING') return true
+
+  const terminalThesisStatuses = new Set(['NOT_CONFIGURED', 'COMPLETED', 'PARTIAL', 'FAILED'])
+  if (terminalThesisStatuses.has(metadata.thesisVerificationStatus)) return false
+
+  const reviews = report.keyTradeReviews ?? report.decisionReviews ?? []
+  return reviews.some((review) => {
+    const thesis = review.thesisOutcome
+    return (
+      !thesis ||
+      (thesis.verdict === 'UNCONFIRMED' && thesis.verificationStatus === 'WEB_SEARCH_NOT_RUN')
+    )
+  })
 }
 
 function normalizeSnapshot(snapshot) {
@@ -48,6 +149,69 @@ function normalizeDailyPerformanceArray(list) {
   return list.map(normalizeSnapshot)
 }
 
+function normalizeSimulatedTrade(trade) {
+  if (!trade) return trade
+
+  return {
+    ...trade,
+    simulatedTradeId: trade.simulatedTradeId ?? trade.simulated_trade_id,
+    simulationVariantId: trade.simulationVariantId ?? trade.simulation_variant_id,
+    securityId: trade.securityId ?? trade.security_id,
+    securityCode: trade.securityCode ?? trade.security_code ?? '',
+    securityName: trade.securityName ?? trade.security_name ?? '',
+    tradeSide: trade.tradeSide ?? trade.trade_side,
+    tradedAt: trade.tradedAt ?? trade.traded_at,
+    unitPrice: trade.unitPrice ?? trade.unit_price,
+    decisionReason: trade.decisionReason ?? trade.decision_reason ?? '',
+  }
+}
+
+function normalizePositionSnapshot(snapshot) {
+  if (!snapshot) return snapshot
+
+  return {
+    ...snapshot,
+    simulationVariantId: snapshot.simulationVariantId ?? snapshot.simulation_variant_id,
+    snapshotDate: snapshot.snapshotDate ?? snapshot.snapshot_date,
+    securityId: snapshot.securityId ?? snapshot.security_id,
+    securityCode: snapshot.securityCode ?? snapshot.security_code ?? '',
+    securityName: snapshot.securityName ?? snapshot.security_name ?? '',
+    averagePrice: snapshot.averagePrice ?? snapshot.average_price ?? 0,
+    currentPrice: snapshot.currentPrice ?? snapshot.current_price ?? 0,
+    marketValue: snapshot.marketValue ?? snapshot.market_value ?? 0,
+    unrealizedPnl: snapshot.unrealizedPnl ?? snapshot.unrealized_pnl ?? 0,
+    returnPercent: snapshot.returnPercent ?? snapshot.return_percent ?? 0,
+  }
+}
+
+async function normalizeSimulationResult(data) {
+  if (!data) return data
+
+  const dailyPerformance = normalizeDailyPerformanceArray(
+    data.dailyPerformance || data.dailySnapshots,
+  )
+  const rawSimulatedTrades = data.simulatedTrades ?? data.simulated_trades
+  const normalizedTrades = Array.isArray(rawSimulatedTrades)
+    ? rawSimulatedTrades.map(normalizeSimulatedTrade)
+    : []
+  const rawPositionSnapshots = data.positionSnapshots ?? data.position_snapshots
+  const normalizedPositionSnapshots = Array.isArray(rawPositionSnapshots)
+    ? rawPositionSnapshots.map(normalizePositionSnapshot)
+    : null
+  const [simulatedTrades, positionSnapshots] = await Promise.all([
+    enrichSecurityDetails(normalizedTrades),
+    enrichSecurityDetails(normalizedPositionSnapshots),
+  ])
+
+  return {
+    ...data,
+    dailyPerformance,
+    dailySnapshots: dailyPerformance,
+    simulatedTrades,
+    positionSnapshots,
+  }
+}
+
 export async function getSimulationHistory() {
   return await request('/api/v1/simulations/history')
 }
@@ -70,14 +234,7 @@ export async function getSimulationOverview(params = {}) {
 
 export async function getLatestSimulationResult() {
   const data = await request('/api/v1/simulations/latest')
-  const dailyPerformance = normalizeDailyPerformanceArray(
-    data.dailyPerformance || data.dailySnapshots,
-  )
-  return {
-    ...data,
-    dailyPerformance,
-    dailySnapshots: dailyPerformance,
-  }
+  return await normalizeSimulationResult(data)
 }
 
 export async function getLatestCompletedSimulationResult() {
@@ -113,46 +270,35 @@ export async function getSimulationComparators() {
 
 export async function runSimulation(payload = {}) {
   const requestBody = {
-    simulationRunId: payload.simulationRunId ?? 101,
-    periodStart: payload.periodStart ?? '2026-03-01',
-    periodEnd: payload.periodEnd ?? '2026-07-29',
-    initialCapital: payload.initialCapital ?? 5000000.0,
-    principles: payload.principles ?? ['익절 +20% 달성 시 이익 실현하고 손절률 -10% 도달 시 손절'],
-    participantTypes: payload.participantTypes ?? [
-      'ACTUAL_USER',
-      'PERSONAL_BOT',
-      'FAMOUS_STRATEGY',
-    ],
+    periodStart: payload.periodStart,
+    periodEnd: payload.periodEnd,
+    participantTypes: payload.participantTypes,
+    personalBotId: payload.personalBotId,
+    accountId: payload.accountId,
   }
   const response = await request('/api/v1/simulations/run', {
     method: 'POST',
     body: JSON.stringify(requestBody),
   })
-  const dailyPerformance = normalizeDailyPerformanceArray(
-    response.dailyPerformance || response.dailySnapshots,
-  )
-  return {
-    ...response,
-    dailyPerformance,
-    dailySnapshots: dailyPerformance,
-  }
+  return await normalizeSimulationResult(response)
 }
 
 export async function getSimulationDetail(simulationId) {
   const response = await request(`/api/v1/simulations/${simulationId}`)
-  const dailyPerformance = normalizeDailyPerformanceArray(
-    response.dailyPerformance || response.dailySnapshots,
-  )
-  return {
-    ...response,
-    dailyPerformance,
-    dailySnapshots: dailyPerformance,
-  }
+  return await normalizeSimulationResult(response)
 }
 
 // GET /api/v1/simulations/{simulationId}/report
 export async function getSimulationReport(simulationId) {
-  return await request(`/api/v1/simulations/${simulationId}/report`)
+  const response = await request(`/api/v1/simulations/${simulationId}/report`)
+  return await normalizeSimulationReport(response)
+}
+
+export async function acceptSimulationPrincipleProposal(simulationId, recommendationId) {
+  return await request('/api/v1/principles/proposals/accept', {
+    method: 'POST',
+    body: JSON.stringify({ simulationId, recommendationId }),
+  })
 }
 
 export async function getSimulationMessages() {

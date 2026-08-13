@@ -17,20 +17,36 @@ function readRecentSecurityCodes() {
   }
 }
 
+async function getTradeTimeline({ securityId, startDate, endDate, page, size }) {
+  const searchParams = new URLSearchParams({
+    securityId: String(securityId),
+    page: String(page),
+    size: String(size),
+  })
+  if (startDate) searchParams.set('startDate', startDate)
+  if (endDate) searchParams.set('endDate', endDate)
+
+  return await request(`/journal/trades?${searchParams.toString()}`)
+}
+
 export async function getJournalStockSearchData() {
   const [securityData, holdingsData] = await Promise.all([
     searchSecurities({ size: 100 }),
     getLedgerHoldings(),
   ])
-  const holdingMap = new Map(
-    (holdingsData?.holdings || []).map((holding) => [holding.securityId, holding.quantity]),
-  )
+  const securities = securityData?.securities || []
+  const holdings = holdingsData?.holdings || []
+  const securitiesById = new Map(securities.map((security) => [security.securityId, security]))
+  const heldStocks = holdings.map((holding) => ({
+    ...securitiesById.get(holding.securityId),
+    ...holding,
+    holdingQuantity: Number(holding.quantity ?? 0),
+    returnRate: Number(holding.returnRate ?? 0),
+  }))
 
   return {
-    stocks: (securityData?.securities || []).map((security) => ({
-      ...security,
-      holdingQuantity: holdingMap.get(security.securityId),
-    })),
+    stocks: [...securities, ...heldStocks.filter((stock) => !securitiesById.has(stock.securityId))],
+    heldStocks,
     recentSecurityCodes: readRecentSecurityCodes(),
   }
 }
@@ -64,20 +80,57 @@ export async function getJournalStockTimeline({
   size = 20,
 }) {
   let targetSecurityId = securityId
+  let targetSecurity = null
   if (!targetSecurityId && securityCode) {
     const securityData = await searchSecurities({ keyword: securityCode, size: 20 })
-    targetSecurityId = securityData?.securities?.find(
+    targetSecurity = securityData?.securities?.find(
       (security) => security.securityCode === securityCode,
-    )?.securityId
+    )
+    targetSecurityId = targetSecurity?.securityId
   }
   if (!targetSecurityId) throw new Error('종목 정보를 찾을 수 없습니다.')
 
-  const searchParams = new URLSearchParams()
-  searchParams.set('securityId', targetSecurityId)
-  if (startDate) searchParams.set('startDate', startDate)
-  if (endDate) searchParams.set('endDate', endDate)
-  searchParams.set('page', page)
-  searchParams.set('size', size)
+  if (!targetSecurity) {
+    const securityData = await searchSecurities({ keyword: String(targetSecurityId), size: 20 })
+    targetSecurity = securityData?.securities?.find(
+      (security) => security.securityId === targetSecurityId,
+    )
+  }
 
-  return await request(`/journal/trades?${searchParams.toString()}`)
+  const [tradeData, holdingsData] = await Promise.all([
+    getTradeTimeline({
+      securityId: targetSecurityId,
+      startDate,
+      endDate,
+      page,
+      size,
+    }),
+    getLedgerHoldings(),
+  ])
+  const trades = tradeData?.trades || []
+  const holdingData = (holdingsData?.holdings || []).find(
+    (holding) => holding.securityId === targetSecurityId,
+  )
+  const firstPurchase = trades
+    .filter((trade) => trade.tradeSide === 'BUY')
+    .sort((a, b) => a.tradedAt.localeCompare(b.tradedAt))[0]
+  const calculatedQuantity = trades.reduce(
+    (quantity, trade) =>
+      quantity + Number(trade.quantity ?? 0) * (trade.tradeSide === 'SELL' ? -1 : 1),
+    0,
+  )
+
+  return {
+    security: tradeData?.security ?? targetSecurity,
+    holding: {
+      firstPurchasedAt: firstPurchase?.tradedAt?.slice(0, 10) ?? null,
+      currentQuantity: Number(holdingData?.quantity ?? calculatedQuantity),
+      cumulativeProfitAmount: Number(holdingData?.profitLossAmount ?? 0),
+    },
+    trades,
+    page: tradeData?.page ?? page,
+    size: tradeData?.size ?? size,
+    totalElements: tradeData?.totalElements ?? trades.length,
+    totalPages: tradeData?.totalPages ?? 0,
+  }
 }

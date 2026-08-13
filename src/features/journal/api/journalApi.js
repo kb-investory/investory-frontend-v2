@@ -1,5 +1,14 @@
 import journalData from '@/mocks/data/journal.json'
+import { getLedgerTrades } from '@/features/ledger/api/ledgerApi'
 import { request } from '@/shared/api/client'
+
+const JOURNAL_TIME_ZONE = 'Asia/Seoul'
+const JOURNAL_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
+  timeZone: JOURNAL_TIME_ZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+})
 
 function formatLocalDate(date = new Date()) {
   const year = date.getFullYear()
@@ -7,6 +16,48 @@ function formatLocalDate(date = new Date()) {
   const day = String(date.getDate()).padStart(2, '0')
 
   return `${year}-${month}-${day}`
+}
+
+function formatJournalDate(instant) {
+  if (!instant) return null
+
+  const parts = JOURNAL_DATE_FORMATTER.formatToParts(new Date(instant))
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]))
+  return `${values.year}-${values.month}-${values.day}`
+}
+
+function addDaysToDateKey(dateKey, amount) {
+  if (!dateKey) return dateKey
+
+  const date = new Date(`${dateKey}T00:00:00Z`)
+  date.setUTCDate(date.getUTCDate() + amount)
+  return date.toISOString().slice(0, 10)
+}
+
+async function getLedgerTradesForJournalRange(startDate, endDate) {
+  const ledgerFrom = startDate ? addDaysToDateKey(startDate, -1) : undefined
+  const firstPage = await getLedgerTrades({ from: ledgerFrom, to: endDate, page: 0, size: 100 })
+  const remainingPages = Array.from(
+    { length: Math.max(0, (firstPage?.totalPages ?? 1) - 1) },
+    (_, index) => index + 1,
+  )
+  const remainingResults = await Promise.all(
+    remainingPages.map((page) =>
+      getLedgerTrades({ from: ledgerFrom, to: endDate, page, size: 100 }),
+    ),
+  )
+
+  return [
+    ...(firstPage?.content || []),
+    ...remainingResults.flatMap((result) => result?.content || []),
+  ]
+    .map((trade) => ({ ...trade, journalDate: formatJournalDate(trade.tradedAt) }))
+    .filter(
+      (trade) =>
+        trade.journalDate &&
+        (!startDate || trade.journalDate >= startDate) &&
+        (!endDate || trade.journalDate <= endDate),
+    )
 }
 
 function findDailyEntryByJournalId(journalId) {
@@ -17,28 +68,45 @@ export function getDefaultJournalDate() {
   return formatLocalDate(new Date())
 }
 
-export async function getJournals() {
-  return getJournalEntries()
+export function getJournalMonthRange(dateKey = getDefaultJournalDate()) {
+  const [year, month] = String(dateKey).split('-').map(Number)
+  const safeYear = Number.isInteger(year) ? year : new Date().getFullYear()
+  const safeMonth = Number.isInteger(month) && month >= 1 && month <= 12 ? month : 1
+  const lastDay = new Date(Date.UTC(safeYear, safeMonth, 0)).getUTCDate()
+  const monthKey = `${safeYear}-${String(safeMonth).padStart(2, '0')}`
+
+  return {
+    startDate: `${monthKey}-01`,
+    endDate: `${monthKey}-${String(lastDay).padStart(2, '0')}`,
+  }
+}
+
+export async function getJournals(params) {
+  return getJournalEntries(params)
 }
 
 export async function getJournalEntries({ startDate, endDate } = {}) {
+  const fallbackRange = getJournalMonthRange(startDate || endDate)
+  const resolvedStartDate = startDate || fallbackRange.startDate
+  const resolvedEndDate = endDate || fallbackRange.endDate
   const searchParams = new URLSearchParams()
-  if (startDate) searchParams.set('startDate', startDate)
-  if (endDate) searchParams.set('endDate', endDate)
+  searchParams.set('startDate', resolvedStartDate)
+  searchParams.set('endDate', resolvedEndDate)
 
-  const query = searchParams.toString()
-  return await request(`/journal/entries${query ? `?${query}` : ''}`)
+  return await request(`/journal/entries?${searchParams.toString()}`)
 }
 
 export async function getCalendarActivity({ year, month, startDate, endDate } = {}) {
-  const entriesData = await getJournalEntries({ startDate, endDate })
   const monthKey = year && month ? `${year}-${String(month).padStart(2, '0')}` : null
-  return (entriesData.entries || [])
-    .map((entry) => ({
-      activityDate: entry.journalDate,
-      hasJournal: true,
-      tradeCount: entry.tradeCount ?? 0,
-    }))
+  const trades = await getLedgerTradesForJournalRange(startDate, endDate)
+  const tradeCountByDate = trades.reduce((counts, trade) => {
+    const activityDate = trade.journalDate
+    if (activityDate) counts.set(activityDate, (counts.get(activityDate) ?? 0) + 1)
+    return counts
+  }, new Map())
+
+  return [...tradeCountByDate.entries()]
+    .map(([activityDate, tradeCount]) => ({ activityDate, tradeCount }))
     .filter((activity) => !monthKey || activity.activityDate.startsWith(monthKey))
 }
 
@@ -50,11 +118,9 @@ export async function getJournalEntryOnDate(journalDate = getDefaultJournalDate(
   const entryData = await request(`/journal/entries/on/${journalDate}`)
 
   if (entryData && (!entryData.trades || entryData.trades.length === 0)) {
-    const ledgerTradesData = await request(
-      `/ledger/trades?from=${journalDate}&to=${journalDate}&size=100`,
-    )
-    if (ledgerTradesData?.content?.length) {
-      entryData.trades = ledgerTradesData.content.map((trade) => ({
+    const ledgerTrades = await getLedgerTradesForJournalRange(journalDate, journalDate)
+    if (ledgerTrades.length) {
+      entryData.trades = ledgerTrades.map((trade) => ({
         tradeId: trade.tradeId,
         securityId: trade.securityId,
         securityCode: trade.securityCode,
