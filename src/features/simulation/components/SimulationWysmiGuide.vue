@@ -49,7 +49,9 @@ function goToJournalNew() {
       </div>
 
       <h2 class="hero-title">
-        {{ hasEnoughDays ? '계좌 상태 데이터를 확인하고 있어요' : '실제 투자 데이터를 모으고 있어요' }}
+        {{
+          hasEnoughDays ? '계좌 상태 데이터를 확인하고 있어요' : '실제 투자 데이터를 모으고 있어요'
+        }}
       </h2>
 
       <p class="hero-description">
@@ -120,19 +122,27 @@ function goToJournalNew() {
         </div>
 
         <!-- Bot Compile Step -->
-        <div class="checklist-item" :class="hasEnoughDays && !hasAccountDataError ? 'active' : 'pending'">
+        <div
+          class="checklist-item"
+          :class="hasEnoughDays && !hasAccountDataError ? 'active' : 'pending'"
+        >
           <div class="item-left">
             <AppIcon
               name="rotate-ccw"
               :size="18"
-              :class="hasEnoughDays && !hasAccountDataError ? 'icon-active spin-slow' : 'icon-pending'"
+              :class="
+                hasEnoughDays && !hasAccountDataError ? 'icon-active spin-slow' : 'icon-pending'
+              "
             />
             <div class="bot-text-group">
               <span class="item-text bold">최신 원칙 봇 생성</span>
               <span class="item-subtext">조건이 채워지면 약 30초 동안 자동으로 만들어요</span>
             </div>
           </div>
-          <span class="item-status" :class="hasEnoughDays && !hasAccountDataError ? 'active' : 'pending'">
+          <span
+            class="item-status"
+            :class="hasEnoughDays && !hasAccountDataError ? 'active' : 'pending'"
+          >
             {{ hasEnoughDays && !hasAccountDataError ? '•••' : '대기' }}
           </span>
         </div>
@@ -145,7 +155,8 @@ function goToJournalNew() {
       <div class="tip-content">
         <h4 class="tip-title">왜 90일이 필요한가요?</h4>
         <p class="tip-desc">
-          일시적인 선택이 아니라 여러 시장 상황에서 반복된 투자 행동과 기록의 흐름을 비교하기 위해서예요.
+          일시적인 선택이 아니라 여러 시장 상황에서 반복된 투자 행동과 기록의 흐름을 비교하기
+          위해서예요.
         </p>
       </div>
     </div>
