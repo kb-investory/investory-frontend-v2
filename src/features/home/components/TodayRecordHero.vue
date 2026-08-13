@@ -15,15 +15,25 @@ defineEmits(['open-transactions'])
 
 const titleParts = computed(() => {
   const highlightedText = '기록으로 이어가요'
+  const completedText = '오늘의 기록이 완성되었습니다'
   const title = props.today.title ?? ''
 
+  if (title === completedText) {
+    return {
+      lead: '오늘의 기록이',
+      highlight: '완성되었습니다',
+      isHighlighted: false,
+    }
+  }
+
   if (!title.includes(highlightedText)) {
-    return { lead: title, highlight: '' }
+    return { lead: title, highlight: '', isHighlighted: false }
   }
 
   return {
     lead: title.replace(highlightedText, '').trim(),
     highlight: highlightedText,
+    isHighlighted: true,
   }
 })
 </script>
@@ -35,11 +45,10 @@ const titleParts = computed(() => {
         <p class="today-record__eyebrow">TODAY · {{ today.totalTrades }} TRADES</p>
         <h1 id="today-record-title" class="today-record__title">
           <span>{{ titleParts.lead }}</span>
-          <em v-if="titleParts.highlight">{{ titleParts.highlight }}</em>
+          <em v-if="titleParts.highlight" :class="{ 'is-highlighted': titleParts.isHighlighted }">
+            {{ titleParts.highlight }}
+          </em>
         </h1>
-        <p class="today-record__description">
-          {{ today.stockCount }}개 종목 · 아직 근거 {{ today.missingReasons }}건이 남아 있어요
-        </p>
       </div>
 
       <svg class="today-record__graph" viewBox="0 0 210 128" aria-hidden="true">
@@ -118,52 +127,35 @@ const titleParts = computed(() => {
 .today-record {
   position: relative;
   display: flex;
-  min-height: 360px;
+  min-height: 338px;
   flex-direction: column;
   gap: 0;
   padding-bottom: 4px;
-  background: #ffffff;
+  background: linear-gradient(to bottom, transparent 0 150px, #ffffff 150px 100%);
 }
 
 .today-record__intro {
   position: relative;
   overflow: hidden;
-  min-height: 168px;
-  padding: 8px 24px 58px;
+  min-height: 150px;
+  padding: 4px 24px 50px;
   color: #ffffff;
-  background:
-    radial-gradient(circle at 80% 70%, rgba(16, 198, 193, 0.2), transparent 40%),
-    linear-gradient(180deg, #031f28 0%, #031f28 12%, #052f3a 100%);
-}
-
-.today-record__intro::after {
-  position: absolute;
-  right: -50px;
-  bottom: -112px;
-  width: 250px;
-  height: 250px;
-  border: 1px solid rgba(39, 211, 205, 0.1);
-  border-radius: 50%;
-  box-shadow:
-    0 0 0 24px rgba(39, 211, 205, 0.035),
-    0 0 0 52px rgba(39, 211, 205, 0.025);
-  content: '';
+  background: transparent;
 }
 
 .today-record__heading {
   position: relative;
   z-index: 2;
-  max-width: 270px;
+  max-width: 250px;
 }
 
 .today-record__eyebrow,
-.today-record__title,
-.today-record__description {
+.today-record__title {
   margin: 0;
 }
 
 .today-record__eyebrow {
-  margin-bottom: 6px;
+  margin-bottom: 5px;
   color: #41ded7;
   font-family: var(--font-mono);
   font-size: var(--font-size-caption);
@@ -174,10 +166,10 @@ const titleParts = computed(() => {
 .today-record__title {
   color: #ffffff;
   font-family: var(--font-heading);
-  font-size: clamp(28px, 8vw, 34px);
+  font-size: clamp(26px, 7.2vw, 30px);
   font-weight: 800;
-  line-height: 1.16;
-  letter-spacing: -1.2px;
+  line-height: 1.13;
+  letter-spacing: -1px;
 }
 
 .today-record__title span,
@@ -187,22 +179,19 @@ const titleParts = computed(() => {
 }
 
 .today-record__title em {
-  color: #36ddd5;
+  color: #ffffff;
 }
 
-.today-record__description {
-  margin-top: 2px;
-  color: #c0d1d5;
-  font-size: 14px;
-  line-height: 1.4;
+.today-record__title em.is-highlighted {
+  color: #36ddd5;
 }
 
 .today-record__graph {
   position: absolute;
   right: -8px;
-  bottom: 4px;
+  bottom: 0;
   z-index: 1;
-  width: 210px;
+  width: 192px;
   opacity: 0.72;
 }
 
@@ -229,11 +218,11 @@ const titleParts = computed(() => {
   position: relative;
   z-index: 3;
   display: grid;
-  min-height: 80px;
+  min-height: 72px;
   grid-template-columns: repeat(4, 1fr);
-  margin: -40px 16px 0;
+  margin: -36px 16px 0;
   border: 1px solid #b8e7e4;
-  border-radius: 22px;
+  border-radius: 20px;
   background: #ffffff;
   box-shadow: 0 12px 24px rgba(1, 52, 62, 0.15);
 }
@@ -249,8 +238,8 @@ const titleParts = computed(() => {
 
 .today-record__metric + .today-record__metric::before {
   position: absolute;
-  top: 20px;
-  bottom: 20px;
+  top: 17px;
+  bottom: 17px;
   left: 0;
   width: 1px;
   background: #e7efef;
@@ -265,7 +254,7 @@ const titleParts = computed(() => {
 .today-record__metric dd {
   color: #263a43;
   font-family: var(--font-mono);
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 800;
 }
 
