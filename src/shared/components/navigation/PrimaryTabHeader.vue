@@ -46,8 +46,8 @@ defineProps({
   position: relative;
   overflow: hidden;
   width: 100%;
-  min-height: 192px;
-  padding-bottom: 32px;
+  min-height: 168px;
+  padding-bottom: 24px;
   background:
     radial-gradient(circle at 88% 24%, rgb(13 154 153 / 20%), transparent 31%),
     linear-gradient(145deg, #02141d 0%, #03232c 62%, #06404a 100%);
@@ -66,7 +66,7 @@ defineProps({
 }
 
 .primary-tab-header--flat-bottom {
-  padding-bottom: 32px;
+  padding-bottom: 24px;
 }
 
 .primary-tab-header--flat-bottom::after {
@@ -119,7 +119,7 @@ defineProps({
   position: absolute;
   z-index: 2;
   right: 14px;
-  bottom: 16px;
+  bottom: 10px;
   width: 178px;
   height: 118px;
   opacity: 0.68;
@@ -170,7 +170,7 @@ defineProps({
   position: relative;
   z-index: 3;
   display: flex;
-  min-height: 68px;
+  min-height: 56px;
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-end;
