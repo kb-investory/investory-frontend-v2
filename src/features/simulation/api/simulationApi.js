@@ -1,4 +1,5 @@
 import simulationData from '@/mocks/data/simulation.json'
+import { getSecurityDetailById } from '@/features/market/api/marketApi'
 import { request } from '@/shared/api/client'
 
 function clone(value) {
@@ -11,6 +12,84 @@ const DEFAULT_HARDCODED_PROFILE = {
   quality: 0.2,
   trend: 0.15,
   disclosure: 0.1,
+}
+
+const securityDetailCache = new Map()
+
+function isPlaceholderSecurityName(name, securityId) {
+  if (!name?.trim()) return true
+
+  const normalizedName = name.trim()
+  return (
+    /^종목\s*#?\d+$/u.test(normalizedName) ||
+    (securityId != null && normalizedName === String(securityId))
+  )
+}
+
+function resolveSecurityId(item) {
+  if (item?.securityId != null) return item.securityId
+
+  const placeholderText = [item?.securityName, item?.action].find((value) =>
+    /^종목\s*#?\d+/u.test(value?.trim()),
+  )
+  return placeholderText?.trim().match(/^종목\s*#?(\d+)/u)?.[1] ?? null
+}
+
+async function getCachedSecurityDetail(securityId) {
+  if (securityId == null) return null
+
+  const cacheKey = String(securityId)
+  if (!securityDetailCache.has(cacheKey)) {
+    securityDetailCache.set(
+      cacheKey,
+      getSecurityDetailById(securityId).catch(() => {
+        securityDetailCache.delete(cacheKey)
+        return null
+      }),
+    )
+  }
+
+  return await securityDetailCache.get(cacheKey)
+}
+
+async function enrichSecurityDetails(items) {
+  if (!Array.isArray(items) || !items.length) return items
+
+  return await Promise.all(
+    items.map(async (item) => {
+      const securityId = resolveSecurityId(item)
+      if (!securityId || !isPlaceholderSecurityName(item.securityName, securityId)) {
+        return item
+      }
+
+      const security = await getCachedSecurityDetail(securityId)
+      if (!security) return item
+      const resolvedName = security.securityName ?? security.securityCode
+
+      return {
+        ...item,
+        securityId: security.securityId ?? securityId,
+        securityCode: security.securityCode ?? item.securityCode,
+        securityName: security.securityName ?? item.securityName,
+        action: resolvedName ? item.action?.replace(/^종목\s*#?\d+/u, resolvedName) : item.action,
+      }
+    }),
+  )
+}
+
+async function normalizeSimulationReport(data) {
+  if (!data) return data
+
+  const [decisionReviews, evidenceReviews] = await Promise.all([
+    enrichSecurityDetails(data.decisionReviews),
+    enrichSecurityDetails(data.evidenceReviews),
+  ])
+
+  return {
+    ...data,
+    decisionReviews,
+    evidenceReviews,
+  }
 }
 
 function normalizeSnapshot(snapshot) {
@@ -83,20 +162,24 @@ function normalizePositionSnapshot(snapshot) {
   }
 }
 
-function normalizeSimulationResult(data) {
+async function normalizeSimulationResult(data) {
   if (!data) return data
 
   const dailyPerformance = normalizeDailyPerformanceArray(
     data.dailyPerformance || data.dailySnapshots,
   )
   const rawSimulatedTrades = data.simulatedTrades ?? data.simulated_trades
-  const simulatedTrades = Array.isArray(rawSimulatedTrades)
+  const normalizedTrades = Array.isArray(rawSimulatedTrades)
     ? rawSimulatedTrades.map(normalizeSimulatedTrade)
     : []
   const rawPositionSnapshots = data.positionSnapshots ?? data.position_snapshots
-  const positionSnapshots = Array.isArray(rawPositionSnapshots)
+  const normalizedPositionSnapshots = Array.isArray(rawPositionSnapshots)
     ? rawPositionSnapshots.map(normalizePositionSnapshot)
     : null
+  const [simulatedTrades, positionSnapshots] = await Promise.all([
+    enrichSecurityDetails(normalizedTrades),
+    enrichSecurityDetails(normalizedPositionSnapshots),
+  ])
 
   return {
     ...data,
@@ -129,7 +212,7 @@ export async function getSimulationOverview(params = {}) {
 
 export async function getLatestSimulationResult() {
   const data = await request('/api/v1/simulations/latest')
-  return normalizeSimulationResult(data)
+  return await normalizeSimulationResult(data)
 }
 
 export async function getLatestCompletedSimulationResult() {
@@ -180,17 +263,18 @@ export async function runSimulation(payload = {}) {
     method: 'POST',
     body: JSON.stringify(requestBody),
   })
-  return normalizeSimulationResult(response)
+  return await normalizeSimulationResult(response)
 }
 
 export async function getSimulationDetail(simulationId) {
   const response = await request(`/api/v1/simulations/${simulationId}`)
-  return normalizeSimulationResult(response)
+  return await normalizeSimulationResult(response)
 }
 
 // GET /api/v1/simulations/{simulationId}/report
 export async function getSimulationReport(simulationId) {
-  return await request(`/api/v1/simulations/${simulationId}/report`)
+  const response = await request(`/api/v1/simulations/${simulationId}/report`)
+  return await normalizeSimulationReport(response)
 }
 
 export async function getSimulationMessages() {
