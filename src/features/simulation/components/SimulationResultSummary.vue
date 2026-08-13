@@ -6,6 +6,7 @@ import SimulationParticipantAvatar from '@/features/simulation/components/Simula
 import { getSecurityDisplayName } from '@/features/simulation/utils/securityDisplayName'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
+import StockLogo from '@/shared/components/StockLogo.vue'
 
 const props = defineProps({
   latestResult: {
@@ -46,12 +47,14 @@ function getReportTrade(reportItem) {
 }
 
 function getTradeSideLabel(tradeSide) {
-  return {
-    BUY: '매수',
-    SELL: '매도',
-    ADD: '추가 매수',
-    REDUCE: '비중 축소',
-  }[tradeSide] ?? tradeSide
+  return (
+    {
+      BUY: '매수',
+      SELL: '매도',
+      ADD: '추가 매수',
+      REDUCE: '비중 축소',
+    }[tradeSide] ?? tradeSide
+  )
 }
 
 const participantMeta = {
@@ -68,21 +71,26 @@ const metrics = [
 ]
 
 const emotionalDecisions = computed(() =>
-  (props.report?.decisionReviews ?? []).map((decision) => ({
-    ...decision,
-    date: decision.tradedAt?.slice(5, 10).replace('-', '.') ?? '',
-    stock: getSecurityDisplayName(getReportTrade(decision)),
-    action: decision.actionSummary,
-    tag: decision.emotionLabel,
-    tone:
-      {
-        FEAR_SELL: 'fear',
-        GREED_BUY: 'greed',
-        HASTE_SELL: 'haste',
-      }[decision.emotionTag] ?? 'fear',
-    result: `이후 ${formatPercent(decision.subsequentReturnPercent)}`,
-    principle: decision.principleFeedback,
-  })),
+  (props.report?.decisionReviews ?? []).map((decision) => {
+    const security = getReportTrade(decision)
+
+    return {
+      ...decision,
+      security,
+      date: decision.tradedAt?.slice(5, 10).replace('-', '.') ?? '',
+      stock: getSecurityDisplayName(security),
+      action: decision.actionSummary,
+      tag: decision.emotionLabel,
+      tone:
+        {
+          FEAR_SELL: 'fear',
+          GREED_BUY: 'greed',
+          HASTE_SELL: 'haste',
+        }[decision.emotionTag] ?? 'fear',
+      result: `이후 ${formatPercent(decision.subsequentReturnPercent)}`,
+      principle: decision.principleFeedback,
+    }
+  }),
 )
 
 const evidenceTrades = computed(() =>
@@ -92,17 +100,13 @@ const evidenceTrades = computed(() =>
 
     return {
       ...review,
+      security: trade,
       action: hasSecurityFields
         ? `${getSecurityDisplayName(trade)} ${getTradeSideLabel(trade.tradeSide)}`
         : review.action,
       score: review.confidenceScore,
       label: review.confidenceLabel,
-      tone:
-        review.confidenceScore >= 70
-          ? 'high'
-          : review.confidenceScore >= 40
-            ? 'medium'
-            : 'low',
+      tone: review.confidenceScore >= 70 ? 'high' : review.confidenceScore >= 40 ? 'medium' : 'low',
     }
   }),
 )
@@ -579,7 +583,10 @@ function goToPrinciplesEdit() {
             <span class="emotion-tag">{{ decision.tag }}</span>
             <span class="decision-result">{{ decision.result }}</span>
           </div>
-          <h3>{{ decision.stock }} · {{ decision.action }}</h3>
+          <h3>
+            <StockLogo :stock="decision.security" :size="28" />
+            <span>{{ decision.stock }} · {{ decision.action }}</span>
+          </h3>
           <div class="bot-coach">
             <AppIcon name="bot" :size="16" />
             <p><strong>원칙대로라면</strong> {{ decision.principle }}</p>
@@ -610,7 +617,11 @@ function goToPrinciplesEdit() {
           </div>
           <div class="evidence-flow">
             <div>
-              <small>행동</small><strong>{{ trade.action }}</strong>
+              <small>행동</small>
+              <span class="evidence-action">
+                <StockLogo :stock="trade.security" :size="24" />
+                <strong>{{ trade.action }}</strong>
+              </span>
             </div>
             <AppIcon name="arrow-right" :size="14" />
             <div>
@@ -1263,8 +1274,15 @@ function goToPrinciplesEdit() {
 }
 
 .emotion-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 9px 0;
   font-size: var(--font-size-body);
+}
+
+.emotion-card h3 span {
+  min-width: 0;
 }
 
 .bot-coach {
@@ -1358,6 +1376,16 @@ function goToPrinciplesEdit() {
   display: block;
   font-size: var(--font-size-caption);
   line-height: 1.35;
+}
+
+.evidence-action {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.evidence-action strong {
+  min-width: 0;
 }
 
 .evidence-flow > .app-icon {

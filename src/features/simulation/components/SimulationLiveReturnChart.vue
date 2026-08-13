@@ -7,6 +7,7 @@ import { SVGRenderer } from 'echarts/renderers'
 
 import AppIcon from '@/shared/components/AppIcon.vue'
 import { getSecurityDisplayName } from '@/features/simulation/utils/securityDisplayName'
+import StockLogo from '@/shared/components/StockLogo.vue'
 
 echarts.use([
   GridComponent,
@@ -387,12 +388,14 @@ function getTradeDirection(tradeSide) {
 }
 
 function getTradeSideLabel(tradeSide) {
-  return {
-    BUY: '매수',
-    SELL: '매도',
-    ADD: '추가 매수',
-    REDUCE: '비중 축소',
-  }[tradeSide] ?? tradeSide
+  return (
+    {
+      BUY: '매수',
+      SELL: '매도',
+      ADD: '추가 매수',
+      REDUCE: '비중 축소',
+    }[tradeSide] ?? tradeSide
+  )
 }
 
 const visibleTransactions = computed(() =>
@@ -407,16 +410,16 @@ const visibleTransactions = computed(() =>
     .sort((a, b) => new Date(b.tradedAt).getTime() - new Date(a.tradedAt).getTime()),
 )
 
-const selectedPositionSnapshotDate = computed(() =>
-  performanceByVariant.value
-    .get(Number(selectedTradeParticipantId.value))
-    ?.filter(
-      (snapshot) =>
-        new Date(
-          `${snapshot.snapshotDate || snapshot.performanceDate}T23:59:59`,
-        ).getTime() <= currentSimulationTimestamp.value,
-    )
-    .at(-1)?.snapshotDate,
+const selectedPositionSnapshotDate = computed(
+  () =>
+    performanceByVariant.value
+      .get(Number(selectedTradeParticipantId.value))
+      ?.filter(
+        (snapshot) =>
+          new Date(`${snapshot.snapshotDate || snapshot.performanceDate}T23:59:59`).getTime() <=
+          currentSimulationTimestamp.value,
+      )
+      .at(-1)?.snapshotDate,
 )
 
 const currentHoldings = computed(() => {
@@ -483,9 +486,7 @@ const currentHoldings = computed(() => {
       const averagePrice = holding.costBasis / holding.quantity
       const currentPrice = holding.currentPrice || averagePrice
       const valuation = currentPrice * holding.quantity
-      const returnPercent = averagePrice
-        ? ((currentPrice - averagePrice) / averagePrice) * 100
-        : 0
+      const returnPercent = averagePrice ? ((currentPrice - averagePrice) / averagePrice) * 100 : 0
 
       return {
         ...holding,
@@ -1117,6 +1118,7 @@ onBeforeUnmount(() => {
           <i></i>
           <div class="trade-timeline__body">
             <div class="trade-timeline__title">
+              <StockLogo :stock="trade" :size="24" />
               <strong>{{ getSecurityDisplayName(trade) }}</strong>
               <span>{{ getTradeSideLabel(trade.tradeSide) }}</span>
               <em>{{ formatCurrency(trade.unitPrice * trade.quantity) }}</em>
@@ -1140,9 +1142,12 @@ onBeforeUnmount(() => {
       <div v-else class="holding-list" role="tabpanel">
         <article v-for="holding in currentHoldings" :key="holding.securityId" class="holding-card">
           <div class="holding-card__top">
-            <div>
-              <strong>{{ holding.displayName }}</strong>
-              <span>{{ holding.quantity }}주</span>
+            <div class="holding-card__identity">
+              <StockLogo :stock="holding" :size="30" />
+              <div class="holding-card__copy">
+                <strong>{{ holding.displayName }}</strong>
+                <span>{{ holding.quantity }}주</span>
+              </div>
             </div>
             <strong
               :class="{ positive: holding.returnPercent > 0, negative: holding.returnPercent < 0 }"
@@ -1772,7 +1777,14 @@ onBeforeUnmount(() => {
   gap: 10px;
 }
 
-.holding-card__top > div {
+.holding-card__identity {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.holding-card__copy {
   display: flex;
   min-width: 0;
   flex-direction: column;
