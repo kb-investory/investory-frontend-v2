@@ -1,6 +1,6 @@
-import { getLedgerHoldings, getLedgerTrades } from '@/features/ledger/api/ledgerApi'
-import { getJournalById, getJournalEntries } from '@/features/journal/api/journalApi'
+import { getLedgerHoldings } from '@/features/ledger/api/ledgerApi'
 import { searchSecurities } from '@/features/market/api/marketApi'
+import { request } from '@/shared/api/client'
 
 const RECENT_STOCKS_KEY = 'investory-journal-recent-stocks'
 
@@ -17,47 +17,16 @@ function readRecentSecurityCodes() {
   }
 }
 
-async function getTradeNotes(trades, securityId) {
-  const tradeDates = trades
-    .map((trade) => trade.tradedAt?.slice(0, 10))
-    .filter(Boolean)
-    .sort()
+async function getTradeTimeline({ securityId, startDate, endDate, page, size }) {
+  const searchParams = new URLSearchParams({
+    securityId: String(securityId),
+    page: String(page),
+    size: String(size),
+  })
+  if (startDate) searchParams.set('startDate', startDate)
+  if (endDate) searchParams.set('endDate', endDate)
 
-  if (!tradeDates.length) return new Map()
-
-  try {
-    const entriesData = await getJournalEntries({
-      startDate: tradeDates[0],
-      endDate: tradeDates.at(-1),
-    })
-    const entries = (entriesData?.entries || []).filter(
-      (entry) => entry.tradeNoteCount == null || entry.tradeNoteCount > 0,
-    )
-    const detailResults = await Promise.allSettled(
-      entries.map((entry) => getJournalById(entry.journalId)),
-    )
-    const notesByTradeId = new Map()
-
-    detailResults.forEach((result, index) => {
-      if (result.status !== 'fulfilled') return
-
-      const entry = entries[index]
-      const detailTrades = result.value?.trades || []
-      detailTrades
-        .filter((trade) => trade.securityId === securityId && trade.note?.rationaleText)
-        .forEach((trade) => {
-          notesByTradeId.set(trade.tradeId, {
-            ...trade.note,
-            journalId: entry.journalId,
-            journalDate: entry.journalDate,
-          })
-        })
-    })
-
-    return notesByTradeId
-  } catch {
-    return new Map()
-  }
+  return await request(`/journal/trades?${searchParams.toString()}`)
 }
 
 export async function getJournalStockSearchData() {
@@ -129,21 +98,16 @@ export async function getJournalStockTimeline({
   }
 
   const [tradeData, holdingsData] = await Promise.all([
-    getLedgerTrades({
+    getTradeTimeline({
       securityId: targetSecurityId,
-      from: startDate,
-      to: endDate,
+      startDate,
+      endDate,
       page,
       size,
     }),
     getLedgerHoldings(),
   ])
-  const ledgerTrades = tradeData?.content || []
-  const notesByTradeId = await getTradeNotes(ledgerTrades, targetSecurityId)
-  const trades = ledgerTrades.map((trade) => ({
-    ...trade,
-    note: trade.note ?? notesByTradeId.get(trade.tradeId) ?? null,
-  }))
+  const trades = tradeData?.trades || []
   const holdingData = (holdingsData?.holdings || []).find(
     (holding) => holding.securityId === targetSecurityId,
   )
@@ -157,7 +121,7 @@ export async function getJournalStockTimeline({
   )
 
   return {
-    security: targetSecurity,
+    security: tradeData?.security ?? targetSecurity,
     holding: {
       firstPurchasedAt: firstPurchase?.tradedAt?.slice(0, 10) ?? null,
       currentQuantity: Number(holdingData?.quantity ?? calculatedQuantity),
