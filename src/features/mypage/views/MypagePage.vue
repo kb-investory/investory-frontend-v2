@@ -176,7 +176,12 @@ onMounted(async () => {
   <div class="mypage-page">
     <PrimaryTabHeader title="마이페이지" flat-bottom>
       <template #right>
-        <button type="button" aria-label="마이페이지 도움말" @click="modal = 'help'">
+        <button
+          class="mypage-page__help"
+          type="button"
+          aria-label="마이페이지 도움말"
+          @click="modal = 'help'"
+        >
           <AppIcon name="circle-help" :size="18" />
         </button>
       </template>
@@ -452,6 +457,28 @@ onMounted(async () => {
   min-height: 100%;
   background: #fff;
   color: #263a3f;
+}
+
+.mypage-page__help {
+  border-color: rgb(67 222 217 / 34%) !important;
+  background: rgb(5 45 56 / 76%) !important;
+  color: #ffffff !important;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.mypage-page__help:hover {
+  border-color: rgb(86 235 229 / 72%) !important;
+  background: #075863 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 20px rgb(22 201 196 / 22%) !important;
+}
+
+.mypage-page__help:focus-visible {
+  outline: 2px solid var(--brand-teal-deep, #087f7c) !important;
+  outline-offset: 2px !important;
 }
 
 .mypage-title {
