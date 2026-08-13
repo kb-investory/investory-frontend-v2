@@ -4,6 +4,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import SimulationLiveReturnChart from '@/features/simulation/components/SimulationLiveReturnChart.vue'
 import SimulationParticipantAvatar from '@/features/simulation/components/SimulationParticipantAvatar.vue'
+import { getSecurityDisplayName } from '@/features/simulation/utils/securityDisplayName'
 
 const props = defineProps({
   participants: {
@@ -64,6 +65,10 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  positionSnapshots: {
+    type: Array,
+    default: null,
+  },
   periodStart: {
     type: String,
     default: '',
@@ -86,21 +91,6 @@ const isPlaying = ref(true)
 const liveChart = ref(null)
 let timer = null
 let lastFrameTime = null
-
-const securityNameById = {
-  101: '삼성전자',
-  102: 'SK하이닉스',
-  103: 'NAVER',
-  104: '카카오',
-  105: '현대차',
-
-  // 레거시 목데이터 종목 ID 호환 지원
-  202: '삼성전자',
-  303: 'NAVER',
-  404: '카카오',
-  505: '현대차',
-  606: '셀트리온',
-}
 
 const timelineDates = computed(() =>
   [
@@ -304,6 +294,19 @@ function formatPeriodDate(date) {
   const [year, month, day] = date.split('-')
   return `${year.slice(-2)}.${month}.${day}.`
 }
+
+function getTradeSideLabel(tradeSide) {
+  return {
+    BUY: '매수',
+    SELL: '매도',
+    ADD: '추가 매수',
+    REDUCE: '비중 축소',
+  }[tradeSide] ?? tradeSide
+}
+
+function getTradeDirection(tradeSide) {
+  return ['BUY', 'ADD'].includes(tradeSide) ? 'buy' : 'sell'
+}
 </script>
 
 <template>
@@ -350,18 +353,14 @@ function formatPeriodDate(date) {
       </span>
       <span class="live-trade-alert__content">
         <small v-if="latestTrade">
-          <b :class="`is-${latestTrade.tradeSide.toLowerCase()}`">
-            {{ latestTrade.tradeSide === 'BUY' ? '매수' : '매도' }}
+          <b :class="`is-${getTradeDirection(latestTrade.tradeSide)}`">
+            {{ getTradeSideLabel(latestTrade.tradeSide) }}
           </b>
           {{ latestTradeParticipant?.variantName ?? '참가자' }}
         </small>
         <small v-else>거래 신호를 기다리고 있어요</small>
         <strong v-if="latestTrade">
-          {{
-            latestTrade.securityName ??
-            securityNameById[latestTrade.securityId] ??
-            `종목 ${latestTrade.securityId}`
-          }}
+          {{ getSecurityDisplayName(latestTrade) }}
           {{ latestTrade.quantity }}주
         </strong>
         <strong v-else>매수·매도가 발생하면 바로 알려드릴게요</strong>
@@ -378,6 +377,7 @@ function formatPeriodDate(date) {
       :participants="participants"
       :daily-performance="dailyPerformance"
       :simulated-trades="simulatedTrades"
+      :position-snapshots="positionSnapshots"
       :initial-capital="initialCapital"
       :progress="progress"
       :speed="speed"

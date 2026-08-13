@@ -159,7 +159,8 @@ export const useMypageStore = defineStore('mypage', () => {
       const actualUser = rankedParticipants[actualUserIndex]
       recentSimulation.value = actualUser
         ? {
-            simulationId: simulationResult.simulationRun?.simulationRunId,
+            simulationId:
+              simulationResult.simulationRunId ?? simulationResult.simulationRun?.simulationRunId,
             rank: actualUserIndex + 1,
             participantCount: rankedParticipants.length,
             participants: rankedParticipants.map((participant, index) => ({

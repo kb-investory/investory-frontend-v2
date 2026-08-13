@@ -6,6 +6,7 @@ import { ROUTE_NAMES } from '@/app/router/route-names'
 import { disconnectSocialAccount, withdrawMember } from '@/features/mypage/api/mypageApi'
 import { useMypageStore } from '@/features/mypage/stores/mypageStore'
 import { useAuthStore } from '@/features/auth/stores/authStore'
+import SimulationParticipantAvatar from '@/features/simulation/components/SimulationParticipantAvatar.vue'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
 import PrimaryTabHeader from '@/shared/components/navigation/PrimaryTabHeader.vue'
@@ -25,61 +26,36 @@ const recentSimulationHeadline = computed(() => {
   const simulation = mypageStore.recentSimulation
   if (!simulation) return ''
 
-  const selectedLabels = simulation.participants
-    .filter((participant) => participant.variantType !== 'ACTUAL_USER')
-    .map(
-      (participant) =>
-        SIMULATION_PARTICIPANT_META[participant.variantType]?.label || participant.variantName,
-    )
+  const winner = simulation.participants.find((participant) => participant.rank === 1)
+  const winnerLabel =
+    SIMULATION_PARTICIPANT_META[winner?.variantType]?.label || winner?.variantName || '참가자'
 
-  return `${selectedLabels.join('·')} 선택 시`
+  return `${simulation.participantCount}명 대결 · ${winnerLabel} 1위`
 })
 
 const SIMULATION_PARTICIPANT_META = Object.freeze({
-  ACTUAL_USER: { label: '실제 나', image: '/assets/images/real-me.png', className: 'actual' },
-  PERSONAL_BOT: { label: '나의 봇', image: '/assets/images/my-bot.png', className: 'bot' },
+  ACTUAL_USER: { label: '실제 나', className: 'actual' },
+  PERSONAL_BOT: { label: '원칙 봇', className: 'bot' },
   FAMOUS_STRATEGY: {
     label: '유명 투자자',
-    image: '/assets/images/famous-investor.png',
     className: 'investor',
   },
-  RANDOM_BOT: { label: '원숭이', image: '/assets/images/monkey.png', className: 'monkey' },
+  RANDOM_BOT: { label: '원숭이', className: 'monkey' },
 })
 
 const podiumParticipants = computed(() => {
   const participants = mypageStore.recentSimulation?.participants || []
-  const participatingTypes = new Set(participants.map((participant) => participant.variantType))
-  const unselectedParticipants = Object.entries(SIMULATION_PARTICIPANT_META)
-    .filter(
-      ([variantType]) => variantType !== 'ACTUAL_USER' && !participatingTypes.has(variantType),
-    )
-    .map(([variantType, meta]) => ({ variantType, ...meta }))
-  let unselectedIndex = 0
+  const displayOrder = [2, 1, 3, 4]
 
-  return [2, 1, 3, 4].map((rank) => {
-    const participant = participants.find((item) => item.rank === rank)
-    if (!participant) {
-      const unselectedParticipant = unselectedParticipants[unselectedIndex]
-      unselectedIndex += 1
-
-      return {
-        rank,
-        empty: true,
-        label: unselectedParticipant?.label || '',
-        image: unselectedParticipant?.image,
-        className: unselectedParticipant?.className || 'empty',
-      }
-    }
-
-    return {
+  return [...participants]
+    .sort((first, second) => displayOrder.indexOf(first.rank) - displayOrder.indexOf(second.rank))
+    .map((participant) => ({
       ...participant,
       ...(SIMULATION_PARTICIPANT_META[participant.variantType] || {
         label: participant.variantName,
-        image: '/assets/images/my-bot.png',
         className: 'bot',
       }),
-    }
-  })
+    }))
 })
 
 const tendencyRoadmapPoints = computed(() => {
@@ -116,12 +92,29 @@ const tendencyRoadmapMessage = computed(() => {
     : '최근에도 투자성향이 안정적으로 유지되고 있어요.'
 })
 
+const podiumGridStyle = computed(() => ({
+  '--participant-count': Math.max(podiumParticipants.value.length, 1),
+}))
+
+function formatSimulationReturn(value) {
+  const number = Number(value) || 0
+  return `${number > 0 ? '+' : ''}${number.toFixed(1)}%`
+}
+
 function goToSection(section) {
   router.push({ name: ROUTE_NAMES.MYPAGE_PLACEHOLDER, params: { section } })
 }
 
 function goToSimulation() {
-  router.push({ name: ROUTE_NAMES.SIMULATION })
+  const simulationId = mypageStore.recentSimulation?.simulationId
+  router.push(
+    simulationId
+      ? {
+          name: ROUTE_NAMES.MYPAGE_SIMULATION_DETAIL,
+          params: { simulationId },
+        }
+      : { name: ROUTE_NAMES.SIMULATION },
+  )
 }
 
 async function confirmLogout() {
@@ -284,28 +277,37 @@ onMounted(async () => {
               <span>{{ recentSimulationHeadline }}</span>
               <strong>실제 나는 {{ mypageStore.recentSimulation.rank }}위예요</strong>
             </p>
-            <div class="simulation-podium" aria-label="시뮬레이션 순위 미리보기">
+            <div
+              class="simulation-podium"
+              :style="podiumGridStyle"
+              :aria-label="`${mypageStore.recentSimulation.participantCount}명 시뮬레이션 순위 미리보기`"
+            >
               <div
                 v-for="participant in podiumParticipants"
-                :key="participant.rank"
+                :key="participant.variantId || participant.variantType"
                 class="simulation-podium__participant"
                 :class="[
                   `simulation-podium__participant--rank-${participant.rank}`,
                   `simulation-podium__participant--${participant.className}`,
-                  { 'simulation-podium__participant--empty': participant.empty },
                 ]"
               >
                 <span
-                  v-if="participant.rank === 1 && !participant.empty"
+                  v-if="participant.rank === 1"
                   class="simulation-podium__crown"
                   aria-label="1위"
                   >👑</span
                 >
                 <span v-else class="simulation-podium__crown-placeholder" aria-hidden="true" />
-                <img v-if="participant.image" :src="participant.image" :alt="participant.label" />
-                <span v-else class="simulation-podium__empty-image" aria-hidden="true" />
+                <SimulationParticipantAvatar
+                  class="simulation-podium__avatar"
+                  :variant-type="participant.variantType"
+                  :size="38"
+                />
                 <small>{{ participant.label }}</small>
-                <strong>{{ participant.empty ? '선택 안 함' : `${participant.rank}위` }}</strong>
+                <strong>
+                  <span>{{ participant.rank }}위</span>
+                  <em>{{ formatSimulationReturn(participant.cumulativeReturnPercent) }}</em>
+                </strong>
               </div>
             </div>
           </template>
@@ -313,11 +315,11 @@ onMounted(async () => {
             <img src="/assets/icons/monkey-question.png" alt="" />
             <div class="summary-empty-state__copy">
               <strong>아직 결과가 없어요</strong>
-              <p>투자봇 4개로<br />첫 대결을 시작해보세요</p>
+              <p>비교 상대를 골라<br />첫 대결을 시작해보세요</p>
             </div>
           </div>
           <span class="summary-card__action summary-card__action--simulation">
-            {{ mypageStore.recentSimulation ? '시뮬레이션 다시하기' : '시뮬레이션 시작하기' }}
+            {{ mypageStore.recentSimulation ? '결과 자세히 보기' : '시뮬레이션 시작하기' }}
             <AppIcon name="arrow-right" :size="11" />
           </span>
         </button>
@@ -814,9 +816,9 @@ onMounted(async () => {
 }
 .simulation-podium {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--participant-count), minmax(0, 1fr));
   align-items: end;
-  gap: 2px;
+  gap: 4px;
   min-height: 100px;
 }
 .simulation-podium__participant {
@@ -829,11 +831,10 @@ onMounted(async () => {
   color: #38596c;
   text-align: center;
 }
-.simulation-podium__participant img,
-.simulation-podium__empty-image {
+.simulation-podium__avatar {
   width: 38px;
-  height: 46px;
-  object-fit: contain;
+  height: 38px;
+  margin: 4px 0;
 }
 .simulation-podium__participant small {
   overflow: hidden;
@@ -846,14 +847,23 @@ onMounted(async () => {
   white-space: nowrap;
 }
 .simulation-podium__participant strong {
-  display: grid;
+  display: flex;
   width: 100%;
   height: 30px;
-  place-items: center;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   border-radius: 7px 7px 3px 3px;
   background: #dfeff4;
   color: #2e657b;
   font-size: 10px;
+  line-height: 1.05;
+}
+.simulation-podium__participant strong em {
+  font-size: 7px;
+  font-style: normal;
+  font-weight: 750;
+  opacity: 0.78;
 }
 .simulation-podium__participant--rank-1 strong {
   height: 42px;
@@ -879,9 +889,6 @@ onMounted(async () => {
   color: #e98d00;
   font-size: 20px;
   line-height: 1;
-}
-.simulation-podium__participant--empty:not(.simulation-podium__participant--rank-4) {
-  opacity: 0.42;
 }
 .simulation-summary-card p:not(.simulation-summary-card__headline) {
   color: #68777a;

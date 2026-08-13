@@ -52,14 +52,14 @@ function buildWeeklyRecordRhythm(weekly, activities, today) {
   )
   const completedDates = new Set(
     activities
-      .filter((activity) => activity.activityDate <= todayKey && activity.tradeCount > 0)
+      .filter((activity) => activity.activityDate <= todayKey)
       .map((activity) => activity.activityDate),
   )
   const weekStart = getWeekStart(today)
   const days = DAY_LABELS.map((label, index) => {
     const date = formatLocalDate(addDays(weekStart, index))
     const tradeCount = activityMap.get(date) ?? 0
-    const completed = date <= todayKey && tradeCount > 0
+    const completed = date <= todayKey && activityMap.has(date)
 
     return {
       date,
@@ -74,6 +74,10 @@ function buildWeeklyRecordRhythm(weekly, activities, today) {
     ...weekly,
     streakDays: getStreakDays(completedDates, today),
     days,
+    description: '투자일지를 작성한 날을 한눈에 확인해요.',
+    insight: completedDates.size
+      ? `이번 주 ${completedDates.size}일의 투자 기록을 남겼어요.`
+      : '이번 주 첫 투자 기록을 남겨보세요.',
   }
 }
 

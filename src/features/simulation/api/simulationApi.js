@@ -48,6 +48,65 @@ function normalizeDailyPerformanceArray(list) {
   return list.map(normalizeSnapshot)
 }
 
+function normalizeSimulatedTrade(trade) {
+  if (!trade) return trade
+
+  return {
+    ...trade,
+    simulatedTradeId: trade.simulatedTradeId ?? trade.simulated_trade_id,
+    simulationVariantId: trade.simulationVariantId ?? trade.simulation_variant_id,
+    securityId: trade.securityId ?? trade.security_id,
+    securityCode: trade.securityCode ?? trade.security_code ?? '',
+    securityName: trade.securityName ?? trade.security_name ?? '',
+    tradeSide: trade.tradeSide ?? trade.trade_side,
+    tradedAt: trade.tradedAt ?? trade.traded_at,
+    unitPrice: trade.unitPrice ?? trade.unit_price,
+    decisionReason: trade.decisionReason ?? trade.decision_reason ?? '',
+  }
+}
+
+function normalizePositionSnapshot(snapshot) {
+  if (!snapshot) return snapshot
+
+  return {
+    ...snapshot,
+    simulationVariantId: snapshot.simulationVariantId ?? snapshot.simulation_variant_id,
+    snapshotDate: snapshot.snapshotDate ?? snapshot.snapshot_date,
+    securityId: snapshot.securityId ?? snapshot.security_id,
+    securityCode: snapshot.securityCode ?? snapshot.security_code ?? '',
+    securityName: snapshot.securityName ?? snapshot.security_name ?? '',
+    averagePrice: snapshot.averagePrice ?? snapshot.average_price ?? 0,
+    currentPrice: snapshot.currentPrice ?? snapshot.current_price ?? 0,
+    marketValue: snapshot.marketValue ?? snapshot.market_value ?? 0,
+    unrealizedPnl: snapshot.unrealizedPnl ?? snapshot.unrealized_pnl ?? 0,
+    returnPercent: snapshot.returnPercent ?? snapshot.return_percent ?? 0,
+  }
+}
+
+function normalizeSimulationResult(data) {
+  if (!data) return data
+
+  const dailyPerformance = normalizeDailyPerformanceArray(
+    data.dailyPerformance || data.dailySnapshots,
+  )
+  const rawSimulatedTrades = data.simulatedTrades ?? data.simulated_trades
+  const simulatedTrades = Array.isArray(rawSimulatedTrades)
+    ? rawSimulatedTrades.map(normalizeSimulatedTrade)
+    : []
+  const rawPositionSnapshots = data.positionSnapshots ?? data.position_snapshots
+  const positionSnapshots = Array.isArray(rawPositionSnapshots)
+    ? rawPositionSnapshots.map(normalizePositionSnapshot)
+    : null
+
+  return {
+    ...data,
+    dailyPerformance,
+    dailySnapshots: dailyPerformance,
+    simulatedTrades,
+    positionSnapshots,
+  }
+}
+
 export async function getSimulationHistory() {
   return await request('/api/v1/simulations/history')
 }
@@ -70,14 +129,7 @@ export async function getSimulationOverview(params = {}) {
 
 export async function getLatestSimulationResult() {
   const data = await request('/api/v1/simulations/latest')
-  const dailyPerformance = normalizeDailyPerformanceArray(
-    data.dailyPerformance || data.dailySnapshots,
-  )
-  return {
-    ...data,
-    dailyPerformance,
-    dailySnapshots: dailyPerformance,
-  }
+  return normalizeSimulationResult(data)
 }
 
 export async function getLatestCompletedSimulationResult() {
@@ -128,26 +180,12 @@ export async function runSimulation(payload = {}) {
     method: 'POST',
     body: JSON.stringify(requestBody),
   })
-  const dailyPerformance = normalizeDailyPerformanceArray(
-    response.dailyPerformance || response.dailySnapshots,
-  )
-  return {
-    ...response,
-    dailyPerformance,
-    dailySnapshots: dailyPerformance,
-  }
+  return normalizeSimulationResult(response)
 }
 
 export async function getSimulationDetail(simulationId) {
   const response = await request(`/api/v1/simulations/${simulationId}`)
-  const dailyPerformance = normalizeDailyPerformanceArray(
-    response.dailyPerformance || response.dailySnapshots,
-  )
-  return {
-    ...response,
-    dailyPerformance,
-    dailySnapshots: dailyPerformance,
-  }
+  return normalizeSimulationResult(response)
 }
 
 // GET /api/v1/simulations/{simulationId}/report

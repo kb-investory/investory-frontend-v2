@@ -26,6 +26,8 @@ export const useSimulationStore = defineStore('simulation', () => {
   const latestResult = ref(null)
   const historyRecords = ref([])
   const simulationReport = ref(null)
+  const simulationReportLoading = ref(false)
+  const simulationReportError = ref(null)
   const sessions = ref([])
   const messages = ref([])
   const comparators = ref([])
@@ -44,10 +46,17 @@ export const useSimulationStore = defineStore('simulation', () => {
   let compileRequestId = 0
   let initialCapitalRequestId = 0
 
-  // Minimum required days for simulation qualification is 7 days
-  const MIN_REQUIRED_DAYS = 7
+  // Minimum required record days for simulation qualification
+  const MIN_REQUIRED_DAYS = 90
 
-  const eligibleDays = computed(() => overview.value?.eligiblePeriod?.totalDays ?? 0)
+  // 시뮬레이션 적격 기간은 일지를 작성한 날짜 수가 아니라 실제 시세가 존재하는
+  // 거래일 수를 기준으로 판단한다. 초기 스냅샷 존재 여부는 API의 isReady가 검증한다.
+  const eligibleDays = computed(
+    () =>
+      overview.value?.priceDataRange?.tradingDayCount ??
+      overview.value?.eligiblePeriod?.totalDays ??
+      0,
+  )
   const simulationAccountId = computed(
     () => overview.value?.initialCapitalBreakdown?.accountId ?? overview.value?.accountId ?? null,
   )
@@ -106,6 +115,9 @@ export const useSimulationStore = defineStore('simulation', () => {
     const filteredPerformance = (result.dailyPerformance ?? result.dailySnapshots ?? []).filter(
       isAllowedSnapshot,
     )
+    const filteredPositionSnapshots = Array.isArray(result.positionSnapshots)
+      ? result.positionSnapshots.filter(isAllowedSnapshot)
+      : null
 
     return {
       ...result,
@@ -117,6 +129,7 @@ export const useSimulationStore = defineStore('simulation', () => {
       totalTradesCount: filteredTrades.length,
       dailyPerformance: filteredPerformance,
       dailySnapshots: filteredPerformance,
+      positionSnapshots: filteredPositionSnapshots,
     }
   }
 
@@ -238,6 +251,8 @@ export const useSimulationStore = defineStore('simulation', () => {
       return null
     }
 
+    simulationReportLoading.value = true
+    simulationReportError.value = null
     try {
       simulationReport.value = await queryClient.fetchQuery({
         queryKey: queryKeys.simulation.report(resolvedId),
@@ -246,8 +261,11 @@ export const useSimulationStore = defineStore('simulation', () => {
       })
       return simulationReport.value
     } catch (error) {
+      simulationReportError.value = error
       console.error('Failed to fetch simulation report:', error)
       return null
+    } finally {
+      simulationReportLoading.value = false
     }
   }
 
@@ -352,6 +370,8 @@ export const useSimulationStore = defineStore('simulation', () => {
         participantTypes: activeParticipantTypes.value,
       })
       latestResult.value = filterResultBySelectedParticipants(result)
+      simulationReport.value = null
+      simulationReportError.value = null
       await queryClient.invalidateQueries({
         queryKey: queryKeys.simulation.overview(),
         exact: true,
@@ -369,7 +389,14 @@ export const useSimulationStore = defineStore('simulation', () => {
     if (!latestResult.value) return null
     latestResult.value = await saveLatestCompletedSimulationResult(latestResult.value)
     queryClient.setQueryData(queryKeys.simulation.latestCompleted(), latestResult.value)
-    await queryClient.invalidateQueries({ queryKey: queryKeys.simulation.overview(), exact: true })
+    void queryClient.invalidateQueries({
+      queryKey: queryKeys.simulation.overview(),
+      exact: true,
+    })
+    void queryClient.invalidateQueries({
+      queryKey: queryKeys.mypage.overview(),
+      exact: true,
+    })
     return latestResult.value
   }
 
@@ -424,6 +451,8 @@ export const useSimulationStore = defineStore('simulation', () => {
     latestResult.value = null
     historyRecords.value = []
     simulationReport.value = null
+    simulationReportLoading.value = false
+    simulationReportError.value = null
     sessions.value = []
     messages.value = []
     comparators.value = []
@@ -445,6 +474,8 @@ export const useSimulationStore = defineStore('simulation', () => {
     latestResult,
     historyRecords,
     simulationReport,
+    simulationReportLoading,
+    simulationReportError,
     sessions,
     messages,
     comparators,

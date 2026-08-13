@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import SimulationParticipantAvatar from '@/features/simulation/components/SimulationParticipantAvatar.vue'
+import { getSecurityDisplayName } from '@/features/simulation/utils/securityDisplayName'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
 
@@ -15,12 +16,43 @@ const props = defineProps({
     type: Object,
     default: null,
   },
+  reportLoading: {
+    type: Boolean,
+    default: false,
+  },
+  reportError: {
+    type: Object,
+    default: null,
+  },
 })
 
 const emit = defineEmits(['restart'])
 const router = useRouter()
 const selectedMetric = ref('return')
 const selectedPrinciples = ref(['long', 'diversify', 'stopLoss'])
+
+const simulatedTradeById = computed(
+  () =>
+    new Map(
+      (props.latestResult?.simulatedTrades ?? []).map((trade) => [
+        String(trade.simulatedTradeId),
+        trade,
+      ]),
+    ),
+)
+
+function getReportTrade(reportItem) {
+  return simulatedTradeById.value.get(String(reportItem.tradeId)) ?? reportItem
+}
+
+function getTradeSideLabel(tradeSide) {
+  return {
+    BUY: '매수',
+    SELL: '매도',
+    ADD: '추가 매수',
+    REDUCE: '비중 축소',
+  }[tradeSide] ?? tradeSide
+}
 
 const participantMeta = {
   ACTUAL_USER: { shortName: '내 투자', color: '#f07a62', volatility: 12.8 },
@@ -39,7 +71,7 @@ const emotionalDecisions = computed(() =>
   (props.report?.decisionReviews ?? []).map((decision) => ({
     ...decision,
     date: decision.tradedAt?.slice(5, 10).replace('-', '.') ?? '',
-    stock: decision.securityName,
+    stock: getSecurityDisplayName(getReportTrade(decision)),
     action: decision.actionSummary,
     tag: decision.emotionLabel,
     tone:
@@ -54,12 +86,25 @@ const emotionalDecisions = computed(() =>
 )
 
 const evidenceTrades = computed(() =>
-  (props.report?.evidenceReviews ?? []).map((trade) => ({
-    ...trade,
-    score: trade.confidenceScore,
-    label: trade.confidenceLabel,
-    tone: trade.confidenceScore >= 70 ? 'high' : trade.confidenceScore >= 40 ? 'medium' : 'low',
-  })),
+  (props.report?.evidenceReviews ?? []).map((review) => {
+    const trade = getReportTrade(review)
+    const hasSecurityFields = trade.securityName?.trim() || trade.securityCode?.trim()
+
+    return {
+      ...review,
+      action: hasSecurityFields
+        ? `${getSecurityDisplayName(trade)} ${getTradeSideLabel(trade.tradeSide)}`
+        : review.action,
+      score: review.confidenceScore,
+      label: review.confidenceLabel,
+      tone:
+        review.confidenceScore >= 70
+          ? 'high'
+          : review.confidenceScore >= 40
+            ? 'medium'
+            : 'low',
+    }
+  }),
 )
 
 const principleMeta = {
@@ -147,6 +192,58 @@ const actualReturn = computed(
     actualParticipant.value?.cumulativeReturnPercent ??
     0,
 )
+
+const benchmarkStatus = computed(() => props.latestResult?.benchmarkData?.status ?? '')
+
+const marketBenchmarks = computed(() => {
+  const marketOrder = { KOSPI: 0, KOSDAQ: 1 }
+
+  return (props.latestResult?.benchmarks ?? [])
+    .map((benchmark) => {
+      const market = String(benchmark.benchmark ?? '').startsWith('KOSDAQ') ? 'KOSDAQ' : 'KOSPI'
+      const returnPercent = Number(benchmark.returnPercent) || 0
+      const isFallback =
+        String(benchmark.benchmark ?? '').includes('EQUAL_WEIGHT') ||
+        String(benchmark.method ?? '').includes('동일가중')
+
+      return {
+        ...benchmark,
+        market,
+        returnPercent,
+        isFallback,
+        sourceLabel: isFallback
+          ? '대체 벤치마크'
+          : benchmarkStatus.value === 'PARTIAL'
+            ? '일부 시장 데이터 보완'
+            : '실제 시장지수',
+        gapFromActual: actualReturn.value - returnPercent,
+      }
+    })
+    .sort((a, b) => marketOrder[a.market] - marketOrder[b.market])
+})
+
+const benchmarkScale = computed(() =>
+  Math.max(
+    1,
+    ...marketBenchmarks.value.map((benchmark) => Math.abs(benchmark.returnPercent)),
+    Math.abs(actualReturn.value),
+  ),
+)
+
+function getBenchmarkBarStyle(returnPercent) {
+  const width = Math.min((Math.abs(returnPercent) / benchmarkScale.value) * 50, 50)
+  return {
+    left: returnPercent >= 0 ? '50%' : `${50 - width}%`,
+    width: `${width}%`,
+  }
+}
+
+function getMarketComparisonText(gap) {
+  if (Math.abs(gap) < 0.05) return '내 투자와 같은 수준'
+  return gap > 0
+    ? `내 투자가 ${Math.abs(gap).toFixed(1)}%p 높아요`
+    : `시장이 ${Math.abs(gap).toFixed(1)}%p 높아요`
+}
 const principleReturn = computed(
   () =>
     props.report?.learningInsights?.principleReturnPercent ??
@@ -275,6 +372,11 @@ function formatPercent(value, absolute = false) {
   return `${prefix}${Math.abs(number).toFixed(1)}%`
 }
 
+function formatSignedPercent(value) {
+  const number = Number(value ?? 0)
+  return `${number > 0 ? '+' : ''}${number.toFixed(1)}%`
+}
+
 function togglePrinciple(id) {
   selectedPrinciples.value = selectedPrinciples.value.includes(id)
     ? selectedPrinciples.value.filter((item) => item !== id)
@@ -302,6 +404,21 @@ function goToPrinciplesEdit() {
         </div>
       </div>
     </header>
+
+    <div v-if="reportLoading" class="report-status" role="status">
+      <AppIcon name="loader-circle" :size="18" class="report-status__spinner" />
+      <div>
+        <strong>복기 리포트를 만들고 있어요</strong>
+        <span>성과 결과는 먼저 확인할 수 있습니다.</span>
+      </div>
+    </div>
+    <div v-else-if="reportError" class="report-status report-status--error" role="alert">
+      <AppIcon name="circle-alert" :size="18" />
+      <div>
+        <strong>복기 리포트를 불러오지 못했어요</strong>
+        <span>성과 결과는 정상적으로 확인할 수 있습니다.</span>
+      </div>
+    </div>
 
     <section class="report-section performance-section">
       <div class="section-heading">
@@ -382,6 +499,61 @@ function goToPrinciplesEdit() {
             <span>MDD {{ formatPercent(participant.mddPercent) }}</span>
           </div>
         </div>
+      </div>
+
+      <div class="market-benchmark-panel">
+        <div class="market-benchmark-panel__heading">
+          <div>
+            <span>시장 벤치마크</span>
+            <h3>KOSPI·KOSDAQ과 비교</h3>
+          </div>
+          <span class="actual-return-chip">내 투자 {{ formatSignedPercent(actualReturn) }}</span>
+        </div>
+
+        <div v-if="marketBenchmarks.length" class="market-benchmark-list">
+          <article
+            v-for="benchmark in marketBenchmarks"
+            :key="benchmark.benchmark"
+            class="market-benchmark-card"
+            :title="benchmark.method"
+          >
+            <div class="market-benchmark-card__top">
+              <div>
+                <strong>{{ benchmark.market }}</strong>
+                <small>{{ benchmark.method }}</small>
+              </div>
+              <span :class="{ 'is-fallback': benchmark.isFallback }">
+                {{ benchmark.sourceLabel }}
+              </span>
+            </div>
+
+            <div class="market-benchmark-card__value">
+              <strong
+                :class="{
+                  positive: benchmark.returnPercent > 0,
+                  negative: benchmark.returnPercent < 0,
+                }"
+              >
+                {{ formatSignedPercent(benchmark.returnPercent) }}
+              </strong>
+              <span>{{ getMarketComparisonText(benchmark.gapFromActual) }}</span>
+            </div>
+
+            <div class="benchmark-return-track" aria-hidden="true">
+              <i></i>
+              <b
+                :class="{ negative: benchmark.returnPercent < 0 }"
+                :style="getBenchmarkBarStyle(benchmark.returnPercent)"
+              ></b>
+            </div>
+
+            <small v-if="benchmark.securityCount" class="benchmark-security-count">
+              투자 가능 종목 {{ benchmark.securityCount }}개 기준
+            </small>
+          </article>
+        </div>
+
+        <p v-else class="market-benchmark-empty">시장 벤치마크 데이터가 없습니다.</p>
       </div>
     </section>
 
@@ -584,6 +756,49 @@ function goToPrinciplesEdit() {
   color: #7c8d94;
   font-size: var(--font-size-caption);
   line-height: 1.45;
+}
+
+.report-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 14px;
+  border: 1px solid #cfe8e6;
+  border-radius: 14px;
+  background: #f2fbfa;
+  color: #315158;
+}
+
+.report-status > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.report-status strong {
+  font-size: var(--font-size-body);
+}
+
+.report-status span {
+  color: #66777d;
+  font-size: var(--font-size-caption);
+}
+
+.report-status--error {
+  border-color: #f0d6d0;
+  background: #fff7f5;
+  color: #a54a39;
+}
+
+.report-status__spinner {
+  flex: 0 0 auto;
+  animation: report-spin 1s linear infinite;
+}
+
+@keyframes report-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .winner-chip {
@@ -804,6 +1019,161 @@ function goToPrinciplesEdit() {
   display: flex;
   justify-content: space-between;
   color: #8a989e;
+  font-size: var(--font-size-caption);
+}
+
+.market-benchmark-panel {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid #dfe8ea;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #f7fbfb 0%, #f7f9fc 100%);
+}
+
+.market-benchmark-panel__heading,
+.market-benchmark-card__top,
+.market-benchmark-card__value {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.market-benchmark-panel__heading > div,
+.market-benchmark-card__top > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.market-benchmark-panel__heading > div > span {
+  color: #0b8f8b;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.market-benchmark-panel__heading h3 {
+  margin: 2px 0 0;
+  font-size: var(--font-size-body);
+}
+
+.actual-return-chip {
+  padding: 6px 8px;
+  border-radius: 999px;
+  background: #fff;
+  color: #df6a55;
+  font-size: var(--font-size-caption);
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgb(38 58 67 / 7%);
+}
+
+.market-benchmark-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.market-benchmark-card {
+  padding: 12px;
+  border: 1px solid #e3eaec;
+  border-radius: 13px;
+  background: #fff;
+}
+
+.market-benchmark-card__top strong {
+  font-size: var(--font-size-caption);
+  letter-spacing: 0.03em;
+}
+
+.market-benchmark-card__top small {
+  margin-top: 2px;
+  color: #839198;
+  font-size: 10px;
+}
+
+.market-benchmark-card__top > span {
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: #e9f7f5;
+  color: #087f7c;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.market-benchmark-card__top > span.is-fallback {
+  background: #fff5dc;
+  color: #9a6b00;
+}
+
+.market-benchmark-card__value {
+  margin-top: 10px;
+}
+
+.market-benchmark-card__value > strong {
+  color: #53646b;
+  font-size: 22px;
+  letter-spacing: -0.03em;
+}
+
+.market-benchmark-card__value > strong.positive {
+  color: #d85d53;
+}
+
+.market-benchmark-card__value > strong.negative {
+  color: #3978c5;
+}
+
+.market-benchmark-card__value > span {
+  color: #65767d;
+  font-size: var(--font-size-caption);
+  font-weight: 700;
+}
+
+.benchmark-return-track {
+  position: relative;
+  height: 7px;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #edf1f2;
+}
+
+.benchmark-return-track > i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: #aebbc0;
+  z-index: 1;
+}
+
+.benchmark-return-track > b {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  background: #df6a5e;
+}
+
+.benchmark-return-track > b.negative {
+  background: #4b82c5;
+}
+
+.benchmark-security-count {
+  display: block;
+  margin-top: 7px;
+  color: #89979d;
+  font-size: 10px;
+}
+
+.market-benchmark-empty {
+  margin: 12px 0 0;
+  padding: 14px;
+  border-radius: 12px;
+  background: #fff;
+  color: #839198;
+  text-align: center;
   font-size: var(--font-size-caption);
 }
 

@@ -56,7 +56,7 @@ export function useSimulationFlow(simulationStore, pageRoot) {
     }
 
     if (step === 'result') {
-      await simulationStore.fetchSimulationReport()
+      void simulationStore.fetchSimulationReport()
     }
   }
 
@@ -95,8 +95,8 @@ export function useSimulationFlow(simulationStore, pageRoot) {
     return navigateToStep('live')
   }
 
-  async function finishLiveSimulation() {
-    await simulationStore.completeSimulation()
+  function finishLiveSimulation() {
+    void simulationStore.completeSimulation()
     return navigateToStep('result')
   }
 

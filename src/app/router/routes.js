@@ -268,7 +268,7 @@ export const routes = [
   {
     path: '/mypage/simulations/:simulationId',
     name: ROUTE_NAMES.MYPAGE_SIMULATION_DETAIL,
-    component: () => import('@/features/mypage/views/MypagePlaceholderPage.vue'),
+    component: () => import('@/features/mypage/views/MypageSimulationDetailPage.vue'),
     meta: { title: '시뮬레이션 결과', layout: 'full-bleed', hideBottomNav: true },
   },
   {
