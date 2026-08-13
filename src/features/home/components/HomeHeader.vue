@@ -36,16 +36,11 @@ defineEmits(['notification'])
 
 <style scoped>
 .home-header {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 40;
   width: 100%;
   margin: 0;
-  background: #ffffff;
-}
-
-.home-header--dark {
-  background: #031f28;
+  background: transparent;
 }
 
 .home-header :deep(.primary-app-header) {
