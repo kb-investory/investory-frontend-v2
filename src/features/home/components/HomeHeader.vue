@@ -75,6 +75,17 @@ defineEmits(['notification'])
   color: #ffffff;
   background: rgba(5, 45, 56, 0.76);
   box-shadow: 0 0 18px rgba(15, 207, 200, 0.12);
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.home-header--dark :deep(.primary-app-header button:hover) {
+  border-color: rgba(86, 235, 229, 0.72);
+  color: #ffffff;
+  background: #075863;
+  box-shadow: 0 0 20px rgba(22, 201, 196, 0.22);
 }
 
 .home-header__button {

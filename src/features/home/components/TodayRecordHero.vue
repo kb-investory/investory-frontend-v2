@@ -49,9 +49,6 @@ const titleParts = computed(() => {
             {{ titleParts.highlight }}
           </em>
         </h1>
-        <p class="today-record__description">
-          {{ today.stockCount }}개 종목 · 아직 근거 {{ today.missingReasons }}건이 남아 있어요
-        </p>
       </div>
 
       <svg class="today-record__graph" viewBox="0 0 210 128" aria-hidden="true">
@@ -153,8 +150,7 @@ const titleParts = computed(() => {
 }
 
 .today-record__eyebrow,
-.today-record__title,
-.today-record__description {
+.today-record__title {
   margin: 0;
 }
 
@@ -188,13 +184,6 @@ const titleParts = computed(() => {
 
 .today-record__title em.is-highlighted {
   color: #36ddd5;
-}
-
-.today-record__description {
-  margin-top: 5px;
-  color: #c0d1d5;
-  font-size: 13px;
-  line-height: 1.35;
 }
 
 .today-record__graph {
@@ -231,7 +220,7 @@ const titleParts = computed(() => {
   display: grid;
   min-height: 72px;
   grid-template-columns: repeat(4, 1fr);
-  margin: -34px 16px 0;
+  margin: -36px 16px 0;
   border: 1px solid #b8e7e4;
   border-radius: 20px;
   background: #ffffff;
