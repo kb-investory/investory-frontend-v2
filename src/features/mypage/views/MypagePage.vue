@@ -8,7 +8,7 @@ import { useMypageStore } from '@/features/mypage/stores/mypageStore'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
-import PrimaryAppHeader from '@/shared/components/navigation/PrimaryAppHeader.vue'
+import PrimaryTabHeader from '@/shared/components/navigation/PrimaryTabHeader.vue'
 
 const router = useRouter()
 const mypageStore = useMypageStore()
@@ -174,15 +174,13 @@ onMounted(async () => {
 
 <template>
   <div class="mypage-page">
-    <PrimaryAppHeader>
+    <PrimaryTabHeader title="마이페이지" flat-bottom>
       <template #right>
         <button type="button" aria-label="마이페이지 도움말" @click="modal = 'help'">
           <AppIcon name="circle-help" :size="18" />
         </button>
       </template>
-    </PrimaryAppHeader>
-
-    <h1 class="mypage-title">마이페이지</h1>
+    </PrimaryTabHeader>
 
     <BaseLoading v-if="mypageStore.loading && !mypageStore.profile" class="mypage-loading" />
 
@@ -251,11 +249,7 @@ onMounted(async () => {
                     class="tendency-roadmap__flag"
                     :d="`M ${point.x} ${point.y - 17} L ${point.x + 10} ${point.y - 14} L ${point.x} ${point.y - 10} Z`"
                   />
-                  <circle
-                    :cx="point.x"
-                    :cy="point.y"
-                    :r="point.isLatest ? 5 : 3.5"
-                  />
+                  <circle :cx="point.x" :cy="point.y" :r="point.isLatest ? 5 : 3.5" />
                   <text :x="point.x" y="48" text-anchor="middle">{{ point.month }}</text>
                 </g>
               </svg>
@@ -471,9 +465,12 @@ onMounted(async () => {
   min-height: 520px;
 }
 .mypage-content {
+  position: relative;
+  z-index: 4;
   display: grid;
   gap: 14px;
-  padding: 8px 16px 24px;
+  margin-top: -58px;
+  padding: 0 16px 24px;
 }
 
 .profile-summary {
@@ -483,18 +480,16 @@ onMounted(async () => {
   gap: 13px;
   min-height: 116px;
   padding: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid #b9e4e2;
   border-radius: 24px;
-  background:
-    radial-gradient(circle at 88% 30%, rgba(35, 198, 201, 0.2), transparent 30%),
-    linear-gradient(135deg, #102f4b 0%, #0c4674 100%);
-  color: #fff;
-  box-shadow: 0 12px 26px rgba(23, 67, 101, 0.2);
+  background: #ffffff;
+  color: #263a43;
+  box-shadow: 0 12px 26px rgb(2 35 44 / 13%);
 }
 .profile-summary__avatar {
   width: 60px;
   height: 60px;
-  border: 2px solid rgba(255, 255, 255, 0.22);
+  border: 2px solid #a9dedb;
   border-radius: 19px;
   background: linear-gradient(145deg, #13b8af, #0a8f91);
   object-fit: cover;
@@ -515,21 +510,21 @@ onMounted(async () => {
 .profile-summary__copy > div > span {
   padding: 4px 8px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #10b5aa, #11a0a1);
-  box-shadow: inset 0 1px rgba(255, 255, 255, 0.22);
+  background: #e7f8f6;
+  color: #087f7c;
   font-size: var(--font-size-caption);
   font-weight: 800;
 }
 .profile-summary p {
   margin: 5px 0;
-  color: #cfe1ec;
+  color: #6f7e84;
   font-size: var(--font-size-caption);
 }
 .profile-summary small {
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #daeaf3;
+  color: #60747b;
   font-size: var(--font-size-caption);
 }
 .provider-dot {
@@ -556,8 +551,10 @@ onMounted(async () => {
   height: 34px;
   place-items: center;
   border: 0;
-  background: transparent;
-  color: #fff;
+  border: 1px solid #c9e7e5;
+  border-radius: 12px;
+  background: #f1fbfa;
+  color: #087f7c;
   cursor: pointer;
 }
 

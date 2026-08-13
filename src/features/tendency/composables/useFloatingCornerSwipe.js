@@ -21,17 +21,9 @@ export function useFloatingCornerSwipe(storageKey, defaultPosition = 'bottom-rig
   function getNextPosition(deltaX, deltaY) {
     const [currentVertical, currentHorizontal] = position.value.split('-')
     const vertical =
-      Math.abs(deltaY) >= SWIPE_THRESHOLD
-        ? deltaY < 0
-          ? 'top'
-          : 'bottom'
-        : currentVertical
+      Math.abs(deltaY) >= SWIPE_THRESHOLD ? (deltaY < 0 ? 'top' : 'bottom') : currentVertical
     const horizontal =
-      Math.abs(deltaX) >= SWIPE_THRESHOLD
-        ? deltaX < 0
-          ? 'left'
-          : 'right'
-        : currentHorizontal
+      Math.abs(deltaX) >= SWIPE_THRESHOLD ? (deltaX < 0 ? 'left' : 'right') : currentHorizontal
 
     return `${vertical}-${horizontal}`
   }

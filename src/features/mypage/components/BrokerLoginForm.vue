@@ -7,7 +7,6 @@ import {
   CircleCheck,
   Eye,
   EyeOff,
-  Keyboard,
   LoaderCircle,
   ShieldCheck,
   TriangleAlert,
@@ -30,7 +29,6 @@ const emit = defineEmits(['submit', 'continue'])
 const loginId = ref('')
 const password = ref('')
 const showPassword = ref(false)
-const useSecurityKeyboard = ref(false)
 const agreed = ref(false)
 const touched = reactive({
   loginId: false,
@@ -156,18 +154,6 @@ function handleSubmit() {
         <small v-if="passwordError" role="alert">{{ passwordError }}</small>
       </label>
     </div>
-
-    <button
-      class="security-keyboard"
-      :class="{ 'security-keyboard--active': useSecurityKeyboard }"
-      type="button"
-      :aria-pressed="useSecurityKeyboard"
-      :disabled="isSubmitting"
-      @click="useSecurityKeyboard = !useSecurityKeyboard"
-    >
-      <Keyboard :size="17" />
-      <span>보안 키패드 사용</span>
-    </button>
 
     <div class="agreement">
       <label class="agreement__row">
@@ -302,26 +288,6 @@ function handleSubmit() {
 .agreement__error {
   color: #d33a45;
   font-size: var(--font-size-caption);
-}
-
-.security-keyboard {
-  display: inline-flex;
-  align-items: center;
-  justify-self: end;
-  gap: 6px;
-  padding: 6px 2px;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--brand-teal-deep);
-  font-size: var(--font-size-body);
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.security-keyboard--active,
-.security-keyboard:hover {
-  color: var(--teal-deep);
 }
 
 .agreement {

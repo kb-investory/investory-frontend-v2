@@ -228,8 +228,12 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
         </section>
 
         <section class="journal-create-page__step-card" aria-labelledby="thought-step-title">
-          <header class="journal-create-page__step-header journal-create-page__step-header--thought">
-            <span class="journal-create-page__step-number journal-create-page__step-number--dark">2</span>
+          <header
+            class="journal-create-page__step-header journal-create-page__step-header--thought"
+          >
+            <span class="journal-create-page__step-number journal-create-page__step-number--dark"
+              >2</span
+            >
             <h2 id="thought-step-title">오늘의 생각을 한 문장부터</h2>
             <span class="journal-create-page__counter">{{ form.marketThought.length }} / 500</span>
           </header>

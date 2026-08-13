@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const moodOptions = [
   {
@@ -40,6 +40,8 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue'])
+const controlRef = ref(null)
+const draggingPointerId = ref(null)
 
 const selectedMood = computed(
   () => moodOptions.find((option) => option.value === props.modelValue) ?? moodOptions[2],
@@ -47,6 +49,51 @@ const selectedMood = computed(
 
 function selectMood(mood) {
   emit('update:modelValue', mood)
+}
+
+function selectNearestMood(clientX) {
+  const optionElements = controlRef.value?.querySelectorAll('.mood-selector__option')
+
+  if (!optionElements?.length) return
+
+  let nearestIndex = 0
+  let nearestDistance = Number.POSITIVE_INFINITY
+
+  optionElements.forEach((optionElement, index) => {
+    const optionRect = optionElement.getBoundingClientRect()
+    const distance = Math.abs(clientX - (optionRect.left + optionRect.width / 2))
+
+    if (distance < nearestDistance) {
+      nearestIndex = index
+      nearestDistance = distance
+    }
+  })
+
+  const nearestMood = moodOptions[nearestIndex]?.value
+
+  if (nearestMood && nearestMood !== props.modelValue) {
+    selectMood(nearestMood)
+  }
+}
+
+function startMoodDrag(event) {
+  draggingPointerId.value = event.pointerId
+  event.currentTarget.setPointerCapture?.(event.pointerId)
+  selectNearestMood(event.clientX)
+}
+
+function moveMoodDrag(event) {
+  if (draggingPointerId.value !== event.pointerId) return
+
+  selectNearestMood(event.clientX)
+}
+
+function finishMoodDrag(event) {
+  if (draggingPointerId.value !== event.pointerId) return
+
+  selectNearestMood(event.clientX)
+  event.currentTarget.releasePointerCapture?.(event.pointerId)
+  draggingPointerId.value = null
 }
 </script>
 
@@ -65,7 +112,14 @@ function selectMood(mood) {
       </Transition>
     </div>
 
-    <div class="mood-selector__control">
+    <div
+      ref="controlRef"
+      class="mood-selector__control"
+      @pointerdown.prevent="startMoodDrag"
+      @pointermove.prevent="moveMoodDrag"
+      @pointerup.prevent="finishMoodDrag"
+      @pointercancel.prevent="finishMoodDrag"
+    >
       <div class="mood-selector__rail" aria-hidden="true" />
 
       <button
@@ -128,6 +182,12 @@ function selectMood(mood) {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   padding-top: 5px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.mood-selector__control:active {
+  cursor: grabbing;
 }
 
 .mood-selector__rail {
