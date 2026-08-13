@@ -47,7 +47,10 @@ async function getLedgerTradesForJournalRange(startDate, endDate) {
     ),
   )
 
-  return [...(firstPage?.content || []), ...remainingResults.flatMap((result) => result?.content || [])]
+  return [
+    ...(firstPage?.content || []),
+    ...remainingResults.flatMap((result) => result?.content || []),
+  ]
     .map((trade) => ({ ...trade, journalDate: formatJournalDate(trade.tradedAt) }))
     .filter(
       (trade) =>
@@ -65,17 +68,32 @@ export function getDefaultJournalDate() {
   return formatLocalDate(new Date())
 }
 
-export async function getJournals() {
-  return getJournalEntries()
+export function getJournalMonthRange(dateKey = getDefaultJournalDate()) {
+  const [year, month] = String(dateKey).split('-').map(Number)
+  const safeYear = Number.isInteger(year) ? year : new Date().getFullYear()
+  const safeMonth = Number.isInteger(month) && month >= 1 && month <= 12 ? month : 1
+  const lastDay = new Date(Date.UTC(safeYear, safeMonth, 0)).getUTCDate()
+  const monthKey = `${safeYear}-${String(safeMonth).padStart(2, '0')}`
+
+  return {
+    startDate: `${monthKey}-01`,
+    endDate: `${monthKey}-${String(lastDay).padStart(2, '0')}`,
+  }
+}
+
+export async function getJournals(params) {
+  return getJournalEntries(params)
 }
 
 export async function getJournalEntries({ startDate, endDate } = {}) {
+  const fallbackRange = getJournalMonthRange(startDate || endDate)
+  const resolvedStartDate = startDate || fallbackRange.startDate
+  const resolvedEndDate = endDate || fallbackRange.endDate
   const searchParams = new URLSearchParams()
-  if (startDate) searchParams.set('startDate', startDate)
-  if (endDate) searchParams.set('endDate', endDate)
+  searchParams.set('startDate', resolvedStartDate)
+  searchParams.set('endDate', resolvedEndDate)
 
-  const query = searchParams.toString()
-  return await request(`/journal/entries${query ? `?${query}` : ''}`)
+  return await request(`/journal/entries?${searchParams.toString()}`)
 }
 
 export async function getCalendarActivity({ year, month, startDate, endDate } = {}) {
