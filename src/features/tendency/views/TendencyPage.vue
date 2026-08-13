@@ -8,11 +8,12 @@ import RecommendationFloating from '@/features/tendency/components/Recommendatio
 import TendencyChangeModal from '@/features/tendency/components/TendencyChangeModal.vue'
 import TendencyDetailModal from '@/features/tendency/components/TendencyDetailModal.vue'
 import TendencyGroupCard from '@/features/tendency/components/TendencyGroupCard.vue'
+import { useFloatingCornerSwipe } from '@/features/tendency/composables/useFloatingCornerSwipe'
 import { useTendencyStore } from '@/features/tendency/stores/tendencyStore'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
-import PrimaryAppHeader from '@/shared/components/navigation/PrimaryAppHeader.vue'
+import PrimaryTabHeader from '@/shared/components/navigation/PrimaryTabHeader.vue'
 import SegmentedControl from '@/shared/components/navigation/SegmentedControl.vue'
 
 const RECOMMENDATION_NOTICE_COLLAPSED_KEY = 'investory:recommendation-notice-collapsed:v4'
@@ -31,15 +32,14 @@ const recommendationNoticeCollapsed = ref(
   window.localStorage.getItem(RECOMMENDATION_NOTICE_COLLAPSED_KEY) !== 'false',
 )
 const reanalysisNoticeCollapsed = ref(true)
-const floatingPosition = ref(window.localStorage.getItem(FLOATING_POSITION_KEY) || 'bottom-right')
-const floatingDragOffset = ref({ x: 0, y: 0 })
-const floatingDragging = ref(false)
-let floatingPointerStart = null
-let suppressFloatingClick = false
-
-const floatingStackStyle = computed(() => ({
-  transform: `translate(${floatingDragOffset.value.x}px, ${floatingDragOffset.value.y}px)`,
-}))
+const {
+  elementRef: floatingStackRef,
+  position: floatingPosition,
+  sliding: floatingSliding,
+  style: floatingStackStyle,
+  startSwipe: startFloatingSwipe,
+  preventClickAfterSwipe: preventFloatingClick,
+} = useFloatingCornerSwipe(FLOATING_POSITION_KEY)
 
 const analysisPeriod = computed(() => {
   const period = tendencyStore.analysis?.period
@@ -172,52 +172,6 @@ function toggleReanalysisNotice() {
   )
 }
 
-function startFloatingDrag(event) {
-  if (event.button !== 0) return
-
-  floatingPointerStart = { x: event.clientX, y: event.clientY }
-  floatingDragging.value = false
-  window.addEventListener('pointermove', moveFloatingStack, { passive: false })
-  window.addEventListener('pointerup', finishFloatingDrag, { once: true })
-}
-
-function moveFloatingStack(event) {
-  if (!floatingPointerStart) return
-
-  const x = event.clientX - floatingPointerStart.x
-  const y = event.clientY - floatingPointerStart.y
-  if (!floatingDragging.value && Math.hypot(x, y) < 8) return
-
-  floatingDragging.value = true
-  floatingDragOffset.value = { x, y }
-  event.preventDefault()
-}
-
-function finishFloatingDrag(event) {
-  window.removeEventListener('pointermove', moveFloatingStack)
-
-  if (floatingDragging.value) {
-    const vertical = event.clientY < window.innerHeight / 2 ? 'top' : 'bottom'
-    const horizontal = event.clientX < window.innerWidth / 2 ? 'left' : 'right'
-    floatingPosition.value = `${vertical}-${horizontal}`
-    window.localStorage.setItem(FLOATING_POSITION_KEY, floatingPosition.value)
-    suppressFloatingClick = true
-    window.setTimeout(() => {
-      suppressFloatingClick = false
-    }, 0)
-  }
-
-  floatingPointerStart = null
-  floatingDragOffset.value = { x: 0, y: 0 }
-  floatingDragging.value = false
-}
-
-function preventFloatingClick(event) {
-  if (!suppressFloatingClick) return
-  event.preventDefault()
-  event.stopPropagation()
-}
-
 function scheduleMidnightRefresh() {
   const now = new Date()
   const nextMidnight = new Date(now)
@@ -265,17 +219,17 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   window.clearTimeout(reanalysisMidnightTimer)
-  window.removeEventListener('pointermove', moveFloatingStack)
-  window.removeEventListener('pointerup', finishFloatingDrag)
 })
 </script>
 
 <template>
   <div class="tendency-page">
-    <PrimaryAppHeader class="tendency-primary-header" />
-    <header class="tendency-navigation">
-      <h1>{{ activeTab === '투자성향' ? '나의 투자성향' : '투자원칙' }}</h1>
-    </header>
+    <PrimaryTabHeader
+      class="tendency-hero"
+      :title="activeTab === '투자성향' ? '나의 투자성향' : '투자원칙'"
+      flat-bottom
+    />
+
     <div class="tendency-tabs">
       <SegmentedControl v-model="activeTab" :options="['투자성향', '투자원칙']" />
     </div>
@@ -679,13 +633,14 @@ onBeforeUnmount(() => {
         !tendencyStore.analyzing &&
         (tendencyStore.shouldShowReanalysis || tendencyStore.shouldShowRecommendation)
       "
+      ref="floatingStackRef"
       class="tendency-floating-stack"
       :class="[
         `tendency-floating-stack--${floatingPosition}`,
-        { 'tendency-floating-stack--dragging': floatingDragging },
+        { 'tendency-floating-stack--sliding': floatingSliding },
       ]"
       :style="floatingStackStyle"
-      @pointerdown="startFloatingDrag"
+      @pointerdown="startFloatingSwipe"
       @click.capture="preventFloatingClick"
     >
       <ReanalysisFloating
@@ -715,52 +670,51 @@ onBeforeUnmount(() => {
   background: #ffffff;
 }
 
-.tendency-navigation {
-  display: flex;
-  min-height: 52px;
-  align-items: center;
-  background: #ffffff;
-}
-
-.tendency-primary-header {
+.tendency-hero {
   width: calc(100% + 40px);
   margin: 0 -20px;
 }
 
-.tendency-navigation h1 {
-  margin: 0;
-  color: #181817;
-  font-family: var(--font-heading);
-  font-size: var(--font-size-title-lg);
-  font-weight: 700;
-  letter-spacing: -0.04em;
+.tendency-tabs {
+  position: relative;
+  z-index: 4;
+  /* 페이지의 17px flex gap까지 상쇄해 56px 탭의 절반이 헤더 경계에 걸리게 한다. */
+  margin-top: -45px;
 }
 
 .tendency-tabs :deep(.segmented-control) {
-  height: 44px;
-  padding: 2px 0;
+  height: 56px;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid #dce6e9;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(2, 35, 44, 0.08);
+}
+
+.tendency-tabs :deep(.segmented-control__item) {
+  height: 46px;
+}
+
+.tendency-tabs :deep(.segmented-control__item--active) {
+  border: 1px solid #0b9692;
+  background: #ffffff;
+  box-shadow: 0 3px 12px rgba(4, 112, 109, 0.12);
 }
 
 .tendency-floating-stack {
   position: fixed;
   z-index: 160;
   display: flex;
-  width: min(calc(100% - 32px), 358px);
+  width: 220px;
   flex-direction: column;
   gap: 0;
   touch-action: none;
   user-select: none;
-  cursor: grab;
-  transition:
-    top 0.22s ease,
-    right 0.22s ease,
-    bottom 0.22s ease,
-    left 0.22s ease;
+  transition: none;
 }
 
-.tendency-floating-stack--dragging {
-  cursor: grabbing;
-  transition: none;
+.tendency-floating-stack--sliding {
+  transition: transform 0.28s cubic-bezier(0.22, 0.8, 0.3, 1);
 }
 
 .tendency-floating-stack--top-left,
@@ -787,11 +741,18 @@ onBeforeUnmount(() => {
   bottom: calc(var(--mobile-frame-edge-offset, 0px) + 84px);
 }
 
-.tendency-floating-stack--top-left :deep(.reanalysis-floating--collapsed),
-.tendency-floating-stack--bottom-left :deep(.reanalysis-floating--collapsed),
-.tendency-floating-stack--top-left :deep(.recommendation-floating--collapsed),
-.tendency-floating-stack--bottom-left :deep(.recommendation-floating--collapsed) {
-  align-self: flex-start;
+.tendency-floating-stack :deep(.recommendation-floating--collapsed) {
+  align-self: auto;
+}
+
+.tendency-floating-stack--top-left,
+.tendency-floating-stack--bottom-left {
+  align-items: flex-start;
+}
+
+.tendency-floating-stack--top-right,
+.tendency-floating-stack--bottom-right {
+  align-items: flex-end;
 }
 
 .analysis-content,

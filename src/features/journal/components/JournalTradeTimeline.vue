@@ -39,6 +39,7 @@ function formatPrice(value) {
   <section class="trade-timeline" aria-labelledby="trade-timeline-title">
     <header class="trade-timeline__header">
       <div class="trade-timeline__title-row">
+        <span class="trade-timeline__step" aria-hidden="true">3</span>
         <h2 id="trade-timeline-title" class="trade-timeline__title">오늘의 거래 타임라인</h2>
         <span class="trade-timeline__count">{{ trades.length }}건</span>
       </div>
@@ -125,6 +126,20 @@ function formatPrice(value) {
   display: flex;
   align-items: center;
   gap: 7px;
+}
+
+.trade-timeline__step {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 8px;
+  background: #e7f7f5;
+  color: var(--brand-teal-deep);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-caption);
+  font-weight: 800;
 }
 
 .trade-timeline__title {

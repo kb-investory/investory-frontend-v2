@@ -135,9 +135,11 @@ function selectMonth(month) {
   grid-template-columns: 44px 1fr 44px;
   align-items: center;
   padding: 0 6px;
-  border-radius: 12px;
-  color: #ffffff;
-  background: var(--teal-deep, #075f5a);
+  border: 1px solid rgb(42 190 183 / 42%);
+  border-radius: 16px;
+  color: #087f7c;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgb(2 35 44 / 14%);
 }
 
 .month-navigator__button {
@@ -147,19 +149,19 @@ function selectMonth(month) {
   place-items: center;
   padding: 0;
   border: 0;
-  border-radius: 10px;
+  border-radius: 12px;
   color: inherit;
-  background: transparent;
+  background: #e8f8f7;
   cursor: pointer;
 }
 
 .month-navigator__button:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: #d6f2f0;
 }
 
 .month-navigator__button:focus-visible {
-  outline: 2px solid #ffffff;
-  outline-offset: -3px;
+  outline: 2px solid #0b8f8b;
+  outline-offset: 2px;
 }
 
 .month-navigator__current {
@@ -180,12 +182,12 @@ function selectMonth(month) {
 }
 
 .month-navigator__current:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: #f1fbfa;
 }
 
 .month-navigator__current:focus-visible {
-  outline: 2px solid #ffffff;
-  outline-offset: -3px;
+  outline: 2px solid #0b8f8b;
+  outline-offset: -2px;
 }
 
 .month-navigator__chevron {

@@ -12,15 +12,25 @@ import WeeklyRecordRhythm from '@/features/home/components/WeeklyRecordRhythm.vu
 import { useHomeClock } from '@/features/home/composables/useHomeClock'
 import { useHomeStore } from '@/features/home/stores/homeStore'
 import ReanalysisFloating from '@/features/tendency/components/ReanalysisFloating.vue'
+import { useFloatingCornerSwipe } from '@/features/tendency/composables/useFloatingCornerSwipe'
 import { useTendencyStore } from '@/features/tendency/stores/tendencyStore'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
 
 const REANALYSIS_NOTICE_COLLAPSED_KEY = 'investory:reanalysis-notice-collapsed:v8'
+const HOME_FLOATING_POSITION_KEY = 'investory:home-floating-position:v1'
 
 const router = useRouter()
 const homeStore = useHomeStore()
 const tendencyStore = useTendencyStore()
 const reanalysisNoticeCollapsed = ref(true)
+const {
+  elementRef: reanalysisFloatingRef,
+  position: reanalysisFloatingPosition,
+  sliding: reanalysisFloatingSliding,
+  style: reanalysisFloatingStyle,
+  startSwipe: startReanalysisSwipe,
+  preventClickAfterSwipe: preventReanalysisClick,
+} = useFloatingCornerSwipe(HOME_FLOATING_POSITION_KEY)
 let reanalysisMidnightTimer
 
 const journalRoute = {
@@ -29,7 +39,7 @@ const journalRoute = {
 }
 const tendencyRoute = { name: ROUTE_NAMES.TENDENCY }
 const simulationRoute = { name: ROUTE_NAMES.SIMULATION }
-const { dateLabel, currentTime, remainingTime, dayProgressPercent } = useHomeClock()
+const { currentTime, remainingTime, dayProgressPercent } = useHomeClock()
 
 const liveToday = computed(() => ({
   ...homeStore.dashboard?.today,
@@ -117,7 +127,10 @@ function openTransactions() {
 <template>
   <div class="home-page">
     <div v-if="homeStore.dashboard" class="home-page__content">
-      <HomeHeader logo-src="/assets/logos/investory-logo-transparent.png" :date-label="dateLabel" />
+      <div class="home-page__hero">
+        <HomeHeader logo-src="/assets/logos/investory-logo-dark.png" dark />
+        <TodayRecordHero :today="liveToday" @open-transactions="openTransactions" />
+      </div>
 
       <HomeConnectionSummary
         v-if="connectedAssetSummary"
@@ -126,8 +139,6 @@ function openTransactions() {
         :holding-count="connectedAssetSummary.holdingCount"
         :total-valuation="connectedAssetSummary.totalValuation"
       />
-
-      <TodayRecordHero :today="liveToday" @open-transactions="openTransactions" />
 
       <HomeQuickActions
         :journal-to="journalRoute"
@@ -147,7 +158,18 @@ function openTransactions() {
 
     <p v-else class="home-page__error">홈 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</p>
 
-    <div v-if="tendencyStore.shouldShowReanalysis" class="home-page__reanalysis-floating">
+    <div
+      v-if="tendencyStore.shouldShowReanalysis"
+      ref="reanalysisFloatingRef"
+      class="home-page__reanalysis-floating"
+      :class="[
+        `home-page__reanalysis-floating--${reanalysisFloatingPosition}`,
+        { 'home-page__reanalysis-floating--sliding': reanalysisFloatingSliding },
+      ]"
+      :style="reanalysisFloatingStyle"
+      @pointerdown="startReanalysisSwipe"
+      @click.capture="preventReanalysisClick"
+    >
       <ReanalysisFloating
         :collapsed="reanalysisNoticeCollapsed"
         @analyze="openTendencyReanalysis"
@@ -160,14 +182,23 @@ function openTransactions() {
 <style scoped>
 .home-page {
   min-height: 100%;
-  background: #ffffff;
+  background: linear-gradient(180deg, #f4f8f8 0%, #ffffff 42%);
 }
 
 .home-page__content {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 0 20px 16px;
+  gap: 12px;
+  padding: 0 16px 24px;
+}
+
+.home-page__hero {
+  overflow: hidden;
+  width: calc(100% + 32px);
+  margin: 0 -16px;
+  border-radius: 0 0 30px 30px;
+  background: #ffffff;
+  box-shadow: 0 14px 30px rgba(31, 58, 67, 0.1);
 }
 
 .home-page__loading {
@@ -187,10 +218,41 @@ function openTransactions() {
 .home-page__reanalysis-floating {
   position: fixed;
   z-index: 160;
-  right: max(16px, calc((100vw - 390px) / 2 + 16px));
-  bottom: calc(var(--mobile-frame-edge-offset, 0px) + 84px);
   display: flex;
-  width: min(calc(100% - 32px), 358px);
+  width: 220px;
   flex-direction: column;
+  touch-action: none;
+  user-select: none;
+  transition: none;
+}
+
+.home-page__reanalysis-floating--sliding {
+  transition: transform 0.28s cubic-bezier(0.22, 0.8, 0.3, 1);
+}
+
+.home-page__reanalysis-floating--top-left,
+.home-page__reanalysis-floating--bottom-left {
+  left: max(16px, calc((100vw - 390px) / 2 + 16px));
+  align-items: flex-start;
+}
+
+.home-page__reanalysis-floating--top-right,
+.home-page__reanalysis-floating--bottom-right {
+  right: max(16px, calc((100vw - 390px) / 2 + 16px));
+  align-items: flex-end;
+}
+
+.home-page__reanalysis-floating--top-left,
+.home-page__reanalysis-floating--top-right {
+  top: calc(var(--mobile-frame-edge-offset, 0px) + 76px);
+}
+
+.home-page__reanalysis-floating--bottom-left,
+.home-page__reanalysis-floating--bottom-right {
+  bottom: calc(var(--mobile-frame-edge-offset, 0px) + 84px);
+}
+
+.home-page__reanalysis-floating :deep(.recommendation-floating--collapsed) {
+  align-self: auto;
 }
 </style>

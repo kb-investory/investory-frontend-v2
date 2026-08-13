@@ -8,7 +8,7 @@ import { useMypageStore } from '@/features/mypage/stores/mypageStore'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
-import PrimaryAppHeader from '@/shared/components/navigation/PrimaryAppHeader.vue'
+import PrimaryTabHeader from '@/shared/components/navigation/PrimaryTabHeader.vue'
 
 const router = useRouter()
 const mypageStore = useMypageStore()
@@ -82,10 +82,39 @@ const podiumParticipants = computed(() => {
   })
 })
 
-const tendencyGroups = computed(() => ({
-  selection: mypageStore.tendencyBadges.filter((badge) => badge.group === 'SELECTION'),
-  behavior: mypageStore.tendencyBadges.filter((badge) => badge.group === 'BEHAVIOR'),
-}))
+const tendencyRoadmapPoints = computed(() => {
+  const history = mypageStore.tendencyHistory
+
+  return history.map((item, index) => {
+    const progress = history.length === 1 ? 0.5 : index / (history.length - 1)
+    return {
+      ...item,
+      x: 14 + progress * 122,
+      y: 31 - Math.sin(progress * Math.PI) * 13,
+      isLatest: index === history.length - 1,
+      month: item.analyzedDate?.slice(2, 7).replace('-', '.'),
+    }
+  })
+})
+
+const tendencyRoadmapLine = computed(() => {
+  if (!tendencyRoadmapPoints.value.length) return ''
+  if (tendencyRoadmapPoints.value.length === 1) return 'M 14 31 H 136'
+
+  return tendencyRoadmapPoints.value
+    .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`)
+    .join(' ')
+})
+
+const tendencyRoadmapMessage = computed(() => {
+  const history = mypageStore.tendencyHistory
+  if (history.length <= 1) return '첫 분석부터 차근차근 성향 변화를 기록해드릴게요.'
+
+  const latest = history.at(-1)
+  return latest.changedCount
+    ? `최근 분석에서 ${latest.changedCount}가지 성향 변화가 있었어요.`
+    : '최근에도 투자성향이 안정적으로 유지되고 있어요.'
+})
 
 function goToSection(section) {
   router.push({ name: ROUTE_NAMES.MYPAGE_PLACEHOLDER, params: { section } })
@@ -145,15 +174,13 @@ onMounted(async () => {
 
 <template>
   <div class="mypage-page">
-    <PrimaryAppHeader>
+    <PrimaryTabHeader title="마이페이지" flat-bottom>
       <template #right>
         <button type="button" aria-label="마이페이지 도움말" @click="modal = 'help'">
           <AppIcon name="circle-help" :size="18" />
         </button>
       </template>
-    </PrimaryAppHeader>
-
-    <h1 class="mypage-title">마이페이지</h1>
+    </PrimaryTabHeader>
 
     <BaseLoading v-if="mypageStore.loading && !mypageStore.profile" class="mypage-loading" />
 
@@ -204,21 +231,32 @@ onMounted(async () => {
             </span>
           </div>
           <div v-if="mypageStore.tendencyBadges.length" class="tendency-result-preview">
-            <div class="tendency-group tendency-group--selection">
-              <strong>투자 선택</strong>
-              <span v-for="badge in tendencyGroups.selection" :key="badge.code">
-                {{ badge.label }}
-              </span>
-            </div>
-            <div class="tendency-group tendency-group--behavior">
-              <strong>매매 행동</strong>
-              <span v-for="badge in tendencyGroups.behavior" :key="badge.code">
-                {{ badge.label }}
-              </span>
+            <div class="tendency-roadmap" aria-label="투자성향 변화 로드맵">
+              <div class="tendency-roadmap__title">
+                <strong>성향 변화 로드맵</strong>
+                <span>분석 {{ mypageStore.tendencyHistory.length }}회</span>
+              </div>
+              <svg viewBox="0 0 150 52" role="img" aria-hidden="true">
+                <path :d="tendencyRoadmapLine" />
+                <g
+                  v-for="point in tendencyRoadmapPoints"
+                  :key="point.analysisRunId"
+                  class="tendency-roadmap__point"
+                  :class="{ 'is-latest': point.isLatest }"
+                >
+                  <line :x1="point.x" :y1="point.y - 2" :x2="point.x" :y2="point.y - 17" />
+                  <path
+                    class="tendency-roadmap__flag"
+                    :d="`M ${point.x} ${point.y - 17} L ${point.x + 10} ${point.y - 14} L ${point.x} ${point.y - 10} Z`"
+                  />
+                  <circle :cx="point.x" :cy="point.y" :r="point.isLatest ? 5 : 3.5" />
+                  <text :x="point.x" y="48" text-anchor="middle">{{ point.month }}</text>
+                </g>
+              </svg>
             </div>
             <div class="tendency-insight">
               <img src="/assets/images/mypage-insight-monkey.png" alt="책을 보며 생각하는 원숭이" />
-              <p>최근 기록에서 반복된 선택과 행동을 한눈에 확인해보세요.</p>
+              <p>{{ tendencyRoadmapMessage }}</p>
             </div>
           </div>
           <div v-else class="summary-empty-state">
@@ -427,9 +465,12 @@ onMounted(async () => {
   min-height: 520px;
 }
 .mypage-content {
+  position: relative;
+  z-index: 4;
   display: grid;
   gap: 14px;
-  padding: 8px 16px 24px;
+  margin-top: -58px;
+  padding: 0 16px 24px;
 }
 
 .profile-summary {
@@ -439,18 +480,16 @@ onMounted(async () => {
   gap: 13px;
   min-height: 116px;
   padding: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid #b9e4e2;
   border-radius: 24px;
-  background:
-    radial-gradient(circle at 88% 30%, rgba(35, 198, 201, 0.2), transparent 30%),
-    linear-gradient(135deg, #102f4b 0%, #0c4674 100%);
-  color: #fff;
-  box-shadow: 0 12px 26px rgba(23, 67, 101, 0.2);
+  background: #ffffff;
+  color: #263a43;
+  box-shadow: 0 12px 26px rgb(2 35 44 / 13%);
 }
 .profile-summary__avatar {
   width: 60px;
   height: 60px;
-  border: 2px solid rgba(255, 255, 255, 0.22);
+  border: 2px solid #a9dedb;
   border-radius: 19px;
   background: linear-gradient(145deg, #13b8af, #0a8f91);
   object-fit: cover;
@@ -471,21 +510,21 @@ onMounted(async () => {
 .profile-summary__copy > div > span {
   padding: 4px 8px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #10b5aa, #11a0a1);
-  box-shadow: inset 0 1px rgba(255, 255, 255, 0.22);
+  background: #e7f8f6;
+  color: #087f7c;
   font-size: var(--font-size-caption);
   font-weight: 800;
 }
 .profile-summary p {
   margin: 5px 0;
-  color: #cfe1ec;
+  color: #6f7e84;
   font-size: var(--font-size-caption);
 }
 .profile-summary small {
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #daeaf3;
+  color: #60747b;
   font-size: var(--font-size-caption);
 }
 .provider-dot {
@@ -512,8 +551,10 @@ onMounted(async () => {
   height: 34px;
   place-items: center;
   border: 0;
-  background: transparent;
-  color: #fff;
+  border: 1px solid #c9e7e5;
+  border-radius: 12px;
+  background: #f1fbfa;
+  color: #087f7c;
   cursor: pointer;
 }
 
@@ -617,71 +658,92 @@ onMounted(async () => {
 }
 .tendency-result-preview {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
   flex: 1;
 }
-.tendency-group {
-  display: flex;
+
+.tendency-roadmap {
+  display: grid;
   min-width: 0;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  padding: 7px 6px;
+  gap: 3px;
+  padding: 7px 7px 2px;
   border-radius: 14px;
-  background: #eef7f9;
-  color: #294f63;
+  background: #edf8f7;
 }
-.tendency-group--behavior {
-  background: #f3effa;
-  color: #7252ad;
+
+.tendency-roadmap__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
 }
-.tendency-group > strong {
-  margin-bottom: 7px;
-  font-size: 10px;
-  line-height: 1;
+
+.tendency-roadmap__title strong {
+  color: #2a555b;
+  font-size: 9px;
 }
-.tendency-group > span {
-  position: relative;
-  overflow: hidden;
+
+.tendency-roadmap__title span {
+  color: #758b8e;
+  font-size: 7px;
+}
+
+.tendency-roadmap svg {
+  display: block;
   width: 100%;
-  padding-left: 10px;
-  color: #385264;
-  font-size: 8px;
-  font-weight: 750;
-  line-height: 1.2;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  height: 52px;
+  overflow: visible;
 }
-.tendency-group > span::before {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  width: 6px;
-  height: 6px;
-  transform: translateY(-50%);
-  border-radius: 50%;
-  background: #37a8d0;
-  content: '';
+
+.tendency-roadmap path {
+  fill: none;
+  stroke: #9ed8d4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 4;
 }
-.tendency-group--behavior > span {
-  color: #665482;
+
+.tendency-roadmap__point line {
+  stroke: #71878a;
+  stroke-linecap: round;
+  stroke-width: 1.5;
 }
-.tendency-group--behavior > span::before {
-  background: #9c82d6;
+
+.tendency-roadmap .tendency-roadmap__flag {
+  fill: #71878a;
+  stroke: none;
+}
+
+.tendency-roadmap__point circle {
+  fill: #71878a;
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+.tendency-roadmap__point.is-latest line {
+  stroke: #07948e;
+}
+
+.tendency-roadmap .tendency-roadmap__point.is-latest .tendency-roadmap__flag,
+.tendency-roadmap__point.is-latest circle {
+  fill: #07948e;
+}
+
+.tendency-roadmap text {
+  fill: #7e9092;
+  font-size: 6px;
 }
 .tendency-insight {
   display: grid;
-  grid-column: 1 / -1;
-  grid-template-columns: 48px minmax(0, 1fr);
+  grid-template-columns: 45px minmax(0, 1fr);
   align-items: center;
-  gap: 4px;
-  min-height: 54px;
-  padding: 1px 5px 0 0;
+  gap: 7px;
+  min-height: 46px;
+  padding: 0 5px 0 0;
 }
 .tendency-insight img {
-  width: 48px;
-  height: 54px;
+  width: 45px;
+  height: 46px;
   object-fit: contain;
 }
 .tendency-insight p {
