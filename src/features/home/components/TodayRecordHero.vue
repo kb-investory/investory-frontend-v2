@@ -1,9 +1,10 @@
 <script setup>
-import { ArrowRight, Moon, TrendingUp } from '@lucide/vue'
+import { computed } from 'vue'
+import { ArrowRight, Moon } from '@lucide/vue'
 
 import RunningMonkey from './RunningMonkey.vue'
 
-defineProps({
+const props = defineProps({
   today: {
     type: Object,
     required: true,
@@ -11,22 +12,58 @@ defineProps({
 })
 
 defineEmits(['open-transactions'])
+
+const titleParts = computed(() => {
+  const highlightedText = '기록으로 이어가요'
+  const completedText = '오늘의 기록이 완성되었습니다'
+  const title = props.today.title ?? ''
+
+  if (title === completedText) {
+    return {
+      lead: '오늘의 기록이',
+      highlight: '완성되었습니다',
+      isHighlighted: false,
+    }
+  }
+
+  if (!title.includes(highlightedText)) {
+    return { lead: title, highlight: '', isHighlighted: false }
+  }
+
+  return {
+    lead: title.replace(highlightedText, '').trim(),
+    highlight: highlightedText,
+    isHighlighted: true,
+  }
+})
 </script>
 
 <template>
   <section class="today-record" aria-labelledby="today-record-title">
-    <div class="today-record__heading">
-      <div>
+    <div class="today-record__intro">
+      <div class="today-record__heading">
         <p class="today-record__eyebrow">TODAY · {{ today.totalTrades }} TRADES</p>
-        <h1 id="today-record-title" class="today-record__title">{{ today.title }}</h1>
-        <p class="today-record__description">
-          {{ today.stockCount }}개 종목 · 아직 근거 {{ today.missingReasons }}건이 남아 있어요
-        </p>
+        <h1 id="today-record-title" class="today-record__title">
+          <span>{{ titleParts.lead }}</span>
+          <em v-if="titleParts.highlight" :class="{ 'is-highlighted': titleParts.isHighlighted }">
+            {{ titleParts.highlight }}
+          </em>
+        </h1>
       </div>
 
-      <span class="today-record__trend" aria-hidden="true">
-        <TrendingUp :size="21" :stroke-width="2" />
-      </span>
+      <svg class="today-record__graph" viewBox="0 0 210 128" aria-hidden="true">
+        <g class="today-record__graph-grid">
+          <path d="M18 28H202M18 59H202M18 90H202M52 10V116M94 10V116M136 10V116M178 10V116" />
+        </g>
+        <path
+          class="today-record__graph-area"
+          d="M14 108 51 91 75 96 108 66 135 75 171 42 203 17V118H14Z"
+        />
+        <path
+          class="today-record__graph-line"
+          d="M14 108 51 91 75 96 108 66 135 75 171 42 203 17"
+        />
+      </svg>
     </div>
 
     <dl class="today-record__metrics">
@@ -48,67 +85,78 @@ defineEmits(['open-transactions'])
       </div>
     </dl>
 
-    <div class="today-record__deadline">
-      <div class="today-record__deadline-heading">
-        <span>오늘 일지 마감까지</span>
-        <strong>{{ today.remainingTime }}</strong>
+    <div class="today-record__deadline-card">
+      <div class="today-record__deadline">
+        <div class="today-record__deadline-heading">
+          <span>오늘 일지 마감까지</span>
+          <strong>{{ today.remainingTime }}</strong>
+        </div>
+
+        <div class="today-record__timeline">
+          <div class="today-record__track">
+            <span
+              class="today-record__elapsed"
+              :style="{ width: `${today.dayProgressPercent}%` }"
+            />
+            <span class="today-record__monkey" :style="{ left: `${today.dayProgressPercent}%` }">
+              <RunningMonkey :size="38" />
+            </span>
+            <span class="today-record__moon" aria-hidden="true">
+              <Moon :size="22" :stroke-width="1.8" />
+            </span>
+          </div>
+          <div class="today-record__timeline-labels">
+            <span>현재 {{ today.currentTime }}</span>
+            <span>자정 24:00 · 일지 마감</span>
+          </div>
+        </div>
       </div>
 
-      <div class="today-record__timeline">
-        <div class="today-record__track">
-          <span class="today-record__elapsed" :style="{ width: `${today.dayProgressPercent}%` }" />
-          <span class="today-record__monkey" :style="{ left: `${today.dayProgressPercent}%` }">
-            <RunningMonkey :size="36" />
-          </span>
-          <span class="today-record__moon" aria-hidden="true">
-            <Moon :size="20" :stroke-width="1.8" />
-          </span>
-        </div>
-        <div class="today-record__timeline-labels">
-          <span>현재 {{ today.currentTime }}</span>
-          <span>자정 24:00 · 일지 마감</span>
-        </div>
-      </div>
+      <button type="button" class="today-record__button" @click="$emit('open-transactions')">
+        <span>거래 내역 확인하기</span>
+        <span class="today-record__button-meta">
+          근거 {{ today.missingReasons }}건
+          <ArrowRight :size="18" :stroke-width="2" />
+        </span>
+      </button>
     </div>
-
-    <button type="button" class="today-record__button" @click="$emit('open-transactions')">
-      <span>거래 내역 확인하기</span>
-      <span class="today-record__button-meta">
-        근거 {{ today.missingReasons }}건
-        <ArrowRight :size="16" :stroke-width="2" />
-      </span>
-    </button>
   </section>
 </template>
 
 <style scoped>
 .today-record {
+  position: relative;
   display: flex;
-  min-height: 277px;
+  min-height: 338px;
   flex-direction: column;
-  gap: 10px;
-  padding: 16px;
-  border: 1px solid #bfe4e2;
-  border-radius: 18px;
-  background: #f5fbfb;
+  gap: 0;
+  padding-bottom: 4px;
+  background: linear-gradient(to bottom, transparent 0 150px, #ffffff 150px 100%);
+}
+
+.today-record__intro {
+  position: relative;
+  overflow: hidden;
+  min-height: 150px;
+  padding: 4px 24px 50px;
+  color: #ffffff;
+  background: transparent;
 }
 
 .today-record__heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
+  position: relative;
+  z-index: 2;
+  max-width: 250px;
 }
 
 .today-record__eyebrow,
-.today-record__title,
-.today-record__description {
+.today-record__title {
   margin: 0;
 }
 
 .today-record__eyebrow {
-  margin-bottom: 3px;
-  color: #087f7c;
+  margin-bottom: 5px;
+  color: #41ded7;
   font-family: var(--font-mono);
   font-size: var(--font-size-caption);
   font-weight: 700;
@@ -116,40 +164,67 @@ defineEmits(['open-transactions'])
 }
 
 .today-record__title {
-  color: #181817;
+  color: #ffffff;
   font-family: var(--font-heading);
-  font-size: var(--font-size-title-md);
-  font-weight: 700;
-  line-height: 1.25;
+  font-size: clamp(26px, 7.2vw, 30px);
+  font-weight: 800;
+  line-height: 1.13;
+  letter-spacing: -1px;
 }
 
-.today-record__description {
-  margin-top: 4px;
-  color: #5d6d73;
-  font-size: var(--font-size-caption);
-  line-height: 1.4;
+.today-record__title span,
+.today-record__title em {
+  display: block;
+  font-style: normal;
 }
 
-.today-record__trend {
-  display: inline-flex;
-  width: 42px;
-  height: 42px;
-  flex: 0 0 42px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  color: #f20d35;
-  background: #fff0f2;
+.today-record__title em {
+  color: #ffffff;
+}
+
+.today-record__title em.is-highlighted {
+  color: #36ddd5;
+}
+
+.today-record__graph {
+  position: absolute;
+  right: -8px;
+  bottom: 0;
+  z-index: 1;
+  width: 192px;
+  opacity: 0.72;
+}
+
+.today-record__graph-grid {
+  fill: none;
+  stroke: rgba(70, 226, 218, 0.08);
+  stroke-width: 1;
+}
+
+.today-record__graph-area {
+  fill: rgba(18, 189, 184, 0.08);
+}
+
+.today-record__graph-line {
+  fill: none;
+  filter: drop-shadow(0 0 7px rgba(57, 230, 220, 0.75));
+  stroke: #3ce1d8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3;
 }
 
 .today-record__metrics {
+  position: relative;
+  z-index: 3;
   display: grid;
-  min-height: 54px;
+  min-height: 72px;
   grid-template-columns: repeat(4, 1fr);
-  margin: 0;
-  border: 1px solid #d8e9e8;
-  border-radius: 12px;
+  margin: -36px 16px 0;
+  border: 1px solid #b8e7e4;
+  border-radius: 20px;
   background: #ffffff;
+  box-shadow: 0 12px 24px rgba(1, 52, 62, 0.15);
 }
 
 .today-record__metric {
@@ -163,8 +238,8 @@ defineEmits(['open-transactions'])
 
 .today-record__metric + .today-record__metric::before {
   position: absolute;
-  top: 10px;
-  bottom: 10px;
+  top: 17px;
+  bottom: 17px;
   left: 0;
   width: 1px;
   background: #e7efef;
@@ -179,8 +254,8 @@ defineEmits(['open-transactions'])
 .today-record__metric dd {
   color: #263a43;
   font-family: var(--font-mono);
-  font-size: var(--font-size-body);
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 800;
 }
 
 .today-record__metric dt {
@@ -207,19 +282,33 @@ defineEmits(['open-transactions'])
   gap: 5px;
 }
 
+.today-record__deadline-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 12px 16px 0;
+  padding: 18px 16px 14px;
+  border: 1px solid rgba(36, 217, 209, 0.24);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 72% 0%, rgba(20, 190, 184, 0.2), transparent 32%),
+    linear-gradient(150deg, #082d37, #03202a);
+  box-shadow: 0 12px 24px rgba(2, 34, 42, 0.2);
+}
+
 .today-record__deadline-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: #5d6d73;
+  color: #d0dfe2;
   font-size: var(--font-size-caption);
   font-weight: 600;
 }
 
 .today-record__deadline-heading strong {
-  color: #263a43;
+  color: #77f3ed;
   font-family: var(--font-mono);
-  font-size: var(--font-size-body);
+  font-size: 22px;
   letter-spacing: 0.3px;
 }
 
@@ -245,13 +334,14 @@ defineEmits(['open-transactions'])
 
 .today-record__track::before {
   width: 100%;
-  background: #d8e9e8;
+  background: rgba(204, 234, 234, 0.26);
   content: '';
 }
 
 .today-record__elapsed {
   max-width: 100%;
-  background: #0b8f8b;
+  background: linear-gradient(90deg, #0b8f8b, #62f0e9);
+  box-shadow: 0 0 10px rgba(69, 232, 224, 0.45);
 }
 
 .today-record__track::after {
@@ -262,7 +352,7 @@ defineEmits(['open-transactions'])
   height: 10px;
   border: 2px solid #ffffff;
   border-radius: 50%;
-  background: #263a43;
+  background: #d9e7e9;
   content: '';
 }
 
@@ -291,8 +381,8 @@ defineEmits(['open-transactions'])
   height: 22px;
   align-items: center;
   justify-content: center;
-  color: #263a43;
-  background: #ffffff;
+  color: #dffaf8;
+  background: rgba(6, 39, 49, 0.94);
   border-radius: 50%;
 }
 
@@ -300,7 +390,7 @@ defineEmits(['open-transactions'])
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: #718087;
+  color: #aabfc4;
   font-family: var(--font-mono);
   font-size: var(--font-size-caption);
   font-weight: 500;
@@ -309,15 +399,16 @@ defineEmits(['open-transactions'])
 .today-record__button {
   display: flex;
   width: 100%;
-  min-height: 52px;
+  min-height: 54px;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   padding: 0 14px;
   border: 0;
-  border-radius: 12px;
+  border: 1px solid rgba(78, 224, 217, 0.24);
+  border-radius: 14px;
   color: #ffffff;
-  background: #263a43;
+  background: rgba(8, 91, 101, 0.58);
   cursor: pointer;
   font-weight: 700;
 }
@@ -331,7 +422,7 @@ defineEmits(['open-transactions'])
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: #bfd0d5;
+  color: #74e7e1;
   font-family: var(--font-mono);
   font-size: var(--font-size-caption);
 }

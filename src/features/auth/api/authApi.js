@@ -1,27 +1,23 @@
-import authData from '@/mocks/data/auth.json'
+import {
+  getMe as serviceGetMe,
+  getOauthAuthorizationUrl,
+  logout as serviceLogout,
+} from '@/modules/auth/services/authService'
 
 export async function getMe() {
-  const savedProvider = window.localStorage.getItem('investory:mock:oauth-provider')
-  const socialType = savedProvider || authData.user.socialType
-  return { ...authData.user, socialType, oauthProvider: socialType }
+  return serviceGetMe()
 }
 
 export async function loginWithOAuth(provider) {
-  await new Promise((resolve) => globalThis.setTimeout(resolve, 650))
-  const oauthProvider = provider.toUpperCase()
-  window.localStorage.setItem('investory:mock:oauth-provider', oauthProvider)
+  const authorizationUrl = getOauthAuthorizationUrl({
+    provider,
+    redirectUri: `${window.location.origin}/broker-connect`,
+  })
 
-  return {
-    authorizationUrl: `/auth/oauth/${provider}/authorization`,
-    user: {
-      ...authData.user,
-      socialType: oauthProvider,
-      oauthProvider,
-    },
-    tokens: authData.tokens,
-  }
+  return { authorizationUrl }
 }
 
 export async function logout() {
+  await serviceLogout()
   return true
 }

@@ -1,5 +1,5 @@
 <script setup>
-import { BookCheck, CalendarCheck, Info } from '@lucide/vue'
+import { BookCheck, CalendarDays, CircleHelp, Info } from '@lucide/vue'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -36,22 +36,18 @@ const journalDate = computed(() => String(route.query.date || getDefaultJournalD
 const draftStorageKey = computed(() => `${DRAFT_KEY_PREFIX}${journalDate.value}`)
 const isEditMode = computed(() => Boolean(journalStore.dailyEntry?.journal))
 const canSubmit = computed(
-  () =>
-    form.marketMood &&
-    form.marketThought.trim().length > 0 &&
-    !journalStore.loading &&
-    (isEditMode.value || journalStore.dailyEntry?.canCreate !== false),
+  () => Boolean(form.marketMood) && form.marketThought.trim().length > 0 && !journalStore.loading,
 )
 const dateLabel = computed(() => {
   const date = new Date(`${journalDate.value}T00:00:00`)
   const weekday = new Intl.DateTimeFormat('ko-KR', { weekday: 'long' }).format(date)
   return `${date.getMonth() + 1}월 ${date.getDate()}일, ${weekday}`
 })
-const monthLabel = computed(() =>
-  new Intl.DateTimeFormat('ko-KR', { month: '2-digit' })
-    .format(new Date(`${journalDate.value}T00:00:00`))
-    .replace(/\D/g, ''),
-)
+const monthLabel = computed(() => {
+  const date = new Date(`${journalDate.value}T00:00:00`)
+  return new Intl.DateTimeFormat('ko-KR', { month: '2-digit' }).format(date).replace(/\D/g, '')
+})
+const thoughtPrompts = ['가장 기억난 건', '내 판단 근거는', '다음에는']
 const sortedTrades = computed(() => {
   const trades = [...(journalStore.dailyEntry?.trades ?? [])]
   return trades.sort((a, b) => {
@@ -121,7 +117,8 @@ function scheduleAutoSave() {
 }
 
 function handleBack() {
-  router.push({ name: ROUTE_NAMES.JOURNAL })
+  const destination = route.query.from === 'home' ? ROUTE_NAMES.HOME : ROUTE_NAMES.JOURNAL
+  router.push({ name: destination })
 }
 
 function updateTradeNote({ tradeId, value }) {
@@ -130,6 +127,11 @@ function updateTradeNote({ tradeId, value }) {
 
 function toggleSort() {
   sortOrder.value = sortOrder.value === 'latest' ? 'oldest' : 'latest'
+}
+
+function appendThoughtPrompt(prompt) {
+  const separator = form.marketThought.trim() ? '\n' : ''
+  form.marketThought = `${form.marketThought}${separator}${prompt}: `
 }
 
 async function handleSubmit() {
@@ -161,8 +163,9 @@ async function handleSubmit() {
       ? '오늘의 투자 일기를 저장했어요. 이어서 수정할 수 있습니다.'
       : '오늘의 투자 일기를 저장했어요.'
     autoSaveStatus.value = '저장 완료 · 방금 전'
-  } catch {
-    resultMessage.value = '일기를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.'
+  } catch (err) {
+    resultMessage.value =
+      err?.message || journalStore.error || '일기를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.'
   }
 }
 
@@ -203,23 +206,59 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
     <template v-else>
       <main class="journal-create-page__content">
         <section class="journal-create-page__date">
-          <div>
+          <span class="journal-create-page__date-icon" aria-hidden="true">
+            <CalendarDays :size="19" :stroke-width="2" />
+          </span>
+          <div class="journal-create-page__date-copy">
             <p class="journal-create-page__eyebrow">DAILY NOTE · {{ monthLabel }}</p>
             <h2>{{ dateLabel }}</h2>
           </div>
           <span class="journal-create-page__badge">
-            <CalendarCheck :size="13" :stroke-width="1.8" aria-hidden="true" />
+            <span class="journal-create-page__today-dot" aria-hidden="true" />
             오늘 1회
           </span>
         </section>
 
-        <section class="journal-create-page__reflection" aria-label="판단 온도와 시장 생각">
+        <section class="journal-create-page__step-card" aria-labelledby="mood-step-title">
+          <header class="journal-create-page__step-header">
+            <span class="journal-create-page__step-number">1</span>
+            <h2 id="mood-step-title">오늘 시장을 보며 어떤 기분이었나요?</h2>
+          </header>
           <JournalMoodPanel v-model="form.marketMood" />
+        </section>
+
+        <section class="journal-create-page__step-card" aria-labelledby="thought-step-title">
+          <header
+            class="journal-create-page__step-header journal-create-page__step-header--thought"
+          >
+            <span class="journal-create-page__step-number journal-create-page__step-number--dark"
+              >2</span
+            >
+            <h2 id="thought-step-title">오늘의 생각을 한 문장부터</h2>
+            <span class="journal-create-page__counter">{{ form.marketThought.length }} / 500</span>
+          </header>
+
+          <div class="journal-create-page__thought-guide">
+            <CircleHelp :size="15" :stroke-width="1.8" aria-hidden="true" />
+            <span>지금까지의 매매 중 첫 번째로 남는 생각은?</span>
+          </div>
+
+          <div class="journal-create-page__prompt-list" aria-label="빠른 작성 문구">
+            <button
+              v-for="prompt in thoughtPrompts"
+              :key="prompt"
+              type="button"
+              @click="appendThoughtPrompt(prompt)"
+            >
+              {{ prompt }}
+            </button>
+          </div>
+
           <BaseTextarea
             v-model="form.marketThought"
             label="오늘 시장을 보며 든 생각"
             :required="true"
-            placeholder="오늘 시장을 어떻게 바라봤는지, 어떤 감정을 느꼈는지, 투자 원칙을 지켰는지 자유롭게 적어주세요."
+            placeholder="버튼을 눌러 시작하거나, 지금 떠오르는 생각을 편하게 적어보세요."
             :max-length="500"
           />
         </section>
@@ -297,10 +336,29 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
 
 .journal-create-page__date {
   display: flex;
-  min-height: 56px;
+  min-height: 66px;
   align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid #e5e7eb;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #d8ecea;
+  border-radius: 14px;
+  background: #f1fbfa;
+}
+
+.journal-create-page__date-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--brand-teal-deep);
+  color: #ffffff;
+}
+
+.journal-create-page__date-copy {
+  min-width: 0;
+  flex: 1;
 }
 
 .journal-create-page__eyebrow {
@@ -328,18 +386,23 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
   gap: 5px;
   padding: 0 10px;
   border-radius: 14px;
-  background: #c8f3ee;
+  background: #ffffff;
   color: var(--teal-deep);
   font-size: var(--font-size-caption);
   font-weight: 700;
   white-space: nowrap;
 }
 
-.journal-create-page__reflection {
-  display: flex;
-  min-height: 220px;
-  align-items: center;
-  gap: 12px;
+.journal-create-page__today-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--brand-teal);
+}
+
+.journal-create-page__step-card {
+  display: grid;
+  gap: 10px;
   padding: 12px;
   border: 1px solid #e4e9ea;
   border-radius: 16px;
@@ -347,17 +410,100 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-.journal-create-page__reflection :deep(.base-textarea) {
+.journal-create-page__step-header {
+  display: flex;
   min-width: 0;
-  flex: 1 1 0;
+  align-items: center;
+  gap: 8px;
 }
 
-.journal-create-page__reflection :deep(.base-textarea__field-wrapper) {
+.journal-create-page__step-header h2 {
+  min-width: 0;
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-body-sm);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.journal-create-page__step-number {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--brand-teal-deep);
+  color: #ffffff;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-caption);
+  font-weight: 800;
+}
+
+.journal-create-page__step-number--dark {
+  background: #24364a;
+}
+
+.journal-create-page__counter {
+  margin-left: auto;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-caption);
+}
+
+.journal-create-page__thought-guide {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: #eff9f8;
+  color: var(--brand-teal-deep);
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+}
+
+.journal-create-page__prompt-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.journal-create-page__prompt-list button {
+  min-width: 0;
+  height: 32px;
+  padding: 0 6px;
+  overflow: hidden;
+  border: 1px solid #dce6e9;
+  border-radius: 9px;
+  background: #ffffff;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: var(--font-size-caption);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.journal-create-page__prompt-list button:focus-visible {
+  outline: 2px solid var(--brand-teal);
+  outline-offset: 2px;
+}
+
+.journal-create-page__step-card :deep(.base-textarea) {
+  min-width: 0;
+}
+
+.journal-create-page__step-card :deep(.base-textarea__header) {
+  display: none;
+}
+
+.journal-create-page__step-card :deep(.base-textarea__field-wrapper) {
   padding: 11px 12px;
 }
 
-.journal-create-page__reflection :deep(.base-textarea__field) {
-  min-height: 152px;
+.journal-create-page__step-card :deep(.base-textarea__field) {
+  min-height: 72px;
   resize: none;
 }
 
@@ -419,8 +565,8 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
     padding-left: 14px;
   }
 
-  .journal-create-page__reflection {
-    gap: 8px;
+  .journal-create-page__step-card {
+    gap: 12px;
     padding: 10px;
   }
 

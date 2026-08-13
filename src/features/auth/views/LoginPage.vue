@@ -1,20 +1,21 @@
 <script setup>
 import { ShieldCheck, TriangleAlert } from '@lucide/vue'
-import { RouterLink, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
 import LoginForm from '@/features/auth/components/LoginForm.vue'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 
-const router = useRouter()
 const authStore = useAuthStore()
+const route = useRoute()
+const router = useRouter()
 
 async function handleSocialLogin(provider) {
   const response = await authStore.startOauthLogin(provider)
+  if (!response?.testMode) return
 
-  if (response) {
-    router.push({ name: ROUTE_NAMES.BROKER_CONNECT })
-  }
+  const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : null
+  await router.push(redirect || { name: ROUTE_NAMES.BROKER_CONNECT })
 }
 </script>
 
@@ -26,7 +27,7 @@ async function handleSocialLogin(provider) {
           <RouterLink class="brand-logo-link" :to="{ name: ROUTE_NAMES.HOME }">
             <img
               class="brand-logo"
-              src="/assets/logos/investory-logo.png"
+              src="/assets/logos/investory-logo-transparent.png"
               alt="Investory 홈으로 이동"
             />
           </RouterLink>

@@ -19,6 +19,15 @@ const saving = ref(false)
 const saveError = ref('')
 const initialized = ref(false)
 
+const PRINCIPLE_ICONS = Object.freeze({
+  PORTFOLIO_RISK_ALLOCATION: 'chart-pie',
+  BUY_JUDGMENT_BASIS: 'search',
+  INVESTMENT_HORIZON: 'calendar-range',
+  LOSS_RESPONSE: 'shield-check',
+  PROFIT_RESPONSE: 'trending-up',
+  PRINCIPLE_FULFILLMENT: 'refresh-cw',
+})
+
 const currentSnapshot = computed(() =>
   JSON.stringify(
     draftPrinciples.value.map((principle) => ({
@@ -54,8 +63,34 @@ function clonePrinciples(principles) {
   }))
 }
 
+function formatSourceDate(date) {
+  if (!date) return ''
+
+  const [year, month, day] = String(date).split('-')
+  if (!year || !month || !day) return String(date)
+  return `${year}. ${month}. ${day}`
+}
+
+function isUserCreatedPrinciple(principle) {
+  return principle.recommendationSource?.type === 'USER_CREATED'
+}
+
 function getSourceLabel(principle) {
-  return principle.recommendationSource?.tendency?.name ?? principle.title ?? '직접 작성'
+  if (isUserCreatedPrinciple(principle)) return '사용자 작성'
+  return principle.recommendationSource?.tendency?.name ?? principle.title ?? '투자성향'
+}
+
+function getSourceMeta(principle) {
+  if (isUserCreatedPrinciple(principle)) {
+    const date = formatSourceDate(principle.modifiedDate || principle.appliedDate)
+    return date ? `사용자 작성 · ${date}` : '사용자 작성'
+  }
+
+  return `${getSourceLabel(principle)} 기반`
+}
+
+function getPrincipleIcon(category) {
+  return PRINCIPLE_ICONS[category] || 'sparkles'
 }
 
 function getLocalDateKey(date = new Date()) {
@@ -153,10 +188,10 @@ function handleBeforeUnload(event) {
 }
 
 watch(
-  [() => tendencyStore.analysis, () => tendencyStore.principles],
-  ([analysis, principles]) => {
-    if (initialized.value || !analysis) return
-    draftPrinciples.value = clonePrinciples(principles)
+  [() => tendencyStore.principles, () => tendencyStore.analysis],
+  ([principles]) => {
+    if (initialized.value) return
+    draftPrinciples.value = clonePrinciples(principles || [])
     initialSnapshot.value = currentSnapshot.value
     initialized.value = true
   },
@@ -170,14 +205,6 @@ onBeforeRouteLeave(() => {
 
 onMounted(async () => {
   await tendencyStore.fetchTendencies()
-  if (tendencyStore.isAnalysisLocked) {
-    await router.replace({
-      name: ROUTE_NAMES.TENDENCY,
-      query: { tab: 'principles' },
-    })
-    return
-  }
-
   window.addEventListener('beforeunload', handleBeforeUnload)
 })
 
@@ -193,7 +220,6 @@ onBeforeUnmount(() => {
         <AppIcon name="chevron-left" :size="20" />
       </button>
       <strong>투자원칙 수정</strong>
-      <span>{{ draftPrinciples.length }}개 적용 중</span>
     </header>
 
     <div
@@ -205,31 +231,36 @@ onBeforeUnmount(() => {
 
     <main v-else class="edit-content">
       <header class="edit-hero">
-        <h1>나의 투자원칙을 편집하세요</h1>
-        <p>적용 중인 원칙은 수정·제외하고, 추천 원칙은 새로 추가할 수 있어요.</p>
+        <h1>원칙을 정리해볼까요?</h1>
+        <p>필요한 원칙만 남기고 새 원칙을 더할 수 있어요.</p>
       </header>
 
-      <section class="edit-guide">
-        <span><AppIcon name="settings" :size="17" /></span>
-        <div>
-          <strong>추천 확인 → 원칙 선택 → 저장</strong>
-          <p>추천 목록에서 원칙을 더한 뒤 아래 저장 버튼을 눌러 적용해주세요.</p>
-        </div>
-      </section>
+      <div class="principle-summary" aria-label="투자원칙 구성 요약">
+        <span class="principle-summary__current">
+          <i aria-hidden="true"></i>
+          적용 중 {{ draftPrinciples.length }}
+        </span>
+        <span>
+          <AppIcon name="sparkles" :size="14" />
+          추천 {{ availableRecommendations.length }}
+        </span>
+      </div>
 
       <section class="edit-section">
         <header>
-          <h2>현재 적용 중 · 수정 또는 제외</h2>
-          <span>{{ draftPrinciples.length }}개</span>
+          <h2><i aria-hidden="true"></i>현재 적용 중 · 수정 또는 제외</h2>
+          <span>현재 적용 중인 {{ draftPrinciples.length }}개</span>
         </header>
 
         <div class="current-principles">
           <article
-            v-for="principle in draftPrinciples"
+            v-for="(principle, index) in draftPrinciples"
             :key="principle.principleId"
             class="edit-principle"
           >
+            <span class="edit-principle__index">{{ String(index + 1).padStart(2, '0') }}</span>
             <div class="edit-principle__body">
+              <span>{{ getSourceMeta(principle) }}</span>
               <textarea
                 v-if="editingId === principle.principleId"
                 v-model="principle.content"
@@ -237,7 +268,6 @@ onBeforeUnmount(() => {
                 :aria-label="`${getSourceLabel(principle)} 원칙 문구 수정`"
               />
               <strong v-else>{{ principle.content }}</strong>
-              <span>{{ getSourceLabel(principle) }} 기반</span>
             </div>
             <button
               type="button"
@@ -270,7 +300,7 @@ onBeforeUnmount(() => {
 
       <section v-if="availableRecommendations.length" class="edit-section">
         <header>
-          <h2>추천 원칙 · 추가하기</h2>
+          <h2><AppIcon name="sparkles" :size="17" />추천 원칙 추가하기</h2>
           <span>{{ availableRecommendations.length }}개 추천</span>
         </header>
 
@@ -279,9 +309,12 @@ onBeforeUnmount(() => {
             v-for="recommendation in availableRecommendations"
             :key="recommendation.recommendationId"
           >
+            <span class="available-principles__icon">
+              <AppIcon :name="getPrincipleIcon(recommendation.analysisType.code)" :size="17" />
+            </span>
             <div>
-              <strong>{{ recommendation.recommendationText }}</strong>
               <span>{{ recommendation.analysisType.name }} 기반</span>
+              <strong>{{ recommendation.recommendationText }}</strong>
             </div>
             <button
               type="button"
@@ -340,7 +373,7 @@ onBeforeUnmount(() => {
   display: grid;
   width: 100%;
   min-height: 64px;
-  grid-template-columns: 36px minmax(0, 1fr) auto;
+  grid-template-columns: 36px minmax(0, 1fr) 36px;
   align-items: center;
   gap: 8px;
   padding: 12px 16px 10px;
@@ -361,29 +394,20 @@ onBeforeUnmount(() => {
 }
 
 .edit-app-bar strong {
+  grid-column: 2;
   color: #24383d;
   font-size: var(--font-size-body);
   text-align: center;
 }
 
-.edit-app-bar > span {
-  padding: 5px 7px;
-  border-radius: 7px;
-  background: #e7f7f6;
-  color: #087f7c;
-  font-size: var(--font-size-caption);
-  font-weight: 800;
-}
-
 .edit-content {
   display: grid;
-  gap: 13px;
+  gap: 14px;
   padding: 8px 20px 92px;
 }
 
 .edit-hero h1,
 .edit-hero p,
-.edit-guide p,
 .edit-section h2,
 .save-error {
   margin: 0;
@@ -396,7 +420,6 @@ onBeforeUnmount(() => {
 
 .edit-hero h1 {
   color: #1f3034;
-  font-family: var(--font-heading);
   font-size: var(--font-size-title-md);
   letter-spacing: -0.045em;
 }
@@ -407,38 +430,39 @@ onBeforeUnmount(() => {
   line-height: 1.45;
 }
 
-.edit-guide {
+.principle-summary {
   display: grid;
-  grid-template-columns: 32px minmax(0, 1fr);
-  gap: 9px;
-  padding: 11px;
-  border: 1px solid #c7e5e3;
-  border-radius: 11px;
-  background: #f0faf9;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 5px;
+  border-radius: 13px;
+  background: #f0f4f4;
+  color: #849092;
+  font-size: var(--font-size-caption);
+  font-weight: 700;
 }
 
-.edit-guide > span {
-  display: inline-flex;
-  width: 32px;
-  height: 32px;
+.principle-summary > span {
+  display: flex;
+  min-height: 36px;
   align-items: center;
   justify-content: center;
-  border-radius: 9px;
-  background: #0b8f8b;
-  color: #fff;
+  gap: 6px;
+  border-radius: 10px;
 }
 
-.edit-guide strong {
-  color: #314649;
-  font-size: var(--font-size-body);
-  line-height: 1.4;
+.principle-summary__current {
+  background: #ffffff;
+  color: #32474b;
+  box-shadow: 0 2px 7px rgba(32, 58, 62, 0.05);
 }
 
-.edit-guide p {
-  margin-top: 4px;
-  color: #7b888a;
-  font-size: var(--font-size-caption);
-  line-height: 1.45;
+.principle-summary i,
+.edit-section h2 i {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #0b918c;
 }
 
 .edit-section {
@@ -450,63 +474,94 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
 }
 
 .edit-section h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: #34474b;
   font-size: var(--font-size-body);
 }
 
 .edit-section header span {
-  color: #0a8c88;
-  font-size: var(--font-size-caption);
+  color: #879294;
+  font-size: 10px;
   font-weight: 750;
 }
 
-.current-principles,
 .available-principles {
   overflow: hidden;
   border: 1px solid #dce5e5;
-  border-radius: 11px;
+  border-radius: 14px;
   background: #fff;
+}
+
+.current-principles {
+  display: grid;
+  gap: 8px;
 }
 
 .edit-principle {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 32px 32px;
+  grid-template-columns: 44px minmax(0, 1fr) 32px;
+  grid-template-rows: repeat(2, auto);
   align-items: center;
-  gap: 6px;
+  gap: 6px 10px;
+  min-height: 88px;
   padding: 11px;
-  border-bottom: 1px solid #edf0f0;
+  border: 1px solid #d8e3e4;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 3px 9px rgba(34, 60, 64, 0.045);
 }
 
-.edit-principle:last-child,
 .available-principles article:last-child {
   border-bottom: 0;
+}
+
+.edit-principle__index {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  grid-row: 1 / 3;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #0b918c;
+  color: #ffffff;
+  font-size: var(--font-size-caption);
+  font-weight: 700;
 }
 
 .edit-principle__body,
 .available-principles article > div {
   display: grid;
   min-width: 0;
-  gap: 6px;
+  gap: 5px;
+}
+
+.edit-principle__body {
+  grid-row: 1 / 3;
 }
 
 .edit-principle strong,
 .available-principles strong {
   color: #35474b;
-  font-size: var(--font-size-body);
+  font-size: 14px;
   line-height: 1.45;
 }
 
 .edit-principle__body > span,
 .available-principles article span {
+  grid-row: 1;
   width: fit-content;
   padding: 3px 6px;
   border-radius: 6px;
   background: #f4f6f6;
   color: #778486;
-  font-size: var(--font-size-caption);
+  font-size: 10px;
 }
 
 .edit-principle textarea,
@@ -518,7 +573,7 @@ onBeforeUnmount(() => {
   background: #fff;
   color: #35474b;
   font: inherit;
-  font-size: var(--font-size-body);
+  font-size: 14px;
   line-height: 1.55;
   padding: 10px;
 }
@@ -536,22 +591,38 @@ onBeforeUnmount(() => {
 }
 
 .edit-principle__edit {
-  background: #f0f1ef;
-  color: #777d7c;
+  align-self: end;
+  background: transparent;
+  color: #607174;
 }
 
 .edit-principle__remove {
+  grid-column: 3;
+  grid-row: 2;
+  align-self: start;
   background: #fff1ef;
-  color: #e06d63;
+  color: #df5e59;
 }
 
 .available-principles article {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 32px;
+  grid-template-columns: 38px minmax(0, 1fr) 32px;
   align-items: center;
-  gap: 8px;
-  padding: 11px;
+  gap: 10px;
+  min-height: 76px;
+  padding: 11px 10px;
   border-bottom: 1px solid #edf0f0;
+}
+
+.available-principles__icon {
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #edf8f7;
+  color: #0a8e89;
 }
 
 .available-principles button {
@@ -561,7 +632,7 @@ onBeforeUnmount(() => {
 
 .custom-principle {
   border: 1px solid #dce5e5;
-  border-radius: 11px;
+  border-radius: 14px;
   background: #fff;
 }
 

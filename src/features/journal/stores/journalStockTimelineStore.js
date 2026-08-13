@@ -1,7 +1,11 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 
+import { queryClient } from '@/app/providers/queryClient'
 import { getJournalStockTimeline } from '@/features/journal/api/journalStockApi'
+import { queryKeys } from '@/shared/api/queryKeys'
+
+const STOCK_TIMELINE_STALE_TIME = 60 * 1000
 
 export const useJournalStockTimelineStore = defineStore('journal-stock-timeline', () => {
   const timeline = ref(null)
@@ -17,7 +21,11 @@ export const useJournalStockTimelineStore = defineStore('journal-stock-timeline'
     timeline.value = null
 
     try {
-      const response = await getJournalStockTimeline({ securityCode })
+      const response = await queryClient.fetchQuery({
+        queryKey: queryKeys.journal.stockTimeline(securityCode),
+        queryFn: () => getJournalStockTimeline({ securityCode }),
+        staleTime: STOCK_TIMELINE_STALE_TIME,
+      })
 
       if (requestId === latestRequestId) {
         timeline.value = response
@@ -37,10 +45,19 @@ export const useJournalStockTimelineStore = defineStore('journal-stock-timeline'
     }
   }
 
+  function reset() {
+    latestRequestId += 1
+    timeline.value = null
+    isLoading.value = false
+    error.value = ''
+    queryClient.removeQueries({ queryKey: ['journal', 'stock-timeline'] })
+  }
+
   return {
     timeline,
     isLoading,
     error,
     fetchTimeline,
+    reset,
   }
 })

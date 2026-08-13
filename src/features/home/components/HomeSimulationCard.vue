@@ -31,28 +31,49 @@ defineProps({
 
 <style scoped>
 .simulation-card {
+  position: relative;
+  overflow: hidden;
   display: flex;
-  min-height: 86px;
+  min-height: 104px;
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  border-radius: 16px;
+  border: 1px solid rgba(43, 226, 217, 0.28);
+  border-radius: 22px;
   color: #ffffff;
-  background: #263a43;
+  background:
+    radial-gradient(circle at 76% 18%, rgba(26, 215, 205, 0.18), transparent 28%),
+    linear-gradient(145deg, #06323c, #021b24);
+  box-shadow: 0 12px 25px rgba(3, 38, 48, 0.18);
+}
+
+.simulation-card::after {
+  position: absolute;
+  right: 48px;
+  bottom: -28px;
+  width: 120px;
+  height: 72px;
+  border-top: 2px solid rgba(52, 229, 220, 0.25);
+  transform: skewY(-18deg);
+  content: '';
 }
 
 .simulation-card__monkey {
   display: inline-flex;
-  width: 46px;
-  height: 46px;
-  flex: 0 0 46px;
+  z-index: 1;
+  width: 58px;
+  height: 58px;
+  flex: 0 0 58px;
   align-items: center;
   justify-content: center;
-  border-radius: 14px;
-  background: #0b8f8b;
+  border: 1px solid rgba(80, 237, 229, 0.4);
+  border-radius: 18px;
+  background: linear-gradient(145deg, #0b8f8b, #045565);
+  box-shadow: 0 0 18px rgba(42, 221, 212, 0.22);
 }
 
 .simulation-card__copy {
+  z-index: 1;
   display: flex;
   min-width: 0;
   flex: 1 1 auto;
@@ -74,6 +95,7 @@ defineProps({
 }
 
 .simulation-card__arrow {
+  z-index: 1;
   display: inline-flex;
   width: 44px;
   height: 44px;
@@ -81,7 +103,7 @@ defineProps({
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  color: #0b63ce;
+  color: #087f7c;
   background: #ffffff;
 }
 

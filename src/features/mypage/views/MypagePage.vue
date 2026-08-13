@@ -6,9 +6,10 @@ import { ROUTE_NAMES } from '@/app/router/route-names'
 import { disconnectSocialAccount, withdrawMember } from '@/features/mypage/api/mypageApi'
 import { useMypageStore } from '@/features/mypage/stores/mypageStore'
 import { useAuthStore } from '@/features/auth/stores/authStore'
+import SimulationParticipantAvatar from '@/features/simulation/components/SimulationParticipantAvatar.vue'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
-import PrimaryAppHeader from '@/shared/components/navigation/PrimaryAppHeader.vue'
+import PrimaryTabHeader from '@/shared/components/navigation/PrimaryTabHeader.vue'
 
 const router = useRouter()
 const mypageStore = useMypageStore()
@@ -25,44 +26,95 @@ const recentSimulationHeadline = computed(() => {
   const simulation = mypageStore.recentSimulation
   if (!simulation) return ''
 
-  return `${simulation.participantCount}명 중 실제 나는 ${simulation.rank}위예요`
+  const winner = simulation.participants.find((participant) => participant.rank === 1)
+  const winnerLabel =
+    SIMULATION_PARTICIPANT_META[winner?.variantType]?.label || winner?.variantName || '참가자'
+
+  return `${simulation.participantCount}명 대결 · ${winnerLabel} 1위`
 })
 
-const simulationParticipants = [
-  { label: '실제 나', image: '/assets/images/real-me.png', className: 'actual' },
-  { label: '나의 봇', image: '/assets/images/my-bot.png', className: 'bot' },
-  {
+const SIMULATION_PARTICIPANT_META = Object.freeze({
+  ACTUAL_USER: { label: '실제 나', className: 'actual' },
+  PERSONAL_BOT: { label: '원칙 봇', className: 'bot' },
+  FAMOUS_STRATEGY: {
     label: '유명 투자자',
-    image: '/assets/images/famous-investor.png',
     className: 'investor',
   },
-  { label: '원숭이', image: '/assets/images/monkey.png', className: 'monkey' },
-]
+  RANDOM_BOT: { label: '원숭이', className: 'monkey' },
+})
+
+const podiumParticipants = computed(() => {
+  const participants = mypageStore.recentSimulation?.participants || []
+  const displayOrder = [2, 1, 3, 4]
+
+  return [...participants]
+    .sort((first, second) => displayOrder.indexOf(first.rank) - displayOrder.indexOf(second.rank))
+    .map((participant) => ({
+      ...participant,
+      ...(SIMULATION_PARTICIPANT_META[participant.variantType] || {
+        label: participant.variantName,
+        className: 'bot',
+      }),
+    }))
+})
+
+const tendencyRoadmapPoints = computed(() => {
+  const history = mypageStore.tendencyHistory
+
+  return history.map((item, index) => {
+    const progress = history.length === 1 ? 0.5 : index / (history.length - 1)
+    return {
+      ...item,
+      x: 14 + progress * 122,
+      y: 31 - Math.sin(progress * Math.PI) * 13,
+      isLatest: index === history.length - 1,
+      month: item.analyzedDate?.slice(2, 7).replace('-', '.'),
+    }
+  })
+})
+
+const tendencyRoadmapLine = computed(() => {
+  if (!tendencyRoadmapPoints.value.length) return ''
+  if (tendencyRoadmapPoints.value.length === 1) return 'M 14 31 H 136'
+
+  return tendencyRoadmapPoints.value
+    .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`)
+    .join(' ')
+})
+
+const tendencyRoadmapMessage = computed(() => {
+  const history = mypageStore.tendencyHistory
+  if (history.length <= 1) return '첫 분석부터 차근차근 성향 변화를 기록해드릴게요.'
+
+  const latest = history.at(-1)
+  return latest.changedCount
+    ? `최근 분석에서 ${latest.changedCount}가지 성향 변화가 있었어요.`
+    : '최근에도 투자성향이 안정적으로 유지되고 있어요.'
+})
+
+const podiumGridStyle = computed(() => ({
+  '--participant-count': Math.max(podiumParticipants.value.length, 1),
+}))
+
+function formatSimulationReturn(value) {
+  const number = Number(value) || 0
+  return `${number > 0 ? '+' : ''}${number.toFixed(1)}%`
+}
 
 function goToSection(section) {
   router.push({ name: ROUTE_NAMES.MYPAGE_PLACEHOLDER, params: { section } })
 }
 
 function goToSimulation() {
-  router.push({ name: ROUTE_NAMES.SIMULATION })
-}
-
-function clearAuthStorage({ allMemberData = false } = {}) {
-  window.sessionStorage.clear()
-  if (allMemberData) {
-    Object.keys(window.localStorage)
-      .filter((key) => key.startsWith('investory:'))
-      .forEach((key) => window.localStorage.removeItem(key))
-    return
-  }
-
-  ;[
-    'accessToken',
-    'refreshToken',
-    'investory:auth',
-    'investory:oauth-session',
-    'investory:mock:oauth-provider',
-  ].forEach((key) => window.localStorage.removeItem(key))
+  const simulationId = mypageStore.recentSimulation?.simulationId
+  router.push(
+    simulationId
+      ? {
+          name: ROUTE_NAMES.MYPAGE_SIMULATION_DETAIL,
+          params: { simulationId },
+        }
+      : { name: ROUTE_NAMES.SIMULATION },
+  )
 }
 
 async function confirmLogout() {
@@ -71,7 +123,6 @@ async function confirmLogout() {
   actionError.value = ''
   try {
     await authStore.signOut()
-    clearAuthStorage()
     await router.replace({ name: ROUTE_NAMES.LOGIN })
   } catch {
     actionError.value = '로그아웃하지 못했어요. 다시 시도해주세요.'
@@ -93,7 +144,6 @@ async function confirmWithdrawal() {
     }
     await withdrawMember()
     await authStore.signOut()
-    clearAuthStorage({ allMemberData: true })
     await router.replace({ name: ROUTE_NAMES.LOGIN })
   } catch {
     actionError.value = '회원 탈퇴를 처리하지 못했어요. 다시 시도해주세요.'
@@ -111,21 +161,24 @@ function closeModal() {
 
 onMounted(async () => {
   if (!authStore.user) await authStore.fetchUser()
-  await mypageStore.fetchOverview({ force: true, authUser: authStore.user })
+  await mypageStore.fetchOverview({ authUser: authStore.user })
 })
 </script>
 
 <template>
   <div class="mypage-page">
-    <PrimaryAppHeader>
+    <PrimaryTabHeader title="마이페이지" flat-bottom>
       <template #right>
-        <button type="button" aria-label="마이페이지 도움말" @click="modal = 'help'">
+        <button
+          class="mypage-page__help"
+          type="button"
+          aria-label="마이페이지 도움말"
+          @click="modal = 'help'"
+        >
           <AppIcon name="circle-help" :size="18" />
         </button>
       </template>
-    </PrimaryAppHeader>
-
-    <h1 class="mypage-title">마이페이지</h1>
+    </PrimaryTabHeader>
 
     <BaseLoading v-if="mypageStore.loading && !mypageStore.profile" class="mypage-loading" />
 
@@ -168,14 +221,41 @@ onMounted(async () => {
           class="tendency-summary-card"
           @click="router.push({ name: ROUTE_NAMES.TENDENCY })"
         >
-          <div class="summary-card__header">
+          <div class="summary-card__header tendency-summary-card__header">
             <span class="summary-card__icon"><AppIcon name="chart-pie" :size="17" /></span>
-            <small>투자성향</small>
-          </div>
-          <div v-if="mypageStore.tendencyBadges.length" class="tendency-badges">
-            <span v-for="badge in mypageStore.tendencyBadges" :key="badge.code">
-              {{ badge.label }}
+            <span class="tendency-summary-card__heading">
+              <strong>나의 투자성향</strong>
+              <small v-if="!mypageStore.tendencyBadges.length">6가지 분석 전</small>
             </span>
+          </div>
+          <div v-if="mypageStore.tendencyBadges.length" class="tendency-result-preview">
+            <div class="tendency-roadmap" aria-label="투자성향 변화 로드맵">
+              <div class="tendency-roadmap__title">
+                <strong>성향 변화 로드맵</strong>
+                <span>분석 {{ mypageStore.tendencyHistory.length }}회</span>
+              </div>
+              <svg viewBox="0 0 150 52" role="img" aria-hidden="true">
+                <path :d="tendencyRoadmapLine" />
+                <g
+                  v-for="point in tendencyRoadmapPoints"
+                  :key="point.analysisRunId"
+                  class="tendency-roadmap__point"
+                  :class="{ 'is-latest': point.isLatest }"
+                >
+                  <line :x1="point.x" :y1="point.y - 2" :x2="point.x" :y2="point.y - 17" />
+                  <path
+                    class="tendency-roadmap__flag"
+                    :d="`M ${point.x} ${point.y - 17} L ${point.x + 10} ${point.y - 14} L ${point.x} ${point.y - 10} Z`"
+                  />
+                  <circle :cx="point.x" :cy="point.y" :r="point.isLatest ? 5 : 3.5" />
+                  <text :x="point.x" y="48" text-anchor="middle">{{ point.month }}</text>
+                </g>
+              </svg>
+            </div>
+            <div class="tendency-insight">
+              <img src="/assets/images/mypage-insight-monkey.png" alt="책을 보며 생각하는 원숭이" />
+              <p>{{ tendencyRoadmapMessage }}</p>
+            </div>
           </div>
           <div v-else class="summary-empty-state">
             <img src="/assets/icons/monkey-question.png" alt="" />
@@ -198,27 +278,53 @@ onMounted(async () => {
             <small>{{ mypageStore.recentSimulation ? '최근 시뮬레이션' : '시뮬레이션' }}</small>
           </div>
           <template v-if="mypageStore.recentSimulation">
-            <p class="simulation-summary-card__headline">{{ recentSimulationHeadline }}</p>
-            <div class="simulation-preview" aria-label="시뮬레이션 결과 미리보기">
-              <span
-                v-for="participant in simulationParticipants"
-                :key="participant.className"
-                :class="`simulation-preview__${participant.className}`"
+            <p class="simulation-summary-card__headline">
+              <span>{{ recentSimulationHeadline }}</span>
+              <strong>실제 나는 {{ mypageStore.recentSimulation.rank }}위예요</strong>
+            </p>
+            <div
+              class="simulation-podium"
+              :style="podiumGridStyle"
+              :aria-label="`${mypageStore.recentSimulation.participantCount}명 시뮬레이션 순위 미리보기`"
+            >
+              <div
+                v-for="participant in podiumParticipants"
+                :key="participant.variantId || participant.variantType"
+                class="simulation-podium__participant"
+                :class="[
+                  `simulation-podium__participant--rank-${participant.rank}`,
+                  `simulation-podium__participant--${participant.className}`,
+                ]"
               >
-                <img :src="participant.image" :alt="participant.label" />
-                {{ participant.label }}
-              </span>
+                <span
+                  v-if="participant.rank === 1"
+                  class="simulation-podium__crown"
+                  aria-label="1위"
+                  >👑</span
+                >
+                <span v-else class="simulation-podium__crown-placeholder" aria-hidden="true" />
+                <SimulationParticipantAvatar
+                  class="simulation-podium__avatar"
+                  :variant-type="participant.variantType"
+                  :size="38"
+                />
+                <small>{{ participant.label }}</small>
+                <strong>
+                  <span>{{ participant.rank }}위</span>
+                  <em>{{ formatSimulationReturn(participant.cumulativeReturnPercent) }}</em>
+                </strong>
+              </div>
             </div>
           </template>
           <div v-else class="summary-empty-state summary-empty-state--simulation">
             <img src="/assets/icons/monkey-question.png" alt="" />
             <div class="summary-empty-state__copy">
               <strong>아직 결과가 없어요</strong>
-              <p>투자봇 4개로<br />첫 대결을 시작해보세요</p>
+              <p>비교 상대를 골라<br />첫 대결을 시작해보세요</p>
             </div>
           </div>
           <span class="summary-card__action summary-card__action--simulation">
-            {{ mypageStore.recentSimulation ? '시뮬레이션 다시하기' : '시뮬레이션 시작하기' }}
+            {{ mypageStore.recentSimulation ? '결과 자세히 보기' : '시뮬레이션 시작하기' }}
             <AppIcon name="arrow-right" :size="11" />
           </span>
         </button>
@@ -355,6 +461,28 @@ onMounted(async () => {
   color: #263a3f;
 }
 
+.mypage-page__help {
+  border-color: rgb(67 222 217 / 34%) !important;
+  background: rgb(5 45 56 / 76%) !important;
+  color: #ffffff !important;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.mypage-page__help:hover {
+  border-color: rgb(86 235 229 / 72%) !important;
+  background: #075863 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 20px rgb(22 201 196 / 22%) !important;
+}
+
+.mypage-page__help:focus-visible {
+  outline: 2px solid var(--brand-teal-deep, #087f7c) !important;
+  outline-offset: 2px !important;
+}
+
 .mypage-title {
   margin: 10px 18px 4px;
   font-size: var(--font-size-title-lg);
@@ -366,26 +494,33 @@ onMounted(async () => {
   min-height: 520px;
 }
 .mypage-content {
+  position: relative;
+  z-index: 4;
   display: grid;
-  gap: 11px;
-  padding: 8px 18px 18px;
+  gap: 14px;
+  margin-top: -40px;
+  padding: 0 16px 24px;
 }
 
 .profile-summary {
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr) 34px;
+  grid-template-columns: 52px minmax(0, 1fr) 34px;
   align-items: center;
   gap: 11px;
-  padding: 14px;
-  border-radius: 14px;
-  background: #233e46;
-  color: #fff;
+  min-height: 92px;
+  padding: 12px 14px;
+  border: 1px solid #b9e4e2;
+  border-radius: 24px;
+  background: #ffffff;
+  color: #263a43;
+  box-shadow: 0 12px 26px rgb(2 35 44 / 13%);
 }
 .profile-summary__avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: #0d9994;
+  width: 52px;
+  height: 52px;
+  border: 2px solid #a9dedb;
+  border-radius: 19px;
+  background: linear-gradient(145deg, #13b8af, #0a8f91);
   object-fit: cover;
 }
 .profile-summary__copy {
@@ -398,24 +533,27 @@ onMounted(async () => {
 }
 .profile-summary h2 {
   margin: 0;
-  font-size: var(--font-size-body);
+  font-size: 19px;
+  letter-spacing: -0.04em;
 }
 .profile-summary__copy > div > span {
-  padding: 3px 6px;
-  border-radius: 5px;
-  background: #0d8d88;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #e7f8f6;
+  color: #087f7c;
   font-size: var(--font-size-caption);
+  font-weight: 800;
 }
 .profile-summary p {
   margin: 3px 0;
-  color: #d7e2e3;
+  color: #6f7e84;
   font-size: var(--font-size-caption);
 }
 .profile-summary small {
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #d7e2e3;
+  color: #60747b;
   font-size: var(--font-size-caption);
 }
 .provider-dot {
@@ -442,36 +580,41 @@ onMounted(async () => {
   height: 34px;
   place-items: center;
   border: 0;
-  background: transparent;
-  color: #fff;
+  border: 1px solid #c9e7e5;
+  border-radius: 12px;
+  background: #f1fbfa;
+  color: #087f7c;
   cursor: pointer;
 }
 
 .mypage-highlights {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 9px;
 }
 .tendency-summary-card,
 .simulation-summary-card {
   display: flex;
   width: 100%;
-  min-height: 148px;
+  min-width: 0;
+  min-height: 222px;
   flex-direction: column;
   align-items: stretch;
-  gap: 10px;
-  padding: 14px;
-  border: 1px solid #cfe7e5;
-  border-radius: 17px;
-  background: #fff;
+  gap: 8px;
+  padding: 12px 10px 10px;
+  border: 1px solid #b9e6e5;
+  border-radius: 22px;
+  background: linear-gradient(160deg, #ffffff 0%, #f7ffff 100%);
   color: #35484c;
   cursor: pointer;
   text-align: left;
-  box-shadow: 0 2px 5px rgba(29, 72, 77, 0.08);
+  box-shadow: 0 7px 18px rgba(33, 79, 102, 0.08);
 }
 .simulation-summary-card {
-  border-color: #f0dfc7;
-  background: #fffdf9;
+  border-color: #c7ddf8;
+  background: linear-gradient(160deg, #ffffff 0%, #f3f7fd 100%);
+  box-shadow: 0 9px 20px rgba(11, 99, 206, 0.08);
 }
 .summary-card__header {
   display: flex;
@@ -483,97 +626,193 @@ onMounted(async () => {
   width: 38px;
   height: 38px;
   place-items: center;
-  border-radius: 11px;
+  flex: 0 0 38px;
+  border-radius: 13px;
   background: #e8f8f7;
   color: #078d88;
 }
 .summary-card__icon--orange {
-  background: #fff3df;
-  color: #db8b1c;
+  background: linear-gradient(145deg, #4386e6, #0b63ce);
+  color: #ffffff;
+  box-shadow:
+    0 6px 12px rgba(11, 99, 206, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 .tendency-summary-card small,
 .simulation-summary-card small {
   color: #078d88;
-  font-size: var(--font-size-caption);
+  font-size: 11px;
   font-weight: 800;
 }
 .summary-card__header--simulation small {
-  color: #ca7a16;
+  color: #0b63ce;
+}
+.tendency-summary-card__header {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+}
+.tendency-summary-card__heading {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+.tendency-summary-card__heading strong {
+  color: #067d79;
+  font-size: 12px;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+.tendency-summary-card__heading small {
+  color: #789092;
+  font-size: 8px;
+  font-weight: 650;
 }
 .summary-card__action {
   display: inline-flex;
-  min-height: 44px;
+  min-height: 36px;
   align-items: center;
   justify-content: center;
   gap: 3px;
   margin-top: auto;
-  padding: 0 7px;
+  padding: 0 6px;
   border-radius: 999px;
   background: #e6f7f5;
   color: #087f7b;
-  font-size: var(--font-size-body);
+  font-size: 10px;
   font-weight: 800;
   white-space: nowrap;
 }
 .summary-card__action--simulation {
   max-width: none !important;
-  background: #fff3df;
-  color: #bc7013 !important;
+  background: #e8f1fd;
+  color: #0b63ce !important;
   line-height: 1;
   text-align: center !important;
 }
-.tendency-badges {
+.tendency-result-preview {
   display: grid;
-  grid-template-columns: repeat(2, max-content);
-  justify-content: start;
-  gap: 5px 7px;
+  gap: 6px;
+  flex: 1;
 }
-.tendency-badges span {
-  display: inline-flex;
-  min-height: 21px;
+
+.tendency-roadmap {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+  padding: 7px 7px 2px;
+  border-radius: 14px;
+  background: #edf8f7;
+}
+
+.tendency-roadmap__title {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 5px;
-  justify-content: flex-start;
-  justify-self: start;
-  padding: 3px 6px;
-  border-radius: 999px;
-  background: #1f5a86;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  font-size: var(--font-size-caption);
-  font-weight: 800;
-  line-height: 1;
-  white-space: nowrap;
 }
-.tendency-badges span::before {
-  width: 7px;
-  height: 7px;
-  flex: 0 0 7px;
-  border-radius: 50%;
-  background: #2eb5ff;
-  content: '';
+
+.tendency-roadmap__title strong {
+  color: #2a555b;
+  font-size: 9px;
+}
+
+.tendency-roadmap__title span {
+  color: #758b8e;
+  font-size: 7px;
+}
+
+.tendency-roadmap svg {
+  display: block;
+  width: 100%;
+  height: 52px;
+  overflow: visible;
+}
+
+.tendency-roadmap path {
+  fill: none;
+  stroke: #9ed8d4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 4;
+}
+
+.tendency-roadmap__point line {
+  stroke: #71878a;
+  stroke-linecap: round;
+  stroke-width: 1.5;
+}
+
+.tendency-roadmap .tendency-roadmap__flag {
+  fill: #71878a;
+  stroke: none;
+}
+
+.tendency-roadmap__point circle {
+  fill: #71878a;
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+.tendency-roadmap__point.is-latest line {
+  stroke: #07948e;
+}
+
+.tendency-roadmap .tendency-roadmap__point.is-latest .tendency-roadmap__flag,
+.tendency-roadmap__point.is-latest circle {
+  fill: #07948e;
+}
+
+.tendency-roadmap text {
+  fill: #7e9092;
+  font-size: 6px;
+}
+.tendency-insight {
+  display: grid;
+  grid-template-columns: 45px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  min-height: 46px;
+  padding: 0 5px 0 0;
+}
+.tendency-insight img {
+  width: 45px;
+  height: 46px;
+  object-fit: contain;
+}
+.tendency-insight p {
+  margin: 0;
+  color: #61777c;
+  font-size: 8px;
+  font-weight: 650;
+  line-height: 1.45;
+  word-break: keep-all;
 }
 .summary-empty-state {
   display: flex;
-  min-height: 51px;
+  min-height: 52px;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  text-align: center;
 }
 .summary-empty-state img {
-  width: 43px;
-  height: 43px;
-  flex: 0 0 43px;
+  width: 56px;
+  height: 56px;
+  flex: 0 0 56px;
   object-fit: contain;
 }
 .summary-empty-state__copy {
   display: grid;
-  gap: 3px;
   min-width: 0;
+  align-content: center;
+  gap: 3px;
+  text-align: center;
 }
 .summary-empty-state__copy strong {
   color: #2e3032;
-  font-size: var(--font-size-body);
+  font-size: 12px;
   font-weight: 800;
   line-height: 1.25;
   word-break: keep-all;
@@ -581,65 +820,116 @@ onMounted(async () => {
 .summary-empty-state__copy p {
   margin: 0;
   color: #7d8b8e;
-  font-size: var(--font-size-caption);
+  font-size: 9px;
   line-height: 1.45;
 }
 .summary-empty-state--simulation .summary-empty-state__copy p {
-  color: #887967;
+  color: #667d96;
 }
 .simulation-summary-card__headline {
-  min-height: 20px;
+  display: grid;
+  min-height: 34px;
+  align-content: center;
+  gap: 3px;
   margin: 0;
-  color: #2e3032;
-  font-size: var(--font-size-body);
-  font-weight: 800;
+  padding: 8px 7px;
+  border: 1px solid #d6e5f8;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #536d89;
+  font-size: 9px;
+  font-weight: 650;
   line-height: 1.45;
   text-align: center;
+  word-break: keep-all;
 }
-.simulation-preview {
+.simulation-summary-card__headline strong {
+  color: #0b63ce;
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1.25;
+}
+.simulation-podium {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--participant-count), minmax(0, 1fr));
+  align-items: end;
   gap: 4px;
+  min-height: 100px;
 }
-.simulation-preview span {
-  display: grid;
+.simulation-podium__participant {
+  position: relative;
+  display: flex;
   min-width: 0;
-  min-height: 54px;
-  place-items: center;
-  gap: 2px;
-  border: 1px solid #71868e;
-  border-radius: 8px;
-  background: #e7eef1;
-  color: #53666c;
-  font-size: var(--font-size-caption);
-  font-weight: 800;
-  line-height: 1.1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  color: #38596c;
   text-align: center;
 }
-.simulation-preview img {
-  width: 27px;
-  height: 34px;
-  object-fit: contain;
+.simulation-podium__avatar {
+  width: 38px;
+  height: 38px;
+  margin: 4px 0;
 }
-.simulation-preview .simulation-preview__actual {
-  border-color: #8ea2aa;
-  background: #edf3f5;
-  color: #53666c;
+.simulation-podium__participant small {
+  overflow: hidden;
+  width: 100%;
+  min-height: 16px;
+  color: inherit;
+  font-size: 7px;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.simulation-preview .simulation-preview__bot {
-  border-color: #e8b22f;
-  background: #fff2bd;
-  color: #a56c00;
+.simulation-podium__participant strong {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  height: 30px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border-radius: 7px 7px 3px 3px;
+  background: #d9ebff;
+  color: #275e9b;
+  font-size: 10px;
+  line-height: 1.05;
 }
-.simulation-preview .simulation-preview__investor {
-  border-color: #d7a64a;
-  background: #fff5db;
-  color: #9a6a14;
+.simulation-podium__participant strong em {
+  font-size: 7px;
+  font-style: normal;
+  font-weight: 750;
+  opacity: 0.78;
 }
-.simulation-preview .simulation-preview__monkey {
-  border-color: #b9a5cf;
-  background: #f0e9f7;
-  color: #7b5c9a;
+.simulation-podium__participant--rank-1 strong {
+  height: 42px;
+  background: #4f91e8;
+  color: #ffffff;
+}
+.simulation-podium__participant--rank-2 strong {
+  height: 35px;
+  background: #91bdec;
+  color: #174f8d;
+}
+.simulation-podium__participant--rank-3 strong {
+  background: #b8d9f7;
+  color: #245d98;
+}
+.simulation-podium__participant--rank-4 strong {
+  height: 23px;
+  background: #dceafd;
+  color: #3c6595;
+}
+.simulation-podium__crown,
+.simulation-podium__crown-placeholder {
+  display: grid;
+  height: 16px;
+  place-items: center;
+  color: #e98d00;
+  font-size: 20px;
+  line-height: 1;
 }
 .simulation-summary-card p:not(.simulation-summary-card__headline) {
   color: #68777a;
@@ -648,39 +938,36 @@ onMounted(async () => {
 
 .menu-section {
   display: grid;
-  gap: 5px;
+  gap: 8px;
 }
 .menu-section h2 {
   margin: 0;
-  color: #607174;
-  font-size: var(--font-size-body);
-  font-weight: 700;
+  color: #183b59;
+  font-size: 15px;
+  font-weight: 850;
 }
 .menu-list {
-  overflow: hidden;
-  border: 1px solid #e0e7e7;
-  border-radius: 12px;
-  background: #fff;
+  display: grid;
+  gap: 7px;
 }
 .menu-list button,
 .account-actions button {
   display: grid;
   width: 100%;
-  min-height: 52px;
+  min-height: 48px;
   grid-template-columns: 22px minmax(0, 1fr) 16px;
   align-items: center;
   gap: 7px;
-  padding: 0 10px;
-  border: 0;
-  border-bottom: 1px solid #edf1f1;
+  padding: 0 14px;
+  border: 1px solid #dce6ec;
+  border-radius: 14px;
   background: #fff;
-  color: #415356;
+  color: #29465d;
   cursor: pointer;
-  font-size: var(--font-size-body);
+  font-size: 13px;
+  font-weight: 700;
   text-align: left;
-}
-.menu-list button:last-child {
-  border-bottom: 0;
+  box-shadow: 0 3px 10px rgba(30, 65, 89, 0.035);
 }
 .account-actions {
   display: grid;
@@ -688,10 +975,10 @@ onMounted(async () => {
   margin-top: 1px;
 }
 .account-actions button {
-  border: 0;
-  border-radius: 10px;
-  background: #fff3f2;
-  color: #ec5258;
+  border-color: #ffe0df;
+  border-radius: 14px;
+  background: linear-gradient(90deg, #fff5f4, #fffafa);
+  color: #e94d54;
 }
 .app-version {
   display: flex;

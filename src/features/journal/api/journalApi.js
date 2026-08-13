@@ -1,10 +1,16 @@
 import journalData from '@/mocks/data/journal.json'
+import { getLedgerTrades } from '@/features/ledger/api/ledgerApi'
+import { request } from '@/shared/api/client'
 
-function clone(value) {
-  return JSON.parse(JSON.stringify(value))
-}
+const JOURNAL_TIME_ZONE = 'Asia/Seoul'
+const JOURNAL_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
+  timeZone: JOURNAL_TIME_ZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+})
 
-function formatLocalDate(date) {
+function formatLocalDate(date = new Date()) {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
@@ -12,169 +18,154 @@ function formatLocalDate(date) {
   return `${year}-${month}-${day}`
 }
 
-function findJournalByDate(journalDate) {
-  return journalData.journals.find((journal) => journal.journalDate === journalDate)
+function formatJournalDate(instant) {
+  if (!instant) return null
+
+  const parts = JOURNAL_DATE_FORMATTER.formatToParts(new Date(instant))
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]))
+  return `${values.year}-${values.month}-${values.day}`
+}
+
+function addDaysToDateKey(dateKey, amount) {
+  if (!dateKey) return dateKey
+
+  const date = new Date(`${dateKey}T00:00:00Z`)
+  date.setUTCDate(date.getUTCDate() + amount)
+  return date.toISOString().slice(0, 10)
+}
+
+async function getLedgerTradesForJournalRange(startDate, endDate) {
+  const ledgerFrom = startDate ? addDaysToDateKey(startDate, -1) : undefined
+  const firstPage = await getLedgerTrades({ from: ledgerFrom, to: endDate, page: 0, size: 100 })
+  const remainingPages = Array.from(
+    { length: Math.max(0, (firstPage?.totalPages ?? 1) - 1) },
+    (_, index) => index + 1,
+  )
+  const remainingResults = await Promise.all(
+    remainingPages.map((page) =>
+      getLedgerTrades({ from: ledgerFrom, to: endDate, page, size: 100 }),
+    ),
+  )
+
+  return [
+    ...(firstPage?.content || []),
+    ...remainingResults.flatMap((result) => result?.content || []),
+  ]
+    .map((trade) => ({ ...trade, journalDate: formatJournalDate(trade.tradedAt) }))
+    .filter(
+      (trade) =>
+        trade.journalDate &&
+        (!startDate || trade.journalDate >= startDate) &&
+        (!endDate || trade.journalDate <= endDate),
+    )
 }
 
 function findDailyEntryByJournalId(journalId) {
   return journalData.dailyEntries?.find((entry) => entry.journal?.journalId === Number(journalId))
 }
 
-function applyTradeNotes(entry, tradeNotes = []) {
-  const noteMap = new Map(tradeNotes.map((note) => [Number(note.tradeId), note.rationaleText]))
-
-  entry.trades.forEach((trade) => {
-    const rationaleText = noteMap.get(trade.tradeId)
-    trade.note = rationaleText
-      ? {
-          journalTradeNoteId: trade.note?.journalTradeNoteId ?? Date.now() + trade.tradeId,
-          rationaleText,
-          createdAt: trade.note?.createdAt ?? new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }
-      : null
-  })
-}
-
 export function getDefaultJournalDate() {
   return formatLocalDate(new Date())
 }
 
-export async function getJournals() {
-  return { entries: clone(journalData.journals) }
+export function getJournalMonthRange(dateKey = getDefaultJournalDate()) {
+  const [year, month] = String(dateKey).split('-').map(Number)
+  const safeYear = Number.isInteger(year) ? year : new Date().getFullYear()
+  const safeMonth = Number.isInteger(month) && month >= 1 && month <= 12 ? month : 1
+  const lastDay = new Date(Date.UTC(safeYear, safeMonth, 0)).getUTCDate()
+  const monthKey = `${safeYear}-${String(safeMonth).padStart(2, '0')}`
+
+  return {
+    startDate: `${monthKey}-01`,
+    endDate: `${monthKey}-${String(lastDay).padStart(2, '0')}`,
+  }
+}
+
+export async function getJournals(params) {
+  return getJournalEntries(params)
 }
 
 export async function getJournalEntries({ startDate, endDate } = {}) {
-  const entries = journalData.journals.filter((journal) => {
-    if (startDate && journal.journalDate < startDate) {
-      return false
-    }
+  const fallbackRange = getJournalMonthRange(startDate || endDate)
+  const resolvedStartDate = startDate || fallbackRange.startDate
+  const resolvedEndDate = endDate || fallbackRange.endDate
+  const searchParams = new URLSearchParams()
+  searchParams.set('startDate', resolvedStartDate)
+  searchParams.set('endDate', resolvedEndDate)
 
-    if (endDate && journal.journalDate > endDate) {
-      return false
-    }
-
-    return true
-  })
-
-  return { entries: clone(entries) }
+  return await request(`/journal/entries?${searchParams.toString()}`)
 }
 
 export async function getCalendarActivity({ year, month, startDate, endDate } = {}) {
   const monthKey = year && month ? `${year}-${String(month).padStart(2, '0')}` : null
+  const trades = await getLedgerTradesForJournalRange(startDate, endDate)
+  const tradeCountByDate = trades.reduce((counts, trade) => {
+    const activityDate = trade.journalDate
+    if (activityDate) counts.set(activityDate, (counts.get(activityDate) ?? 0) + 1)
+    return counts
+  }, new Map())
 
-  return clone(
-    (journalData.calendarActivity ?? []).filter((activity) => {
-      if (startDate && activity.activityDate < startDate) {
-        return false
-      }
-
-      if (endDate && activity.activityDate > endDate) {
-        return false
-      }
-
-      return !monthKey || activity.activityDate.startsWith(monthKey)
-    }),
-  )
+  return [...tradeCountByDate.entries()]
+    .map(([activityDate, tradeCount]) => ({ activityDate, tradeCount }))
+    .filter((activity) => !monthKey || activity.activityDate.startsWith(monthKey))
 }
 
 export async function getJournalById(journalId) {
-  const dailyEntry = findDailyEntryByJournalId(journalId)
-  if (dailyEntry?.journal) {
-    return clone({ ...dailyEntry.journal, trades: dailyEntry.trades })
-  }
-
-  const journal = journalData.journals.find((item) => item.journalId === Number(journalId))
-  if (!journal) {
-    throw new Error('투자일지를 찾을 수 없습니다.')
-  }
-
-  return clone(journal)
+  return await request(`/journal/entries/${journalId}`)
 }
 
 export async function getJournalEntryOnDate(journalDate = getDefaultJournalDate()) {
-  const entry = journalData.dailyEntries?.find((item) => item.journalDate === journalDate)
-  const journal = entry?.journal ?? findJournalByDate(journalDate) ?? null
-  const isFutureDate = journalDate > getDefaultJournalDate()
+  const entryData = await request(`/journal/entries/on/${journalDate}`)
 
-  return clone({
-    journalDate,
-    canCreate: !journal && !isFutureDate && entry?.canCreate !== false,
-    journal,
-    trades: entry?.trades ?? journal?.trades ?? [],
-  })
+  if (entryData && (!entryData.trades || entryData.trades.length === 0)) {
+    const ledgerTrades = await getLedgerTradesForJournalRange(journalDate, journalDate)
+    if (ledgerTrades.length) {
+      entryData.trades = ledgerTrades.map((trade) => ({
+        tradeId: trade.tradeId,
+        securityId: trade.securityId,
+        securityCode: trade.securityCode,
+        securityName: trade.securityName,
+        tradeSide: trade.tradeSide,
+        quantity: trade.quantity,
+        unitPrice: trade.unitPrice,
+        tradedAt: trade.tradedAt,
+        note: null,
+      }))
+    }
+  }
+
+  return entryData
 }
 
 export async function createJournal(payload) {
   const journalDate = payload.journalDate || getDefaultJournalDate()
-  let dailyEntry = journalData.dailyEntries?.find((entry) => entry.journalDate === journalDate)
 
-  if (dailyEntry?.journal) {
-    throw new Error('해당 날짜의 투자일지가 이미 존재합니다.')
-  }
-
-  if (!dailyEntry) {
-    dailyEntry = {
+  return await request('/journal/entries', {
+    method: 'POST',
+    body: JSON.stringify({
       journalDate,
-      canCreate: true,
-      journal: null,
-      trades: [],
-    }
-    journalData.dailyEntries ??= []
-    journalData.dailyEntries.push(dailyEntry)
-  }
-
-  const now = new Date().toISOString()
-  const newJournal = {
-    journalId: Date.now(),
-    journalDate,
-    marketThought: payload.marketThought || '',
-    marketMood: payload.marketMood || 'CALM',
-    tradeCount: dailyEntry.trades.length,
-    complianceRate: 100,
-    createdAt: now,
-    updatedAt: now,
-    editableUntilAt: null,
-    isBackfilled: false,
-    isEditable: true,
-  }
-
-  dailyEntry.journal = { ...newJournal }
-  dailyEntry.canCreate = false
-  applyTradeNotes(dailyEntry, payload.tradeNotes)
-
-  journalData.journals.unshift(newJournal)
-  return clone(newJournal)
+      marketThought: payload.marketThought || '',
+      marketMood: payload.marketMood || null,
+      tradeNotes: (payload.tradeNotes || []).map((note) => ({
+        tradeId: Number(note.tradeId),
+        rationaleText: note.rationaleText || '',
+      })),
+    }),
+  })
 }
 
 export async function updateJournal(journalId, payload) {
-  const dailyEntry = findDailyEntryByJournalId(journalId)
-
-  if (dailyEntry?.journal) {
-    Object.assign(dailyEntry.journal, {
-      marketThought: payload.marketThought,
-      marketMood: payload.marketMood,
-      updatedAt: new Date().toISOString(),
-    })
-    applyTradeNotes(dailyEntry, payload.tradeNotes)
-
-    const listJournal = journalData.journals.find(
-      (journal) => journal.journalId === Number(journalId),
-    )
-    if (listJournal) {
-      Object.assign(listJournal, dailyEntry.journal)
-    }
-
-    return clone(dailyEntry.journal)
-  }
-
-  const journal = journalData.journals.find((item) => item.journalId === Number(journalId))
-  if (!journal) {
-    throw new Error('투자일지를 찾을 수 없습니다.')
-  }
-
-  Object.assign(journal, payload, { updatedAt: new Date().toISOString() })
-  return clone(journal)
+  return await request(`/journal/entries/${journalId}`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      marketThought: payload.marketThought || '',
+      marketMood: payload.marketMood || null,
+      tradeNotes: (payload.tradeNotes || []).map((note) => ({
+        tradeId: Number(note.tradeId),
+        rationaleText: note.rationaleText || '',
+      })),
+    }),
+  })
 }
 
 export async function deleteJournal(journalId) {
@@ -195,6 +186,5 @@ export async function deleteJournal(journalId) {
   return true
 }
 
-// Store compatibility aliases
 export const getJournalDetail = getJournalById
 export const saveJournal = createJournal

@@ -1,0 +1,51 @@
+export const queryKeys = Object.freeze({
+  auth: {
+    all: ['auth'],
+    currentUser: () => ['auth', 'current-user'],
+  },
+  home: {
+    all: ['home'],
+    dashboard: () => ['home', 'dashboard'],
+    accountSummary: () => ['home', 'account-summary'],
+    holdings: () => ['home', 'holdings'],
+  },
+  journal: {
+    all: ['journal'],
+    entries: (params = {}) => ['journal', 'entries', params],
+    calendar: (startDate, endDate) => ['journal', 'calendar', startDate, endDate],
+    detail: (journalId) => ['journal', 'detail', journalId],
+    daily: (journalDate) => ['journal', 'daily', journalDate],
+    stockSearchData: () => ['journal', 'stock-search-data'],
+    stockSearch: (keyword) => ['journal', 'stock-search', keyword],
+    stockTimeline: (securityCode) => ['journal', 'stock-timeline', securityCode],
+  },
+  mypage: {
+    all: ['mypage'],
+    overview: () => ['mypage', 'overview'],
+    profile: () => ['mypage', 'profile'],
+    accounts: () => ['mypage', 'accounts'],
+    accountDetail: (accountId) => ['mypage', 'accounts', accountId],
+    brokerProviders: (query) => ['mypage', 'broker-providers', query],
+  },
+  tendency: {
+    all: ['tendency'],
+    analysis: () => ['tendency', 'analysis'],
+    principles: () => ['tendency', 'principles'],
+    recommendations: () => ['tendency', 'recommendations'],
+    access: () => ['tendency', 'access'],
+  },
+  simulation: {
+    all: ['simulation'],
+    overview: () => ['simulation', 'overview'],
+    latestCompleted: () => ['simulation', 'latest-completed'],
+    comparators: () => ['simulation', 'comparators'],
+    report: (simulationId) => ['simulation', 'report', simulationId],
+    initialCapitalAll: () => ['simulation', 'initial-capital'],
+    initialCapital: (startDate, accountId) => [
+      'simulation',
+      'initial-capital',
+      startDate,
+      accountId,
+    ],
+  },
+})

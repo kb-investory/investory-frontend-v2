@@ -1,8 +1,10 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
+import { queryClient } from '@/app/providers/queryClient'
 import {
   compileSimulationBot,
+  getInitialCapital,
   getLatestSimulationResult,
   getSimulationBotCompileJob,
   getSimulationComparators,
@@ -10,33 +12,61 @@ import {
   getSimulationOverview,
   getSimulationReport,
   getSimulationSessions,
+  isSimulationReportEnrichmentPending,
   runSimulation as runSimulationApi,
   saveLatestCompletedSimulationResult,
   sendSimulationPrompt,
 } from '@/features/simulation/api/simulationApi'
+import { queryKeys } from '@/shared/api/queryKeys'
+
+const SIMULATION_STALE_TIME = 60 * 1000
+const COMPARATOR_STALE_TIME = 10 * 60 * 1000
+const REPORT_REFRESH_INTERVAL = 5000
+const REPORT_REFRESH_LIMIT = 12
 
 export const useSimulationStore = defineStore('simulation', () => {
   const overview = ref(null)
   const latestResult = ref(null)
   const historyRecords = ref([])
   const simulationReport = ref(null)
+  const simulationReportLoading = ref(false)
+  const simulationReportError = ref(null)
   const sessions = ref([])
   const messages = ref([])
   const comparators = ref([])
-  const selectedComparatorTypes = ref(['FAMOUS_STRATEGY'])
+  const selectedComparatorTypes = ref(['FAMOUS_STRATEGY', 'RANDOM_BOT'])
   const simulationConditions = ref(null)
+  const initialCapital = ref(null)
+  const initialCapitalLoading = ref(false)
+  const initialCapitalError = ref(null)
   const loading = ref(false)
   const comparatorsLoading = ref(false)
   const comparatorsError = ref(null)
   const botCompileStatus = ref('IDLE')
   const botCompileProgress = ref(0)
   const botCompileJobId = ref(null)
+  const personalBotId = ref(null)
   const botCompileError = ref(null)
+  let compileRequestId = 0
+  let initialCapitalRequestId = 0
+  let reportRefreshTimer = null
+  let reportRefreshCount = 0
+  let reportRefreshGeneration = 0
 
-  // Minimum required days for simulation qualification is 7 days
-  const MIN_REQUIRED_DAYS = 7
+  // Minimum required record days for simulation qualification
+  const MIN_REQUIRED_DAYS = 90
 
-  const eligibleDays = computed(() => overview.value?.eligiblePeriod?.totalDays ?? 0)
+  // 시뮬레이션 적격 기간은 일지를 작성한 날짜 수가 아니라 실제 시세가 존재하는
+  // 거래일 수를 기준으로 판단한다. 초기 스냅샷 존재 여부는 API의 isReady가 검증한다.
+  const eligibleDays = computed(
+    () =>
+      overview.value?.priceDataRange?.tradingDayCount ??
+      overview.value?.eligiblePeriod?.totalDays ??
+      0,
+  )
+  const simulationAccountId = computed(
+    () => overview.value?.initialCapitalBreakdown?.accountId ?? overview.value?.accountId ?? null,
+  )
 
   const isReady = computed(() => {
     if (!overview.value) return false
@@ -92,6 +122,9 @@ export const useSimulationStore = defineStore('simulation', () => {
     const filteredPerformance = (result.dailyPerformance ?? result.dailySnapshots ?? []).filter(
       isAllowedSnapshot,
     )
+    const filteredPositionSnapshots = Array.isArray(result.positionSnapshots)
+      ? result.positionSnapshots.filter(isAllowedSnapshot)
+      : null
 
     return {
       ...result,
@@ -103,6 +136,7 @@ export const useSimulationStore = defineStore('simulation', () => {
       totalTradesCount: filteredTrades.length,
       dailyPerformance: filteredPerformance,
       dailySnapshots: filteredPerformance,
+      positionSnapshots: filteredPositionSnapshots,
     }
   }
 
@@ -114,17 +148,31 @@ export const useSimulationStore = defineStore('simulation', () => {
   const isBotCompileComplete = computed(() => botCompileStatus.value === 'COMPLETED')
   const isBotCompileFailed = computed(() => botCompileStatus.value === 'FAILED')
 
-  async function fetchOverview() {
+  async function fetchOverview({ force = false } = {}) {
     loading.value = true
     try {
-      const [overviewRes, latestRes, historyRes] = await Promise.all([
-        getSimulationOverview(),
-        getLatestSimulationResult(),
-        getSimulationHistory(),
-      ])
-      overview.value = overviewRes
-      latestResult.value = latestRes
-      historyRecords.value = historyRes || []
+      if (force) {
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.simulation.overview(),
+          exact: true,
+        })
+      }
+
+      const response = await queryClient.fetchQuery({
+        queryKey: queryKeys.simulation.overview(),
+        queryFn: async () => {
+          const [overviewData, latestData, historyData] = await Promise.all([
+            getSimulationOverview(),
+            getLatestSimulationResult(),
+            getSimulationHistory(),
+          ])
+          return { overview: overviewData, latest: latestData, history: historyData || [] }
+        },
+        staleTime: SIMULATION_STALE_TIME,
+      })
+      overview.value = response.overview
+      latestResult.value = response.latest
+      historyRecords.value = response.history
     } catch (error) {
       console.error('Failed to fetch simulation overview:', error)
     } finally {
@@ -136,7 +184,11 @@ export const useSimulationStore = defineStore('simulation', () => {
     comparatorsLoading.value = true
     comparatorsError.value = null
     try {
-      comparators.value = await getSimulationComparators()
+      comparators.value = await queryClient.fetchQuery({
+        queryKey: queryKeys.simulation.comparators(),
+        queryFn: getSimulationComparators,
+        staleTime: COMPARATOR_STALE_TIME,
+      })
     } catch (error) {
       comparatorsError.value = error
       console.error('Failed to fetch simulation comparators:', error)
@@ -145,7 +197,54 @@ export const useSimulationStore = defineStore('simulation', () => {
     }
   }
 
-  async function fetchSimulationReport(simulationId) {
+  async function fetchInitialCapital(startDate, accountId, { signal } = {}) {
+    const requestId = ++initialCapitalRequestId
+    initialCapitalLoading.value = true
+    initialCapitalError.value = null
+    initialCapital.value = null
+
+    try {
+      const response = await queryClient.fetchQuery({
+        queryKey: queryKeys.simulation.initialCapital(startDate, accountId),
+        queryFn: ({ signal: querySignal }) =>
+          getInitialCapital(startDate, accountId, { signal: signal ?? querySignal }),
+        staleTime: 5 * 60 * 1000,
+      })
+      const responseStartDate = response?.startDate
+      const snapshotDate = response?.snapshotDate
+
+      if (responseStartDate !== startDate || !snapshotDate || snapshotDate >= responseStartDate) {
+        const validationError = new Error('올바른 직전 보유 데이터를 찾지 못했습니다.')
+        validationError.errorCode = 'INITIAL_SNAPSHOT_NOT_BEFORE_START'
+        throw validationError
+      }
+
+      const capital = Number(response.totalInitialCapital)
+      if (!Number.isFinite(capital) || capital < 0) {
+        throw new Error('초기자금 응답이 올바르지 않습니다.')
+      }
+
+      if (requestId === initialCapitalRequestId) {
+        initialCapital.value = capital
+      }
+      return {
+        ...response,
+        totalInitialCapital: capital,
+        holdings: Array.isArray(response.holdings) ? response.holdings : [],
+      }
+    } catch (error) {
+      if (requestId === initialCapitalRequestId) {
+        initialCapitalError.value = error
+      }
+      throw error
+    } finally {
+      if (requestId === initialCapitalRequestId) {
+        initialCapitalLoading.value = false
+      }
+    }
+  }
+
+  async function fetchSimulationReport(simulationId, { background = false, force = false } = {}) {
     const resolvedId =
       simulationId ??
       latestResult.value?.simulationRunId ??
@@ -159,18 +258,64 @@ export const useSimulationStore = defineStore('simulation', () => {
       return null
     }
 
+    if (!background) simulationReportLoading.value = true
+    simulationReportError.value = null
     try {
-      simulationReport.value = await getSimulationReport(resolvedId)
+      if (force) {
+        simulationReport.value = await getSimulationReport(resolvedId)
+        queryClient.setQueryData(queryKeys.simulation.report(resolvedId), simulationReport.value)
+      } else {
+        simulationReport.value = await queryClient.fetchQuery({
+          queryKey: queryKeys.simulation.report(resolvedId),
+          queryFn: () => getSimulationReport(resolvedId),
+          staleTime: SIMULATION_STALE_TIME,
+        })
+      }
       return simulationReport.value
     } catch (error) {
+      if (!background) simulationReportError.value = error
       console.error('Failed to fetch simulation report:', error)
       return null
+    } finally {
+      if (!background) simulationReportLoading.value = false
     }
+  }
+
+  function stopSimulationReportRefresh() {
+    if (reportRefreshTimer) clearTimeout(reportRefreshTimer)
+    reportRefreshTimer = null
+    reportRefreshCount = 0
+    reportRefreshGeneration += 1
+  }
+
+  async function startSimulationReportRefresh(simulationId) {
+    stopSimulationReportRefresh()
+    const refreshGeneration = reportRefreshGeneration
+    const report = await fetchSimulationReport(simulationId, { force: true })
+    if (refreshGeneration !== reportRefreshGeneration) return report
+    if (!isSimulationReportEnrichmentPending(report)) return report
+
+    const refresh = async () => {
+      if (refreshGeneration !== reportRefreshGeneration) return
+      if (reportRefreshCount >= REPORT_REFRESH_LIMIT) return
+      reportRefreshCount += 1
+      const refreshed = await fetchSimulationReport(simulationId, { background: true, force: true })
+      if (refreshGeneration !== reportRefreshGeneration) return
+      if (!isSimulationReportEnrichmentPending(refreshed)) {
+        stopSimulationReportRefresh()
+        return
+      }
+      reportRefreshTimer = setTimeout(refresh, REPORT_REFRESH_INTERVAL)
+    }
+
+    reportRefreshTimer = setTimeout(refresh, REPORT_REFRESH_INTERVAL)
+    return report
   }
 
   async function compilePersonalBot() {
     if (isBotCompiling.value || isBotCompileComplete.value) return
 
+    const requestId = ++compileRequestId
     botCompileStatus.value = 'QUEUED'
     botCompileProgress.value = 0
     botCompileJobId.value = null
@@ -178,6 +323,7 @@ export const useSimulationStore = defineStore('simulation', () => {
 
     try {
       let job = await compileSimulationBot()
+      if (requestId !== compileRequestId) return
       botCompileJobId.value = job.jobId
       botCompileStatus.value = job.status ?? 'RUNNING'
       botCompileProgress.value = job.progressPercent ?? 0
@@ -188,7 +334,9 @@ export const useSimulationStore = defineStore('simulation', () => {
         attempt += 1
       ) {
         await new Promise((resolve) => setTimeout(resolve, 500))
+        if (requestId !== compileRequestId) return
         job = await getSimulationBotCompileJob(job.jobId)
+        if (requestId !== compileRequestId) return
         botCompileStatus.value = job.status
         botCompileProgress.value = job.progressPercent ?? botCompileProgress.value
       }
@@ -196,7 +344,9 @@ export const useSimulationStore = defineStore('simulation', () => {
       if (botCompileStatus.value !== 'COMPLETED') {
         throw new Error('투자봇 생성이 완료되지 않았습니다.')
       }
+      personalBotId.value = job.personalBotId ?? null
     } catch (error) {
+      if (requestId !== compileRequestId) return
       botCompileStatus.value = 'FAILED'
       botCompileError.value = error
       console.error('Failed to compile personal simulation bot:', error)
@@ -204,10 +354,21 @@ export const useSimulationStore = defineStore('simulation', () => {
   }
 
   function resetBotCompilation() {
+    compileRequestId += 1
     botCompileStatus.value = 'IDLE'
     botCompileProgress.value = 0
     botCompileJobId.value = null
+    personalBotId.value = null
     botCompileError.value = null
+  }
+
+  function cancelBotCompilation() {
+    compileRequestId += 1
+    if (isBotCompiling.value) {
+      botCompileStatus.value = 'IDLE'
+      botCompileProgress.value = 0
+      botCompileJobId.value = null
+    }
   }
 
   function setSelectedComparators(types) {
@@ -249,11 +410,17 @@ export const useSimulationStore = defineStore('simulation', () => {
       const result = await runSimulationApi({
         periodStart: activeConditions?.periodStart,
         periodEnd: activeConditions?.periodEnd,
-        initialCapital: activeConditions?.initialCapital,
-        principles: activeConditions?.principles,
         participantTypes: activeParticipantTypes.value,
+        personalBotId: personalBotId.value,
+        accountId: simulationAccountId.value,
       })
       latestResult.value = filterResultBySelectedParticipants(result)
+      simulationReport.value = null
+      simulationReportError.value = null
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.simulation.overview(),
+        exact: true,
+      })
       return latestResult.value
     } catch (error) {
       console.error('Failed to execute simulation:', error)
@@ -266,6 +433,15 @@ export const useSimulationStore = defineStore('simulation', () => {
   async function completeSimulation() {
     if (!latestResult.value) return null
     latestResult.value = await saveLatestCompletedSimulationResult(latestResult.value)
+    queryClient.setQueryData(queryKeys.simulation.latestCompleted(), latestResult.value)
+    void queryClient.invalidateQueries({
+      queryKey: queryKeys.simulation.overview(),
+      exact: true,
+    })
+    void queryClient.invalidateQueries({
+      queryKey: queryKeys.mypage.overview(),
+      exact: true,
+    })
     return latestResult.value
   }
 
@@ -314,24 +490,56 @@ export const useSimulationStore = defineStore('simulation', () => {
     }
   }
 
+  function reset() {
+    cancelBotCompilation()
+    stopSimulationReportRefresh()
+    overview.value = null
+    latestResult.value = null
+    historyRecords.value = []
+    simulationReport.value = null
+    simulationReportLoading.value = false
+    simulationReportError.value = null
+    sessions.value = []
+    messages.value = []
+    comparators.value = []
+    selectedComparatorTypes.value = ['FAMOUS_STRATEGY', 'RANDOM_BOT']
+    simulationConditions.value = null
+    initialCapital.value = null
+    initialCapitalLoading.value = false
+    initialCapitalError.value = null
+    initialCapitalRequestId += 1
+    loading.value = false
+    comparatorsLoading.value = false
+    comparatorsError.value = null
+    resetBotCompilation()
+    queryClient.removeQueries({ queryKey: queryKeys.simulation.all })
+  }
+
   return {
     overview,
     latestResult,
     historyRecords,
     simulationReport,
+    simulationReportLoading,
+    simulationReportError,
     sessions,
     messages,
     comparators,
     selectedComparatorTypes,
     simulationConditions,
+    initialCapital,
+    initialCapitalLoading,
+    initialCapitalError,
     loading,
     comparatorsLoading,
     comparatorsError,
     botCompileStatus,
     botCompileProgress,
     botCompileJobId,
+    personalBotId,
     botCompileError,
     eligibleDays,
+    simulationAccountId,
     isReady,
     actualParticipant,
     comparatorRoster,
@@ -344,8 +552,12 @@ export const useSimulationStore = defineStore('simulation', () => {
     MIN_REQUIRED_DAYS,
     fetchOverview,
     fetchComparators,
+    fetchInitialCapital,
     fetchSimulationReport,
+    startSimulationReportRefresh,
+    stopSimulationReportRefresh,
     compilePersonalBot,
+    cancelBotCompilation,
     resetBotCompilation,
     setSelectedComparators,
     toggleComparator,
@@ -355,5 +567,6 @@ export const useSimulationStore = defineStore('simulation', () => {
     fetchMessages,
     sendMessage,
     setMockDataDays,
+    reset,
   }
 })

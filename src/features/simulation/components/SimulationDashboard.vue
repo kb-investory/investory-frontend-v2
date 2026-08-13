@@ -69,7 +69,7 @@ function formatPercent(val) {
 
 <template>
   <div class="dashboard-page-container">
-    <SimulationHeader />
+    <SimulationHeader :overview="overview" @start="emit('startSimulation')" />
     <!-- Hero Card: 같은 날, 같은 돈으로 다시 투자해 본다면? -->
     <div class="hero-card">
       <!-- Help Icon (top right) -->
@@ -82,11 +82,6 @@ function formatPercent(val) {
       >
         <AppIcon name="circle-check" :size="18" class="help-icon" />
       </button>
-
-      <div class="hero-subhead">
-        <AppIcon name="sparkles" :size="14" class="sparkle-icon" />
-        <span>과거의 나 vs 원칙을 지킨 나</span>
-      </div>
 
       <h2 class="hero-title">
         같은 날, 같은 돈으로<br />
@@ -199,19 +194,6 @@ function formatPercent(val) {
   color: #087f7c;
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-.hero-subhead {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: var(--font-size-caption);
-  font-weight: 700;
-  color: #087f7c;
-}
-
-.sparkle-icon {
-  color: #087f7c;
 }
 
 .hero-title {

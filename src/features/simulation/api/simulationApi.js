@@ -1,29 +1,10 @@
 import simulationData from '@/mocks/data/simulation.json'
-import simulationReportData from '@/mocks/data/simulation-report.json'
-import {
-  liveDailyPerformance,
-  liveSimulatedTrades,
-} from '@/mocks/data/liveSimulationPerformance.js'
+import { getSecurityDetailById } from '@/features/market/api/marketApi'
 import { request } from '@/shared/api/client'
 
 function clone(value) {
   return structuredClone(value)
 }
-
-const compileJobAttempts = new Map()
-const MOCK_COMPILE_PROGRESS = [18, 36, 54, 72, 88, 100]
-const LATEST_COMPLETED_RESULT_KEY = 'investory:mock:latest-completed-simulation:v1'
-
-function createLatestSimulationResult() {
-  return {
-    ...simulationData.latest,
-    dailyPerformance: liveDailyPerformance,
-    simulatedTrades: liveSimulatedTrades,
-    totalTradesCount: liveSimulatedTrades.length,
-  }
-}
-
-const USE_MOCK_FALLBACK = import.meta.env.VITE_USE_MOCK_FALLBACK !== 'false'
 
 const DEFAULT_HARDCODED_PROFILE = {
   value: 0.15,
@@ -31,6 +12,106 @@ const DEFAULT_HARDCODED_PROFILE = {
   quality: 0.2,
   trend: 0.15,
   disclosure: 0.1,
+}
+
+const securityDetailCache = new Map()
+
+function isPlaceholderSecurityName(name, securityId) {
+  if (!name?.trim()) return true
+
+  const normalizedName = name.trim()
+  return (
+    /^종목\s*#?\d+$/u.test(normalizedName) ||
+    (securityId != null && normalizedName === String(securityId))
+  )
+}
+
+function resolveSecurityId(item) {
+  if (item?.securityId != null) return item.securityId
+
+  const placeholderText = [item?.securityName, item?.action].find((value) =>
+    /^종목\s*#?\d+/u.test(value?.trim()),
+  )
+  return placeholderText?.trim().match(/^종목\s*#?(\d+)/u)?.[1] ?? null
+}
+
+async function getCachedSecurityDetail(securityId) {
+  if (securityId == null) return null
+
+  const cacheKey = String(securityId)
+  if (!securityDetailCache.has(cacheKey)) {
+    securityDetailCache.set(
+      cacheKey,
+      getSecurityDetailById(securityId).catch(() => {
+        securityDetailCache.delete(cacheKey)
+        return null
+      }),
+    )
+  }
+
+  return await securityDetailCache.get(cacheKey)
+}
+
+async function enrichSecurityDetails(items) {
+  if (!Array.isArray(items) || !items.length) return items
+
+  return await Promise.all(
+    items.map(async (item) => {
+      const securityId = resolveSecurityId(item)
+      if (!securityId || !isPlaceholderSecurityName(item.securityName, securityId)) {
+        return item
+      }
+
+      const security = await getCachedSecurityDetail(securityId)
+      if (!security) return item
+      const resolvedName = security.securityName ?? security.securityCode
+
+      return {
+        ...item,
+        securityId: security.securityId ?? securityId,
+        securityCode: security.securityCode ?? item.securityCode,
+        securityName: security.securityName ?? item.securityName,
+        action: resolvedName ? item.action?.replace(/^종목\s*#?\d+/u, resolvedName) : item.action,
+      }
+    }),
+  )
+}
+
+async function normalizeSimulationReport(data) {
+  if (!data) return data
+
+  const rawKeyTradeReviews = data.keyTradeReviews ?? data.decisionReviews ?? []
+  const [keyTradeReviews, decisionReviews, evidenceReviews] = await Promise.all([
+    enrichSecurityDetails(rawKeyTradeReviews),
+    enrichSecurityDetails(data.decisionReviews),
+    enrichSecurityDetails(data.evidenceReviews),
+  ])
+
+  return {
+    ...data,
+    keyTradeReviews,
+    decisionReviews: decisionReviews?.length ? decisionReviews : keyTradeReviews,
+    evidenceReviews,
+  }
+}
+
+export function isSimulationReportEnrichmentPending(report) {
+  if (!report) return false
+
+  const metadata = report.generationMetadata ?? {}
+  if (metadata.narrativeStatus === 'PENDING') return true
+
+  const terminalThesisStatuses = new Set(['NOT_CONFIGURED', 'COMPLETED', 'PARTIAL', 'FAILED'])
+  if (terminalThesisStatuses.has(metadata.thesisVerificationStatus)) return false
+
+  const reviews = report.keyTradeReviews ?? report.decisionReviews ?? []
+  return reviews.some((review) => {
+    const thesis = review.thesisOutcome
+    return (
+      !thesis ||
+      (thesis.verdict === 'UNCONFIRMED' && thesis.verificationStatus === 'WEB_SEARCH_NOT_RUN')
+    )
+  })
 }
 
 function normalizeSnapshot(snapshot) {
@@ -68,253 +149,156 @@ function normalizeDailyPerformanceArray(list) {
   return list.map(normalizeSnapshot)
 }
 
-const MOCK_HISTORY_RECORDS = [
-  {
-    simulationRunId: 101,
-    version: 'v3',
-    date: '2026.07.27',
-    period: '2026.03.01 ~ 2026.07.29',
-    returnPercent: 17.0,
-    actualReturnPercent: 5.0,
-    status: 'COMPLETED',
-  },
-  {
-    simulationRunId: 102,
-    version: 'v2',
-    date: '2026.06.18',
-    period: '2026.03.01 ~ 2026.06.17',
-    returnPercent: 11.4,
-    actualReturnPercent: 3.2,
-    status: 'COMPLETED',
-  },
-  {
-    simulationRunId: 103,
-    version: 'v2',
-    date: '2026.05.02',
-    period: '2026.03.01 ~ 2026.05.01',
-    returnPercent: 9.8,
-    actualReturnPercent: 2.1,
-    status: 'COMPLETED',
-  },
-  {
-    simulationRunId: 104,
-    version: 'v1',
-    date: '2026.03.21',
-    period: '2026.03.01 ~ 2026.03.20',
-    returnPercent: 6.2,
-    actualReturnPercent: 1.0,
-    status: 'COMPLETED',
-  },
-]
+function normalizeSimulatedTrade(trade) {
+  if (!trade) return trade
 
-export async function getSimulationHistory() {
-  try {
-    return await request('/api/v1/simulations/history')
-  } catch (error) {
-    if (!USE_MOCK_FALLBACK) throw error
-    console.warn('API /api/v1/simulations/history 요청 실패, 목데이터를 사용합니다:', error)
-    return clone(MOCK_HISTORY_RECORDS)
+  return {
+    ...trade,
+    simulatedTradeId: trade.simulatedTradeId ?? trade.simulated_trade_id,
+    simulationVariantId: trade.simulationVariantId ?? trade.simulation_variant_id,
+    securityId: trade.securityId ?? trade.security_id,
+    securityCode: trade.securityCode ?? trade.security_code ?? '',
+    securityName: trade.securityName ?? trade.security_name ?? '',
+    tradeSide: trade.tradeSide ?? trade.trade_side,
+    tradedAt: trade.tradedAt ?? trade.traded_at,
+    unitPrice: trade.unitPrice ?? trade.unit_price,
+    decisionReason: trade.decisionReason ?? trade.decision_reason ?? '',
   }
 }
 
-export async function getInitialCapital(startDate) {
-  try {
-    const query = new URLSearchParams({
-      start_date: startDate ?? '2026-03-01',
-      account_id: 1,
-    }).toString()
-    return await request(`/api/v1/simulations/initial-capital?${query}`)
-  } catch (error) {
-    if (!USE_MOCK_FALLBACK) throw error
-    console.warn('API /api/v1/simulations/initial-capital 요청 실패, 기본값을 사용합니다:', error)
-    return { totalInitialCapital: 5000000.0 }
+function normalizePositionSnapshot(snapshot) {
+  if (!snapshot) return snapshot
+
+  return {
+    ...snapshot,
+    simulationVariantId: snapshot.simulationVariantId ?? snapshot.simulation_variant_id,
+    snapshotDate: snapshot.snapshotDate ?? snapshot.snapshot_date,
+    securityId: snapshot.securityId ?? snapshot.security_id,
+    securityCode: snapshot.securityCode ?? snapshot.security_code ?? '',
+    securityName: snapshot.securityName ?? snapshot.security_name ?? '',
+    averagePrice: snapshot.averagePrice ?? snapshot.average_price ?? 0,
+    currentPrice: snapshot.currentPrice ?? snapshot.current_price ?? 0,
+    marketValue: snapshot.marketValue ?? snapshot.market_value ?? 0,
+    unrealizedPnl: snapshot.unrealizedPnl ?? snapshot.unrealized_pnl ?? 0,
+    returnPercent: snapshot.returnPercent ?? snapshot.return_percent ?? 0,
   }
+}
+
+async function normalizeSimulationResult(data) {
+  if (!data) return data
+
+  const dailyPerformance = normalizeDailyPerformanceArray(
+    data.dailyPerformance || data.dailySnapshots,
+  )
+  const rawSimulatedTrades = data.simulatedTrades ?? data.simulated_trades
+  const normalizedTrades = Array.isArray(rawSimulatedTrades)
+    ? rawSimulatedTrades.map(normalizeSimulatedTrade)
+    : []
+  const rawPositionSnapshots = data.positionSnapshots ?? data.position_snapshots
+  const normalizedPositionSnapshots = Array.isArray(rawPositionSnapshots)
+    ? rawPositionSnapshots.map(normalizePositionSnapshot)
+    : null
+  const [simulatedTrades, positionSnapshots] = await Promise.all([
+    enrichSecurityDetails(normalizedTrades),
+    enrichSecurityDetails(normalizedPositionSnapshots),
+  ])
+
+  return {
+    ...data,
+    dailyPerformance,
+    dailySnapshots: dailyPerformance,
+    simulatedTrades,
+    positionSnapshots,
+  }
+}
+
+export async function getSimulationHistory() {
+  return await request('/api/v1/simulations/history')
+}
+
+export async function getInitialCapital(startDate, accountId, { signal } = {}) {
+  const query = new URLSearchParams({
+    start_date: startDate,
+    account_id: accountId,
+  }).toString()
+  return await request(`/api/v1/simulations/initial-capital?${query}`, { signal })
 }
 
 export async function getSimulationOverview(params = {}) {
-  try {
-    const query = new URLSearchParams({
-      start_date: params.startDate ?? '2026-03-01',
-      account_id: params.accountId ?? 1,
-    }).toString()
-    return await request(`/api/v1/simulations/overview?${query}`)
-  } catch (error) {
-    if (!USE_MOCK_FALLBACK) throw error
-    console.warn('API /api/v1/simulations/overview 요청 실패, 목데이터를 사용합니다:', error)
-    return clone(simulationData.overview)
-  }
+  const searchParams = new URLSearchParams()
+  if (params.startDate) searchParams.set('start_date', params.startDate)
+  if (params.accountId) searchParams.set('account_id', params.accountId)
+  const query = searchParams.toString()
+  return await request(`/api/v1/simulations/overview${query ? `?${query}` : ''}`)
 }
 
 export async function getLatestSimulationResult() {
-  try {
-    const data = await request('/api/v1/simulations/latest')
-    const dailyPerformance = normalizeDailyPerformanceArray(
-      data.dailyPerformance || data.dailySnapshots,
-    )
-    return {
-      ...data,
-      dailyPerformance,
-      dailySnapshots: dailyPerformance,
-    }
-  } catch (error) {
-    if (!USE_MOCK_FALLBACK) throw error
-    console.warn('API /api/v1/simulations/latest 요청 실패, 목데이터를 사용합니다:', error)
-    return clone(createLatestSimulationResult())
-  }
+  const data = await request('/api/v1/simulations/latest')
+  return await normalizeSimulationResult(data)
 }
 
 export async function getLatestCompletedSimulationResult() {
-  try {
-    const storedResult = JSON.parse(
-      window.localStorage.getItem(LATEST_COMPLETED_RESULT_KEY) || 'null',
-    )
-    return storedResult ? clone(storedResult) : null
-  } catch {
-    window.localStorage.removeItem(LATEST_COMPLETED_RESULT_KEY)
-    return null
-  }
+  return await getLatestSimulationResult()
 }
 
 export async function saveLatestCompletedSimulationResult(result) {
-  const completedResult = JSON.parse(JSON.stringify(result || createLatestSimulationResult()))
-  window.localStorage.setItem(LATEST_COMPLETED_RESULT_KEY, JSON.stringify(completedResult))
-  return clone(completedResult)
+  if (!result) throw new Error('저장할 시뮬레이션 결과가 없습니다.')
+  return clone(result)
 }
 
 export async function compileSimulationBot(payload = {}) {
-  try {
-    const requestBody = {
-      principles: payload.principles ?? [
-        '익절 +20% 달성 시 이익 실현하고 손절률 -10% 도달 시 손절',
-        '단일 종목 보유 수 최대 5개',
-      ],
-      profile: payload.profile ?? DEFAULT_HARDCODED_PROFILE,
-    }
-    const response = await request('/api/v1/simulation-bots/compile', {
-      method: 'POST',
-      body: JSON.stringify(requestBody),
-    })
-    compileJobAttempts.set(response.jobId, 0)
-    return response
-  } catch (error) {
-    if (!USE_MOCK_FALLBACK) throw error
-    console.warn('API /api/v1/simulation-bots/compile 요청 실패, 목데이터를 사용합니다:', error)
-    const response = clone(simulationData.compileResponse)
-    compileJobAttempts.set(response.jobId, 0)
-    return response
+  const requestBody = {
+    principles: payload.principles ?? [
+      '익절 +20% 달성 시 이익 실현하고 손절률 -10% 도달 시 손절',
+      '단일 종목 보유 수 최대 5개',
+    ],
+    profile: payload.profile ?? DEFAULT_HARDCODED_PROFILE,
   }
+  return await request('/api/v1/simulation-bots/compile', {
+    method: 'POST',
+    body: JSON.stringify(requestBody),
+  })
 }
 
 export async function getSimulationBotCompileJob(jobId) {
-  try {
-    return await request(`/api/v1/simulation-bots/compile-jobs/${jobId}`)
-  } catch (error) {
-    if (!USE_MOCK_FALLBACK) throw error
-    console.warn(
-      `API /api/v1/simulation-bots/compile-jobs/${jobId} 요청 실패, 목데이터를 사용합니다:`,
-      error,
-    )
-    const attempts = (compileJobAttempts.get(jobId) ?? 0) + 1
-    compileJobAttempts.set(jobId, attempts)
-
-    const job = clone(simulationData.compileJobs[jobId] ?? simulationData.compileJobs.JOB_794FF6CC)
-    const progressIndex = Math.min(attempts - 1, MOCK_COMPILE_PROGRESS.length - 1)
-    const progressPercent = MOCK_COMPILE_PROGRESS[progressIndex]
-
-    if (progressPercent === 100) {
-      return {
-        ...job,
-        status: 'COMPLETED',
-        progressPercent: 100,
-        message: 'AI 원칙 봇 전략 생성이 완료되었습니다.',
-      }
-    }
-
-    return {
-      ...job,
-      status: 'RUNNING',
-      progressPercent,
-      message: '최근 거래 기록과 투자 원칙을 분석하고 있습니다.',
-    }
-  }
+  return await request(`/api/v1/simulation-bots/compile-jobs/${jobId}`)
 }
 
 export async function getSimulationComparators() {
-  try {
-    return await request('/api/v1/simulation-bots/comparators')
-  } catch (error) {
-    if (!USE_MOCK_FALLBACK) throw error
-    console.warn('API /api/v1/simulation-bots/comparators 요청 실패, 목데이터를 사용합니다:', error)
-    return clone(simulationData.comparators)
-  }
+  return await request('/api/v1/simulation-bots/comparators')
 }
 
 export async function runSimulation(payload = {}) {
-  try {
-    const requestBody = {
-      simulationRunId: payload.simulationRunId ?? 101,
-      periodStart: payload.periodStart ?? '2026-03-01',
-      periodEnd: payload.periodEnd ?? '2026-07-29',
-      initialCapital: payload.initialCapital ?? 5000000.0,
-      principles: payload.principles ?? [
-        '익절 +20% 달성 시 이익 실현하고 손절률 -10% 도달 시 손절',
-      ],
-      participantTypes: payload.participantTypes ?? [
-        'ACTUAL_USER',
-        'PERSONAL_BOT',
-        'FAMOUS_STRATEGY',
-      ],
-    }
-    const response = await request('/api/v1/simulations/run', {
-      method: 'POST',
-      body: JSON.stringify(requestBody),
-    })
-    const dailyPerformance = normalizeDailyPerformanceArray(
-      response.dailyPerformance || response.dailySnapshots,
-    )
-    return {
-      ...response,
-      dailyPerformance,
-      dailySnapshots: dailyPerformance,
-    }
-  } catch (error) {
-    if (!USE_MOCK_FALLBACK) throw error
-    console.warn('API /api/v1/simulations/run 요청 실패, 목데이터를 사용합니다:', error)
-    return {
-      ...clone(simulationData.run),
-      dailySnapshots: clone(liveDailyPerformance),
-    }
+  const requestBody = {
+    periodStart: payload.periodStart,
+    periodEnd: payload.periodEnd,
+    participantTypes: payload.participantTypes,
+    personalBotId: payload.personalBotId,
+    accountId: payload.accountId,
   }
+  const response = await request('/api/v1/simulations/run', {
+    method: 'POST',
+    body: JSON.stringify(requestBody),
+  })
+  return await normalizeSimulationResult(response)
 }
 
 export async function getSimulationDetail(simulationId) {
-  try {
-    const response = await request(`/api/v1/simulations/${simulationId}`)
-    const dailyPerformance = normalizeDailyPerformanceArray(
-      response.dailyPerformance || response.dailySnapshots,
-    )
-    return {
-      ...response,
-      dailyPerformance,
-      dailySnapshots: dailyPerformance,
-    }
-  } catch (error) {
-    if (!USE_MOCK_FALLBACK) throw error
-    console.warn(`API /api/v1/simulations/${simulationId} 요청 실패, 목데이터를 사용합니다:`, error)
-    return clone(simulationData.details[String(simulationId)] ?? simulationData.details['101'])
-  }
+  const response = await request(`/api/v1/simulations/${simulationId}`)
+  return await normalizeSimulationResult(response)
 }
 
 // GET /api/v1/simulations/{simulationId}/report
 export async function getSimulationReport(simulationId) {
-  try {
-    return await request(`/api/v1/simulations/${simulationId}/report`)
-  } catch (error) {
-    if (!USE_MOCK_FALLBACK) throw error
-    const report =
-      simulationReportData.reports[String(simulationId)] ?? simulationReportData.reports['101']
-    return clone(report)
-  }
+  const response = await request(`/api/v1/simulations/${simulationId}/report`)
+  return await normalizeSimulationReport(response)
+}
+
+export async function acceptSimulationPrincipleProposal(simulationId, recommendationId) {
+  return await request('/api/v1/principles/proposals/accept', {
+    method: 'POST',
+    body: JSON.stringify({ simulationId, recommendationId }),
+  })
 }
 
 export async function getSimulationMessages() {

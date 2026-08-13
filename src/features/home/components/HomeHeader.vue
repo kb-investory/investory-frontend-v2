@@ -8,9 +8,9 @@ defineProps({
     type: String,
     required: true,
   },
-  dateLabel: {
-    type: String,
-    required: true,
+  dark: {
+    type: Boolean,
+    default: false,
   },
 })
 
@@ -18,7 +18,7 @@ defineEmits(['notification'])
 </script>
 
 <template>
-  <div class="home-header">
+  <div class="home-header" :class="{ 'home-header--dark': dark }">
     <PrimaryAppHeader :logo-src="logoSrc">
       <template #right>
         <button
@@ -31,32 +31,61 @@ defineEmits(['notification'])
         </button>
       </template>
     </PrimaryAppHeader>
-    <time class="home-header__date">{{ dateLabel }}</time>
   </div>
 </template>
 
 <style scoped>
 .home-header {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 40;
-  width: calc(100% + 40px);
-  margin: 0 -20px;
-  background: #ffffff;
+  width: 100%;
+  margin: 0;
+  background: transparent;
 }
 
 .home-header :deep(.primary-app-header) {
   position: static;
 }
 
-.home-header__date {
-  display: block;
-  padding: 0 20px 6px;
-  color: #718087;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
-  font-weight: 600;
-  letter-spacing: 0.3px;
+.home-header--dark :deep(.primary-app-header) {
+  grid-template-columns: minmax(0, 1fr) 44px;
+  padding: 0 20px;
+  background: transparent;
+}
+
+.home-header--dark :deep(.primary-app-header__side--left) {
+  display: none;
+}
+
+.home-header--dark :deep(.primary-app-header__logo-link) {
+  width: 154px;
+  justify-self: start;
+  padding: 0;
+  background: transparent;
+}
+
+.home-header--dark :deep(.primary-app-header__logo) {
+  width: 146px;
+  filter: drop-shadow(0 0 5px rgba(45, 225, 217, 0.16));
+  object-position: left center;
+}
+
+.home-header--dark :deep(.primary-app-header button) {
+  border-color: rgba(67, 222, 217, 0.34);
+  color: #ffffff;
+  background: rgba(5, 45, 56, 0.76);
+  box-shadow: 0 0 18px rgba(15, 207, 200, 0.12);
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.home-header--dark :deep(.primary-app-header button:hover) {
+  border-color: rgba(86, 235, 229, 0.72);
+  color: #ffffff;
+  background: #075863;
+  box-shadow: 0 0 20px rgba(22, 201, 196, 0.22);
 }
 
 .home-header__button {

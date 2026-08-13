@@ -92,7 +92,7 @@ function formatMarkerDate(value) {
         </dd>
       </div>
       <div>
-        <dt>누적 손익</dt>
+        <dt>평가 손익</dt>
         <dd :class="profitClass">{{ formatSignedCurrency(cumulativeProfitAmount) }}</dd>
       </div>
     </dl>

@@ -1,6 +1,6 @@
 <script setup>
 import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 
 import SimulationParticipantAvatar from '@/features/simulation/components/SimulationParticipantAvatar.vue'
 import { useSimulationStore } from '@/features/simulation/stores/simulationStore'
@@ -21,6 +21,39 @@ const {
   selectedParticipantCount: selectedBotCount,
 } = storeToRefs(simulationStore)
 const activeBot = ref(null)
+const botModal = ref(null)
+
+const botTypeLabel = computed(
+  () =>
+    ({
+      PERSONAL_BOT: '내 원칙 기반',
+      FAMOUS_STRATEGY: '가치·품질 전략',
+      RANDOM_BOT: '성과 비교 기준',
+    })[activeBot.value?.variantType] ?? '투자 전략',
+)
+
+const displayedPrinciples = computed(() => (activeBot.value?.principles ?? []).slice(0, 3))
+
+const hiddenRuleLabels = new Set([
+  '반복 실행',
+  '화면 재현 시드',
+  '일별 매매 시도 확률',
+  '보유 시 매도 선택 확률',
+])
+
+const displayedRules = computed(() =>
+  (activeBot.value?.rules ?? []).filter((rule) => !hiddenRuleLabels.has(rule.label)).slice(0, 4),
+)
+
+function getBotTone(bot) {
+  return (
+    {
+      PERSONAL_BOT: 'personal',
+      FAMOUS_STRATEGY: 'legend',
+      RANDOM_BOT: 'random',
+    }[bot?.variantType] ?? 'personal'
+  )
+}
 
 function isSelected(bot) {
   return bot.fixed || selectedComparators.value.includes(bot.variantType)
@@ -29,6 +62,7 @@ function isSelected(bot) {
 function openBotModal(bot) {
   if (isPersonalBotLoading(bot)) return
   activeBot.value = bot
+  void nextTick(() => botModal.value?.focus())
 }
 
 function isPersonalBotLoading(bot) {
@@ -41,6 +75,11 @@ function isPersonalBotUnavailable(bot) {
 
 function toggleBotSelection(bot) {
   simulationStore.toggleComparator(bot?.variantType)
+}
+
+function handleModalAction() {
+  if (!activeBot.value || activeBot.value.fixed) return
+  toggleBotSelection(activeBot.value)
 }
 
 function handlePrimaryAction() {
@@ -94,7 +133,7 @@ function handlePrimaryAction() {
         v-for="bot in roster"
         :key="bot.variantType"
         class="roster-card"
-        :class="[`roster-card--${bot.tone}`, { 'is-selected': isSelected(bot) }]"
+        :class="[`roster-card--${getBotTone(bot)}`, { 'is-selected': isSelected(bot) }]"
       >
         <button
           type="button"
@@ -191,10 +230,14 @@ function handlePrimaryAction() {
       @click.self="activeBot = null"
     >
       <section
+        ref="botModal"
         class="bot-modal"
+        :class="`bot-modal--${getBotTone(activeBot)}`"
         role="dialog"
         aria-modal="true"
+        tabindex="-1"
         :aria-label="`${activeBot.variantName} 상세 정보`"
+        @keydown.esc="activeBot = null"
       >
         <span class="bot-modal__handle" aria-hidden="true"></span>
 
@@ -202,71 +245,91 @@ function handlePrimaryAction() {
           <AppIcon name="x" :size="18" />
         </button>
 
-        <header class="bot-modal__header">
-          <div class="bot-modal__avatar">
-            <SimulationParticipantAvatar :variant-type="activeBot.variantType" :size="54" />
-            <strong>{{ activeBot.level }}</strong>
-          </div>
-          <div class="bot-modal__identity">
-            <span class="bot-modal__class" :class="`bot-modal__class--${activeBot.tone}`">
-              {{ activeBot.strategyLabel }}
-            </span>
-            <h3>{{ activeBot.variantName }}</h3>
-            <p>{{ activeBot.versionLine }}</p>
-          </div>
-        </header>
-
-        <div class="bot-modal__summary">
-          <AppIcon name="sparkles" :size="18" />
-          <strong>{{ activeBot.summary }}</strong>
-        </div>
-
-        <section class="bot-modal__section bot-modal__principles">
-          <div class="bot-modal__section-title">
-            <strong>이 봇이 중요하게 보는 원칙</strong>
-            <span>{{ activeBot.fixed ? '나의 확정 원칙' : activeBot.className }}</span>
-          </div>
-          <ol>
-            <li v-for="(principle, index) in activeBot.principles" :key="principle">
-              <span>{{ index + 1 }}</span>
-              <p>{{ principle }}</p>
-            </li>
-          </ol>
-        </section>
-
-        <section class="bot-modal__section bot-modal__rules">
-          <div class="bot-modal__section-title">
-            <strong>핵심 운용 원칙</strong>
-            <span>{{ activeBot.rules.length }} RULES</span>
-          </div>
-          <dl>
-            <div v-for="rule in activeBot.rules" :key="rule.label">
-              <dt>{{ rule.label }}</dt>
-              <dd>{{ rule.value }}</dd>
+        <div class="bot-modal__content">
+          <header class="bot-modal__header">
+            <div class="bot-modal__avatar">
+              <SimulationParticipantAvatar :variant-type="activeBot.variantType" :size="54" />
             </div>
-          </dl>
-        </section>
+            <div class="bot-modal__identity">
+              <span class="bot-modal__class" :class="`bot-modal__class--${getBotTone(activeBot)}`">
+                {{ botTypeLabel }}
+              </span>
+              <h3>{{ activeBot.variantName }}</h3>
+              <p>{{ activeBot.description }}</p>
+            </div>
+          </header>
 
-        <div class="bot-modal__data">
-          <AppIcon name="database" :size="17" />
-          <div>
-            <strong>{{ activeBot.dataTitle }}</strong>
-            <span>{{ activeBot.dataSummary }}</span>
+          <div class="bot-modal__summary">
+            <AppIcon name="sparkles" :size="18" />
+            <div>
+              <span>한 줄 요약</span>
+              <strong>{{ activeBot.summary }}</strong>
+            </div>
+          </div>
+
+          <section v-if="activeBot.traits?.length" class="bot-modal__traits" aria-label="전략 특징">
+            <span v-for="trait in activeBot.traits" :key="trait">{{ trait }}</span>
+          </section>
+
+          <section
+            v-if="displayedPrinciples.length"
+            class="bot-modal__section bot-modal__principles"
+          >
+            <div class="bot-modal__section-title">
+              <AppIcon name="compass" :size="17" />
+              <strong>이렇게 투자해요</strong>
+            </div>
+            <ul>
+              <li
+                v-for="principle in displayedPrinciples"
+                :key="principle.principleId ?? principle.text"
+              >
+                <AppIcon name="check" :size="14" />
+                <p>{{ principle.text ?? principle }}</p>
+              </li>
+            </ul>
+          </section>
+
+          <section v-if="displayedRules.length" class="bot-modal__section bot-modal__rules">
+            <div class="bot-modal__section-title">
+              <AppIcon name="sliders-horizontal" :size="17" />
+              <strong>핵심 기준</strong>
+            </div>
+            <dl>
+              <div v-for="rule in displayedRules" :key="rule.key ?? rule.label">
+                <dt>{{ rule.label }}</dt>
+                <dd>{{ rule.value }}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <div v-if="activeBot.dataEvidence" class="bot-modal__data">
+            <AppIcon name="database" :size="17" />
+            <div>
+              <strong>{{ activeBot.dataEvidence.title }}</strong>
+              <span>{{ activeBot.dataEvidence.summary }}</span>
+            </div>
           </div>
         </div>
 
-        <div class="bot-modal__select-button" :class="{ 'is-selected': isSelected(activeBot) }">
-          <AppIcon :name="isSelected(activeBot) ? 'circle-check' : 'circle-help'" :size="17" />
+        <button
+          type="button"
+          class="bot-modal__select-button"
+          :class="{ 'is-selected': isSelected(activeBot) }"
+          :disabled="activeBot.fixed"
+          @click="handleModalAction"
+        >
+          <AppIcon :name="isSelected(activeBot) ? 'circle-check' : 'plus'" :size="17" />
           <span>
             {{
               activeBot.fixed
-                ? '고정 참가'
+                ? '기본 참가 봇'
                 : isSelected(activeBot)
-                  ? '선택된 투자봇'
-                  : '아직 선택하지 않은 투자봇'
+                  ? '선택 해제하기'
+                  : '이 봇 선택하기'
             }}
           </span>
-        </div>
+        </button>
       </section>
     </div>
   </div>
@@ -624,28 +687,43 @@ function handlePrimaryAction() {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding: 8px 8px 0;
-  background: rgb(20 34 39 / 46%);
-  backdrop-filter: blur(2px);
+  padding: 20px 8px 0;
+  background: rgb(20 34 39 / 52%);
+  backdrop-filter: blur(4px);
 }
 
 .bot-modal {
   position: relative;
   display: flex;
-  width: min(100%, 378px);
-  max-height: calc(100dvh - 10px);
+  width: min(100%, 390px);
+  max-height: min(88dvh, 720px);
   flex-direction: column;
-  gap: 10px;
-  padding: 28px 18px 18px;
-  overflow-y: auto;
-  border-radius: 20px 20px 0 0;
-  background: #fff;
-  box-shadow: 0 -12px 36px rgb(0 0 0 / 20%);
+  gap: 14px;
+  padding: 26px 20px max(20px, env(safe-area-inset-bottom));
+  overflow: hidden;
+  border-radius: 26px 26px 0 0;
+  background: #fbfcfc;
+  box-shadow: 0 -18px 50px rgb(0 0 0 / 24%);
   text-align: left;
   scrollbar-width: none;
 }
 
-.bot-modal::-webkit-scrollbar {
+.bot-modal__content {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.bot-modal__content > * {
+  flex: 0 0 auto;
+}
+
+.bot-modal__content::-webkit-scrollbar {
   display: none;
 }
 
@@ -663,13 +741,13 @@ function handlePrimaryAction() {
 .bot-modal__close {
   position: absolute;
   z-index: 1;
-  top: 46px;
-  right: 18px;
+  top: 24px;
+  right: 20px;
   display: grid;
-  width: 42px;
-  height: 42px;
+  width: 38px;
+  height: 38px;
   place-items: center;
-  border: 1px solid #d3dfe2;
+  border: 0;
   border-radius: 50%;
   background: #f7fafb;
   color: #40545b;
@@ -678,29 +756,30 @@ function handlePrimaryAction() {
 
 .bot-modal__header {
   display: flex;
-  min-height: 86px;
+  min-height: 78px;
   align-items: center;
-  gap: 12px;
-  padding-right: 48px;
+  gap: 14px;
+  padding-right: 42px;
 }
 
 .bot-modal__avatar {
   display: flex;
-  width: 68px;
-  height: 82px;
+  width: 72px;
+  height: 72px;
   flex: 0 0 auto;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1px;
-  border-radius: 14px;
-  background: #e8f0f2;
+  border-radius: 22px;
+  background: #e8f4f3;
 }
 
-.bot-modal__avatar strong {
-  color: #40545b;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
+.bot-modal--legend .bot-modal__avatar {
+  background: #fff3cf;
+}
+
+.bot-modal--random .bot-modal__avatar {
+  background: #f3ebfb;
 }
 
 .bot-modal__identity {
@@ -712,11 +791,10 @@ function handlePrimaryAction() {
 }
 
 .bot-modal__class {
-  padding: 4px 7px;
-  border-radius: 4px;
+  padding: 5px 8px;
+  border-radius: 999px;
   background: #edf1f2;
   color: #40545b;
-  font-family: var(--font-mono);
   font-size: var(--font-size-caption);
   font-weight: 700;
 }
@@ -735,40 +813,66 @@ function handlePrimaryAction() {
   margin: 0;
   color: #181817;
   font-family: var(--font-heading);
-  font-size: var(--font-size-title-md);
+  font-size: 24px;
   font-weight: 800;
 }
 
 .bot-modal__identity p {
   margin: 0;
-  overflow: hidden;
-  color: #94948e;
+  color: #6f7e84;
   font-size: var(--font-size-caption);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.45;
 }
 
 .bot-modal__summary {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  padding: 13px 12px;
-  border: 1px solid #cfe8e7;
-  border-radius: 10px;
-  background: #f3fbfa;
+  padding: 14px;
+  border: 0;
+  border-radius: 16px;
+  background: #eef8f7;
   color: #087f7c;
+}
+
+.bot-modal__summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bot-modal__summary span {
+  color: #087f7c;
+  font-size: 11px;
+  font-weight: 800;
 }
 
 .bot-modal__summary strong {
   color: #263a43;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.bot-modal__traits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.bot-modal__traits span {
+  padding: 7px 10px;
+  border: 1px solid #dce6e8;
+  border-radius: 999px;
+  background: #fff;
+  color: #40545b;
   font-size: var(--font-size-caption);
-  line-height: 1.55;
+  font-weight: 700;
 }
 
 .bot-modal__section {
   overflow: hidden;
   border: 1px solid #e1e7e9;
-  border-radius: 10px;
+  border-radius: 16px;
   background: #fff;
 }
 
@@ -776,28 +880,22 @@ function handlePrimaryAction() {
   display: flex;
   min-height: 41px;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 0 12px;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 0 14px;
   border-bottom: 1px solid #edf1f2;
 }
 
 .bot-modal__section-title strong {
   color: #263a43;
-  font-size: var(--font-size-caption);
+  font-size: 14px;
   font-weight: 800;
 }
 
-.bot-modal__section-title span {
-  color: #a0a09a;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
-}
-
-.bot-modal__principles ol {
+.bot-modal__principles ul {
   display: flex;
   margin: 0;
-  padding: 8px 12px 9px;
+  padding: 10px 14px 12px;
   flex-direction: column;
   gap: 4px;
   list-style: none;
@@ -806,34 +904,27 @@ function handlePrimaryAction() {
 .bot-modal__principles li {
   display: flex;
   min-height: 31px;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 9px;
 }
 
-.bot-modal__principles li > span {
+.bot-modal__principles li > svg {
   display: grid;
   width: 20px;
   height: 20px;
   flex: 0 0 auto;
-  place-items: center;
-  border-radius: 6px;
-  background: #f2f5f5;
-  color: #40545b;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
-  font-weight: 700;
-}
-
-.bot-modal__principles li:nth-child(2) > span {
-  background: #fff5d8;
-  color: #805c00;
+  margin-top: 1px;
+  padding: 3px;
+  border-radius: 50%;
+  background: #e7f5f3;
+  color: #087f7c;
 }
 
 .bot-modal__principles p {
   margin: 0;
   color: #263a43;
-  font-size: var(--font-size-caption);
-  line-height: 1.45;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .bot-modal__rules dl {
@@ -846,7 +937,7 @@ function handlePrimaryAction() {
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  padding: 0 12px;
+  padding: 0 14px;
   border-bottom: 1px solid #edf1f2;
 }
 
@@ -855,14 +946,14 @@ function handlePrimaryAction() {
 }
 
 .bot-modal__rules dt {
-  color: #a0a09a;
+  color: #718188;
   font-size: var(--font-size-caption);
 }
 
 .bot-modal__rules dd {
   margin: 0;
   color: #263a43;
-  font-size: var(--font-size-caption);
+  font-size: 13px;
   font-weight: 800;
   text-align: right;
 }
@@ -871,10 +962,10 @@ function handlePrimaryAction() {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  padding: 12px;
-  border: 1px solid #cfe8e7;
-  border-radius: 10px;
-  background: #f3fbfa;
+  padding: 12px 14px;
+  border: 1px solid #e1e8ea;
+  border-radius: 14px;
+  background: #fff;
   color: #087f7c;
 }
 
@@ -897,21 +988,28 @@ function handlePrimaryAction() {
 .bot-modal__select-button {
   display: inline-flex;
   width: 100%;
-  min-height: 52px;
+  min-height: 54px;
   align-items: center;
   justify-content: center;
   gap: 8px;
   border: 0;
-  border-radius: 12px;
+  border-radius: 15px;
   background: #263a43;
   color: #fff;
   font-family: inherit;
   font-size: var(--font-size-body);
   font-weight: 800;
+  flex: 0 0 auto;
 }
 
 .bot-modal__select-button.is-selected {
   color: #75d6d2;
+}
+
+.bot-modal__select-button:disabled {
+  background: #e9eff0;
+  color: #65777e;
+  cursor: default;
 }
 
 @keyframes loader-spin {

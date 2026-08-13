@@ -1,28 +1,38 @@
-import { request } from '@/shared/api/client'
+import { getApiUrl, request, setAccessToken } from '@/shared/api/client'
 
-export function getOauthAuthorizationUrl({ provider, redirectUri, state }) {
-  const searchParams = new URLSearchParams({ redirectUri, state })
+export function getOauthAuthorizationUrl({ provider, redirectUri }) {
+  const searchParams = new URLSearchParams()
+  if (redirectUri) {
+    searchParams.set('redirectUri', redirectUri)
+  }
 
-  return request(`/auth/oauth/${encodeURIComponent(provider)}/authorize?${searchParams.toString()}`)
+  const queryString = searchParams.toString()
+  const endpoint = `/auth/oauth/${encodeURIComponent(provider.toLowerCase())}/authorization${queryString ? `?${queryString}` : ''}`
+  return getApiUrl(endpoint)
 }
 
-export function completeOauth({ provider, code, state, redirectUri }) {
-  return request(`/auth/oauth/${encodeURIComponent(provider)}/callback`, {
+export async function refreshAccessToken() {
+  const data = await request('/auth/token/refresh', {
     method: 'POST',
-    body: JSON.stringify({ code, state, redirectUri }),
+    withCredentials: true,
   })
+  if (data?.accessToken) {
+    setAccessToken(data.accessToken)
+  }
+  return data
 }
 
-export function refreshAccessToken(refreshToken) {
-  return request('/auth/token/refresh', {
-    method: 'POST',
-    body: JSON.stringify({ refreshToken }),
-  })
+export async function getMe() {
+  return await request('/auth/me')
 }
 
-export function logout(refreshToken) {
-  return request('/auth/logout', {
-    method: 'POST',
-    body: JSON.stringify({ refreshToken }),
-  })
+export async function logout() {
+  try {
+    await request('/auth/logout', {
+      method: 'POST',
+      withCredentials: true,
+    })
+  } finally {
+    setAccessToken(null)
+  }
 }

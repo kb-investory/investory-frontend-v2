@@ -1,28 +1,26 @@
 <script setup>
-import { computed, onUnmounted, ref, watch } from 'vue'
-import { getInitialCapital } from '@/features/simulation/api/simulationApi'
 import SimulationParticipantAvatar from '@/features/simulation/components/SimulationParticipantAvatar.vue'
+import { useSimulationConditions } from '@/features/simulation/composables/useSimulationConditions'
+import { useSimulationStore } from '@/features/simulation/stores/simulationStore'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
-
-const DAY_IN_MS = 24 * 60 * 60 * 1000
 
 const props = defineProps({
   periodStart: {
     type: String,
-    default: '2026-03-01',
+    required: true,
   },
   periodEnd: {
     type: String,
-    default: '2026-07-29',
+    required: true,
   },
   totalDays: {
     type: Number,
     default: 150,
   },
-  initialCapital: {
+  accountId: {
     type: Number,
-    default: 5000000,
+    required: true,
   },
   selectedBotTypes: {
     type: Array,
@@ -35,137 +33,47 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['start'])
-
-const startOffset = ref(0)
-const endOffset = ref(1)
-const currentInitialCapital = ref(props.initialCapital ?? 5000000)
-
-const maxOffset = computed(() => {
-  const start = new Date(`${props.periodStart}T00:00:00`)
-  const end = new Date(`${props.periodEnd}T00:00:00`)
-  return Math.max(1, Math.round((end - start) / DAY_IN_MS))
-})
-
-watch(
+const simulationStore = useSimulationStore()
+const {
+  startOffset,
+  endOffset,
+  currentInitialCapital,
+  capitalLoading,
+  capitalError,
+  snapshotDate,
+  initialHoldings,
   maxOffset,
-  (value) => {
-    startOffset.value = 0
-    endOffset.value = value
-  },
-  { immediate: true },
-)
-
-const participants = computed(() => {
-  const items = [
-    { type: 'ACTUAL_USER', className: 'PLAYER', name: '실제 나', tone: 'actual' },
-    { type: 'PERSONAL_BOT', className: 'PERSONAL', name: '나의 봇 v3', tone: 'personal' },
-  ]
-
-  if (props.selectedBotTypes.includes('FAMOUS_STRATEGY')) {
-    items.push({
-      type: 'FAMOUS_STRATEGY',
-      className: 'LEGEND',
-      name: '유명 투자자',
-      tone: 'legend',
-    })
-  }
-  if (props.selectedBotTypes.includes('RANDOM_BOT')) {
-    items.push({ type: 'RANDOM_BOT', className: 'WILD', name: '원숭이', tone: 'wild' })
-  }
-  return items
-})
-
-const participantCount = computed(() => participants.value.length)
-const selectedDays = computed(() => endOffset.value - startOffset.value + 1)
-const startPercent = computed(() => (startOffset.value / maxOffset.value) * 100)
-const endPercent = computed(() => (endOffset.value / maxOffset.value) * 100)
-
-function dateAtOffset(offset) {
-  const date = new Date(`${props.periodStart}T00:00:00`)
-  date.setDate(date.getDate() + offset)
-  return date
-}
-
-function formatDate(date) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}. ${month}. ${day}`
-}
-
-function toApiDate(date) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-const selectedStartDate = computed(() => dateAtOffset(startOffset.value))
-const selectedEndDate = computed(() => dateAtOffset(endOffset.value))
-const selectedStartDateStr = computed(() => toApiDate(selectedStartDate.value))
-
-let debounceTimer = null
-let isFirstCall = true
-
-watch(
-  selectedStartDateStr,
-  (newApiDate) => {
-    if (!newApiDate) return
-
-    if (debounceTimer) {
-      clearTimeout(debounceTimer)
-      debounceTimer = null
-    }
-
-    const fetchCapital = async () => {
-      try {
-        const res = await getInitialCapital(newApiDate)
-        const capital =
-          res?.totalInitialCapital ?? res?.recommendedInitialCapital ?? res?.total_initial_capital
-        if (typeof capital === 'number' && capital > 0) {
-          currentInitialCapital.value = capital
-        }
-      } catch (e) {
-        console.warn('Failed to fetch initial capital for date:', e)
-      }
-    }
-
-    if (isFirstCall) {
-      isFirstCall = false
-      fetchCapital()
-    } else {
-      debounceTimer = setTimeout(fetchCapital, 300)
-    }
-  },
-  { immediate: true },
-)
-
-onUnmounted(() => {
-  if (debounceTimer) {
-    clearTimeout(debounceTimer)
-  }
-})
-
-function updateStart(event) {
-  startOffset.value = Math.min(Number(event.target.value), endOffset.value - 1)
-}
-
-function updateEnd(event) {
-  endOffset.value = Math.max(Number(event.target.value), startOffset.value + 1)
-}
-
-function formatCurrency(value) {
-  return new Intl.NumberFormat('ko-KR').format(value)
-}
+  participants,
+  participantCount,
+  selectedDays,
+  startPercent,
+  endPercent,
+  selectedStartDate,
+  selectedEndDate,
+  dateAtOffset,
+  updateStart,
+  updateEnd,
+  formatDate,
+  formatCurrency,
+  getConditions,
+} = useSimulationConditions(props, simulationStore.fetchInitialCapital)
 
 function startSimulation() {
-  if (props.isPending) return
+  if (
+    props.isPending ||
+    capitalLoading.value ||
+    capitalError.value ||
+    !currentInitialCapital.value
+  ) {
+    return
+  }
 
-  emit('start', {
-    periodStart: toApiDate(selectedStartDate.value),
-    periodEnd: toApiDate(selectedEndDate.value),
-    initialCapital: currentInitialCapital.value,
-  })
+  emit('start', getConditions())
+}
+
+function formatDateKey(value) {
+  if (!value) return ''
+  return value.replaceAll('-', '. ')
 }
 </script>
 
@@ -266,17 +174,40 @@ function startSimulation() {
       </div>
       <div>
         <strong>{{ participantCount }}명 · 같은 시점 · 같은 투자금</strong>
-        <span>
-          실제 나 + 투자봇 {{ participantCount - 1 }}명 · ₩{{
-            formatCurrency(currentInitialCapital)
-          }}
+        <span v-if="capitalLoading" class="capital-status capital-status--loading" role="status">
+          <AppIcon name="loader-circle" :size="13" class="pending-spinner" />
+          초기자금 갱신 중
         </span>
+        <span v-else-if="capitalError" class="capital-status capital-status--error" role="alert">
+          {{ capitalError }}
+        </span>
+        <template v-else-if="currentInitialCapital !== null">
+          <span>
+            실제 나 + 투자봇 {{ participantCount - 1 }}명 · ₩{{
+              formatCurrency(currentInitialCapital)
+            }}
+          </span>
+          <small
+            >보유 기준 {{ formatDateKey(snapshotDate) }} · {{ initialHoldings.length }}종목</small
+          >
+        </template>
       </div>
-      <AppIcon name="circle-check" :size="17" />
+      <AppIcon
+        v-if="!capitalLoading && !capitalError && currentInitialCapital !== null"
+        name="circle-check"
+        :size="17"
+      />
     </section>
 
     <div class="setup-action">
-      <BaseButton variant="primary" full-width :disabled="isPending" @click="startSimulation">
+      <BaseButton
+        variant="primary"
+        full-width
+        :disabled="
+          isPending || capitalLoading || Boolean(capitalError) || currentInitialCapital === null
+        "
+        @click="startSimulation"
+      >
         <template v-if="isPending">
           <AppIcon name="loader-circle" :size="17" class="pending-spinner" />
           <span>시뮬레이션 준비 중</span>
@@ -1011,6 +942,29 @@ function startSimulation() {
   font-size: var(--font-size-caption);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.same-condition small {
+  color: #8b999d;
+  font-size: var(--font-size-caption);
+}
+
+.same-condition .capital-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.same-condition .capital-status--loading {
+  color: #087f7c;
+}
+
+.same-condition .capital-status--error {
+  overflow: visible;
+  color: #c35050;
+  line-height: 1.4;
+  text-overflow: unset;
+  white-space: normal;
 }
 
 .setup-action {

@@ -1,7 +1,9 @@
 <script setup>
+import { computed } from 'vue'
+
 import StockLogo from '@/shared/components/StockLogo.vue'
 
-defineProps({
+const props = defineProps({
   stock: {
     type: Object,
     required: true,
@@ -9,6 +11,12 @@ defineProps({
 })
 
 defineEmits(['select'])
+
+const holdingQuantity = computed(() => Number(props.stock.holdingQuantity ?? 0))
+const returnRate = computed(() => {
+  const value = Number(props.stock.returnRate ?? 0)
+  return Number.isFinite(value) ? value : 0
+})
 </script>
 
 <template>
@@ -16,16 +24,16 @@ defineEmits(['select'])
     class="holding-shortcut"
     :class="`holding-shortcut--${stock.brandKey}`"
     type="button"
-    :aria-label="`${stock.securityName}, ${stock.holdingQuantity}주 보유, 종목 거래 일지 보기`"
+    :aria-label="`${stock.securityName}, ${holdingQuantity}주 보유, 종목 거래 일지 보기`"
     @click="$emit('select', stock)"
   >
     <StockLogo :stock="stock" :size="32" />
     <strong>{{ stock.securityName }}</strong>
-    <span>{{ stock.holdingQuantity }}주 보유</span>
+    <span>{{ holdingQuantity }}주 보유</span>
     <span class="holding-shortcut__return">
       <small>수익률</small>
-      <b :class="{ 'holding-shortcut__return--loss': stock.returnRate < 0 }">
-        {{ stock.returnRate > 0 ? '+' : '' }}{{ stock.returnRate.toFixed(1) }}%
+      <b :class="{ 'holding-shortcut__return--loss': returnRate < 0 }">
+        {{ returnRate > 0 ? '+' : '' }}{{ returnRate.toFixed(1) }}%
       </b>
     </span>
   </button>
