@@ -197,7 +197,16 @@ function openTransactions() {
   width: calc(100% + 32px);
   margin: 0 -16px;
   border-radius: 0 0 30px 30px;
-  background: #ffffff;
+  background:
+    radial-gradient(
+      circle at 82% 44%,
+      transparent 0 64px,
+      rgba(39, 211, 205, 0.09) 65px 66px,
+      transparent 67px 94px,
+      rgba(39, 211, 205, 0.06) 95px 96px,
+      transparent 97px
+    ),
+    radial-gradient(circle at 80% 58%, rgba(16, 198, 193, 0.16), transparent 42%), #032832;
   box-shadow: 0 14px 30px rgba(31, 58, 67, 0.1);
 }
 

@@ -169,7 +169,12 @@ onMounted(async () => {
   <div class="mypage-page">
     <PrimaryTabHeader title="마이페이지" flat-bottom>
       <template #right>
-        <button type="button" aria-label="마이페이지 도움말" @click="modal = 'help'">
+        <button
+          class="mypage-page__help"
+          type="button"
+          aria-label="마이페이지 도움말"
+          @click="modal = 'help'"
+        >
           <AppIcon name="circle-help" :size="18" />
         </button>
       </template>
@@ -456,6 +461,28 @@ onMounted(async () => {
   color: #263a3f;
 }
 
+.mypage-page__help {
+  border-color: rgb(67 222 217 / 34%) !important;
+  background: rgb(5 45 56 / 76%) !important;
+  color: #ffffff !important;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.mypage-page__help:hover {
+  border-color: rgb(86 235 229 / 72%) !important;
+  background: #075863 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 20px rgb(22 201 196 / 22%) !important;
+}
+
+.mypage-page__help:focus-visible {
+  outline: 2px solid var(--brand-teal-deep, #087f7c) !important;
+  outline-offset: 2px !important;
+}
+
 .mypage-title {
   margin: 10px 18px 4px;
   font-size: var(--font-size-title-lg);
@@ -471,17 +498,17 @@ onMounted(async () => {
   z-index: 4;
   display: grid;
   gap: 14px;
-  margin-top: -58px;
+  margin-top: -40px;
   padding: 0 16px 24px;
 }
 
 .profile-summary {
   display: grid;
-  grid-template-columns: 60px minmax(0, 1fr) 36px;
+  grid-template-columns: 52px minmax(0, 1fr) 34px;
   align-items: center;
-  gap: 13px;
-  min-height: 116px;
-  padding: 18px;
+  gap: 11px;
+  min-height: 92px;
+  padding: 12px 14px;
   border: 1px solid #b9e4e2;
   border-radius: 24px;
   background: #ffffff;
@@ -489,8 +516,8 @@ onMounted(async () => {
   box-shadow: 0 12px 26px rgb(2 35 44 / 13%);
 }
 .profile-summary__avatar {
-  width: 60px;
-  height: 60px;
+  width: 52px;
+  height: 52px;
   border: 2px solid #a9dedb;
   border-radius: 19px;
   background: linear-gradient(145deg, #13b8af, #0a8f91);
@@ -518,7 +545,7 @@ onMounted(async () => {
   font-weight: 800;
 }
 .profile-summary p {
-  margin: 5px 0;
+  margin: 3px 0;
   color: #6f7e84;
   font-size: var(--font-size-caption);
 }
@@ -585,8 +612,9 @@ onMounted(async () => {
   box-shadow: 0 7px 18px rgba(33, 79, 102, 0.08);
 }
 .simulation-summary-card {
-  border-color: #efd6ad;
-  background: linear-gradient(160deg, #ffffff 0%, #fffaf2 100%);
+  border-color: #c7ddf8;
+  background: linear-gradient(160deg, #ffffff 0%, #f3f7fd 100%);
+  box-shadow: 0 9px 20px rgba(11, 99, 206, 0.08);
 }
 .summary-card__header {
   display: flex;
@@ -604,8 +632,11 @@ onMounted(async () => {
   color: #078d88;
 }
 .summary-card__icon--orange {
-  background: #fff3df;
-  color: #db8b1c;
+  background: linear-gradient(145deg, #4386e6, #0b63ce);
+  color: #ffffff;
+  box-shadow:
+    0 6px 12px rgba(11, 99, 206, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 .tendency-summary-card small,
 .simulation-summary-card small {
@@ -614,7 +645,7 @@ onMounted(async () => {
   font-weight: 800;
 }
 .summary-card__header--simulation small {
-  color: #ca7a16;
+  color: #0b63ce;
 }
 .tendency-summary-card__header {
   display: grid;
@@ -653,8 +684,8 @@ onMounted(async () => {
 }
 .summary-card__action--simulation {
   max-width: none !important;
-  background: #fff3df;
-  color: #bc7013 !important;
+  background: #e8f1fd;
+  color: #0b63ce !important;
   line-height: 1;
   text-align: center !important;
 }
@@ -793,7 +824,7 @@ onMounted(async () => {
   line-height: 1.45;
 }
 .summary-empty-state--simulation .summary-empty-state__copy p {
-  color: #887967;
+  color: #667d96;
 }
 .simulation-summary-card__headline {
   display: grid;
@@ -801,7 +832,11 @@ onMounted(async () => {
   align-content: center;
   gap: 3px;
   margin: 0;
-  color: #61777c;
+  padding: 8px 7px;
+  border: 1px solid #d6e5f8;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #536d89;
   font-size: 9px;
   font-weight: 650;
   line-height: 1.45;
@@ -809,7 +844,7 @@ onMounted(async () => {
   word-break: keep-all;
 }
 .simulation-summary-card__headline strong {
-  color: #bd6f12;
+  color: #0b63ce;
   font-size: 13px;
   font-weight: 850;
   line-height: 1.25;
@@ -828,6 +863,7 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
+  width: 100%;
   color: #38596c;
   text-align: center;
 }
@@ -849,13 +885,15 @@ onMounted(async () => {
 .simulation-podium__participant strong {
   display: flex;
   width: 100%;
+  min-width: 0;
   height: 30px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
   border-radius: 7px 7px 3px 3px;
-  background: #dfeff4;
-  color: #2e657b;
+  background: #d9ebff;
+  color: #275e9b;
   font-size: 10px;
   line-height: 1.05;
 }
@@ -867,19 +905,22 @@ onMounted(async () => {
 }
 .simulation-podium__participant--rank-1 strong {
   height: 42px;
-  background: #ffdb7b;
-  color: #8a5910;
+  background: #4f91e8;
+  color: #ffffff;
 }
 .simulation-podium__participant--rank-2 strong {
   height: 35px;
-  background: #f7e3a9;
-  color: #805e20;
+  background: #91bdec;
+  color: #174f8d;
+}
+.simulation-podium__participant--rank-3 strong {
+  background: #b8d9f7;
+  color: #245d98;
 }
 .simulation-podium__participant--rank-4 strong {
   height: 23px;
-  background: #ede5f7;
-  color: #765c94;
-  font-size: 7px;
+  background: #dceafd;
+  color: #3c6595;
 }
 .simulation-podium__crown,
 .simulation-podium__crown-placeholder {
