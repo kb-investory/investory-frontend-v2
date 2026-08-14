@@ -353,7 +353,7 @@ onBeforeUnmount(() => {
       <section class="tendency-combination">
         <header class="tendency-combination__header">
           <h2>나의 성향 조합</h2>
-          <p>최근 분석한 6가지 성향을 한눈에 확인해요.</p>
+          <p>6가지 성향 버튼을 누르면 각 성향의 상세 설명을 확인할 수 있어요</p>
         </header>
 
         <div class="tendency-combination__cards">
