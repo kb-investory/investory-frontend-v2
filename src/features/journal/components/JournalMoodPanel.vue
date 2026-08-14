@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 const moodOptions = [
   {
@@ -7,28 +7,28 @@ const moodOptions = [
     label: '불안',
     color: '#3976d9',
     softColor: '#eaf2ff',
-    image: '/assets/images/journal-moods/anxious.png',
+    image: '/assets/images/journal-moods/anxious.webp',
   },
   {
     value: 'CAUTIOUS',
     label: '경계',
     color: '#e0a012',
     softColor: '#fff7dc',
-    image: '/assets/images/journal-moods/cautious.png',
+    image: '/assets/images/journal-moods/cautious.webp',
   },
   {
     value: 'CALM',
     label: '차분',
     color: '#139c83',
     softColor: '#e8f8f4',
-    image: '/assets/images/journal-moods/calm.png',
+    image: '/assets/images/journal-moods/calm.webp',
   },
   {
     value: 'CONFIDENT',
     label: '확신',
     color: '#e84a5f',
     softColor: '#fff0f2',
-    image: '/assets/images/journal-moods/confident.png',
+    image: '/assets/images/journal-moods/confident.webp',
   },
 ]
 
@@ -42,10 +42,21 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 const controlRef = ref(null)
 const draggingPointerId = ref(null)
+const preloadedMoodImages = []
 
 const selectedMood = computed(
   () => moodOptions.find((option) => option.value === props.modelValue) ?? moodOptions[2],
 )
+
+onMounted(() => {
+  moodOptions.forEach((option) => {
+    const image = new Image()
+    image.decoding = 'async'
+    image.src = option.image
+    preloadedMoodImages.push(image)
+    void image.decode().catch(() => {})
+  })
+})
 
 function selectMood(mood) {
   emit('update:modelValue', mood)
@@ -221,14 +232,16 @@ function finishMoodDrag(event) {
   height: 18px;
   border: 4px solid #ffffff;
   border-radius: 50%;
-  background: var(--mood-color);
+  background: var(--mood-soft-color);
   box-shadow: 0 0 0 1px rgba(36, 54, 74, 0.08);
   transition:
+    background-color 0.18s ease,
     transform 0.18s ease,
     box-shadow 0.18s ease;
 }
 
 .mood-selector__option--active .mood-selector__dot {
+  background: var(--mood-color);
   transform: scale(1.28);
   box-shadow:
     0 0 0 3px var(--mood-soft-color),
