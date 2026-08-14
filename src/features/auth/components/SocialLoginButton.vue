@@ -78,18 +78,19 @@ const buttonLabel = computed(() => {
   justify-content: center;
   gap: 10px;
   padding: 0 18px;
-  border: 1px solid transparent;
-  border-radius: 8px;
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 999px;
   cursor: pointer;
   font-size: var(--font-size-body);
   font-weight: 700;
   transition:
+    box-shadow 160ms ease,
     filter 160ms ease,
     transform 160ms ease;
 }
 
 .social-button:hover:not(:disabled) {
-  filter: brightness(0.97);
+  filter: brightness(1.03);
   transform: translateY(-1px);
 }
 
@@ -101,17 +102,20 @@ const buttonLabel = computed(() => {
 .social-button--naver {
   background: #03c75a;
   color: #ffffff;
+  box-shadow: 0 8px 16px rgb(3 199 90 / 20%);
 }
 
 .social-button--kakao {
   background: #fee500;
   color: #181600;
+  box-shadow: 0 8px 16px rgb(254 229 0 / 16%);
 }
 
 .social-button--google {
-  border-color: var(--color-border);
-  background: #ffffff;
+  border-color: rgb(255 255 255 / 64%);
+  background: rgb(255 255 255 / 96%);
   color: var(--color-heading);
+  box-shadow: 0 8px 16px rgb(0 0 0 / 14%);
 }
 
 .social-button__mark {
