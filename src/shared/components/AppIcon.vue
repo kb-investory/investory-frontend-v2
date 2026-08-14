@@ -1,6 +1,7 @@
 <script setup>
 import {
   Activity,
+  ArrowLeftRight,
   ArrowRight,
   ArrowUpRight,
   BarChart3,
@@ -64,6 +65,7 @@ import {
 
 const iconComponents = {
   activity: Activity,
+  'arrow-left-right': ArrowLeftRight,
   'arrow-right': ArrowRight,
   'arrow-up-right': ArrowUpRight,
   'bar-chart': BarChart3,

@@ -158,11 +158,10 @@ async function handleSubmit() {
       tradeNotes,
     })
     localStorage.removeItem(draftStorageKey.value)
-    applyEntry(journalStore.dailyEntry)
-    resultMessage.value = isEditMode.value
-      ? '오늘의 투자 일기를 저장했어요. 이어서 수정할 수 있습니다.'
-      : '오늘의 투자 일기를 저장했어요.'
-    autoSaveStatus.value = '저장 완료 · 방금 전'
+    await router.replace({
+      name: ROUTE_NAMES.JOURNAL_DATE,
+      params: { date: journalDate.value },
+    })
   } catch (err) {
     resultMessage.value =
       err?.message || journalStore.error || '일기를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.'

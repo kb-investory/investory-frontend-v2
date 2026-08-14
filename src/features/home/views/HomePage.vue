@@ -11,6 +11,7 @@ import TodayRecordHero from '@/features/home/components/TodayRecordHero.vue'
 import WeeklyRecordRhythm from '@/features/home/components/WeeklyRecordRhythm.vue'
 import { useHomeClock } from '@/features/home/composables/useHomeClock'
 import { useHomeStore } from '@/features/home/stores/homeStore'
+import { useNotificationStore } from '@/features/notifications/stores/notificationStore'
 import ReanalysisFloating from '@/features/tendency/components/ReanalysisFloating.vue'
 import { useFloatingCornerSwipe } from '@/features/tendency/composables/useFloatingCornerSwipe'
 import { useTendencyStore } from '@/features/tendency/stores/tendencyStore'
@@ -21,8 +22,10 @@ const HOME_FLOATING_POSITION_KEY = 'investory:home-floating-position:v1'
 
 const router = useRouter()
 const homeStore = useHomeStore()
+const notificationStore = useNotificationStore()
 const tendencyStore = useTendencyStore()
 const reanalysisNoticeCollapsed = ref(true)
+const syncingHome = ref(false)
 const {
   elementRef: reanalysisFloatingRef,
   position: reanalysisFloatingPosition,
@@ -32,6 +35,7 @@ const {
   preventClickAfterSwipe: preventReanalysisClick,
 } = useFloatingCornerSwipe(HOME_FLOATING_POSITION_KEY)
 let reanalysisMidnightTimer
+let notificationClockTimer
 
 const journalRoute = {
   name: ROUTE_NAMES.JOURNAL_CREATE,
@@ -77,6 +81,27 @@ function openTendencyReanalysis() {
   })
 }
 
+function openNotifications() {
+  router.push({ name: ROUTE_NAMES.NOTIFICATIONS })
+}
+
+async function syncHome() {
+  if (syncingHome.value) return
+
+  syncingHome.value = true
+  try {
+    await Promise.allSettled([
+      homeStore.fetchDashboard({ force: true }),
+      homeStore.fetchSummary({ force: true }),
+      notificationStore.fetchNotifications(),
+      tendencyStore.fetchLatestAnalysis({ force: true }),
+    ])
+    tendencyStore.refreshAnalysisDate()
+  } finally {
+    syncingHome.value = false
+  }
+}
+
 function scheduleMidnightRefresh() {
   const now = new Date()
   const nextMidnight = new Date(now)
@@ -109,14 +134,19 @@ onMounted(async () => {
   await Promise.allSettled([
     homeStore.fetchDashboard(),
     homeStore.fetchSummary(),
+    notificationStore.fetchNotifications(),
     tendencyStore.fetchLatestAnalysis(),
   ])
   tendencyStore.refreshAnalysisDate()
   scheduleMidnightRefresh()
+  notificationClockTimer = window.setInterval(() => {
+    void notificationStore.refreshForCurrentTime()
+  }, 60 * 1000)
 })
 
 onBeforeUnmount(() => {
   window.clearTimeout(reanalysisMidnightTimer)
+  window.clearInterval(notificationClockTimer)
 })
 
 function openTransactions() {
@@ -128,7 +158,14 @@ function openTransactions() {
   <div class="home-page">
     <div v-if="homeStore.dashboard" class="home-page__content">
       <div class="home-page__hero">
-        <HomeHeader logo-src="/assets/logos/investory-logo-dark.png" dark />
+        <HomeHeader
+          logo-src="/assets/logos/investory-logo-dark.png"
+          dark
+          :notification-count="notificationStore.unreadCount"
+          :syncing="syncingHome"
+          @notification="openNotifications"
+          @sync="syncHome"
+        />
         <TodayRecordHero :today="liveToday" @open-transactions="openTransactions" />
       </div>
 
