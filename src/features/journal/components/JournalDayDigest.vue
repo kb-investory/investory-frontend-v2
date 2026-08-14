@@ -18,22 +18,22 @@ const moodOptions = {
   ANXIOUS: {
     label: '불안',
     sentence: '오늘은 마음이 흔들린 하루였어요',
-    image: '/assets/images/journal-moods/anxious.png',
+    image: '/assets/images/journal-moods/anxious.webp',
   },
   CAUTIOUS: {
     label: '경계',
     sentence: '오늘은 신중하게 살핀 하루였어요',
-    image: '/assets/images/journal-moods/cautious.png',
+    image: '/assets/images/journal-moods/cautious.webp',
   },
   CALM: {
     label: '차분',
     sentence: '오늘은 차분한 하루였어요',
-    image: '/assets/images/journal-moods/calm.png',
+    image: '/assets/images/journal-moods/calm.webp',
   },
   CONFIDENT: {
     label: '확신',
     sentence: '오늘은 확신을 지킨 하루였어요',
-    image: '/assets/images/journal-moods/confident.png',
+    image: '/assets/images/journal-moods/confident.webp',
   },
 }
 

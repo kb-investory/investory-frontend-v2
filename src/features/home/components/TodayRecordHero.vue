@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { ArrowRight, Moon } from '@lucide/vue'
+import { Moon } from '@lucide/vue'
 
 import RunningMonkey from './RunningMonkey.vue'
 
@@ -9,9 +9,11 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  assetSummary: {
+    type: Object,
+    default: null,
+  },
 })
-
-defineEmits(['open-transactions'])
 
 const titleParts = computed(() => {
   const highlightedText = '기록으로 이어가요'
@@ -36,13 +38,23 @@ const titleParts = computed(() => {
     isHighlighted: true,
   }
 })
+
+function formatCurrency(value) {
+  return new Intl.NumberFormat('ko-KR').format(value ?? 0)
+}
 </script>
 
 <template>
   <section class="today-record" aria-labelledby="today-record-title">
     <div class="today-record__intro">
       <div class="today-record__heading">
-        <p class="today-record__eyebrow">TODAY · {{ today.totalTrades }} TRADES</p>
+        <div v-if="assetSummary" class="today-record__account-summary">
+          <strong>{{ assetSummary.accountName }}</strong>
+          <span>
+            보유 {{ assetSummary.holdingCount }}종목 ·
+            {{ formatCurrency(assetSummary.totalValuation) }}원
+          </span>
+        </div>
         <h1 id="today-record-title" class="today-record__title">
           <span>{{ titleParts.lead }}</span>
           <em v-if="titleParts.highlight" :class="{ 'is-highlighted': titleParts.isHighlighted }">
@@ -111,14 +123,6 @@ const titleParts = computed(() => {
           </div>
         </div>
       </div>
-
-      <button type="button" class="today-record__button" @click="$emit('open-transactions')">
-        <span>거래 내역 확인하기</span>
-        <span class="today-record__button-meta">
-          근거 {{ today.missingReasons }}건
-          <ArrowRight :size="18" :stroke-width="2" />
-        </span>
-      </button>
     </div>
   </section>
 </template>
@@ -127,7 +131,7 @@ const titleParts = computed(() => {
 .today-record {
   position: relative;
   display: flex;
-  min-height: 338px;
+  min-height: 270px;
   flex-direction: column;
   gap: 0;
   padding-bottom: 4px;
@@ -149,18 +153,34 @@ const titleParts = computed(() => {
   max-width: 250px;
 }
 
-.today-record__eyebrow,
 .today-record__title {
   margin: 0;
 }
 
-.today-record__eyebrow {
-  margin-bottom: 5px;
+.today-record__account-summary {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 6px;
+  color: #b9d4d7;
+  font-size: 10px;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.today-record__account-summary strong {
+  overflow: hidden;
+  max-width: 92px;
   color: #41ded7;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
-  font-weight: 700;
-  letter-spacing: 0.7px;
+  font-size: 11px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+}
+
+.today-record__account-summary span {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
 }
 
 .today-record__title {
@@ -285,9 +305,8 @@ const titleParts = computed(() => {
 .today-record__deadline-card {
   display: flex;
   flex-direction: column;
-  gap: 14px;
   margin: 12px 16px 0;
-  padding: 18px 16px 14px;
+  padding: 18px 16px;
   border: 1px solid rgba(36, 217, 209, 0.24);
   border-radius: 22px;
   background:
@@ -394,41 +413,5 @@ const titleParts = computed(() => {
   font-family: var(--font-mono);
   font-size: var(--font-size-caption);
   font-weight: 500;
-}
-
-.today-record__button {
-  display: flex;
-  width: 100%;
-  min-height: 54px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 0 14px;
-  border: 0;
-  border: 1px solid rgba(78, 224, 217, 0.24);
-  border-radius: 14px;
-  color: #ffffff;
-  background: rgba(8, 91, 101, 0.58);
-  cursor: pointer;
-  font-weight: 700;
-}
-
-.today-record__button > span:first-child {
-  font-size: var(--font-size-body);
-  line-height: 1.35;
-}
-
-.today-record__button-meta {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: #74e7e1;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
-}
-
-.today-record__button:focus-visible {
-  outline: 2px solid #0b8f8b;
-  outline-offset: 2px;
 }
 </style>
