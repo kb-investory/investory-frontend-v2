@@ -1,5 +1,5 @@
 <script setup>
-import { ChevronRight, NotebookPen, ScanSearch } from '@lucide/vue'
+import { ChevronRight, NotebookPen, ShieldCheck } from '@lucide/vue'
 import { RouterLink } from 'vue-router'
 
 defineProps({
@@ -7,15 +7,11 @@ defineProps({
     type: Object,
     required: true,
   },
-  tendencyTo: {
+  principleTo: {
     type: Object,
     required: true,
   },
   journalStatus: {
-    type: String,
-    required: true,
-  },
-  tendencyProgress: {
     type: String,
     required: true,
   },
@@ -34,13 +30,13 @@ defineProps({
       <ChevronRight class="quick-action__arrow" :size="20" :stroke-width="2" />
     </RouterLink>
 
-    <RouterLink class="quick-action quick-action--tendency" :to="tendencyTo">
+    <RouterLink class="quick-action quick-action--principle" :to="principleTo">
       <div class="quick-action__top">
-        <span class="quick-action__icon"><ScanSearch :size="20" :stroke-width="2.2" /></span>
-        <span class="quick-action__status">{{ tendencyProgress }}</span>
+        <span class="quick-action__icon"><ShieldCheck :size="20" :stroke-width="2.2" /></span>
+        <span class="quick-action__status">원칙 보기</span>
       </div>
-      <strong>투자 패턴 점검</strong>
-      <p>쌓인 기록에서 반복되는<br />습관을 확인해요</p>
+      <strong>투자원칙 확인</strong>
+      <p>세운 원칙을 확인하고<br />매매 전에 점검해요</p>
       <ChevronRight class="quick-action__arrow" :size="20" :stroke-width="2" />
     </RouterLink>
   </section>
@@ -72,7 +68,7 @@ defineProps({
   box-shadow: 0 9px 20px rgba(11, 143, 139, 0.08);
 }
 
-.quick-action--tendency {
+.quick-action--principle {
   border-color: #c7ddf8;
   background: #f3f7fd;
   box-shadow: 0 9px 20px rgba(11, 99, 206, 0.08);
@@ -99,7 +95,7 @@ defineProps({
     inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
-.quick-action--tendency .quick-action__icon {
+.quick-action--principle .quick-action__icon {
   color: #ffffff;
   background: linear-gradient(145deg, #4386e6, #0b63ce);
   box-shadow:
@@ -114,7 +110,7 @@ defineProps({
   font-weight: 700;
 }
 
-.quick-action--tendency .quick-action__status {
+.quick-action--principle .quick-action__status {
   color: #0b63ce;
 }
 
