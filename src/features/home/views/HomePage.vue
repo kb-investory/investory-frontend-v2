@@ -3,7 +3,6 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
-import HomeConnectionSummary from '@/features/home/components/HomeConnectionSummary.vue'
 import HomeHeader from '@/features/home/components/HomeHeader.vue'
 import HomeQuickActions from '@/features/home/components/HomeQuickActions.vue'
 import HomeSimulationCard from '@/features/home/components/HomeSimulationCard.vue'
@@ -41,7 +40,7 @@ const journalRoute = {
   name: ROUTE_NAMES.JOURNAL_CREATE,
   query: { from: 'home' },
 }
-const tendencyRoute = { name: ROUTE_NAMES.TENDENCY }
+const principleRoute = { name: ROUTE_NAMES.TENDENCY, query: { tab: 'principles' } }
 const simulationRoute = { name: ROUTE_NAMES.SIMULATION }
 const { currentTime, remainingTime, dayProgressPercent } = useHomeClock()
 
@@ -56,8 +55,7 @@ const connectedAssetSummary = computed(() => {
   if (!firstAccount || !homeStore.summary) return null
 
   return {
-    brokerName: firstAccount.brokerName,
-    accountCount: homeStore.accounts.length,
+    accountName: firstAccount.accountName || firstAccount.brokerName,
     holdingCount: homeStore.holdings.length,
     totalValuation: homeStore.summary.totalMarketValue,
   }
@@ -148,10 +146,6 @@ onBeforeUnmount(() => {
   window.clearTimeout(reanalysisMidnightTimer)
   window.clearInterval(notificationClockTimer)
 })
-
-function openTransactions() {
-  router.push(journalRoute)
-}
 </script>
 
 <template>
@@ -166,22 +160,13 @@ function openTransactions() {
           @notification="openNotifications"
           @sync="syncHome"
         />
-        <TodayRecordHero :today="liveToday" @open-transactions="openTransactions" />
+        <TodayRecordHero :today="liveToday" :asset-summary="connectedAssetSummary" />
       </div>
-
-      <HomeConnectionSummary
-        v-if="connectedAssetSummary"
-        :broker-name="connectedAssetSummary.brokerName"
-        :account-count="connectedAssetSummary.accountCount"
-        :holding-count="connectedAssetSummary.holdingCount"
-        :total-valuation="connectedAssetSummary.totalValuation"
-      />
 
       <HomeQuickActions
         :journal-to="journalRoute"
-        :tendency-to="tendencyRoute"
+        :principle-to="principleRoute"
         :journal-status="homeStore.dashboard.quickActions.journalStatus"
-        :tendency-progress="homeStore.dashboard.quickActions.tendencyProgress"
       />
 
       <HomeSimulationCard :to="simulationRoute" />

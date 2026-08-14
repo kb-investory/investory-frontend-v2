@@ -1,4 +1,4 @@
-import { getBrokerAccounts, getBrokerConnections } from '@/features/mypage/api/brokerConnectionApi'
+import { getBrokerAccounts } from '@/features/mypage/api/brokerConnectionApi'
 import { getJournalEntries, getJournalEntryOnDate } from '@/features/journal/api/journalApi'
 import { getLedgerHoldings } from '@/features/ledger/api/ledgerApi'
 
@@ -88,14 +88,12 @@ export async function getHomeDashboard(today = new Date()) {
   const weekStartStr = formatLocalDate(weekStart)
   const weekEndStr = formatLocalDate(weekEnd)
 
-  const [entriesData, todayData, connectionsData] = await Promise.all([
+  const [entriesData, todayData] = await Promise.all([
     getJournalEntries({ startDate: weekStartStr, endDate: weekEndStr }),
     getJournalEntryOnDate(todayStr),
-    getBrokerConnections(),
   ])
 
   const entries = entriesData?.entries || []
-  const connections = connectionsData?.connections || []
   const trades = todayData?.trades || []
   const buyTrades = trades.filter((trade) => trade.tradeSide === 'BUY').length
   const sellTrades = trades.filter((trade) => trade.tradeSide === 'SELL').length
@@ -122,8 +120,6 @@ export async function getHomeDashboard(today = new Date()) {
     },
     quickActions: {
       journalStatus: isTodayJournalWritten ? '작성 완료' : '작성 전',
-      tendencyProgress: '6 / 10',
-      connectionCount: connections.length,
     },
     weekly: buildWeeklyRecordRhythm({ streakDays: 0, days: [] }, activities, today),
   }
