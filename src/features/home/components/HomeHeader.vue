@@ -1,5 +1,5 @@
 <script setup>
-import { Bell } from '@lucide/vue'
+import { Bell, RefreshCw } from '@lucide/vue'
 
 import PrimaryAppHeader from '@/shared/components/navigation/PrimaryAppHeader.vue'
 
@@ -12,9 +12,17 @@ defineProps({
     type: Boolean,
     default: false,
   },
+  notificationCount: {
+    type: Number,
+    default: 0,
+  },
+  syncing: {
+    type: Boolean,
+    default: false,
+  },
 })
 
-defineEmits(['notification'])
+defineEmits(['notification', 'sync'])
 </script>
 
 <template>
@@ -24,10 +32,25 @@ defineEmits(['notification'])
         <button
           type="button"
           class="home-header__button"
-          aria-label="알림 확인"
+          :class="{ 'home-header__button--syncing': syncing }"
+          :aria-label="syncing ? '홈 정보 동기화 중' : '홈 정보 동기화'"
+          :disabled="syncing"
+          @click="$emit('sync')"
+        >
+          <RefreshCw :size="18" :stroke-width="1.9" />
+        </button>
+        <button
+          type="button"
+          class="home-header__button"
+          :aria-label="
+            notificationCount ? `읽지 않은 알림 ${notificationCount}개 확인` : '알림 확인'
+          "
           @click="$emit('notification')"
         >
           <Bell :size="18" :stroke-width="1.9" />
+          <span v-if="notificationCount" class="home-header__badge" aria-hidden="true">
+            {{ notificationCount > 9 ? '9+' : notificationCount }}
+          </span>
         </button>
       </template>
     </PrimaryAppHeader>
@@ -48,7 +71,7 @@ defineEmits(['notification'])
 }
 
 .home-header--dark :deep(.primary-app-header) {
-  grid-template-columns: minmax(0, 1fr) 44px;
+  grid-template-columns: minmax(0, 1fr) 96px;
   padding: 0 20px;
   background: transparent;
 }
@@ -70,6 +93,11 @@ defineEmits(['notification'])
   object-position: left center;
 }
 
+.home-header--dark :deep(.primary-app-header__side--right) {
+  width: 96px;
+  gap: 8px;
+}
+
 .home-header--dark :deep(.primary-app-header button) {
   border-color: rgba(67, 222, 217, 0.34);
   color: #ffffff;
@@ -89,11 +117,45 @@ defineEmits(['notification'])
 }
 
 .home-header__button {
+  position: relative;
   color: var(--slate-strong);
+}
+
+.home-header__button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.home-header__button--syncing svg {
+  animation: home-header-sync-spin 0.8s linear infinite;
+}
+
+.home-header__badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  display: grid;
+  min-width: 18px;
+  height: 18px;
+  place-items: center;
+  padding: 0 4px;
+  border: 2px solid #032832;
+  border-radius: 999px;
+  background: #2ac9c2;
+  color: #032832;
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 1;
 }
 
 .home-header__button:focus-visible {
   outline: 2px solid #0b8f8b;
   outline-offset: 2px;
+}
+
+@keyframes home-header-sync-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

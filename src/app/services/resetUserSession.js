@@ -5,6 +5,7 @@ import { useJournalStockTimelineStore } from '@/features/journal/stores/journalS
 import { useJournalStore } from '@/features/journal/stores/journalStore'
 import { useBrokerConnectionStore } from '@/features/mypage/stores/brokerConnectionStore'
 import { useMypageStore } from '@/features/mypage/stores/mypageStore'
+import { useNotificationStore } from '@/features/notifications/stores/notificationStore'
 import { useSimulationStore } from '@/features/simulation/stores/simulationStore'
 import { useTendencyStore } from '@/features/tendency/stores/tendencyStore'
 
@@ -38,6 +39,7 @@ export async function resetUserSession() {
   useJournalStockSearchStore().reset()
   useJournalStockTimelineStore().reset()
   useMypageStore().reset()
+  useNotificationStore().reset()
   useTendencyStore().reset()
   useSimulationStore().reset()
 
