@@ -223,12 +223,11 @@ onMounted(async () => {
           class="tendency-summary-card"
           @click="router.push({ name: ROUTE_NAMES.TENDENCY })"
         >
-          <div class="summary-card__header tendency-summary-card__header">
-            <span class="summary-card__icon"><AppIcon name="chart-pie" :size="17" /></span>
-            <span class="tendency-summary-card__heading">
-              <strong>나의 투자성향</strong>
-              <small v-if="!mypageStore.tendencyBadges.length">6가지 분석 전</small>
+          <div class="summary-card__header">
+            <span class="summary-card__icon summary-card__icon--tendency">
+              <AppIcon name="chart-pie" :size="17" />
             </span>
+            <small>나의 투자성향</small>
           </div>
           <div v-if="mypageStore.tendencyBadges.length" class="tendency-result-preview">
             <div class="tendency-roadmap" aria-label="투자성향 변화 로드맵">
@@ -608,6 +607,13 @@ onMounted(async () => {
     0 6px 12px rgba(11, 99, 206, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
+.summary-card__icon--tendency {
+  background: linear-gradient(145deg, #18b9b2, #078d88);
+  color: #ffffff;
+  box-shadow:
+    0 6px 12px rgba(7, 141, 136, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
 .tendency-summary-card small,
 .simulation-summary-card small {
   color: #078d88;
@@ -616,26 +622,6 @@ onMounted(async () => {
 }
 .summary-card__header--simulation small {
   color: #0b63ce;
-}
-.tendency-summary-card__header {
-  display: grid;
-  grid-template-columns: 38px minmax(0, 1fr);
-}
-.tendency-summary-card__heading {
-  display: grid;
-  min-width: 0;
-  gap: 2px;
-}
-.tendency-summary-card__heading strong {
-  color: #067d79;
-  font-size: 12px;
-  line-height: 1.1;
-  white-space: nowrap;
-}
-.tendency-summary-card__heading small {
-  color: #789092;
-  font-size: 8px;
-  font-weight: 650;
 }
 .summary-card__action {
   display: inline-flex;
