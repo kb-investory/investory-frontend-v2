@@ -1,5 +1,17 @@
 import { request } from '@/shared/api/client'
 
+const DEFAULT_SYNC_ERROR_MESSAGE = '계좌 정보를 동기화하지 못했습니다. 잠시 후 다시 시도해 주세요.'
+
+function assertSuccessfulSync(syncResult) {
+  if (syncResult?.syncStatus !== 'FAILED') return
+
+  const error = new Error(syncResult.errorMessage?.trim() || DEFAULT_SYNC_ERROR_MESSAGE)
+  error.name = 'BrokerSyncError'
+  error.errorCode = 'BROKER_SYNC_FAILED'
+  error.syncResult = syncResult
+  throw error
+}
+
 export async function getBrokerProviders({ query = '' } = {}) {
   const data = await request('/broker/providers')
   const normalizedQuery = query.trim().toLowerCase()
@@ -21,7 +33,7 @@ export async function getBrokerConnections() {
 
 export async function createBrokerConnection({ brokerId, loginId, password }) {
   try {
-    return await request('/broker/connections', {
+    const connection = await request('/broker/connections', {
       method: 'POST',
       body: JSON.stringify({
         brokerId: Number(brokerId),
@@ -29,6 +41,8 @@ export async function createBrokerConnection({ brokerId, loginId, password }) {
         password,
       }),
     })
+    assertSuccessfulSync(connection?.syncResult)
+    return connection
   } catch (error) {
     if (error?.errorCode !== 'BRK_002' && !error?.message?.includes('이미 연동된')) throw error
 
@@ -38,8 +52,12 @@ export async function createBrokerConnection({ brokerId, loginId, password }) {
     )
     if (!existingConnection) throw error
 
-    await syncBrokerConnection(existingConnection.connectionId)
-    return existingConnection
+    const syncResult = await syncBrokerConnection(existingConnection.connectionId)
+    return {
+      ...existingConnection,
+      lastSyncedAt: syncResult.completedAt ?? existingConnection.lastSyncedAt,
+      syncResult,
+    }
   }
 }
 
@@ -52,9 +70,11 @@ export async function getBrokerConnectionAccounts(connectionId) {
 }
 
 export async function syncBrokerConnection(connectionId) {
-  return await request(`/broker/connections/${connectionId}/sync`, {
+  const syncResult = await request(`/broker/connections/${connectionId}/sync`, {
     method: 'POST',
   })
+  assertSuccessfulSync(syncResult)
+  return syncResult
 }
 
 export async function getBrokerAccounts() {
