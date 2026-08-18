@@ -9,6 +9,8 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const javaBackendUrl = env.VITE_API_TARGET_URL || 'http://localhost:8080/api/v1'
   const pythonAiUrl = env.VITE_AI_TARGET_URL || 'http://localhost:8000'
+  const bypassPageNavigation = (request) =>
+    request.headers.accept?.includes('text/html') ? '/index.html' : undefined
 
   return {
     plugins: [vue(), vueDevTools()],
@@ -24,6 +26,7 @@ export default defineConfig(({ mode }) => {
           target: javaBackendUrl,
           changeOrigin: true,
           secure: false,
+          bypass: bypassPageNavigation,
         },
         // 자바 코어 백엔드 서버 (/api 프리픽스 경로)
         '/api': {

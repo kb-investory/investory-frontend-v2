@@ -1,8 +1,61 @@
 import { getLedgerHoldings } from '@/features/ledger/api/ledgerApi'
 import { searchSecurities } from '@/features/market/api/marketApi'
+import journalData from '@/mocks/data/journal.json'
 import { request } from '@/shared/api/client'
 
 const RECENT_STOCKS_KEY = 'investory-journal-recent-stocks'
+const USE_MOCK_JOURNAL = import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_JOURNAL === 'true'
+const SEOUL_DATE_FORMATTER = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Asia/Seoul',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+})
+
+function cloneMockData(value) {
+  return JSON.parse(JSON.stringify(value))
+}
+
+function getSeoulDateKey(value) {
+  return SEOUL_DATE_FORMATTER.format(new Date(value))
+}
+
+function getMockTradeTimeline({ securityId, startDate, endDate, page, size }) {
+  const dailyTrades = (journalData.dailyEntries || []).flatMap((entry) => entry.trades || [])
+  const uniqueTrades = new Map()
+
+  ;[...(journalData.tradeHistory || []), ...dailyTrades].forEach((trade) => {
+    if (Number(trade.securityId) === Number(securityId)) {
+      uniqueTrades.set(trade.tradeId, trade)
+    }
+  })
+
+  const matchingTrades = [...uniqueTrades.values()]
+    .filter((trade) => {
+      const tradedDate = getSeoulDateKey(trade.tradedAt)
+      return (!startDate || tradedDate >= startDate) && (!endDate || tradedDate <= endDate)
+    })
+    .sort((a, b) => new Date(b.tradedAt) - new Date(a.tradedAt))
+  const pageStart = page * size
+  const trades = matchingTrades.slice(pageStart, pageStart + size)
+  const securitySource = matchingTrades[0]
+
+  return cloneMockData({
+    security: securitySource
+      ? {
+          securityId: securitySource.securityId,
+          securityCode: securitySource.securityCode,
+          securityName: securitySource.securityName,
+          marketType: securitySource.marketType || 'KOSPI',
+        }
+      : null,
+    trades,
+    page,
+    size,
+    totalElements: matchingTrades.length,
+    totalPages: Math.ceil(matchingTrades.length / size),
+  })
+}
 
 function readRecentSecurityCodes() {
   if (typeof window === 'undefined') {
@@ -18,6 +71,10 @@ function readRecentSecurityCodes() {
 }
 
 async function getTradeTimeline({ securityId, startDate, endDate, page, size }) {
+  if (USE_MOCK_JOURNAL) {
+    return getMockTradeTimeline({ securityId, startDate, endDate, page, size })
+  }
+
   const searchParams = new URLSearchParams({
     securityId: String(securityId),
     page: String(page),
@@ -27,6 +84,17 @@ async function getTradeTimeline({ securityId, startDate, endDate, page, size }) 
   if (endDate) searchParams.set('endDate', endDate)
 
   return await request(`/journal/trades?${searchParams.toString()}`)
+}
+
+export async function getJournalTradeHistory({ securityId, journalDate, size = 20 }) {
+  const response = await getTradeTimeline({
+    securityId,
+    endDate: journalDate,
+    page: 0,
+    size,
+  })
+
+  return response?.trades || []
 }
 
 export async function getJournalStockSearchData() {
@@ -82,19 +150,48 @@ export async function getJournalStockTimeline({
   let targetSecurityId = securityId
   let targetSecurity = null
   if (!targetSecurityId && securityCode) {
-    const securityData = await searchSecurities({ keyword: securityCode, size: 20 })
-    targetSecurity = securityData?.securities?.find(
-      (security) => security.securityCode === securityCode,
-    )
+    if (USE_MOCK_JOURNAL) {
+      const fixtureTrade = [
+        ...(journalData.tradeHistory || []),
+        ...(journalData.dailyEntries || []).flatMap((entry) => entry.trades || []),
+      ].find((trade) => trade.securityCode === securityCode)
+      targetSecurity = fixtureTrade
+        ? {
+            securityId: fixtureTrade.securityId,
+            securityCode: fixtureTrade.securityCode,
+            securityName: fixtureTrade.securityName,
+            marketType: fixtureTrade.marketType || 'KOSPI',
+          }
+        : null
+    } else {
+      const securityData = await searchSecurities({ keyword: securityCode, size: 20 })
+      targetSecurity = securityData?.securities?.find(
+        (security) => security.securityCode === securityCode,
+      )
+    }
     targetSecurityId = targetSecurity?.securityId
   }
   if (!targetSecurityId) throw new Error('종목 정보를 찾을 수 없습니다.')
 
   if (!targetSecurity) {
-    const securityData = await searchSecurities({ keyword: String(targetSecurityId), size: 20 })
-    targetSecurity = securityData?.securities?.find(
-      (security) => security.securityId === targetSecurityId,
-    )
+    if (USE_MOCK_JOURNAL) {
+      const fixtureTrade = (journalData.tradeHistory || []).find(
+        (trade) => Number(trade.securityId) === Number(targetSecurityId),
+      )
+      targetSecurity = fixtureTrade
+        ? {
+            securityId: fixtureTrade.securityId,
+            securityCode: fixtureTrade.securityCode,
+            securityName: fixtureTrade.securityName,
+            marketType: fixtureTrade.marketType || 'KOSPI',
+          }
+        : null
+    } else {
+      const securityData = await searchSecurities({ keyword: String(targetSecurityId), size: 20 })
+      targetSecurity = securityData?.securities?.find(
+        (security) => security.securityId === targetSecurityId,
+      )
+    }
   }
 
   const [tradeData, holdingsData] = await Promise.all([
@@ -105,7 +202,7 @@ export async function getJournalStockTimeline({
       page,
       size,
     }),
-    getLedgerHoldings(),
+    USE_MOCK_JOURNAL ? Promise.resolve({ holdings: [] }) : getLedgerHoldings(),
   ])
   const trades = tradeData?.trades || []
   const holdingData = (holdingsData?.holdings || []).find(
