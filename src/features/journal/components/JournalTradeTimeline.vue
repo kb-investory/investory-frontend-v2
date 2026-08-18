@@ -1,5 +1,5 @@
 <script setup>
-import { ArrowDownUp, CircleHelp, SquarePen } from '@lucide/vue'
+import { ArrowDownUp, SquarePen } from '@lucide/vue'
 import { computed, ref } from 'vue'
 
 import JournalTradeNoteSheet from '@/features/journal/components/JournalTradeNoteSheet.vue'
@@ -82,7 +82,7 @@ function updateSelectedNote(value) {
       <div class="trade-timeline__title-row">
         <span class="trade-timeline__step" aria-hidden="true">{{ stepNumber }}</span>
         <h2 id="trade-timeline-title" class="trade-timeline__title">오늘의 거래 타임라인</h2>
-        <span class="trade-timeline__count">{{ trades.length }}건</span>
+        <span class="trade-timeline__count">{{ completedNoteCount }}/{{ trades.length }}건</span>
       </div>
 
       <button type="button" class="trade-timeline__sort" @click="emit('toggle-sort')">
@@ -90,16 +90,6 @@ function updateSelectedNote(value) {
         {{ sortOrder === 'latest' ? '최신순' : '오래된순' }}
       </button>
     </header>
-
-    <div class="trade-timeline__guide">
-      <span class="trade-timeline__guide-icon">
-        <CircleHelp :size="17" :stroke-width="1.8" aria-hidden="true" />
-      </span>
-      <div>
-        <strong>왜 이 거래를 했나요? · {{ completedNoteCount }}/{{ trades.length }} 작성</strong>
-        <p>근거 입력을 누르면 이전 판단 기록을 함께 확인할 수 있어요.</p>
-      </div>
-    </div>
 
     <div v-if="trades.length" class="trade-timeline__list">
       <article v-for="trade in trades" :key="trade.tradeId" class="trade-timeline__item">
@@ -226,40 +216,6 @@ function updateSelectedNote(value) {
   cursor: pointer;
   font-size: var(--font-size-caption);
   font-weight: 700;
-}
-
-.trade-timeline__guide {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 12px;
-  border: 1px solid #bce8e7;
-  border-radius: 13px;
-  background: #f2fbfb;
-}
-
-.trade-timeline__guide-icon {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  flex: 0 0 auto;
-  place-items: center;
-  border-radius: 9px;
-  background: #e1f6f5;
-  color: var(--brand-teal-deep);
-}
-
-.trade-timeline__guide strong {
-  color: var(--slate-strong);
-  font-family: var(--font-heading);
-  font-size: var(--font-size-caption);
-}
-
-.trade-timeline__guide p {
-  margin: 2px 0 0;
-  color: var(--text-tertiary);
-  font-size: var(--font-size-caption);
-  line-height: 1.4;
 }
 
 .trade-timeline__list {
