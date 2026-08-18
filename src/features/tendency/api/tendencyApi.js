@@ -1,6 +1,19 @@
 import { ApiError, request } from '@/shared/api/client'
+import tendencyData from '@/mocks/data/tendency.json'
 
 const MINIMUM_RECORD_DAYS = 90
+const USE_MOCK_TENDENCY = import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_TENDENCY === 'true'
+
+function clone(value) {
+  return structuredClone(value)
+}
+
+let mockPrinciples = null
+
+function getMockPrinciples() {
+  if (!mockPrinciples) mockPrinciples = clone(tendencyData.principles || [])
+  return mockPrinciples
+}
 
 const DIMENSION_META = Object.freeze({
   PORTFOLIO_RISK_ALLOCATION: {
@@ -375,17 +388,28 @@ function toPrincipleRequest(principle, index) {
 }
 
 export async function getLatestTendencyAnalysis() {
+  if (USE_MOCK_TENDENCY) return clone(tendencyData)
   return attachHistory(await getAllAnalyses())
 }
 
 export async function runTendencyAnalysis() {
+  if (USE_MOCK_TENDENCY) return clone(tendencyData)
   await request('/tendency/analyses', { method: 'POST' })
   return getLatestTendencyAnalysis()
 }
 
 export async function getUserPrinciples() {
+  if (USE_MOCK_TENDENCY) {
+    return {
+      principleSetId: 1,
+      versionNo: 1,
+      setStatus: 'ACTIVE',
+      principles: clone(getMockPrinciples()),
+    }
+  }
+
   try {
-    const response = await request('/api/principle')
+    const response = await request('/principle')
     return {
       principleSetId: response.principleSetId,
       versionNo: response.versionNo,
@@ -403,6 +427,14 @@ export async function getUserPrinciples() {
 }
 
 export async function getTendencyAccessStatus() {
+  if (USE_MOCK_TENDENCY) {
+    return {
+      serviceStartedDate: tendencyData.period?.startDate ?? null,
+      analysisAvailableDate: null,
+      minimumRecordDays: MINIMUM_RECORD_DAYS,
+    }
+  }
+
   const listResponse = await request('/tendency/analyses')
   const latestRun = listResponse?.runs?.[0]
   if (!latestRun) {
@@ -423,11 +455,23 @@ export async function getTendencyAccessStatus() {
 }
 
 export async function getRecommendedPrinciples() {
-  return await request('/api/principle/recommendations')
+  if (USE_MOCK_TENDENCY) {
+    return { recommendations: clone(tendencyData.suggestedPrinciples || []) }
+  }
+  return await request('/principle/recommendations')
 }
 
 export async function saveUserPrinciples({ analysisRunId, principles }) {
-  await request('/api/principle', {
+  if (USE_MOCK_TENDENCY) {
+    mockPrinciples = (principles || []).map((principle, index) => ({
+      ...clone(principle),
+      principleId: principle.principleId ?? `mock-principle-${index + 1}`,
+      sortOrder: index + 1,
+    }))
+    return getUserPrinciples()
+  }
+
+  await request('/principle', {
     method: 'POST',
     body: JSON.stringify({
       analysisRunId: analysisRunId ?? null,
