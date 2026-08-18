@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
+import RunningMonkey from '@/features/home/components/RunningMonkey.vue'
 import ReanalysisFloating from '@/features/tendency/components/ReanalysisFloating.vue'
 import RecommendationFloating from '@/features/tendency/components/RecommendationFloating.vue'
 import TendencyChangeModal from '@/features/tendency/components/TendencyChangeModal.vue'
@@ -279,11 +280,9 @@ onBeforeUnmount(() => {
           </header>
           <div class="analysis-locked__track">
             <span :style="{ width: `${analysisProgressPercent}%` }"></span>
-            <img
-              src="/assets/icons/monkey.png"
-              alt=""
-              :style="{ left: `${analysisMarkerPercent}%` }"
-            />
+            <span class="analysis-locked__runner" :style="{ left: `${analysisMarkerPercent}%` }">
+              <RunningMonkey :size="48" />
+            </span>
           </div>
           <footer>
             <span>현재 {{ tendencyStore.recordedDays }}일째</span>
@@ -560,17 +559,8 @@ onBeforeUnmount(() => {
         <span class="principles-empty__icon">
           <AppIcon name="check" :size="22" />
         </span>
-        <strong>
-          {{
-            tendencyStore.analysis
-              ? '아직 적용 중인 투자원칙이 없어요'
-              : '투자성향을 먼저 분석해 주세요'
-          }}
-        </strong>
-        <p v-if="tendencyStore.analysis">
-          분석 결과를 바탕으로 필요한 매매 기준을 골라 적용할 수 있어요.
-        </p>
-        <p v-else>거래와 일지를 분석해 맞춤 원칙을 추천해요.</p>
+        <strong> 아직 적용 중인 투자원칙이 없어요 </strong>
+        <p>나만의 매매 기준을 직접 작성하고 바로 적용할 수 있어요.</p>
       </section>
 
       <section
@@ -579,32 +569,24 @@ onBeforeUnmount(() => {
         aria-label="투자원칙 이용 안내"
       >
         <div>
-          <AppIcon name="radar" :size="17" />
-          <strong>성향 분석</strong>
-          <span>거래와 일지 패턴 확인</span>
+          <AppIcon name="pencil" :size="17" />
+          <strong>직접 작성</strong>
+          <span>나만의 매매 기준 기록</span>
         </div>
         <div>
-          <AppIcon name="sparkles" :size="17" />
-          <strong>원칙 추천</strong>
-          <span>성향에 맞는 기준 제안</span>
+          <AppIcon name="refresh-cw" :size="17" />
+          <strong>언제든 수정</strong>
+          <span>상황에 맞게 기준 변경</span>
         </div>
         <div>
           <AppIcon name="check" :size="17" />
-          <strong>직접 선택</strong>
-          <span>필요한 원칙만 적용</span>
+          <strong>바로 적용</strong>
+          <span>일지와 회고에서 확인</span>
         </div>
       </section>
 
-      <BaseButton
-        v-if="!tendencyStore.principles.length"
-        full-width
-        :disabled="
-          tendencyStore.analyzing ||
-          (Boolean(tendencyStore.analysis) && !tendencyStore.activeRecommendations.length)
-        "
-        @click="tendencyStore.analysis ? openRecommendations() : startTendencyAnalysis()"
-      >
-        {{ tendencyStore.analysis ? '추천 원칙 선택하기' : '투자성향 먼저 분석하기' }}
+      <BaseButton v-if="!tendencyStore.principles.length" full-width @click="openPrincipleEdit">
+        투자원칙 직접 작성하기
         <template #iconRight><AppIcon name="arrow-right" :size="16" /></template>
       </BaseButton>
 
@@ -897,15 +879,13 @@ onBeforeUnmount(() => {
   background: linear-gradient(90deg, #54c4bf, #0a918c);
 }
 
-.analysis-locked__track img {
+.analysis-locked__runner {
   position: absolute;
   z-index: 4;
   top: 50%;
-  width: 48px;
-  height: 48px;
-  object-fit: cover;
-  filter: drop-shadow(0 3px 5px rgba(21, 82, 80, 0.18));
   transform: translate(-50%, -52%);
+  transition: left 1s linear;
+  will-change: left;
 }
 
 .analysis-locked__progress footer {
@@ -1079,6 +1059,10 @@ onBeforeUnmount(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .analysis-locked__runner {
+    transition: none;
+  }
+
   .analysis-progress__orbit,
   .analysis-progress__step {
     animation: none;

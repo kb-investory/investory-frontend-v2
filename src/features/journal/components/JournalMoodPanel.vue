@@ -1,36 +1,7 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 
-const moodOptions = [
-  {
-    value: 'ANXIOUS',
-    label: '불안',
-    color: '#3976d9',
-    softColor: '#eaf2ff',
-    image: '/assets/images/journal-moods/anxious.webp',
-  },
-  {
-    value: 'CAUTIOUS',
-    label: '경계',
-    color: '#e0a012',
-    softColor: '#fff7dc',
-    image: '/assets/images/journal-moods/cautious.webp',
-  },
-  {
-    value: 'CALM',
-    label: '차분',
-    color: '#139c83',
-    softColor: '#e8f8f4',
-    image: '/assets/images/journal-moods/calm.webp',
-  },
-  {
-    value: 'CONFIDENT',
-    label: '확신',
-    color: '#e84a5f',
-    softColor: '#fff0f2',
-    image: '/assets/images/journal-moods/confident.webp',
-  },
-]
+import { JOURNAL_MOOD_OPTIONS } from '@/features/journal/config/journalMoodOptions'
 
 const props = defineProps({
   modelValue: {
@@ -42,21 +13,12 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 const controlRef = ref(null)
 const draggingPointerId = ref(null)
-const preloadedMoodImages = []
 
 const selectedMood = computed(
-  () => moodOptions.find((option) => option.value === props.modelValue) ?? moodOptions[2],
+  () =>
+    JOURNAL_MOOD_OPTIONS.find((option) => option.value === props.modelValue) ??
+    JOURNAL_MOOD_OPTIONS[2],
 )
-
-onMounted(() => {
-  moodOptions.forEach((option) => {
-    const image = new Image()
-    image.decoding = 'async'
-    image.src = option.image
-    preloadedMoodImages.push(image)
-    void image.decode().catch(() => {})
-  })
-})
 
 function selectMood(mood) {
   emit('update:modelValue', mood)
@@ -80,7 +42,7 @@ function selectNearestMood(clientX) {
     }
   })
 
-  const nearestMood = moodOptions[nearestIndex]?.value
+  const nearestMood = JOURNAL_MOOD_OPTIONS[nearestIndex]?.value
 
   if (nearestMood && nearestMood !== props.modelValue) {
     selectMood(nearestMood)
@@ -134,7 +96,7 @@ function finishMoodDrag(event) {
       <div class="mood-selector__rail" aria-hidden="true" />
 
       <button
-        v-for="option in moodOptions"
+        v-for="option in JOURNAL_MOOD_OPTIONS"
         :key="option.value"
         type="button"
         class="mood-selector__option"

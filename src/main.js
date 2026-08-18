@@ -7,6 +7,9 @@ import App from '@/app/App.vue'
 import { pinia } from '@/app/providers/pinia'
 import { queryClient } from '@/app/providers/queryClient'
 import router from '@/app/router'
+import { preloadJournalMoodImages } from '@/features/journal/config/journalMoodOptions'
+
+void preloadJournalMoodImages()
 
 const app = createApp(App)
 
