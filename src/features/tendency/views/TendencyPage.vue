@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
+import RunningMonkey from '@/features/home/components/RunningMonkey.vue'
 import ReanalysisFloating from '@/features/tendency/components/ReanalysisFloating.vue'
 import RecommendationFloating from '@/features/tendency/components/RecommendationFloating.vue'
 import TendencyChangeModal from '@/features/tendency/components/TendencyChangeModal.vue'
@@ -279,11 +280,9 @@ onBeforeUnmount(() => {
           </header>
           <div class="analysis-locked__track">
             <span :style="{ width: `${analysisProgressPercent}%` }"></span>
-            <img
-              src="/assets/icons/monkey.png"
-              alt=""
-              :style="{ left: `${analysisMarkerPercent}%` }"
-            />
+            <span class="analysis-locked__runner" :style="{ left: `${analysisMarkerPercent}%` }">
+              <RunningMonkey :size="48" />
+            </span>
           </div>
           <footer>
             <span>현재 {{ tendencyStore.recordedDays }}일째</span>
@@ -897,15 +896,13 @@ onBeforeUnmount(() => {
   background: linear-gradient(90deg, #54c4bf, #0a918c);
 }
 
-.analysis-locked__track img {
+.analysis-locked__runner {
   position: absolute;
   z-index: 4;
   top: 50%;
-  width: 48px;
-  height: 48px;
-  object-fit: cover;
-  filter: drop-shadow(0 3px 5px rgba(21, 82, 80, 0.18));
   transform: translate(-50%, -52%);
+  transition: left 1s linear;
+  will-change: left;
 }
 
 .analysis-locked__progress footer {
@@ -1079,6 +1076,10 @@ onBeforeUnmount(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .analysis-locked__runner {
+    transition: none;
+  }
+
   .analysis-progress__orbit,
   .analysis-progress__step {
     animation: none;
