@@ -883,7 +883,10 @@ onBeforeUnmount(() => {
   position: absolute;
   z-index: 4;
   top: 50%;
-  transform: translate(-50%, -52%);
+  /* 스프라이트 캐릭터의 발이 프레임 중앙이 아니라 아래쪽(~86%)에 있어서,
+     박스 전체를 게이지바에 맞추면 발이 게이지바보다 아래로 처진다.
+     발 위치가 게이지바 중앙에 오도록 위로 더 끌어올린다. */
+  transform: translate(-50%, -86%);
   transition: left 1s linear;
   will-change: left;
 }
