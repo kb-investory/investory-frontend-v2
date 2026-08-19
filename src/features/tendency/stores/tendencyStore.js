@@ -43,28 +43,6 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-// 분석 완료 후 추천 원칙은 백엔드에서 이벤트 리스너로 비동기 생성되기 때문에,
-// 분석 응답을 받자마자 조회하면 아직 추천이 안 만들어져 있을 수 있다. 서버가
-// analysisRunId별 생성 상태(generationStatus: REQUESTED/SUCCESS/FAILED)를
-// 내려주므로, REQUESTED인 동안만 재시도하고 SUCCESS/FAILED가 되면 즉시 멈춘다.
-async function fetchFreshRecommendations(analysisRunId) {
-  if (analysisRunId == null) return getRecommendedPrinciples()
-
-  let recommendationData = await getRecommendedPrinciples(analysisRunId)
-
-  for (
-    let attempt = 1;
-    attempt < RECOMMENDATION_POLL_MAX_ATTEMPTS &&
-    recommendationData.generationStatus === 'REQUESTED';
-    attempt += 1
-  ) {
-    await wait(RECOMMENDATION_POLL_INTERVAL_MS)
-    recommendationData = await getRecommendedPrinciples(analysisRunId)
-  }
-
-  return recommendationData
-}
-
 function mapRecommendationToPrinciple(recommendation, sortOrder, analysisRunId) {
   const recommendationId =
     recommendation.recommendationId ??
@@ -251,6 +229,28 @@ export const useTendencyStore = defineStore('tendency', () => {
     }
   }
 
+  function applyRecommendationData(recommendationData) {
+    recommendationGenerationStatus.value = recommendationData.generationStatus ?? null
+    recommendations.value = recommendationData.recommendations || []
+    queryClient.setQueryData(queryKeys.tendency.recommendations(), recommendationData)
+  }
+
+  // 추천 생성이 아직 REQUESTED면, 분석 결과 화면은 이미 떴으니 사용자를 막지 않고
+  // 백그라운드에서 계속 폴링만 한다. recommendationGenerationStatus를 구독하는
+  // 화면(추천 목록 섹션 등)이 REQUESTED 동안 자체적으로 로딩 상태를 보여주면 된다.
+  async function pollRecommendationGenerationInBackground(analysisRunId) {
+    try {
+      for (let attempt = 1; attempt < RECOMMENDATION_POLL_MAX_ATTEMPTS; attempt += 1) {
+        await wait(RECOMMENDATION_POLL_INTERVAL_MS)
+        const recommendationData = await getRecommendedPrinciples(analysisRunId)
+        applyRecommendationData(recommendationData)
+        if (recommendationData.generationStatus !== 'REQUESTED') return
+      }
+    } catch {
+      // 백그라운드 폴링 실패는 분석 결과 자체엔 영향을 주지 않는다.
+    }
+  }
+
   async function analyzeTendencies() {
     if (analyzing.value || isAnalysisLocked.value) return
 
@@ -263,15 +263,17 @@ export const useTendencyStore = defineStore('tendency', () => {
       updateAnalysis(analysisData)
       queryClient.setQueryData(queryKeys.tendency.analysis(), analysisData)
       const [recommendationData, accessData] = await Promise.all([
-        fetchFreshRecommendations(analysisData.analysisRunId),
+        getRecommendedPrinciples(analysisData.analysisRunId),
         getTendencyAccessStatus(),
       ])
-      recommendationGenerationStatus.value = recommendationData.generationStatus ?? null
-      recommendations.value = recommendationData.recommendations || []
+      applyRecommendationData(recommendationData)
       analysisAccess.value = accessData
-      queryClient.setQueryData(queryKeys.tendency.recommendations(), recommendationData)
       queryClient.setQueryData(queryKeys.tendency.access(), accessData)
       await queryClient.invalidateQueries({ queryKey: queryKeys.mypage.overview(), exact: true })
+
+      if (recommendationData.generationStatus === 'REQUESTED') {
+        pollRecommendationGenerationInBackground(analysisData.analysisRunId)
+      }
     } catch (analysisError) {
       error.value = analysisError
     } finally {
