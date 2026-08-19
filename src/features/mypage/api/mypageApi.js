@@ -204,17 +204,6 @@ export async function disconnectBroker(connectionId) {
   return await getNormalizedAccounts()
 }
 
-export async function disconnectSocialAccount() {
-  await wait(250)
-  return true
-}
-
-export async function withdrawMember() {
-  await wait(500)
-  window.localStorage.removeItem(MYPAGE_STORAGE_KEY)
-  return { withdrawn: true, journalPolicy: 'RETENTION_POLICY_APPLIED' }
-}
-
 export async function getAppInfo() {
   return clone(readState().appInfo)
 }

@@ -36,3 +36,14 @@ export async function logout() {
     setAccessToken(null)
   }
 }
+
+export async function withdrawAccount() {
+  try {
+    await request('/auth/me', {
+      method: 'DELETE',
+      withCredentials: true,
+    })
+  } finally {
+    setAccessToken(null)
+  }
+}
