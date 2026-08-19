@@ -408,7 +408,7 @@ export async function getSimulationReport(simulationId) {
       simulationReportData.reports?.[String(simulationId)] ?? simulationReportData.reports?.['101']
     return await normalizeSimulationReport({
       ...clone(report),
-      reportVersion: report?.reportVersion ?? 'MOCK_V11',
+      reportVersion: report?.reportVersion ?? 'DETERMINISTIC_V13',
       generationMetadata: {
         judgmentSource: 'DETERMINISTIC_RULE_ENGINE',
         narrativeStatus: 'COMPLETED',
