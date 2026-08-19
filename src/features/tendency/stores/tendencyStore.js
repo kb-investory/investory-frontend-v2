@@ -254,9 +254,34 @@ export const useTendencyStore = defineStore('tendency', () => {
     return history.value.find((item) => String(item.analysisRunId) === String(analysisRunId))
   }
 
+  // 저장 시 서버는 채택된 추천을 SUGGESTED -> ADOPTED로 전이시키는데(reconcileRecommendationStatuses),
+  // 추천 목록 캐시를 갱신하지 않으면 TENDENCY_STALE_TIME(5분) 동안 옛 SUGGESTED 상태가 남아
+  // 이미 채택한 추천이 목록에 계속 노출된다. 새로고침하면 메모리 캐시가 날아가 정상으로 보이던
+  // 증상의 원인이라, 저장 직후 서버가 판정한 상태를 다시 읽어온다.
+  // 저장 자체는 이미 커밋된 뒤이므로, 재조회 실패가 저장 실패로 보이지 않도록 예외는 삼킨다
+  // (이 경우 activeRecommendations의 클라이언트 가드가 그대로 백스톱 역할을 한다).
+  async function refreshRecommendations() {
+    try {
+      const recommendationData = await getRecommendedPrinciples()
+      recommendations.value = recommendationData.recommendations || []
+      queryClient.setQueryData(queryKeys.tendency.recommendations(), recommendationData)
+    } catch {
+      // 추천 목록 갱신 실패는 저장 결과에 영향을 주지 않는다.
+    }
+  }
+
   async function applyRecommendations(recommendationIds) {
-    const selectedRecommendations = recommendations.value.filter((recommendation) =>
-      recommendationIds.includes(recommendation.recommendationId),
+    // 이미 채택된 추천을 다시 적용하면 같은 recommendationId를 가진 원칙이 중복 저장되므로 제외한다.
+    const adoptedRecommendationIds = new Set(
+      principles.value
+        .map((principle) => principle.recommendationId)
+        .filter((recommendationId) => recommendationId != null)
+        .map(String),
+    )
+    const selectedRecommendations = recommendations.value.filter(
+      (recommendation) =>
+        recommendationIds.includes(recommendation.recommendationId) &&
+        !adoptedRecommendationIds.has(String(recommendation.recommendationId)),
     )
 
     if (!selectedRecommendations.length) return
@@ -288,6 +313,7 @@ export const useTendencyStore = defineStore('tendency', () => {
       APPLIED_RECOMMENDATIONS_KEY,
       JSON.stringify(appliedRecommendationIds.value),
     )
+    await refreshRecommendations()
   }
 
   async function savePrincipleEdits(nextPrinciples) {
@@ -328,6 +354,7 @@ export const useTendencyStore = defineStore('tendency', () => {
       APPLIED_RECOMMENDATIONS_KEY,
       JSON.stringify(appliedRecommendationIds.value),
     )
+    await refreshRecommendations()
   }
 
   function reset() {
