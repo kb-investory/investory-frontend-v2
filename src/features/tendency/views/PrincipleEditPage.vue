@@ -115,6 +115,8 @@ function addRecommendation(recommendation) {
     ...draftPrinciples.value,
     {
       principleId: `recommendation-${recommendation.recommendationId}`,
+      // 저장 시 이 값이 없으면 서버가 원칙을 DIRECT(사용자 작성)로 판정해 성향 기반 라벨이 사라진다.
+      recommendationId: recommendation.recommendationId,
       title: recommendation.analysisType.name,
       content: recommendation.recommendationText,
       originalContent: recommendation.recommendationText,
