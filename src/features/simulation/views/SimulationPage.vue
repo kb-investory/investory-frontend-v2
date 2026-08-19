@@ -51,6 +51,7 @@ const {
         v-else-if="effectiveMode === 'wysmi'"
         :eligible-days="simulationStore.eligibleDays"
         :min-required-days="simulationStore.MIN_REQUIRED_DAYS"
+        :data-error="simulationStore.overview?.dataError"
       />
 
       <!-- Screen 1: Ready State / Main Entry Screen (/simulation/dashboard) & Interactive Flow -->
@@ -92,6 +93,7 @@ const {
           :participants="simulationStore.liveSimulationResult?.participantSummary"
           :simulated-trades="simulationStore.liveSimulationResult?.simulatedTrades"
           :daily-performance="simulationStore.liveSimulationResult?.dailyPerformance"
+          :position-snapshots="simulationStore.liveSimulationResult?.positionSnapshots"
           :period-start="
             simulationStore.simulationConditions?.periodStart ??
             simulationStore.latestResult?.periodStart
@@ -112,6 +114,8 @@ const {
           v-else-if="currentStep === 'result'"
           :latest-result="simulationStore.latestResult"
           :report="simulationStore.simulationReport"
+          :report-loading="simulationStore.simulationReportLoading"
+          :report-error="simulationStore.simulationReportError"
           @restart="restartFlow"
         />
       </div>

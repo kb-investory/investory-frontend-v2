@@ -13,6 +13,7 @@ const STOCK_SEARCH_STALE_TIME = 5 * 60 * 1000
 
 export const useJournalStockSearchStore = defineStore('journal-stock-search', () => {
   const stocks = ref([])
+  const heldStocks = ref([])
   const recentSecurityCodes = ref([])
   const searchResults = ref([])
   const isLoading = ref(false)
@@ -25,10 +26,6 @@ export const useJournalStockSearchStore = defineStore('journal-stock-search', ()
       .filter(Boolean),
   )
 
-  const heldStocks = computed(() =>
-    stocks.value.filter((stock) => Number.isFinite(stock.holdingQuantity)),
-  )
-
   async function initialize() {
     const response = await queryClient.fetchQuery({
       queryKey: queryKeys.journal.stockSearchData(),
@@ -36,6 +33,7 @@ export const useJournalStockSearchStore = defineStore('journal-stock-search', ()
       staleTime: STOCK_SEARCH_STALE_TIME,
     })
     stocks.value = response.stocks
+    heldStocks.value = response.heldStocks ?? []
     recentSecurityCodes.value = response.recentSecurityCodes
   }
 
@@ -78,6 +76,7 @@ export const useJournalStockSearchStore = defineStore('journal-stock-search', ()
     recentSecurityCodes.value = await saveRecentJournalStock(securityCode)
     queryClient.setQueryData(queryKeys.journal.stockSearchData(), {
       stocks: stocks.value,
+      heldStocks: heldStocks.value,
       recentSecurityCodes: recentSecurityCodes.value,
     })
   }
@@ -89,6 +88,7 @@ export const useJournalStockSearchStore = defineStore('journal-stock-search', ()
   function reset() {
     latestSearchRequestId += 1
     stocks.value = []
+    heldStocks.value = []
     recentSecurityCodes.value = []
     searchResults.value = []
     isLoading.value = false

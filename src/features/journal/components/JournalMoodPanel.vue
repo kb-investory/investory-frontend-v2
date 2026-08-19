@@ -1,36 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 
-const moodOptions = [
-  {
-    value: 'ANXIOUS',
-    label: '불안',
-    color: '#3976d9',
-    softColor: '#eaf2ff',
-    image: '/assets/images/journal-moods/anxious.png',
-  },
-  {
-    value: 'CAUTIOUS',
-    label: '경계',
-    color: '#e0a012',
-    softColor: '#fff7dc',
-    image: '/assets/images/journal-moods/cautious.png',
-  },
-  {
-    value: 'CALM',
-    label: '차분',
-    color: '#139c83',
-    softColor: '#e8f8f4',
-    image: '/assets/images/journal-moods/calm.png',
-  },
-  {
-    value: 'CONFIDENT',
-    label: '확신',
-    color: '#e84a5f',
-    softColor: '#fff0f2',
-    image: '/assets/images/journal-moods/confident.png',
-  },
-]
+import { JOURNAL_MOOD_OPTIONS } from '@/features/journal/config/journalMoodOptions'
 
 const props = defineProps({
   modelValue: {
@@ -44,7 +15,9 @@ const controlRef = ref(null)
 const draggingPointerId = ref(null)
 
 const selectedMood = computed(
-  () => moodOptions.find((option) => option.value === props.modelValue) ?? moodOptions[2],
+  () =>
+    JOURNAL_MOOD_OPTIONS.find((option) => option.value === props.modelValue) ??
+    JOURNAL_MOOD_OPTIONS[2],
 )
 
 function selectMood(mood) {
@@ -69,7 +42,7 @@ function selectNearestMood(clientX) {
     }
   })
 
-  const nearestMood = moodOptions[nearestIndex]?.value
+  const nearestMood = JOURNAL_MOOD_OPTIONS[nearestIndex]?.value
 
   if (nearestMood && nearestMood !== props.modelValue) {
     selectMood(nearestMood)
@@ -123,7 +96,7 @@ function finishMoodDrag(event) {
       <div class="mood-selector__rail" aria-hidden="true" />
 
       <button
-        v-for="option in moodOptions"
+        v-for="option in JOURNAL_MOOD_OPTIONS"
         :key="option.value"
         type="button"
         class="mood-selector__option"
@@ -221,14 +194,16 @@ function finishMoodDrag(event) {
   height: 18px;
   border: 4px solid #ffffff;
   border-radius: 50%;
-  background: var(--mood-color);
+  background: var(--mood-soft-color);
   box-shadow: 0 0 0 1px rgba(36, 54, 74, 0.08);
   transition:
+    background-color 0.18s ease,
     transform 0.18s ease,
     box-shadow 0.18s ease;
 }
 
 .mood-selector__option--active .mood-selector__dot {
+  background: var(--mood-color);
   transform: scale(1.28);
   box-shadow:
     0 0 0 3px var(--mood-soft-color),

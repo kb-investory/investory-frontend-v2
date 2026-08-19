@@ -28,7 +28,13 @@ defineProps({
         v-for="day in weekly.days"
         :key="day.date"
         class="weekly-rhythm__day"
-        :aria-label="`${day.date}, ${day.completed ? `거래 ${day.tradeCount}건 기록` : '기록 없음'}`"
+        :aria-label="`${day.date}, ${
+          day.completed
+            ? day.tradeCount > 0
+              ? `거래 ${day.tradeCount}건 포함 투자일지 기록`
+              : '투자일지 기록'
+            : '기록 없음'
+        }`"
       >
         <span
           class="weekly-rhythm__day-state"

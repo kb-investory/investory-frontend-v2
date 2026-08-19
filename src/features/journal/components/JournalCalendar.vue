@@ -35,6 +35,8 @@ function formatDateKey(date) {
   return `${year}-${month}-${day}`
 }
 
+const todayDateKey = formatDateKey(new Date())
+
 const entryByDate = computed(
   () => new Map(props.entries.map((entry) => [entry.journalDate, entry])),
 )
@@ -60,6 +62,7 @@ const calendarCells = computed(() => {
       day: date.getDate(),
       dayOfWeek: date.getDay(),
       inCurrentMonth: date.getMonth() === props.month - 1,
+      isToday: dateKey === todayDateKey,
       journal,
       activity,
     }
@@ -78,7 +81,8 @@ function getAriaLabel(cell) {
   const [year, month, day] = cell.dateKey.split('-').map(Number)
   const journalStatus = cell.journal ? '작성한 투자 일지 있음' : '작성한 투자 일지 없음'
   const tradeStatus = cell.activity ? `, 거래 ${cell.activity.tradeCount}건` : ''
-  return `${year}년 ${month}월 ${day}일, ${journalStatus}${tradeStatus}`
+  const todayStatus = cell.isToday ? ', 오늘' : ''
+  return `${year}년 ${month}월 ${day}일${todayStatus}, ${journalStatus}${tradeStatus}`
 }
 </script>
 
@@ -106,6 +110,7 @@ function getAriaLabel(cell) {
           'journal-calendar__day--outside': !cell.inCurrentMonth,
           'journal-calendar__day--sunday': cell.dayOfWeek === 0,
           'journal-calendar__day--saturday': cell.dayOfWeek === 6,
+          'journal-calendar__day--today': cell.isToday,
           'journal-calendar__day--selected': cell.dateKey === selectedDate,
           'journal-calendar__day--has-journal': cell.journal,
           'journal-calendar__day--has-activity': cell.activity,
@@ -196,7 +201,9 @@ function getAriaLabel(cell) {
   cursor: pointer;
 }
 
-.journal-calendar__day--has-journal:hover:not(.journal-calendar__day--selected) {
+.journal-calendar__day--has-journal:hover:not(.journal-calendar__day--selected):not(
+    .journal-calendar__day--today
+  ) {
   background: #f1fbfa;
 }
 
@@ -225,8 +232,16 @@ function getAriaLabel(cell) {
   color: #abc3e8;
 }
 
+.journal-calendar__day--today {
+  color: var(--brand-teal-deep, #087f7c);
+  background: #e5f7f5;
+  box-shadow: inset 0 0 0 1px #b9e6e2;
+  font-weight: 800;
+}
+
 .journal-calendar__day--selected {
   background: #c8f3ee;
+  box-shadow: none;
 }
 
 .journal-calendar__markers {

@@ -7,7 +7,7 @@ import { getMe, loginWithOAuth, logout as logoutApi } from '@/features/auth/api/
 import { refreshAccessToken } from '@/modules/auth/services/authService'
 import { queryKeys } from '@/shared/api/queryKeys'
 
-const USE_TEST_AUTH = import.meta.env.DEV || import.meta.env.VITE_USE_TEST_AUTH === 'true'
+const USE_TEST_AUTH = import.meta.env.VITE_USE_TEST_AUTH === 'true'
 const TEST_AUTH_SESSION_KEY = 'investory:test-auth-user'
 
 function readTestUser() {

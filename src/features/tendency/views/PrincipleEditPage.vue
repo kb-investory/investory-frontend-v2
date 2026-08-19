@@ -36,6 +36,7 @@ const currentSnapshot = computed(() =>
     })),
   ),
 )
+const isCreateMode = computed(() => !tendencyStore.principles.length)
 const hasUnsavedChanges = computed(
   () => initialized.value && currentSnapshot.value !== initialSnapshot.value,
 )
@@ -193,6 +194,7 @@ watch(
     if (initialized.value) return
     draftPrinciples.value = clonePrinciples(principles || [])
     initialSnapshot.value = currentSnapshot.value
+    customFormOpen.value = !principles?.length
     initialized.value = true
   },
   { immediate: true },
@@ -219,20 +221,23 @@ onBeforeUnmount(() => {
       <button type="button" aria-label="투자원칙 화면으로 돌아가기" @click="router.back()">
         <AppIcon name="chevron-left" :size="20" />
       </button>
-      <strong>투자원칙 수정</strong>
+      <strong>{{ isCreateMode ? '투자원칙 작성' : '투자원칙 수정' }}</strong>
     </header>
 
-    <div
-      v-if="tendencyStore.loading || tendencyStore.isAnalysisLocked || !initialized"
-      class="loading-wrapper"
-    >
+    <div v-if="tendencyStore.loading || !initialized" class="loading-wrapper">
       <BaseLoading />
     </div>
 
     <main v-else class="edit-content">
       <header class="edit-hero">
-        <h1>원칙을 정리해볼까요?</h1>
-        <p>필요한 원칙만 남기고 새 원칙을 더할 수 있어요.</p>
+        <h1>{{ isCreateMode ? '나만의 원칙을 작성해볼까요?' : '원칙을 정리해볼까요?' }}</h1>
+        <p>
+          {{
+            isCreateMode
+              ? '실제 투자에서 지키고 싶은 기준을 편하게 적어보세요.'
+              : '필요한 원칙만 남기고 새 원칙을 더할 수 있어요.'
+          }}
+        </p>
       </header>
 
       <div class="principle-summary" aria-label="투자원칙 구성 요약">
@@ -240,13 +245,13 @@ onBeforeUnmount(() => {
           <i aria-hidden="true"></i>
           적용 중 {{ draftPrinciples.length }}
         </span>
-        <span>
+        <span v-if="!isCreateMode">
           <AppIcon name="sparkles" :size="14" />
           추천 {{ availableRecommendations.length }}
         </span>
       </div>
 
-      <section class="edit-section">
+      <section v-if="draftPrinciples.length" class="edit-section">
         <header>
           <h2><i aria-hidden="true"></i>현재 적용 중 · 수정 또는 제외</h2>
           <span>현재 적용 중인 {{ draftPrinciples.length }}개</span>
@@ -298,7 +303,28 @@ onBeforeUnmount(() => {
         </div>
       </section>
 
-      <section v-if="availableRecommendations.length" class="edit-section">
+      <section class="custom-principle">
+        <button v-if="!customFormOpen" type="button" @click="customFormOpen = true">
+          <AppIcon name="plus" :size="16" />
+          직접 작성해서 추가
+        </button>
+        <div v-else class="custom-principle__form">
+          <textarea
+            v-model="customText"
+            rows="3"
+            placeholder="예: 매수 전 투자 근거를 세 가지 이상 확인한다"
+            aria-label="직접 작성할 투자원칙"
+          />
+          <div>
+            <button type="button" @click="customFormOpen = false">취소</button>
+            <button type="button" :disabled="!customText.trim()" @click="addCustomPrinciple">
+              추가하기
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section v-if="!isCreateMode && availableRecommendations.length" class="edit-section">
         <header>
           <h2><AppIcon name="sparkles" :size="17" />추천 원칙 추가하기</h2>
           <span>{{ availableRecommendations.length }}개 추천</span>
@@ -327,31 +353,14 @@ onBeforeUnmount(() => {
         </div>
       </section>
 
-      <section class="custom-principle">
-        <button v-if="!customFormOpen" type="button" @click="customFormOpen = true">
-          <AppIcon name="plus" :size="16" />
-          직접 작성해서 추가
-        </button>
-        <div v-else class="custom-principle__form">
-          <textarea
-            v-model="customText"
-            rows="3"
-            placeholder="나만의 투자원칙을 입력하세요"
-            aria-label="직접 작성할 투자원칙"
-          />
-          <div>
-            <button type="button" @click="customFormOpen = false">취소</button>
-            <button type="button" :disabled="!customText.trim()" @click="addCustomPrinciple">
-              추가하기
-            </button>
-          </div>
-        </div>
-      </section>
-
       <p v-if="saveError" class="save-error" role="alert">{{ saveError }}</p>
 
       <footer class="save-bar">
-        <BaseButton full-width :disabled="saving" @click="saveChanges">
+        <BaseButton
+          full-width
+          :disabled="saving || (isCreateMode && !draftPrinciples.length)"
+          @click="saveChanges"
+        >
           <template #iconLeft><AppIcon name="check" :size="15" /></template>
           {{ saving ? '저장하는 중...' : `변경한 원칙 ${draftPrinciples.length}개 저장하기` }}
         </BaseButton>

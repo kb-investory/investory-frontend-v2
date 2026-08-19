@@ -17,6 +17,18 @@ export const routes = [
     },
   },
   {
+    path: '/notifications',
+    name: ROUTE_NAMES.NOTIFICATIONS,
+    component: () => import('@/features/notifications/views/NotificationPage.vue'),
+    meta: {
+      title: '알림',
+      layout: 'full-bleed',
+      hideBottomNav: true,
+      frameHeight: 920,
+      mainBottomPadding: 0,
+    },
+  },
+  {
     path: '/login',
     name: ROUTE_NAMES.LOGIN,
     component: () => import('@/features/auth/views/LoginPage.vue'),
@@ -268,7 +280,7 @@ export const routes = [
   {
     path: '/mypage/simulations/:simulationId',
     name: ROUTE_NAMES.MYPAGE_SIMULATION_DETAIL,
-    component: () => import('@/features/mypage/views/MypagePlaceholderPage.vue'),
+    component: () => import('@/features/mypage/views/MypageSimulationDetailPage.vue'),
     meta: { title: '시뮬레이션 결과', layout: 'full-bleed', hideBottomNav: true },
   },
   {

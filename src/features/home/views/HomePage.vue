@@ -3,7 +3,6 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
-import HomeConnectionSummary from '@/features/home/components/HomeConnectionSummary.vue'
 import HomeHeader from '@/features/home/components/HomeHeader.vue'
 import HomeQuickActions from '@/features/home/components/HomeQuickActions.vue'
 import HomeSimulationCard from '@/features/home/components/HomeSimulationCard.vue'
@@ -11,6 +10,7 @@ import TodayRecordHero from '@/features/home/components/TodayRecordHero.vue'
 import WeeklyRecordRhythm from '@/features/home/components/WeeklyRecordRhythm.vue'
 import { useHomeClock } from '@/features/home/composables/useHomeClock'
 import { useHomeStore } from '@/features/home/stores/homeStore'
+import { useNotificationStore } from '@/features/notifications/stores/notificationStore'
 import ReanalysisFloating from '@/features/tendency/components/ReanalysisFloating.vue'
 import { useFloatingCornerSwipe } from '@/features/tendency/composables/useFloatingCornerSwipe'
 import { useTendencyStore } from '@/features/tendency/stores/tendencyStore'
@@ -21,8 +21,10 @@ const HOME_FLOATING_POSITION_KEY = 'investory:home-floating-position:v1'
 
 const router = useRouter()
 const homeStore = useHomeStore()
+const notificationStore = useNotificationStore()
 const tendencyStore = useTendencyStore()
 const reanalysisNoticeCollapsed = ref(true)
+const syncingHome = ref(false)
 const {
   elementRef: reanalysisFloatingRef,
   position: reanalysisFloatingPosition,
@@ -32,12 +34,13 @@ const {
   preventClickAfterSwipe: preventReanalysisClick,
 } = useFloatingCornerSwipe(HOME_FLOATING_POSITION_KEY)
 let reanalysisMidnightTimer
+let notificationClockTimer
 
 const journalRoute = {
   name: ROUTE_NAMES.JOURNAL_CREATE,
   query: { from: 'home' },
 }
-const tendencyRoute = { name: ROUTE_NAMES.TENDENCY }
+const principleRoute = { name: ROUTE_NAMES.TENDENCY, query: { tab: 'principles' } }
 const simulationRoute = { name: ROUTE_NAMES.SIMULATION }
 const { currentTime, remainingTime, dayProgressPercent } = useHomeClock()
 
@@ -52,8 +55,7 @@ const connectedAssetSummary = computed(() => {
   if (!firstAccount || !homeStore.summary) return null
 
   return {
-    brokerName: firstAccount.brokerName,
-    accountCount: homeStore.accounts.length,
+    accountName: firstAccount.accountName || firstAccount.brokerName,
     holdingCount: homeStore.holdings.length,
     totalValuation: homeStore.summary.totalMarketValue,
   }
@@ -75,6 +77,27 @@ function openTendencyReanalysis() {
     name: ROUTE_NAMES.TENDENCY,
     query: { reanalyze: 'true' },
   })
+}
+
+function openNotifications() {
+  router.push({ name: ROUTE_NAMES.NOTIFICATIONS })
+}
+
+async function syncHome() {
+  if (syncingHome.value) return
+
+  syncingHome.value = true
+  try {
+    await Promise.allSettled([
+      homeStore.fetchDashboard({ force: true }),
+      homeStore.fetchSummary({ force: true }),
+      notificationStore.fetchNotifications(),
+      tendencyStore.fetchLatestAnalysis({ force: true }),
+    ])
+    tendencyStore.refreshAnalysisDate()
+  } finally {
+    syncingHome.value = false
+  }
 }
 
 function scheduleMidnightRefresh() {
@@ -109,42 +132,41 @@ onMounted(async () => {
   await Promise.allSettled([
     homeStore.fetchDashboard(),
     homeStore.fetchSummary(),
+    notificationStore.fetchNotifications(),
     tendencyStore.fetchLatestAnalysis(),
   ])
   tendencyStore.refreshAnalysisDate()
   scheduleMidnightRefresh()
+  notificationClockTimer = window.setInterval(() => {
+    void notificationStore.refreshForCurrentTime()
+  }, 60 * 1000)
 })
 
 onBeforeUnmount(() => {
   window.clearTimeout(reanalysisMidnightTimer)
+  window.clearInterval(notificationClockTimer)
 })
-
-function openTransactions() {
-  router.push(journalRoute)
-}
 </script>
 
 <template>
   <div class="home-page">
     <div v-if="homeStore.dashboard" class="home-page__content">
       <div class="home-page__hero">
-        <HomeHeader logo-src="/assets/logos/investory-logo-dark.png" dark />
-        <TodayRecordHero :today="liveToday" @open-transactions="openTransactions" />
+        <HomeHeader
+          logo-src="/assets/logos/investory-logo-dark.png"
+          dark
+          :notification-count="notificationStore.unreadCount"
+          :syncing="syncingHome"
+          @notification="openNotifications"
+          @sync="syncHome"
+        />
+        <TodayRecordHero :today="liveToday" :asset-summary="connectedAssetSummary" />
       </div>
-
-      <HomeConnectionSummary
-        v-if="connectedAssetSummary"
-        :broker-name="connectedAssetSummary.brokerName"
-        :account-count="connectedAssetSummary.accountCount"
-        :holding-count="connectedAssetSummary.holdingCount"
-        :total-valuation="connectedAssetSummary.totalValuation"
-      />
 
       <HomeQuickActions
         :journal-to="journalRoute"
-        :tendency-to="tendencyRoute"
+        :principle-to="principleRoute"
         :journal-status="homeStore.dashboard.quickActions.journalStatus"
-        :tendency-progress="homeStore.dashboard.quickActions.tendencyProgress"
       />
 
       <HomeSimulationCard :to="simulationRoute" />
