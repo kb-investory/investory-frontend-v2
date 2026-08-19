@@ -177,9 +177,10 @@ async function goHome() {
   width: 100%;
   margin: 0;
   padding: 8px 16px;
-  border: 1px solid rgb(255 255 255 / 13%);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 12px;
-  background: rgb(38 58 67 / 78%);
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 10%);
 }
 
 .complete-summary > div {
@@ -187,7 +188,7 @@ async function goHome() {
   min-height: 56px;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgb(255 255 255 / 14%);
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .complete-summary > div:last-child {
@@ -195,14 +196,14 @@ async function goHome() {
 }
 
 .complete-summary dt {
-  color: #dce6e9;
+  color: var(--color-text-muted);
   font-size: var(--font-size-body);
   font-weight: 500;
 }
 
 .complete-summary dd {
   margin: 0;
-  color: #ffffff;
+  color: var(--color-heading);
   font-size: var(--font-size-body);
   font-weight: 700;
 }
@@ -214,9 +215,6 @@ async function goHome() {
 .complete-action {
   display: grid;
   gap: 9px;
-  padding: 14px;
-  border-radius: 14px;
-  background: #ffffff;
 }
 
 .complete-action :deep(.base-button--primary) {
