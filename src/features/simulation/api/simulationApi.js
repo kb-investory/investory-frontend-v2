@@ -1,9 +1,43 @@
 import simulationData from '@/mocks/data/simulation.json'
+import simulationReportData from '@/mocks/data/simulation-report.json'
 import { getSecurityDetailById } from '@/features/market/api/marketApi'
 import { request } from '@/shared/api/client'
 
+const USE_MOCK_SIMULATION =
+  import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_SIMULATION === 'true'
+
+const MOCK_SECURITY_BY_ID = Object.freeze({
+  101: { securityCode: '000660', securityName: 'SK하이닉스' },
+  202: { securityCode: '035420', securityName: 'NAVER' },
+  303: { securityCode: '005930', securityName: '삼성전자' },
+  404: { securityCode: '005380', securityName: '현대차' },
+  505: { securityCode: '068270', securityName: '셀트리온' },
+})
+
 function clone(value) {
   return structuredClone(value)
+}
+
+function withMockSecurityNames(data) {
+  const result = clone(data)
+  const fillSecurity = (item) => {
+    const security = MOCK_SECURITY_BY_ID[item?.securityId]
+    return security ? { ...item, ...security } : item
+  }
+
+  if (Array.isArray(result?.simulatedTrades)) {
+    result.simulatedTrades = result.simulatedTrades.map(fillSecurity)
+  }
+  if (Array.isArray(result?.positionSnapshots)) {
+    result.positionSnapshots = result.positionSnapshots.map(fillSecurity)
+  }
+  return result
+}
+
+function getMockSimulationDetail(simulationId) {
+  return (
+    simulationData.details?.[String(simulationId)] ?? simulationData.latest ?? simulationData.run
+  )
 }
 
 const DEFAULT_HARDCODED_PROFILE = {
@@ -81,17 +115,20 @@ async function normalizeSimulationReport(data) {
   if (!data) return data
 
   const rawKeyTradeReviews = data.keyTradeReviews ?? data.decisionReviews ?? []
-  const [keyTradeReviews, decisionReviews, evidenceReviews] = await Promise.all([
-    enrichSecurityDetails(rawKeyTradeReviews),
-    enrichSecurityDetails(data.decisionReviews),
-    enrichSecurityDetails(data.evidenceReviews),
-  ])
+  const [keyTradeReviews, decisionReviews, evidenceReviews, securityEvidenceReviews] =
+    await Promise.all([
+      enrichSecurityDetails(rawKeyTradeReviews),
+      enrichSecurityDetails(data.decisionReviews),
+      enrichSecurityDetails(data.evidenceReviews),
+      enrichSecurityDetails(data.securityEvidenceReviews),
+    ])
 
   return {
     ...data,
     keyTradeReviews,
     decisionReviews: decisionReviews?.length ? decisionReviews : keyTradeReviews,
     evidenceReviews,
+    securityEvidenceReviews,
   }
 }
 
@@ -100,6 +137,7 @@ export function isSimulationReportEnrichmentPending(report) {
 
   const metadata = report.generationMetadata ?? {}
   if (metadata.narrativeStatus === 'PENDING') return true
+  if ((report.evidenceReviews ?? []).some((review) => review.webVerdict === 'PENDING')) return true
 
   const terminalThesisStatuses = new Set(['NOT_CONFIGURED', 'COMPLETED', 'PARTIAL', 'FAILED'])
   if (terminalThesisStatuses.has(metadata.thesisVerificationStatus)) return false
@@ -213,27 +251,69 @@ async function normalizeSimulationResult(data) {
 }
 
 export async function getSimulationHistory() {
-  return await request('/api/v1/simulations/history')
+  if (USE_MOCK_SIMULATION) {
+    const run = simulationData.latest?.simulationRun ?? simulationData.run
+    return [
+      {
+        simulationRunId: run?.simulationRunId ?? 101,
+        version: 'v3',
+        date: (run?.periodEnd ?? '2026-07-29').replaceAll('-', '.'),
+        period: `${(run?.periodStart ?? '2026-03-01').replaceAll('-', '.')} ~ ${(
+          run?.periodEnd ?? '2026-07-29'
+        ).replaceAll('-', '.')}`,
+        returnPercent:
+          simulationData.latest?.participantSummary?.find(
+            (participant) => participant.variantType === 'PERSONAL_BOT',
+          )?.cumulativeReturnPercent ?? 17,
+        runStatus: run?.runStatus ?? 'COMPLETED',
+        createdAt: `${run?.periodEnd ?? '2026-07-29'}T18:00:00`,
+      },
+    ]
+  }
+  return await request('/v1/simulations/history')
 }
 
 export async function getInitialCapital(startDate, accountId, { signal } = {}) {
+  if (USE_MOCK_SIMULATION) {
+    if (signal?.aborted) throw new DOMException('요청이 취소되었습니다.', 'AbortError')
+    const snapshotDate = new Date(`${startDate}T00:00:00Z`)
+    snapshotDate.setUTCDate(snapshotDate.getUTCDate() - 1)
+    return {
+      accountId: Number(accountId),
+      startDate,
+      snapshotDate: snapshotDate.toISOString().slice(0, 10),
+      totalInitialCapital: simulationData.overview.recommendedInitialCapital,
+      holdings: [],
+    }
+  }
+
   const query = new URLSearchParams({
     start_date: startDate,
     account_id: accountId,
   }).toString()
-  return await request(`/api/v1/simulations/initial-capital?${query}`, { signal })
+  return await request(`/v1/simulations/initial-capital?${query}`, { signal })
 }
 
 export async function getSimulationOverview(params = {}) {
+  if (USE_MOCK_SIMULATION) {
+    return {
+      ...clone(simulationData.overview),
+      accountId: Number(params.accountId) || 1,
+    }
+  }
+
   const searchParams = new URLSearchParams()
   if (params.startDate) searchParams.set('start_date', params.startDate)
   if (params.accountId) searchParams.set('account_id', params.accountId)
   const query = searchParams.toString()
-  return await request(`/api/v1/simulations/overview${query ? `?${query}` : ''}`)
+  return await request(`/v1/simulations/overview${query ? `?${query}` : ''}`)
 }
 
 export async function getLatestSimulationResult() {
-  const data = await request('/api/v1/simulations/latest')
+  if (USE_MOCK_SIMULATION) {
+    return await normalizeSimulationResult(withMockSecurityNames(simulationData.latest))
+  }
+  const data = await request('/v1/simulations/latest')
   return await normalizeSimulationResult(data)
 }
 
@@ -254,18 +334,37 @@ export async function compileSimulationBot(payload = {}) {
     ],
     profile: payload.profile ?? DEFAULT_HARDCODED_PROFILE,
   }
-  return await request('/api/v1/simulation-bots/compile', {
+  if (USE_MOCK_SIMULATION) {
+    return {
+      ...clone(simulationData.compileResponse),
+      status: 'COMPLETED',
+      progressPercent: 100,
+      personalBotId: 1,
+    }
+  }
+  return await request('/v1/simulation-bots/compile', {
     method: 'POST',
     body: JSON.stringify(requestBody),
   })
 }
 
 export async function getSimulationBotCompileJob(jobId) {
-  return await request(`/api/v1/simulation-bots/compile-jobs/${jobId}`)
+  if (USE_MOCK_SIMULATION) {
+    return {
+      ...(clone(simulationData.compileJobs?.[jobId]) || {}),
+      jobId,
+      status: 'COMPLETED',
+      progressPercent: 100,
+      personalBotId: 1,
+      message: 'AI 원칙 봇 전략 생성이 완료되었습니다.',
+    }
+  }
+  return await request(`/v1/simulation-bots/compile-jobs/${jobId}`)
 }
 
 export async function getSimulationComparators() {
-  return await request('/api/v1/simulation-bots/comparators')
+  if (USE_MOCK_SIMULATION) return clone(simulationData.comparators)
+  return await request('/v1/simulation-bots/comparators')
 }
 
 export async function runSimulation(payload = {}) {
@@ -276,7 +375,16 @@ export async function runSimulation(payload = {}) {
     personalBotId: payload.personalBotId,
     accountId: payload.accountId,
   }
-  const response = await request('/api/v1/simulations/run', {
+  if (USE_MOCK_SIMULATION) {
+    const mockResult = withMockSecurityNames(simulationData.run)
+    return await normalizeSimulationResult({
+      ...mockResult,
+      periodStart: payload.periodStart ?? mockResult.periodStart,
+      periodEnd: payload.periodEnd ?? mockResult.periodEnd,
+      persistenceStatus: 'COMPLETED',
+    })
+  }
+  const response = await request('/v1/simulations/run', {
     method: 'POST',
     body: JSON.stringify(requestBody),
   })
@@ -284,18 +392,43 @@ export async function runSimulation(payload = {}) {
 }
 
 export async function getSimulationDetail(simulationId) {
-  const response = await request(`/api/v1/simulations/${simulationId}`)
+  if (USE_MOCK_SIMULATION) {
+    return await normalizeSimulationResult(
+      withMockSecurityNames(getMockSimulationDetail(simulationId)),
+    )
+  }
+  const response = await request(`/v1/simulations/${simulationId}`)
   return await normalizeSimulationResult(response)
 }
 
-// GET /api/v1/simulations/{simulationId}/report
+// GET /v1/simulations/{simulationId}/report
 export async function getSimulationReport(simulationId) {
-  const response = await request(`/api/v1/simulations/${simulationId}/report`)
+  if (USE_MOCK_SIMULATION) {
+    const report =
+      simulationReportData.reports?.[String(simulationId)] ?? simulationReportData.reports?.['101']
+    return await normalizeSimulationReport({
+      ...clone(report),
+      reportVersion: report?.reportVersion ?? 'DETERMINISTIC_V13',
+      generationMetadata: {
+        judgmentSource: 'DETERMINISTIC_RULE_ENGINE',
+        narrativeStatus: 'COMPLETED',
+        narrativeSource: 'TEMPLATE_FALLBACK',
+        thesisVerificationStatus: 'NOT_CONFIGURED',
+        thesisVerificationSource: 'NONE',
+        proposalSource: 'MOCK_DATA',
+        ...clone(report?.generationMetadata ?? {}),
+      },
+    })
+  }
+  const response = await request(`/v1/simulations/${simulationId}/report`)
   return await normalizeSimulationReport(response)
 }
 
 export async function acceptSimulationPrincipleProposal(simulationId, recommendationId) {
-  return await request('/api/v1/principles/proposals/accept', {
+  if (USE_MOCK_SIMULATION) {
+    return { simulationId, recommendationId, status: 'ACCEPTED' }
+  }
+  return await request('/v1/principles/proposals/accept', {
     method: 'POST',
     body: JSON.stringify({ simulationId, recommendationId }),
   })

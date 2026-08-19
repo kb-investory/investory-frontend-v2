@@ -4,10 +4,13 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
+import { queryClient } from '@/app/providers/queryClient'
+import { getJournalTradeHistory } from '@/features/journal/api/journalStockApi'
 import JournalMoodPanel from '@/features/journal/components/JournalMoodPanel.vue'
 import JournalTradeTimeline from '@/features/journal/components/JournalTradeTimeline.vue'
 import { getDefaultJournalDate } from '@/features/journal/api/journalApi'
 import { useJournalStore } from '@/features/journal/stores/journalStore'
+import { queryKeys } from '@/shared/api/queryKeys'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
 import BaseTextarea from '@/shared/components/inputs/BaseTextarea.vue'
@@ -30,6 +33,9 @@ const autoSaveStatus = ref('작성 내용을 불러오는 중…')
 const validationMessage = ref('')
 const resultMessage = ref('')
 const isHydrating = ref(true)
+const tradeHistories = reactive({})
+const tradeHistoryLoading = reactive({})
+const tradeHistoryErrors = reactive({})
 let autoSaveTimer
 
 const journalDate = computed(() => String(route.query.date || getDefaultJournalDate()))
@@ -127,6 +133,45 @@ function updateTradeNote({ tradeId, value }) {
 
 function toggleSort() {
   sortOrder.value = sortOrder.value === 'latest' ? 'oldest' : 'latest'
+}
+
+async function loadTradeHistory(trade) {
+  const securityId = Number(trade.securityId)
+  const historyKey = String(securityId)
+  if (!securityId) {
+    tradeHistoryErrors[historyKey] = '종목 정보를 확인할 수 없어요.'
+    return
+  }
+  if (Object.hasOwn(tradeHistories, historyKey) || tradeHistoryLoading[historyKey]) return
+
+  tradeHistoryLoading[historyKey] = true
+  tradeHistoryErrors[historyKey] = ''
+
+  try {
+    tradeHistories[historyKey] = await queryClient.fetchQuery({
+      queryKey: queryKeys.journal.tradeHistory(securityId, journalDate.value),
+      queryFn: () =>
+        getJournalTradeHistory({
+          securityId,
+          journalDate: journalDate.value,
+          size: 20,
+        }),
+      staleTime: 5 * 60 * 1000,
+    })
+  } catch (error) {
+    tradeHistoryErrors[historyKey] = error?.message || '이전 거래 기록을 불러오지 못했어요.'
+  } finally {
+    tradeHistoryLoading[historyKey] = false
+  }
+}
+
+function openStockHistory(trade) {
+  if (!trade.securityCode) return
+
+  router.push({
+    name: ROUTE_NAMES.JOURNAL_STOCK,
+    params: { securityCode: trade.securityCode },
+  })
 }
 
 function appendThoughtPrompt(prompt) {
@@ -273,8 +318,13 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
           :trades="sortedTrades"
           :notes="form.tradeNotes"
           :sort-order="sortOrder"
+          :histories="tradeHistories"
+          :history-loading="tradeHistoryLoading"
+          :history-errors="tradeHistoryErrors"
           @update-note="updateTradeNote"
           @toggle-sort="toggleSort"
+          @load-history="loadTradeHistory"
+          @open-stock-history="openStockHistory"
         />
 
         <div class="journal-create-page__notice">

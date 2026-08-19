@@ -41,7 +41,7 @@ const activeChapter = ref(0)
 const slideDirection = ref('next')
 const touchStart = ref(null)
 const expandedDecisionKey = ref(null)
-const expandedThesisKey = ref(null)
+const selectedEvidenceSecurityKey = ref(null)
 const proposalToConfirm = ref(null)
 const applyingProposalId = ref(null)
 const appliedProposalIds = ref(new Set())
@@ -49,9 +49,9 @@ const proposalError = ref('')
 
 const REPORT_CHAPTERS = [
   { number: '01', title: '성과 비교', icon: 'bar-chart' },
-  { number: '02', title: '감정 복기', icon: 'activity' },
+  { number: '02', title: '원칙 복기', icon: 'activity' },
   { number: '03', title: '근거 검증', icon: 'circle-check' },
-  { number: '04', title: '학습 인사이트', icon: 'sparkles' },
+  { number: '04', title: '인사이트', icon: 'sparkles' },
   { number: '05', title: '다음 원칙', icon: 'target' },
 ]
 
@@ -89,11 +89,6 @@ function getDecisionKey(decision, index) {
 function toggleDecision(decision, index) {
   const key = getDecisionKey(decision, index)
   expandedDecisionKey.value = expandedDecisionKey.value === key ? null : key
-}
-
-function toggleThesis(decision, index) {
-  const key = getDecisionKey(decision, index)
-  expandedThesisKey.value = expandedThesisKey.value === key ? null : key
 }
 
 const simulatedTradeById = computed(
@@ -135,7 +130,29 @@ function normalizeDecisionAction(action) {
   return { ADD: 'BUY', REDUCE: 'SELL', WAIT: 'HOLD' }[action] ?? action
 }
 
+function compactRecommendedAction(action) {
+  const text = String(action ?? '').trim()
+
+  if (/추가 매수.*(않|보류).*(기존.*보유|유지)/.test(text)) {
+    return '기존 보유 유지'
+  }
+
+  return text
+}
+
+function formatOutcomePercent(value) {
+  if (value == null) return '-'
+  const number = Number(value)
+  if (!Number.isFinite(number)) return '-'
+  const formatted = number.toFixed(2).replace(/\.?0+$/, '')
+  return `${number > 0 ? '+' : ''}${formatted}%`
+}
+
 function getPrincipleRecommendedAction(decision) {
+  if (decision.matchedPrinciple?.expectedAction) {
+    return compactRecommendedAction(decision.matchedPrinciple.expectedAction)
+  }
+
   const actualAction = normalizeDecisionAction(decision.action)
   const principleAction = normalizeDecisionAction(decision.principleBotAction)
 
@@ -184,7 +201,10 @@ function getDistinctNarrative(narrative, ...comparisonTexts) {
 }
 
 function getDecisionOutcomeContext(decision) {
-  const outcomeReturn = decision.outcome?.priceReturnPercent ?? decision.subsequentReturnPercent
+  const outcomeReturn =
+    decision.marketOutcome?.fiveTradingDays?.returnPercent ??
+    decision.outcome?.priceReturnPercent ??
+    decision.subsequentReturnPercent
   if (outcomeReturn == null) {
     return '사후 성과와 관계없이, 결정 당시 확인할 수 있었던 원칙을 기준으로 복기했어요.'
   }
@@ -192,8 +212,105 @@ function getDecisionOutcomeContext(decision) {
   return `5거래일 뒤 수익률은 ${formatPercent(outcomeReturn)}였지만, 사후 수익과 별개로 당시 원칙을 기준으로 판단했어요.`
 }
 
+const principleJudgmentMeta = {
+  FOLLOWED: {
+    label: '원칙 준수',
+    verdictLabel: '원칙을 지킨 결정',
+    tone: 'followed',
+    icon: 'circle-check',
+    comparisonLabel: '원칙과 일치',
+  },
+  VIOLATED: {
+    label: '원칙 위반',
+    verdictLabel: '원칙을 어긴 결정',
+    tone: 'violated',
+    icon: 'triangle-alert',
+    comparisonLabel: '원칙과 불일치',
+  },
+  DECISION_DIFFERENCE: {
+    label: '판단 차이',
+    verdictLabel: '원칙봇과 다른 결정',
+    tone: 'difference',
+    icon: 'arrow-left-right',
+    comparisonLabel: '판단이 달랐어요',
+  },
+  NOT_APPLICABLE: {
+    label: '적용 원칙 없음',
+    verdictLabel: '원칙 적용 대상 아님',
+    tone: 'unassessed',
+    icon: 'minus',
+    comparisonLabel: '평가 제외',
+  },
+  INSUFFICIENT_DATA: {
+    label: '판정 자료 부족',
+    verdictLabel: '아직 판단할 수 없음',
+    tone: 'unassessed',
+    icon: 'circle-help',
+    comparisonLabel: '평가 보류',
+  },
+}
+
+const reviewCaseMeta = {
+  GOOD_PROCESS_GOOD_OUTCOME: {
+    label: '좋은 과정 · 좋은 결과',
+    description: '원칙을 지켰고 가격 결과도 유리했어요.',
+    tone: 'good',
+  },
+  GOOD_PROCESS_BAD_OUTCOME: {
+    label: '좋은 과정 · 아쉬운 결과',
+    description: '결과는 불리했지만 원칙에 맞는 과정이었어요.',
+    tone: 'steady',
+  },
+  BAD_PROCESS_LUCKY_OUTCOME: {
+    label: '어긋난 과정 · 운 좋은 결과',
+    description: '수익이 났어도 원칙 위반은 별도로 복기해야 해요.',
+    tone: 'lucky',
+  },
+  BAD_PROCESS_BAD_OUTCOME: {
+    label: '어긋난 과정 · 나쁜 결과',
+    description: '원칙 위반과 불리한 결과가 함께 나타났어요.',
+    tone: 'bad',
+  },
+  UNASSESSED: {
+    label: '과정·결과 평가 보류',
+    description: '원칙 또는 가격 데이터가 부족해 결합 판정을 보류했어요.',
+    tone: 'unassessed',
+  },
+}
+
 function getPrincipleReviewMeta(decision) {
   const principleReview = decision.principleReview ?? {}
+  const v12Meta = principleJudgmentMeta[decision.principleJudgment]
+  if (v12Meta) {
+    const matchedTitle = decision.matchedPrinciple?.title
+    const conclusion =
+      decision.principleJudgment === 'FOLLOWED'
+        ? matchedTitle
+          ? `'${matchedTitle}' 원칙을 지킨 결정이었어요.`
+          : '적용 가능한 원칙을 지킨 결정이었어요.'
+        : decision.principleJudgment === 'VIOLATED'
+          ? matchedTitle
+            ? `'${matchedTitle}' 원칙을 어긴 결정이었어요.`
+            : '명시적인 원칙을 어긴 결정이었어요.'
+          : decision.principleJudgment === 'DECISION_DIFFERENCE'
+            ? '원칙 위반은 아니지만 원칙봇과 다른 결정을 내렸어요.'
+            : '연결된 원칙과 데이터가 부족해 이번 결정은 평가하지 않았어요.'
+
+    return {
+      statusLabel: v12Meta.label,
+      verdictLabel: v12Meta.verdictLabel,
+      conclusion,
+      comparisonLabel: v12Meta.comparisonLabel,
+      reminder:
+        decision.matchedPrinciple?.expectedAction ||
+        (decision.principleJudgment === 'DECISION_DIFFERENCE'
+          ? '다음에는 원칙봇과 다른 선택을 한 이유를 근거에 함께 남겨보세요.'
+          : '다음 거래에서도 적용 가능한 원칙을 먼저 확인해 보세요.'),
+      tone: v12Meta.tone,
+      icon: v12Meta.icon,
+    }
+  }
+
   const isViolation = principleReview.status === 'VIOLATION_PATTERN_DETECTED'
 
   if (isViolation) {
@@ -207,6 +324,8 @@ function getPrincipleReviewMeta(decision) {
       reminder:
         principleReview.recommendedAction ||
         '다음 거래에서는 주문 전에 해당 원칙을 먼저 확인해 주세요.',
+      tone: 'violated',
+      icon: 'triangle-alert',
     }
   }
 
@@ -218,6 +337,8 @@ function getPrincipleReviewMeta(decision) {
     reminder:
       principleReview.recommendedAction ||
       '다음 거래에서는 실행 전에 원칙봇의 판단과 다른 이유를 한 번 더 확인해 주세요.',
+    tone: 'difference',
+    icon: 'arrow-left-right',
   }
 }
 
@@ -313,23 +434,52 @@ const evidenceReviewByTradeId = computed(
 )
 
 const emotionalDecisions = computed(() =>
-  (props.report?.keyTradeReviews ?? props.report?.decisionReviews ?? []).map((decision) => {
+  (props.report?.decisionReviews ?? props.report?.keyTradeReviews ?? []).map((decision) => {
     const security = getReportTrade(decision)
     const relatedEvidence = evidenceReviewByTradeId.value.get(String(decision.tradeId))
     const principleReview = decision.principleReview ?? {}
     const reviewMeta = getPrincipleReviewMeta(decision)
-    const outcomeReturn = decision.outcome?.priceReturnPercent ?? decision.subsequentReturnPercent
+    const fiveDayOutcome = decision.marketOutcome?.fiveTradingDays ?? decision.outcome
+    const twentyDayOutcome = decision.marketOutcome?.twentyTradingDays
+    const outcomeReturn = fiveDayOutcome?.returnPercent ?? fiveDayOutcome?.priceReturnPercent
+    const twentyDayReturn =
+      twentyDayOutcome?.returnPercent ?? twentyDayOutcome?.priceReturnPercent ?? null
     const actualBasis =
       decision.decisionReason ||
       security.decisionReason ||
       relatedEvidence?.basis ||
       '이 거래에 직접 기록된 매매 근거가 없습니다.'
     const judgmentExplanation =
+      decision.judgmentReason ||
       principleReview.violationReason ||
       decision.principleFeedback ||
       '원칙봇과 행동이 달랐지만 원칙 위반으로 확정할 근거는 충분하지 않았습니다.'
     const recommendedGuidance =
-      principleReview.recommendedAction || '이 결정에 대한 권장 행동이 제공되지 않았습니다.'
+      decision.matchedPrinciple?.expectedAction ||
+      principleReview.recommendedAction ||
+      reviewMeta.reminder
+    const reviewCase = reviewCaseMeta[decision.reviewCase] ?? reviewCaseMeta.UNASSESSED
+    const principleSectionLabel =
+      {
+        FOLLOWED: '지킨 원칙',
+        VIOLATED: '위반한 원칙',
+        DECISION_DIFFERENCE: '판단 차이',
+        NOT_APPLICABLE: '적용 원칙 없음',
+        INSUFFICIENT_DATA: '판정 정보',
+      }[decision.principleJudgment] ??
+      (principleReview.status === 'VIOLATION_PATTERN_DETECTED' ? '위반한 원칙' : '판단 차이')
+    const comparisonActionLabel = decision.matchedPrinciple
+      ? '원칙상 기대 행동'
+      : decision.principleJudgment === 'DECISION_DIFFERENCE'
+        ? '원칙봇 행동'
+        : '비교 행동'
+    const principleSourceLabel =
+      {
+        USER_PRINCIPLE: '내가 작성한 원칙',
+        DIRECT: '내가 작성한 원칙',
+        TENDENCY_ANALYSIS: '투자성향 기반 원칙',
+        SIMULATION_PROPOSAL: '시뮬레이션에서 제안된 원칙',
+      }[decision.matchedPrinciple?.source] ?? decision.matchedPrinciple?.source
 
     return {
       ...decision,
@@ -350,22 +500,24 @@ const emotionalDecisions = computed(() =>
       tag: reviewMeta.statusLabel,
       patternLabel:
         decision.emotionLabel || emotionLabelMap[decision.emotionTag] || '핵심 거래 복기',
-      tone:
-        {
-          FEAR_SELL: 'fear',
-          GREED_BUY: 'greed',
-          HASTE_SELL: 'haste',
-        }[decision.emotionTag] ?? 'fear',
+      tone: reviewMeta.tone,
+      judgmentIcon: reviewMeta.icon,
+      principleSectionLabel,
+      comparisonActionLabel,
+      principleSourceLabel,
       result:
         outcomeReturn == null ? '후속 데이터 부족' : `5거래일 후 ${formatPercent(outcomeReturn)}`,
       outcomeSummary:
-        decision.outcome?.summary ||
+        fiveDayOutcome?.summary ||
         (outcomeReturn == null
           ? '후속 데이터가 부족합니다.'
           : `5거래일 후 ${formatPercent(outcomeReturn)}`),
+      twentyDayOutcomeSummary: twentyDayOutcome?.summary ?? '20거래일 결과가 없습니다.',
+      fiveDayReturnLabel: formatOutcomePercent(outcomeReturn),
+      twentyDayReturnLabel: formatOutcomePercent(twentyDayReturn),
       recommendedAction: getPrincipleRecommendedAction(decision),
       conclusion:
-        principleReview.status != null
+        decision.principleJudgment != null || principleReview.status != null
           ? reviewMeta.conclusion
           : getPrincipleDecisionConclusion(decision),
       verdictLabel: reviewMeta.verdictLabel,
@@ -373,73 +525,391 @@ const emotionalDecisions = computed(() =>
       outcomeContext: getDecisionOutcomeContext(decision),
       actualBasis,
       judgmentExplanation,
-      violatedPrinciple: principleReview.violatedPrinciple,
-      principleTargetRule: principleReview.targetRule,
+      matchedPrinciple: decision.matchedPrinciple ?? null,
+      violatedPrinciple: decision.matchedPrinciple?.title ?? principleReview.violatedPrinciple,
+      principleTargetRule:
+        decision.matchedPrinciple?.executionRule?.targetRule ?? principleReview.targetRule,
       recommendedGuidance,
       reminder: reviewMeta.reminder,
+      reviewCase,
       thesis: normalizeThesisOutcome(decision.thesisOutcome, props.report?.generationMetadata),
       distinctNarrative: getDistinctNarrative(decision.narrative, actualBasis, judgmentExplanation),
     }
   }),
 )
 
-const proposalIconMap = {
-  ENTRY_DISCIPLINE: 'shield-check',
-  LOSS_CONTROL: 'activity',
-  POSITION_SIZING: 'chart-pie',
-  EVIDENCE_DISCIPLINE: 'search',
-}
+const principleReviewSummary = computed(() => {
+  const summary = props.report?.principleReviewSummary
+  if (summary) return summary
 
-function normalizeProposal(item) {
-  const evidenceCount = item.evidence?.count ?? item.evidence?.assessedTradeCount ?? 0
+  const counts = emotionalDecisions.value.reduce(
+    (result, decision) => {
+      const legacyStatus = decision.principleReview?.status
+      if (decision.principleJudgment === 'FOLLOWED') result.followedCount += 1
+      else if (
+        decision.principleJudgment === 'VIOLATED' ||
+        legacyStatus === 'VIOLATION_PATTERN_DETECTED'
+      ) {
+        result.violatedCount += 1
+      } else if (
+        decision.principleJudgment === 'DECISION_DIFFERENCE' ||
+        legacyStatus === 'DECISION_DIFFERENCE'
+      ) {
+        result.decisionDifferenceCount += 1
+      } else result.unassessedCount += 1
+      return result
+    },
+    { followedCount: 0, violatedCount: 0, decisionDifferenceCount: 0, unassessedCount: 0 },
+  )
+
   return {
-    ...item,
-    icon: proposalIconMap[item.principleType] ?? 'target',
-    sourceLabel:
-      item.proposalSource === 'OPENAI_WEB_SEARCH'
-        ? '웹 검색 근거 검증 제안'
-        : item.proposalSource === 'OPENAI_VALIDATED'
-          ? 'AI 제안 · 서버 검증 완료'
-          : '분석 규칙 기반 제안',
-    changeLabel: item.changeType === 'THRESHOLD_ADJUSTMENT' ? '기준 조정' : '실행력 강화',
-    evidenceLabel:
-      item.recommendationCode === 'THESIS_VALIDATION'
-        ? `근거 검증 거래 ${evidenceCount}건`
-        : `반복 패턴 ${evidenceCount}회`,
+    ...counts,
+    assessedTradeCount: counts.followedCount + counts.violatedCount,
+    totalTradeCount: emotionalDecisions.value.length,
   }
+})
+
+const principleSummaryItems = computed(() => [
+  {
+    key: 'followed',
+    label: '원칙 준수',
+    value: principleReviewSummary.value.followedCount ?? 0,
+    tone: 'followed',
+  },
+  {
+    key: 'violated',
+    label: '원칙 위반',
+    value: principleReviewSummary.value.violatedCount ?? 0,
+    tone: 'violated',
+  },
+  {
+    key: 'difference',
+    label: '판단 차이',
+    value: principleReviewSummary.value.decisionDifferenceCount ?? 0,
+    tone: 'difference',
+  },
+  {
+    key: 'unassessed',
+    label: '평가 보류',
+    value: principleReviewSummary.value.unassessedCount ?? 0,
+    tone: 'unassessed',
+  },
+])
+
+const evidenceBasisMeta = {
+  FUNDAMENTAL: { label: '기업·실적', tone: 'fundamental' },
+  TECHNICAL: { label: '가격·차트', tone: 'technical' },
+  EVENT: { label: '뉴스·공시', tone: 'event' },
+  EMOTION: { label: '감정·기대', tone: 'emotion' },
+  OTHER: { label: '기타 근거', tone: 'other' },
+  UNKNOWN: { label: '미분류', tone: 'unknown' },
 }
 
-const principleDiscoveries = computed(() =>
-  (
-    props.report?.principleDiscoveries ??
-    props.report?.recommendedPrinciples?.filter((item) => item.proposalType === 'DISCOVERY') ??
-    []
-  ).map(normalizeProposal),
-)
-
-const principleReinforcements = computed(() =>
-  (
-    props.report?.principleReinforcements ??
-    props.report?.recommendedPrinciples?.filter((item) => item.proposalType === 'REINFORCEMENT') ??
-    []
-  ).map(normalizeProposal),
-)
-
-const improvementMeta = {
-  EMOTIONAL_TRADING: 'refresh-cw',
-  JOURNAL: 'notebook',
-  ASSET_ALLOCATION: 'scale',
-  EVIDENCE_DISCIPLINE: 'search',
+const evidenceSourceMeta = {
+  DATABASE: 'DB 기록 유형',
+  DETERMINISTIC_KEYWORD_FALLBACK: '키워드 보조 분류',
+  NOT_CLASSIFIED: '분류되지 않음',
 }
 
-const improvementItems = computed(() =>
-  (props.report?.improvementActions ?? []).map((item) => ({
-    ...item,
-    icon: improvementMeta[item.category] ?? 'settings',
-    detail: item.action,
-    sourceLabel: item.judgmentSource === 'OPENAI_WEB_SEARCH' ? '웹 검색 검증' : '규칙 엔진 분석',
+const verifiabilityMeta = {
+  VERIFIABLE: { label: '검증 가능', tone: 'verifiable' },
+  AMBIGUOUS: { label: '조건이 모호함', tone: 'ambiguous' },
+  UNVERIFIABLE: { label: '검증 어려움', tone: 'unverifiable' },
+}
+
+const webVerdictMeta = {
+  PENDING: { label: '웹 확인 중', tone: 'pending', icon: 'loader-circle' },
+  NOT_SELECTED: { label: '검색 대상 아님', tone: 'neutral', icon: 'minus' },
+  CONFIRMED: { label: '근거 확인', tone: 'confirmed', icon: 'circle-check' },
+  PARTIAL: { label: '일부 확인', tone: 'partial', icon: 'circle-help' },
+  CONTRADICTED: { label: '근거와 상충', tone: 'contradicted', icon: 'triangle-alert' },
+  UNCONFIRMED: { label: '확인 불가', tone: 'neutral', icon: 'circle-help' },
+}
+
+const evidenceReviews = computed(() =>
+  (props.report?.evidenceReviews ?? []).map((review) => {
+    const security = getReportTrade(review)
+    const basisMeta = evidenceBasisMeta[review.basisType] ?? evidenceBasisMeta.UNKNOWN
+    const verdictMeta = webVerdictMeta[review.webVerdict] ?? webVerdictMeta.UNCONFIRMED
+    const verifiability = verifiabilityMeta[review.verifiability] ?? verifiabilityMeta.UNVERIFIABLE
+
+    return {
+      ...review,
+      security,
+      stock: getSecurityDisplayName(security),
+      date: review.tradedAt?.slice(5, 10).replace('-', '.') ?? '',
+      actionLabel: getTradeSideLabel(review.action),
+      basisMeta,
+      verdictMeta,
+      verifiabilityMeta: verifiability,
+      basisSourceLabel: evidenceSourceMeta[review.basisTypeSource] ?? '분류 출처 없음',
+      fiveDayOutcomeSummary:
+        review.marketOutcome?.fiveTradingDays?.summary ?? '5거래일 가격 결과 없음',
+      twentyDayOutcomeSummary:
+        review.marketOutcome?.twentyTradingDays?.summary ?? '20거래일 가격 결과 없음',
+      sources: review.sources ?? [],
+    }
+  }),
+)
+
+function getSecurityEvidenceKey(group) {
+  return group ? String(group.securityId ?? group.securityCode ?? group.securityName) : ''
+}
+
+const securityEvidenceReviews = computed(() => props.report?.securityEvidenceReviews ?? [])
+
+function getGroupEvidenceReviews(group) {
+  const referencedTradeIds = new Set(
+    (group?.evidenceReviews ?? []).map((review) =>
+      String(typeof review === 'object' ? review.tradeId : review),
+    ),
+  )
+
+  return evidenceReviews.value.filter(
+    (review) =>
+      referencedTradeIds.has(String(review.tradeId)) ||
+      String(review.securityId) === String(group?.securityId),
+  )
+}
+
+const securityEvidenceCards = computed(() => {
+  const groups = securityEvidenceReviews.value.map((group) => ({ ...group }))
+  const groupByKey = new Map(groups.map((group) => [getSecurityEvidenceKey(group), group]))
+
+  evidenceReviews.value.forEach((evidence) => {
+    const key = getSecurityEvidenceKey(evidence)
+    const existing = groupByKey.get(key)
+
+    if (existing) {
+      const evidenceIds = new Set(existing.evidenceReviews ?? [])
+      evidenceIds.add(evidence.tradeId)
+      existing.evidenceReviews = [...evidenceIds]
+      return
+    }
+
+    const fallbackGroup = {
+      securityId: evidence.securityId,
+      securityCode: evidence.security?.securityCode ?? evidence.securityCode,
+      securityName: evidence.stock,
+      priceSeries: [],
+      chartAnnotations: [],
+      evidenceReviews: [evidence.tradeId],
+    }
+    groups.push(fallbackGroup)
+    groupByKey.set(key, fallbackGroup)
+  })
+
+  return groups.map((group) => {
+    const relatedEvidence = getGroupEvidenceReviews(group)
+    const searchableEvidence = relatedEvidence.filter(
+      (review) => review.webVerdict !== 'NOT_SELECTED',
+    )
+    const completedCount = searchableEvidence.filter(
+      (review) => review.webVerdict !== 'PENDING',
+    ).length
+    const annotationTradeCount = (group.chartAnnotations ?? []).filter((annotation) =>
+      ['BUY', 'ADD', 'SELL', 'REDUCE'].includes(annotation.type),
+    ).length
+    const tradeCount = annotationTradeCount || relatedEvidence.length
+    const reviewStatusLabel =
+      searchableEvidence.length === 0
+        ? '검색 대상 아님'
+        : searchableEvidence.some((review) => review.webVerdict === 'PENDING')
+          ? '확인 중'
+          : `${completedCount}/${searchableEvidence.length} 확인`
+
+    return {
+      ...group,
+      evidenceCount: relatedEvidence.length,
+      completedCount,
+      tradeCount,
+      reviewStatusLabel,
+    }
+  })
+})
+
+const selectedSecurityEvidence = computed(() => {
+  return securityEvidenceCards.value.find(
+    (group) => getSecurityEvidenceKey(group) === selectedEvidenceSecurityKey.value,
+  )
+})
+
+function toggleEvidenceSecurity(group) {
+  const key = getSecurityEvidenceKey(group)
+  selectedEvidenceSecurityKey.value = selectedEvidenceSecurityKey.value === key ? null : key
+}
+
+const annotationMeta = {
+  BUY: { label: '매수', graphLabel: '매수', color: '#0b8f8b', icon: 'plus' },
+  ADD: { label: '추가 매수', graphLabel: '추매', color: '#0b8f8b', icon: 'plus' },
+  SELL: { label: '매도', graphLabel: '매도', color: '#e06a58', icon: 'minus' },
+  REDUCE: { label: '비중 축소', graphLabel: '축소', color: '#e06a58', icon: 'minus' },
+  OUTCOME_CHECKPOINT: {
+    label: '가격 평가',
+    graphLabel: '평가',
+    color: '#7b83d5',
+    icon: 'flag',
+  },
+  EVIDENCE_EVENT: {
+    label: '근거 자료',
+    graphLabel: '근거',
+    color: '#d09b27',
+    icon: 'search',
+  },
+}
+
+const evidencePriceChart = computed(() => {
+  const series = selectedSecurityEvidence.value?.priceSeries ?? []
+  if (!series.length) return { points: '', annotations: [], minPrice: 0, maxPrice: 0 }
+
+  const prices = series.map((item) => Number(item.closePrice ?? item.price ?? 0))
+  const minPrice = Math.min(...prices)
+  const maxPrice = Math.max(...prices)
+  const range = maxPrice === minPrice ? 1 : maxPrice - minPrice
+  const pointAt = (index, price) => ({
+    x: series.length === 1 ? 150 : (index / (series.length - 1)) * 300,
+    y: 106 - ((price - minPrice) / range) * 86,
+  })
+  const points = series
+    .map((item, index) => {
+      const point = pointAt(index, prices[index])
+      return `${point.x.toFixed(1)},${point.y.toFixed(1)}`
+    })
+    .join(' ')
+  const annotations = (selectedSecurityEvidence.value?.chartAnnotations ?? []).map((annotation) => {
+    let index = series.findIndex((item) => item.date === annotation.date)
+    if (index < 0) {
+      const annotationTime = new Date(`${annotation.date}T00:00:00Z`).getTime()
+      index = series.reduce((nearestIndex, item, itemIndex) => {
+        const nearestDistance = Math.abs(
+          new Date(`${series[nearestIndex].date}T00:00:00Z`).getTime() - annotationTime,
+        )
+        const itemDistance = Math.abs(new Date(`${item.date}T00:00:00Z`).getTime() - annotationTime)
+        return itemDistance < nearestDistance ? itemIndex : nearestIndex
+      }, 0)
+    }
+    const point = pointAt(index, prices[index])
+    const meta = annotationMeta[annotation.type] ?? annotationMeta.OUTCOME_CHECKPOINT
+    const graphLabel =
+      annotation.type === 'OUTCOME_CHECKPOINT'
+        ? annotation.label?.match(/20\s*일/) != null
+          ? '20일'
+          : annotation.label?.match(/5\s*일/) != null
+            ? '5일'
+            : meta.graphLabel
+        : meta.graphLabel
+    const labelWidth = Math.max(28, graphLabel.length * 8 + 12)
+    const labelX = Math.min(300 - labelWidth, Math.max(0, point.x - labelWidth / 2))
+    const labelY = point.y < 28 ? point.y + 9 : point.y - 20
+
+    return {
+      ...annotation,
+      ...point,
+      meta,
+      graphLabel,
+      labelWidth,
+      labelX,
+      labelY,
+    }
+  })
+
+  return { points, annotations, minPrice, maxPrice }
+})
+
+const principleEvaluationMeta = {
+  KEEP: { label: '현재 원칙 유지', shortLabel: '유지', tone: 'keep', icon: 'circle-check' },
+  STRENGTHEN: {
+    label: '원칙 강화 필요',
+    shortLabel: '강화',
+    tone: 'strengthen',
+    icon: 'shield-check',
+  },
+  REVISE: {
+    label: '원칙 재검토 필요',
+    shortLabel: '재검토',
+    tone: 'revise',
+    icon: 'refresh-cw',
+  },
+  REVIEW: {
+    label: '사용자 검토 필요',
+    shortLabel: '검토',
+    tone: 'review',
+    icon: 'circle-help',
+  },
+  INSUFFICIENT_DATA: {
+    label: '평가 데이터 부족',
+    shortLabel: '데이터 부족',
+    tone: 'insufficient',
+    icon: 'circle-help',
+  },
+}
+
+const principleEvaluations = computed(() =>
+  (props.report?.principleEvaluations ?? []).map((evaluation) => ({
+    ...evaluation,
+    meta: principleEvaluationMeta[evaluation.verdict] ?? principleEvaluationMeta.INSUFFICIENT_DATA,
   })),
 )
+
+const principleEvaluationSummary = computed(() => {
+  if (props.report?.principleEvaluationSummary) return props.report.principleEvaluationSummary
+
+  return principleEvaluations.value.reduce(
+    (summary, evaluation) => {
+      summary.totalCount += 1
+      if (evaluation.verdict === 'KEEP') summary.keepCount += 1
+      if (evaluation.verdict === 'STRENGTHEN') summary.strengthenCount += 1
+      if (evaluation.verdict === 'REVISE') summary.reviseCount += 1
+      if (evaluation.verdict === 'REVIEW') summary.reviewCount += 1
+      if (evaluation.verdict === 'INSUFFICIENT_DATA') summary.insufficientDataCount += 1
+      return summary
+    },
+    {
+      totalCount: 0,
+      keepCount: 0,
+      strengthenCount: 0,
+      reviseCount: 0,
+      reviewCount: 0,
+      insufficientDataCount: 0,
+    },
+  )
+})
+
+const principleEvaluationSummaryItems = computed(() => [
+  { label: '유지', count: principleEvaluationSummary.value.keepCount ?? 0, tone: 'keep' },
+  {
+    label: '강화',
+    count: principleEvaluationSummary.value.strengthenCount ?? 0,
+    tone: 'strengthen',
+  },
+  {
+    label: '재검토',
+    count:
+      (principleEvaluationSummary.value.reviseCount ?? 0) +
+      (principleEvaluationSummary.value.reviewCount ?? 0),
+    tone: 'review',
+  },
+  {
+    label: '데이터 부족',
+    count: principleEvaluationSummary.value.insufficientDataCount ?? 0,
+    tone: 'insufficient',
+  },
+])
+
+const referencePrinciples = computed(() => props.report?.referencePrinciples ?? [])
+
+function hasEvaluationOutcomes(evaluation) {
+  const outcomes = evaluation.outcomes
+  return (
+    outcomes &&
+    [
+      outcomes.followed5dAveragePercent,
+      outcomes.followed20dAveragePercent,
+      outcomes.violated5dAveragePercent,
+      outcomes.violated20dAveragePercent,
+    ].some((value) => value != null)
+  )
+}
 
 const participants = computed(() =>
   (props.latestResult?.participantSummary ?? []).map((participant) => {
@@ -607,27 +1077,6 @@ const reportEnrichmentStatus = computed(() => {
   }
   return null
 })
-const reportProvenance = computed(() => {
-  const metadata = props.report?.generationMetadata ?? {}
-  const narrativeSource =
-    {
-      OPENAI: 'OpenAI 설명',
-      TEMPLATE_FALLBACK: '템플릿 설명',
-      NOT_REQUESTED: '설명 미요청',
-    }[metadata.narrativeSource] ?? '설명 출처 미확인'
-  const thesisSource =
-    metadata.thesisVerificationSource === 'OPENAI_WEB_SEARCH'
-      ? '웹 검색 근거 검증'
-      : '웹 검색 검증 없음'
-
-  return {
-    version: props.report?.reportVersion,
-    judgment: metadata.judgmentSource === 'DETERMINISTIC_RULE_ENGINE' ? '규칙 엔진 판정' : null,
-    narrative: narrativeSource,
-    thesis: thesisSource,
-  }
-})
-
 const mistakePatternText = computed(() => {
   const insights = props.report?.learningInsights
   if (insights?.primaryMistakePattern) return insights.primaryMistakePattern
@@ -752,22 +1201,6 @@ function formatPercent(value, absolute = false) {
 function formatSignedPercent(value) {
   const number = Number(value ?? 0)
   return `${number > 0 ? '+' : ''}${number.toFixed(1)}%`
-}
-
-function formatProposalValue(proposal, value) {
-  if (value == null || Number.isNaN(Number(value))) return '설정 없음'
-  if (typeof value === 'boolean') return value ? '사용' : '사용 안 함'
-
-  const percentageRules = new Set([
-    'entry.max_5day_return',
-    'exit.stop_loss_rate',
-    'portfolio.max_single_position_weight',
-  ])
-  if (percentageRules.has(proposal.targetRule)) {
-    return `${(Number(value) * 100).toFixed(0)}%`
-  }
-
-  return String(value)
 }
 
 const simulationId = computed(
@@ -1048,9 +1481,28 @@ function goToPrinciplesEdit() {
           <div class="section-heading">
             <span class="section-number">02</span>
             <div>
-              <h2>감정적 결정 복기</h2>
-              <p>결과보다, 결정이 흔들린 순간을 살펴봤어요.</p>
+              <h2>원칙 준수 복기</h2>
+              <p>전체 실제 거래를 당시 원칙과 가격 결과로 나눠 살펴봤어요.</p>
             </div>
+          </div>
+
+          <div class="principle-review-overview">
+            <div class="principle-review-overview__heading">
+              <span>전체 거래 {{ principleReviewSummary.totalTradeCount ?? 0 }}건</span>
+              <strong>
+                원칙 판단 {{ principleReviewSummary.assessedTradeCount ?? 0 }}건 완료
+              </strong>
+            </div>
+            <div class="principle-review-counts">
+              <div v-for="item in principleSummaryItems" :key="item.key" :class="`is-${item.tone}`">
+                <strong>{{ item.value }}</strong>
+                <span>{{ item.label }}</span>
+              </div>
+            </div>
+            <p>
+              원칙봇과 행동이 달라도 명시적인 사용자 원칙이나 실행 규칙 위반이 없으면
+              <b>판단 차이</b>로 분리합니다.
+            </p>
           </div>
 
           <div class="emotion-timeline">
@@ -1063,7 +1515,6 @@ function goToPrinciplesEdit() {
                 { 'is-expanded': expandedDecisionKey === getDecisionKey(decision, index) },
               ]"
             >
-              <div class="timeline-marker"></div>
               <button
                 type="button"
                 class="decision-summary"
@@ -1072,7 +1523,9 @@ function goToPrinciplesEdit() {
               >
                 <span class="decision-summary__top">
                   <span class="decision-date">{{ decision.date }}</span>
-                  <span class="emotion-tag">{{ decision.tag }}</span>
+                  <span class="emotion-tag" :class="`is-${decision.tone}`">
+                    {{ decision.tag }}
+                  </span>
                   <span class="decision-result">{{ decision.result }}</span>
                 </span>
                 <span class="decision-summary__main">
@@ -1080,10 +1533,6 @@ function goToPrinciplesEdit() {
                   <span class="decision-summary__identity">
                     <strong>{{ decision.stock }}</strong>
                     <small>{{ decision.actualAction }} · {{ decision.patternLabel }}</small>
-                  </span>
-                  <span class="decision-summary__verdict">
-                    <small>원칙상</small>
-                    <strong>{{ decision.recommendedAction }}</strong>
                   </span>
                   <AppIcon name="chevron-down" :size="17" class="decision-summary__chevron" />
                 </span>
@@ -1094,14 +1543,40 @@ function goToPrinciplesEdit() {
                   v-if="expandedDecisionKey === getDecisionKey(decision, index)"
                   class="decision-detail"
                 >
-                  <div class="decision-core-verdict">
-                    <div class="decision-core-verdict__label">
-                      <AppIcon name="circle-check" :size="16" />
-                      <span>{{ decision.verdictLabel }}</span>
-                    </div>
-                    <h3>{{ decision.conclusion }}</h3>
-                    <p>{{ decision.recommendedGuidance }}</p>
+                  <div class="decision-status-line" :class="`is-${decision.tone}`">
+                    <span>
+                      <AppIcon :name="decision.judgmentIcon" :size="16" />
+                      {{ decision.verdictLabel }}
+                    </span>
                   </div>
+
+                  <section
+                    v-if="decision.matchedPrinciple"
+                    class="matched-principle-card"
+                    :class="`is-${decision.tone}`"
+                  >
+                    <div class="matched-principle-card__heading">
+                      <span>{{ decision.principleSectionLabel }}</span>
+                      <small v-if="decision.principleSourceLabel">
+                        {{ decision.principleSourceLabel }}
+                      </small>
+                    </div>
+                    <blockquote>
+                      {{
+                        decision.matchedPrinciple.principleText || decision.matchedPrinciple.title
+                      }}
+                    </blockquote>
+                    <div class="matched-principle-card__reason">
+                      <span>이렇게 판단했어요</span>
+                      <p>{{ decision.judgmentExplanation }}</p>
+                    </div>
+                  </section>
+
+                  <section v-else class="unmatched-principle-card">
+                    <span>{{ decision.principleSectionLabel }}</span>
+                    <p>{{ decision.judgmentExplanation }}</p>
+                  </section>
+
                   <div class="decision-action-compare">
                     <div class="decision-action-compare__actual">
                       <small>실제 행동</small>
@@ -1112,33 +1587,34 @@ function goToPrinciplesEdit() {
                       <AppIcon name="link-2-off" :size="17" />
                     </div>
                     <div class="decision-action-compare__principle">
-                      <small>원칙봇 판단</small>
+                      <small>{{ decision.comparisonActionLabel }}</small>
                       <strong>{{ decision.recommendedAction }}</strong>
                     </div>
                   </div>
-                  <dl class="decision-key-facts">
-                    <div>
-                      <dt>{{ decision.violatedPrinciple ? '확인된 원칙' : '판단 차이' }}</dt>
-                      <dd>
-                        <strong v-if="decision.violatedPrinciple">{{
-                          decision.violatedPrinciple
-                        }}</strong>
-                        {{ decision.judgmentExplanation }}
-                      </dd>
+
+                  <section class="decision-outcome-card">
+                    <div class="decision-outcome-card__heading">
+                      <span>사후 가격 결과</span>
+                      <small>원칙 판정과 별도</small>
                     </div>
-                    <div>
-                      <dt>거래 정보</dt>
-                      <dd>
-                        {{ decision.tradeCostDetail || decision.tradeDetail || '거래 상세 없음' }}
-                      </dd>
+                    <div class="decision-outcome-values">
+                      <div>
+                        <span>5거래일</span>
+                        <strong>{{ decision.fiveDayReturnLabel }}</strong>
+                      </div>
+                      <div>
+                        <span>20거래일</span>
+                        <strong>{{ decision.twentyDayReturnLabel }}</strong>
+                      </div>
                     </div>
-                    <div>
-                      <dt>5거래일 뒤</dt>
-                      <dd>
-                        <strong>{{ decision.outcomeSummary }}</strong>
-                      </dd>
+                    <div class="decision-outcome-card__interpretation">
+                      <span :class="`is-${decision.reviewCase.tone}`">
+                        {{ decision.reviewCase.label }}
+                      </span>
+                      <p>{{ decision.reviewCase.description }}</p>
                     </div>
-                  </dl>
+                  </section>
+
                   <button type="button" class="decision-to-thesis" @click="goToChapter(2)">
                     내가 적은 투자 근거가 맞았는지는 03 근거 검증에서 확인
                     <AppIcon name="arrow-right" :size="14" />
@@ -1148,7 +1624,7 @@ function goToPrinciplesEdit() {
             </article>
           </div>
           <p v-if="!emotionalDecisions.length" class="chapter-empty">
-            실제 나와 원칙봇이 유의미하게 달랐던 결정이 발견되지 않았습니다.
+            원칙을 복기할 실제 거래가 없습니다.
           </p>
         </section>
 
@@ -1157,113 +1633,224 @@ function goToPrinciplesEdit() {
             <span class="section-number">03</span>
             <div>
               <h2>근거 검증</h2>
-              <p>당시 믿었던 근거가 이후 실제로 확인됐는지 살펴봤어요.</p>
+              <p>기록한 사실과 이후 가격 결과를 서로 섞지 않고 확인했어요.</p>
             </div>
           </div>
 
-          <div class="thesis-review-list">
-            <article
-              v-for="(decision, index) in emotionalDecisions"
-              :key="`thesis-${getDecisionKey(decision, index)}`"
-              class="thesis-trade-card"
-              :class="`thesis-trade-card--${decision.thesis.tone}`"
-            >
-              <button
-                type="button"
-                class="thesis-trade-summary"
-                :aria-expanded="expandedThesisKey === getDecisionKey(decision, index)"
-                @click="toggleThesis(decision, index)"
-              >
-                <StockLogo :stock="decision.security" :size="34" />
-                <span class="thesis-trade-summary__identity">
-                  <strong>{{ decision.stock }}</strong>
-                  <small>{{ decision.actualAction }} · {{ decision.date }}</small>
-                </span>
-                <span class="thesis-trade-summary__verdict" :class="`is-${decision.thesis.tone}`">
-                  {{ decision.thesis.displayLabel }}
-                </span>
-                <AppIcon
-                  name="chevron-down"
-                  :size="16"
-                  :class="{ 'is-open': expandedThesisKey === getDecisionKey(decision, index) }"
-                />
-                <span class="thesis-trade-summary__reason">{{ decision.actualBasis }}</span>
-              </button>
+          <section v-if="securityEvidenceCards.length" class="security-evidence-section">
+            <div class="security-evidence-section__heading">
+              <div>
+                <strong>종목별 근거 흐름</strong>
+                <span>종목을 누르면 거래·근거·가격 평가 시점을 함께 볼 수 있어요.</span>
+              </div>
+              <small>{{ securityEvidenceCards.length }}개 종목</small>
+            </div>
 
-              <Transition name="decision-detail">
-                <div
-                  v-if="expandedThesisKey === getDecisionKey(decision, index)"
-                  class="thesis-trade-detail"
+            <div class="security-evidence-accordions" aria-label="종목별 근거 검증 목록">
+              <article
+                v-for="group in securityEvidenceCards"
+                :key="getSecurityEvidenceKey(group)"
+                class="security-evidence-accordion"
+                :class="{
+                  'is-active':
+                    getSecurityEvidenceKey(group) ===
+                    getSecurityEvidenceKey(selectedSecurityEvidence),
+                }"
+              >
+                <button
+                  type="button"
+                  class="security-evidence-card"
+                  :aria-expanded="
+                    getSecurityEvidenceKey(group) ===
+                    getSecurityEvidenceKey(selectedSecurityEvidence)
+                  "
+                  @click="toggleEvidenceSecurity(group)"
                 >
-                  <div class="thesis-recorded-reason">
-                    <span><AppIcon name="notebook" :size="14" /> 당시 내가 적은 근거</span>
-                    <p>{{ decision.actualBasis }}</p>
-                  </div>
-                  <div class="thesis-verdict-line">
-                    <AppIcon
-                      :name="decision.thesis.icon"
-                      :size="18"
-                      :class="{ 'report-status__spinner': decision.thesis.isPending }"
-                    />
-                    <div>
-                      <small>사후 확인 결과</small>
-                      <strong>{{ decision.thesis.displayLabel }}</strong>
-                      <p>{{ decision.thesis.summary }}</p>
+                  <StockLogo :stock="group" :size="36" />
+                  <span class="security-evidence-card__identity">
+                    <strong>{{ group.securityName || group.securityCode }}</strong>
+                    <small>
+                      {{ group.securityCode }} · 근거 {{ group.evidenceCount }}건 · 거래
+                      {{ group.tradeCount }}건
+                    </small>
+                  </span>
+                  <span class="security-evidence-card__progress">{{
+                    group.reviewStatusLabel
+                  }}</span>
+                  <AppIcon
+                    name="chevron-down"
+                    :size="17"
+                    :class="{
+                      'is-open':
+                        getSecurityEvidenceKey(group) ===
+                        getSecurityEvidenceKey(selectedSecurityEvidence),
+                    }"
+                  />
+                </button>
+
+                <Transition name="decision-detail">
+                  <div
+                    v-if="
+                      getSecurityEvidenceKey(group) ===
+                      getSecurityEvidenceKey(selectedSecurityEvidence)
+                    "
+                    class="security-evidence-detail"
+                  >
+                    <section v-if="group.priceSeries?.length" class="security-evidence-chart">
+                      <div class="security-evidence-chart__heading">
+                        <div>
+                          <span>가격과 주요 시점</span>
+                          <strong>{{ group.securityName }}</strong>
+                        </div>
+                        <small>일별 종가 기준</small>
+                      </div>
+
+                      <div class="security-price-plot">
+                        <span class="security-price-plot__max">
+                          {{ Math.round(evidencePriceChart.maxPrice).toLocaleString() }}원
+                        </span>
+                        <svg
+                          viewBox="0 0 300 120"
+                          role="img"
+                          aria-label="종목 가격과 거래 근거 이벤트"
+                        >
+                          <line
+                            v-for="y in [20, 63, 106]"
+                            :key="y"
+                            x1="0"
+                            :y1="y"
+                            x2="300"
+                            :y2="y"
+                          />
+                          <polyline :points="evidencePriceChart.points" />
+                          <g
+                            v-for="(annotation, index) in evidencePriceChart.annotations"
+                            :key="`${annotation.type}-${annotation.date}-${index}`"
+                          >
+                            <line
+                              :x1="annotation.x"
+                              :y1="annotation.y"
+                              :x2="annotation.x"
+                              y2="112"
+                              :stroke="annotation.meta.color"
+                            />
+                            <circle
+                              :cx="annotation.x"
+                              :cy="annotation.y"
+                              r="5"
+                              :fill="annotation.meta.color"
+                            />
+                            <rect
+                              :x="annotation.labelX"
+                              :y="annotation.labelY"
+                              :width="annotation.labelWidth"
+                              height="14"
+                              rx="7"
+                              :fill="annotation.meta.color"
+                            />
+                            <text
+                              :x="annotation.labelX + annotation.labelWidth / 2"
+                              :y="annotation.labelY + 9.5"
+                              text-anchor="middle"
+                            >
+                              {{ annotation.graphLabel }}
+                            </text>
+                            <title>
+                              {{ annotation.meta.label }} · {{ annotation.date }} ·
+                              {{ annotation.label }}
+                            </title>
+                          </g>
+                        </svg>
+                        <span class="security-price-plot__min">
+                          {{ Math.round(evidencePriceChart.minPrice).toLocaleString() }}원
+                        </span>
+                      </div>
+
+                      <div class="chart-annotation-list">
+                        <div
+                          v-for="(annotation, index) in evidencePriceChart.annotations"
+                          :key="`legend-${annotation.type}-${annotation.date}-${index}`"
+                          class="chart-annotation-event"
+                        >
+                          <span
+                            class="chart-annotation-event__icon"
+                            :style="{
+                              background: `${annotation.meta.color}18`,
+                              color: annotation.meta.color,
+                            }"
+                          >
+                            <AppIcon :name="annotation.meta.icon" :size="14" />
+                          </span>
+                          <span class="chart-annotation-event__type">
+                            <b>{{ annotation.meta.label }}</b>
+                            <small>{{ annotation.date.slice(5).replace('-', '.') }}</small>
+                          </span>
+                          <strong>{{ annotation.label }}</strong>
+                        </div>
+                      </div>
+                    </section>
+
+                    <div v-else class="security-price-unavailable">
+                      <AppIcon name="chart-pie" :size="18" />
+                      <span>이 종목은 가격 그래프 데이터가 아직 없어요.</span>
+                    </div>
+
+                    <section class="security-evidence-basis-section">
+                      <div class="security-evidence-basis-section__heading">
+                        <strong>내가 적은 근거</strong>
+                        <span>{{ getGroupEvidenceReviews(group).length }}건</span>
+                      </div>
+
+                      <article
+                        v-for="(evidence, index) in getGroupEvidenceReviews(group)"
+                        :key="`group-evidence-${getDecisionKey(evidence, index)}`"
+                        class="security-evidence-basis"
+                      >
+                        <div class="security-evidence-basis__meta">
+                          <span>{{ evidence.actionLabel }} · {{ evidence.date }}</span>
+                          <span
+                            class="evidence-verdict-badge"
+                            :class="`is-${evidence.verdictMeta.tone}`"
+                          >
+                            {{ evidence.verdictMeta.label }}
+                          </span>
+                        </div>
+                        <p class="security-evidence-basis__text">{{ evidence.basis }}</p>
+                        <div class="security-evidence-judgment">
+                          <span>판정 설명</span>
+                          <p>{{ evidence.webSummary || '아직 판정 설명이 없습니다.' }}</p>
+                        </div>
+                        <ul v-if="evidence.sources.length" class="security-evidence-sources">
+                          <li v-for="source in evidence.sources" :key="source.url || source.title">
+                            <a
+                              v-if="getSafeSourceUrl(source.url)"
+                              :href="getSafeSourceUrl(source.url)"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {{ source.title }} · {{ source.publisher }}
+                              <AppIcon name="arrow-up-right" :size="11" />
+                            </a>
+                            <span v-else>{{ source.title }} · {{ source.publisher }}</span>
+                          </li>
+                        </ul>
+                      </article>
+                    </section>
+
+                    <div class="evidence-separation-note">
+                      <AppIcon name="circle-help" :size="16" />
+                      <p>
+                        <strong>근거 사실 판정과 수익률은 별개예요.</strong>
+                        검색 자료에는 주가 수익률을 섞지 않았어요.
+                      </p>
                     </div>
                   </div>
-                  <div
-                    v-if="decision.thesis.claims.length"
-                    class="thesis-claims thesis-claims--flat"
-                  >
-                    <details
-                      v-for="(claim, claimIndex) in decision.thesis.claims"
-                      :key="`${decision.tradeId}-claim-${claimIndex}`"
-                    >
-                      <summary>
-                        <span>{{ claim.claim }}</span>
-                        <strong>{{
-                          thesisVerdictMeta[claim.status]?.label ?? claim.status
-                        }}</strong>
-                      </summary>
-                      <p>{{ claim.evidence }}</p>
-                      <ul v-if="claim.sources?.length">
-                        <li v-for="source in claim.sources" :key="source.url || source.title">
-                          <a
-                            v-if="getSafeSourceUrl(source.url)"
-                            :href="getSafeSourceUrl(source.url)"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {{ source.title }} · {{ source.publisher }}
-                            <template v-if="source.publishedAt">
-                              · {{ source.publishedAt }}</template
-                            >
-                            <AppIcon name="arrow-up-right" :size="12" />
-                          </a>
-                          <span v-else>
-                            {{ source.title }} · {{ source.publisher }}
-                            <template v-if="source.publishedAt">
-                              · {{ source.publishedAt }}</template
-                            >
-                          </span>
-                        </li>
-                      </ul>
-                    </details>
-                  </div>
-                  <div class="thesis-trade-meta">
-                    <span>{{ decision.outcomeSummary }}</span>
-                    <span v-if="decision.thesis.checkedUntil">
-                      {{ decision.thesis.checkedUntil }} 기준
-                    </span>
-                    <span v-if="decision.thesis.sourceCount">
-                      출처 {{ decision.thesis.sourceCount }}개
-                    </span>
-                  </div>
-                </div>
-              </Transition>
-            </article>
-          </div>
-          <p v-if="!emotionalDecisions.length" class="chapter-empty">
+                </Transition>
+              </article>
+            </div>
+          </section>
+
+          <p v-if="!securityEvidenceCards.length" class="chapter-empty">
             검증할 실제 매매 기록이 없습니다.
           </p>
         </section>
@@ -1341,156 +1928,163 @@ function goToPrinciplesEdit() {
               </div>
             </div>
           </div>
-
-          <div class="report-provenance">
-            <span v-if="reportProvenance.version">{{ reportProvenance.version }}</span>
-            <span v-if="reportProvenance.judgment">{{ reportProvenance.judgment }}</span>
-            <span>{{ reportProvenance.narrative }}</span>
-            <span>{{ reportProvenance.thesis }}</span>
-          </div>
         </section>
 
         <section v-else key="principles" class="report-section principle-section">
           <div class="section-heading">
             <span class="section-number">05</span>
             <div>
-              <h2>원칙 진화</h2>
-              <p>반복된 행동에서 새 원칙을 발굴하고 기존 원칙을 강화했어요.</p>
+              <h2>다음 원칙</h2>
+              <p>시뮬레이션에 사용한 원칙을 하나씩 평가했어요.</p>
             </div>
           </div>
 
-          <div class="proposal-counts">
-            <span>새 원칙 {{ principleDiscoveries.length }}개</span>
-            <span>강화 제안 {{ principleReinforcements.length }}개</span>
+          <div v-if="principleEvaluations.length" class="principle-evaluation-overview">
+            <div class="principle-evaluation-overview__title">
+              <span><AppIcon name="notebook" :size="18" /></span>
+              <div>
+                <small>전체 평가</small>
+                <strong
+                  >{{ principleEvaluationSummary.totalCount ?? 0 }}개의 원칙을 살펴봤어요</strong
+                >
+              </div>
+            </div>
+            <div class="principle-evaluation-counts">
+              <div
+                v-for="item in principleEvaluationSummaryItems"
+                :key="item.label"
+                :class="`is-${item.tone}`"
+              >
+                <strong>{{ item.count }}</strong>
+                <span>{{ item.label }}</span>
+              </div>
+            </div>
           </div>
 
-          <section class="proposal-group">
-            <div class="proposal-group__heading">
-              <div><AppIcon name="sparkles" :size="16" /><strong>원칙 발굴</strong></div>
-              <small>현재 원칙에 없던 새 실행 기준</small>
-            </div>
-            <div class="proposal-list">
-              <article
-                v-for="proposal in principleDiscoveries"
-                :key="proposal.recommendationId"
-                class="proposal-card proposal-card--discovery"
-              >
-                <div class="proposal-card__meta">
-                  <span>새 원칙</span>
-                  <small>{{ proposal.sourceLabel }}</small>
-                </div>
-                <div class="proposal-card__title">
-                  <span><AppIcon :name="proposal.icon" :size="18" /></span>
-                  <div>
-                    <strong>{{ proposal.title }}</strong>
-                    <p>{{ proposal.description }}</p>
-                  </div>
-                </div>
-                <div class="proposal-facts">
-                  <span>{{ proposal.evidenceLabel }}</span>
-                  <span>{{ proposal.targetRule }}</span>
-                  <strong>{{ formatProposalValue(proposal, proposal.proposedValue) }}</strong>
-                </div>
-                <p v-if="proposal.narrative" class="proposal-narrative">{{ proposal.narrative }}</p>
-                <button
-                  type="button"
-                  :disabled="appliedProposalIds.has(proposal.recommendationId)"
-                  @click="openProposalConfirmation(proposal)"
-                >
-                  <AppIcon
-                    :name="
-                      appliedProposalIds.has(proposal.recommendationId) ? 'circle-check' : 'plus'
-                    "
-                    :size="15"
-                  />
-                  {{
-                    appliedProposalIds.has(proposal.recommendationId)
-                      ? '적용 완료'
-                      : '새 원칙으로 추가'
-                  }}
-                </button>
-              </article>
-            </div>
-            <p v-if="!principleDiscoveries.length" class="proposal-empty">
-              새로 추가할 만큼 반복적인 행동 패턴이 발견되지 않았습니다.
-            </p>
-          </section>
+          <div v-if="principleEvaluations.length" class="principle-evaluation-list">
+            <article
+              v-for="evaluation in principleEvaluations"
+              :key="evaluation.evaluationId"
+              :class="['principle-evaluation-card', `is-${evaluation.meta.tone}`]"
+            >
+              <div class="principle-evaluation-card__heading">
+                <span class="principle-evaluation-verdict">
+                  <AppIcon :name="evaluation.meta.icon" :size="15" />
+                  {{ evaluation.meta.label }}
+                </span>
+                <strong>{{ evaluation.principleText }}</strong>
+                <p>{{ evaluation.evaluationReason }}</p>
+              </div>
 
-          <section class="proposal-group">
-            <div class="proposal-group__heading">
-              <div><AppIcon name="shield-check" :size="16" /><strong>원칙 강화</strong></div>
-              <small>기존 원칙을 행동 패턴에 맞게 보완</small>
-            </div>
-            <div class="proposal-list">
-              <article
-                v-for="proposal in principleReinforcements"
-                :key="proposal.recommendationId"
-                class="proposal-card proposal-card--reinforcement"
-              >
-                <div class="proposal-card__meta">
-                  <span>{{ proposal.changeLabel }}</span>
-                  <small>{{ proposal.sourceLabel }}</small>
+              <div v-if="evaluation.statistics" class="principle-evaluation-stats">
+                <div>
+                  <small>적용 거래</small>
+                  <strong>{{ evaluation.statistics.applicableCount ?? 0 }}건</strong>
                 </div>
-                <strong class="source-principle">
-                  {{ proposal.sourcePrincipleText || proposal.title }}
-                </strong>
-                <div class="proposal-change">
+                <div>
+                  <small>원칙 준수</small>
+                  <strong>{{ evaluation.statistics.followedCount ?? 0 }}건</strong>
+                </div>
+                <div>
+                  <small>원칙 위반</small>
+                  <strong>{{ evaluation.statistics.violatedCount ?? 0 }}건</strong>
+                </div>
+                <div v-if="evaluation.statistics.violationRatePercent != null">
+                  <small>위반 비율</small>
+                  <strong>{{ evaluation.statistics.violationRatePercent }}%</strong>
+                </div>
+              </div>
+
+              <div v-if="hasEvaluationOutcomes(evaluation)" class="principle-evaluation-outcomes">
+                <div class="principle-evaluation-outcomes__heading">
+                  <strong>거래 후 결과</strong>
+                  <small>매수·매도 방향을 맞춰 계산했어요</small>
+                </div>
+                <div class="principle-evaluation-outcomes__grid">
                   <div>
-                    <small>현재 기준</small>
-                    <strong>{{ formatProposalValue(proposal, proposal.currentValue) }}</strong>
+                    <span>원칙을 지킨 거래</span>
+                    <p>
+                      <small>5일</small>
+                      <strong>{{
+                        formatOutcomePercent(evaluation.outcomes.followed5dAveragePercent)
+                      }}</strong>
+                      <small>20일</small>
+                      <strong>{{
+                        formatOutcomePercent(evaluation.outcomes.followed20dAveragePercent)
+                      }}</strong>
+                    </p>
                   </div>
-                  <AppIcon name="arrow-right" :size="17" />
                   <div>
-                    <small>강화 기준</small>
-                    <strong>{{ formatProposalValue(proposal, proposal.proposedValue) }}</strong>
+                    <span>원칙을 어긴 거래</span>
+                    <p>
+                      <small>5일</small>
+                      <strong>{{
+                        formatOutcomePercent(evaluation.outcomes.violated5dAveragePercent)
+                      }}</strong>
+                      <small>20일</small>
+                      <strong>{{
+                        formatOutcomePercent(evaluation.outcomes.violated20dAveragePercent)
+                      }}</strong>
+                    </p>
                   </div>
                 </div>
-                <p class="proposal-description">{{ proposal.description }}</p>
-                <div class="proposal-facts">
-                  <span>{{ proposal.evidenceLabel }}</span>
-                  <span>{{ proposal.targetRule }}</span>
-                </div>
+              </div>
+
+              <div v-if="evaluation.suggestion" class="principle-evaluation-suggestion">
+                <span>강화될 원칙</span>
+                <strong>{{ evaluation.suggestion.description }}</strong>
                 <button
                   type="button"
-                  :disabled="appliedProposalIds.has(proposal.recommendationId)"
-                  @click="openProposalConfirmation(proposal)"
+                  :disabled="appliedProposalIds.has(evaluation.suggestion.recommendationId)"
+                  @click="openProposalConfirmation(evaluation.suggestion)"
                 >
                   <AppIcon
                     :name="
-                      appliedProposalIds.has(proposal.recommendationId)
+                      appliedProposalIds.has(evaluation.suggestion.recommendationId)
                         ? 'circle-check'
                         : 'shield-check'
                     "
                     :size="15"
                   />
                   {{
-                    appliedProposalIds.has(proposal.recommendationId)
+                    appliedProposalIds.has(evaluation.suggestion.recommendationId)
                       ? '적용 완료'
-                      : '이 기준으로 강화'
+                      : '이 원칙으로 강화'
                   }}
                 </button>
-              </article>
-            </div>
-            <p v-if="!principleReinforcements.length" class="proposal-empty">
-              강화가 필요한 반복 위반이나 기준 공백이 발견되지 않았습니다.
-            </p>
-          </section>
-
-          <div class="improvement-box">
-            <div class="improvement-title">
-              <AppIcon name="settings" :size="17" />
-              <strong>함께 수정하면 좋은 요소</strong>
-            </div>
-            <div v-for="item in improvementItems" :key="item.title" class="improvement-row">
-              <AppIcon :name="item.icon" :size="16" />
-              <p>
-                <strong>{{ item.title }}</strong
-                ><small>{{ item.sourceLabel }}</small
-                ><span>{{ item.detail }}</span>
-                <span v-if="item.narrative">{{ item.narrative }}</span>
-              </p>
-            </div>
+              </div>
+            </article>
           </div>
+
+          <div v-else class="proposal-empty principle-evaluation-empty">
+            <AppIcon name="circle-help" :size="20" />
+            <strong>평가할 원칙이 없어요</strong>
+            <p>시뮬레이션에 사용된 원칙이 생기면 이곳에서 결과를 확인할 수 있어요.</p>
+          </div>
+
+          <section v-if="referencePrinciples.length" class="reference-principles">
+            <div class="reference-principles__heading">
+              <div>
+                <AppIcon name="sparkles" :size="17" />
+                <strong>비교 전략 참고</strong>
+              </div>
+              <p>내 원칙에 없는 비교 전략의 기준을 참고용으로 보여드려요.</p>
+            </div>
+            <article
+              v-for="reference in referencePrinciples"
+              :key="reference.referenceId"
+              class="reference-principle-card"
+            >
+              <small>{{ reference.recommendationOrigin?.botName || '비교 전략 봇' }}</small>
+              <strong>{{ reference.title }}</strong>
+              <p>{{ reference.description }}</p>
+              <div v-if="reference.comparisonEvidence" class="reference-principle-card__evidence">
+                비교봇이 {{ reference.comparisonEvidence.botAppliedTradeCount ?? 0 }}건의 거래에
+                적용한 기준이에요.
+              </div>
+              <em>{{ reference.disclaimer }}</em>
+            </article>
+          </section>
         </section>
       </Transition>
     </div>
@@ -1545,25 +2139,12 @@ function goToPrinciplesEdit() {
       @click.self="proposalToConfirm = null"
     >
       <div class="proposal-modal__panel">
-        <span class="proposal-modal__icon">
-          <AppIcon :name="proposalToConfirm.icon" :size="20" />
-        </span>
         <small>
-          {{ proposalToConfirm.proposalType === 'DISCOVERY' ? '새 원칙 추가' : '기존 원칙 강화' }}
+          {{ proposalToConfirm.proposalType === 'DISCOVERY' ? '추가할 원칙' : '강화할 원칙' }}
         </small>
-        <h3 id="proposal-modal-title">{{ proposalToConfirm.title }}</h3>
-        <p>{{ proposalToConfirm.description }}</p>
-        <div class="proposal-modal__value">
-          <template v-if="proposalToConfirm.proposalType === 'REINFORCEMENT'">
-            <span>{{
-              formatProposalValue(proposalToConfirm, proposalToConfirm.currentValue)
-            }}</span>
-            <AppIcon name="arrow-right" :size="16" />
-          </template>
-          <strong>{{
-            formatProposalValue(proposalToConfirm, proposalToConfirm.proposedValue)
-          }}</strong>
-        </div>
+        <h3 id="proposal-modal-title">
+          {{ proposalToConfirm.description || proposalToConfirm.title }}
+        </h3>
         <p v-if="proposalError" class="proposal-modal__error">{{ proposalError }}</p>
         <div class="proposal-modal__actions">
           <BaseButton
@@ -1578,7 +2159,13 @@ function goToPrinciplesEdit() {
             :disabled="applyingProposalId != null"
             @click="acceptProposal"
           >
-            {{ applyingProposalId != null ? '적용 중...' : '확인하고 적용' }}
+            {{
+              applyingProposalId != null
+                ? '적용 중...'
+                : proposalToConfirm.proposalType === 'DISCOVERY'
+                  ? '원칙 추가'
+                  : '원칙 강화'
+            }}
           </BaseButton>
         </div>
       </div>
@@ -2253,22 +2840,94 @@ function goToPrinciplesEdit() {
   font-size: var(--font-size-caption);
 }
 
+.principle-review-overview {
+  padding: 14px;
+  border: 1px solid #d9e8e7;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #f8fcfb, #fff);
+}
+
+.principle-review-overview__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #73868b;
+  font-size: var(--font-size-caption);
+}
+
+.principle-review-overview__heading strong {
+  color: #31565a;
+}
+
+.principle-review-counts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.principle-review-counts > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 9px 4px;
+  border-radius: 10px;
+  background: #f1f5f5;
+}
+
+.principle-review-counts strong {
+  color: #496067;
+  font-size: 18px;
+}
+
+.principle-review-counts span {
+  color: #77888d;
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.principle-review-counts .is-followed {
+  background: #eaf7f3;
+}
+
+.principle-review-counts .is-followed strong {
+  color: #087f7c;
+}
+
+.principle-review-counts .is-violated {
+  background: #fff0ed;
+}
+
+.principle-review-counts .is-violated strong {
+  color: #c65f50;
+}
+
+.principle-review-counts .is-difference {
+  background: #eef2fb;
+}
+
+.principle-review-counts .is-difference strong {
+  color: #6673bb;
+}
+
+.principle-review-overview > p {
+  margin: 10px 0 0;
+  color: #718388;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.principle-review-overview > p b {
+  color: #526d73;
+}
+
 .emotion-timeline {
-  position: relative;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-left: 16px;
-}
-
-.emotion-timeline::before {
-  position: absolute;
-  top: 12px;
-  bottom: 12px;
-  left: 4px;
-  width: 1px;
-  background: #dce5e7;
-  content: '';
 }
 
 .emotion-card {
@@ -2286,6 +2945,18 @@ function goToPrinciplesEdit() {
 .emotion-card.is-expanded {
   border-color: #cbdedd;
   box-shadow: 0 10px 24px rgb(42 73 78 / 8%);
+}
+
+.emotion-card--followed.is-expanded {
+  border-color: #96d5cf;
+}
+
+.emotion-card--violated.is-expanded {
+  border-color: #efb6ac;
+}
+
+.emotion-card--difference.is-expanded {
+  border-color: #bec2eb;
 }
 
 .decision-summary {
@@ -2326,7 +2997,7 @@ function goToPrinciplesEdit() {
 
 .decision-summary__main {
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr) auto 17px;
+  grid-template-columns: 36px minmax(0, 1fr) 17px;
   gap: 8px;
 }
 
@@ -2350,25 +3021,6 @@ function goToPrinciplesEdit() {
   font-size: var(--font-size-caption);
 }
 
-.decision-summary__verdict {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-}
-
-.decision-summary__verdict small {
-  color: #7c8f92;
-  font-size: 9px;
-}
-
-.decision-summary__verdict strong {
-  color: #087f7c;
-  font-size: var(--font-size-caption);
-  text-align: right;
-}
-
 .decision-summary__chevron {
   color: #89999e;
   transition: transform 0.2s ease;
@@ -2390,30 +3042,109 @@ function goToPrinciplesEdit() {
   margin-top: 0;
 }
 
-.decision-core-verdict {
-  padding: 16px 2px 14px;
-  border-bottom: 1px solid #e9eff0;
-}
-
-.decision-core-verdict__label {
+.decision-status-line {
   display: flex;
   align-items: center;
-  gap: 5px;
-  color: #087f7c;
+  padding: 12px 2px 10px;
   font-size: 10px;
   font-weight: 850;
 }
 
-.decision-core-verdict h3 {
-  margin: 7px 0 5px;
-  color: #294b50;
-  font-size: 17px;
-  line-height: 1.45;
+.decision-status-line > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
-.decision-core-verdict p {
+.decision-status-line.is-followed {
+  color: #087f7c;
+}
+
+.decision-status-line.is-violated {
+  color: #cc5949;
+}
+
+.decision-status-line.is-difference {
+  color: #626bc0;
+}
+
+.decision-status-line.is-unassessed {
+  color: #73858a;
+}
+
+.matched-principle-card,
+.unmatched-principle-card {
+  padding: 14px;
+  border: 1px solid #dfe8e9;
+  border-left-width: 3px;
+  border-radius: 12px;
+  background: #f8fafa;
+}
+
+.matched-principle-card.is-followed {
+  border-color: #b7ded9;
+  background: #f2faf8;
+}
+
+.matched-principle-card.is-violated {
+  border-color: #efc4bc;
+  background: #fff8f6;
+}
+
+.matched-principle-card.is-difference {
+  border-color: #cfd1ee;
+  background: #f8f8fd;
+}
+
+.matched-principle-card__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.matched-principle-card__heading > span,
+.unmatched-principle-card > span {
+  color: #50666b;
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.matched-principle-card__heading > small {
+  color: #8a989d;
+  font-size: 8px;
+}
+
+.matched-principle-card blockquote {
   margin: 0;
-  color: #6d7f84;
+  padding: 12px;
+  border: 0;
+  border-radius: 9px;
+  background: rgb(255 255 255 / 72%);
+  color: #293f44;
+  font-size: var(--font-size-body);
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1.6;
+}
+
+.matched-principle-card__reason {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #d5e0e1;
+}
+
+.matched-principle-card__reason > span {
+  color: #74878c;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.matched-principle-card__reason > p,
+.unmatched-principle-card > p {
+  margin: 4px 0 0;
+  color: #64777c;
   font-size: var(--font-size-caption);
   line-height: 1.55;
 }
@@ -2423,8 +3154,7 @@ function goToPrinciplesEdit() {
   grid-template-columns: 1fr 28px 1fr;
   align-items: center;
   gap: 8px;
-  padding: 14px 2px;
-  border-bottom: 1px solid #e9eff0;
+  padding: 16px 2px;
 }
 
 .decision-action-compare > div:not(.decision-action-compare__divider) {
@@ -2460,38 +3190,91 @@ function goToPrinciplesEdit() {
   place-items: center;
   border-radius: 50%;
   background: #f3f6f6;
-  color: #d66c5c;
+  color: #839397;
 }
 
-.decision-key-facts {
-  margin: 0;
+.decision-outcome-card {
+  padding: 14px;
+  border: 1px solid #e0e7e8;
+  border-radius: 12px;
+  background: #fbfcfc;
 }
 
-.decision-key-facts > div {
-  display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
-  gap: 10px;
-  padding: 11px 2px;
-  border-bottom: 1px solid #edf1f2;
+.decision-outcome-card__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
-.decision-key-facts dt {
-  color: #7c8e93;
+.decision-outcome-card__heading > span {
+  color: #445c62;
   font-size: 10px;
-  font-weight: 750;
+  font-weight: 850;
 }
 
-.decision-key-facts dd {
-  margin: 0;
-  color: #61757a;
-  font-size: var(--font-size-caption);
-  line-height: 1.5;
+.decision-outcome-card__heading > small {
+  color: #929fa3;
+  font-size: 8px;
 }
 
-.decision-key-facts dd strong {
+.decision-outcome-values {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.decision-outcome-values > div {
+  padding: 10px;
+  border-radius: 9px;
+  background: #f2f5f5;
+}
+
+.decision-outcome-values span {
   display: block;
-  margin-bottom: 2px;
-  color: #36565b;
+  color: #839297;
+  font-size: 9px;
+}
+
+.decision-outcome-values strong {
+  display: block;
+  margin-top: 4px;
+  color: #334e54;
+  font-size: var(--font-size-caption);
+}
+
+.decision-outcome-card__interpretation {
+  margin-top: 10px;
+}
+
+.decision-outcome-card__interpretation > span {
+  display: inline-flex;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: #edf2f2;
+  color: #667a7f;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.decision-outcome-card__interpretation > span.is-good,
+.decision-outcome-card__interpretation > span.is-steady {
+  background: #e9f7f4;
+  color: #087f7c;
+}
+
+.decision-outcome-card__interpretation > span.is-lucky,
+.decision-outcome-card__interpretation > span.is-bad {
+  background: #fff0ed;
+  color: #c65a49;
+}
+
+.decision-outcome-card__interpretation > p {
+  margin: 6px 0 0;
+  color: #718287;
+  font-size: 10px;
+  line-height: 1.45;
 }
 
 .decision-to-thesis {
@@ -2516,37 +3299,73 @@ function goToPrinciplesEdit() {
   outline-offset: 3px;
 }
 
-.thesis-review-list {
+.security-evidence-section {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.thesis-trade-card {
+.security-evidence-section__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.security-evidence-section__heading > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.security-evidence-section__heading strong {
+  color: #345359;
+  font-size: var(--font-size-body);
+}
+
+.security-evidence-section__heading span,
+.security-evidence-section__heading small {
+  color: #829398;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.security-evidence-section__heading small {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: #edf5f5;
+  color: #527278;
+  font-weight: 750;
+}
+
+.security-evidence-accordions {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.security-evidence-accordion {
   overflow: hidden;
-  border: 1px solid #dde6e7;
+  border: 1px solid #dce6e7;
   border-radius: 14px;
   background: #fff;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
-.thesis-trade-card--realized {
-  border-color: #cfe4df;
+.security-evidence-accordion.is-active {
+  border-color: #9bcfcb;
+  box-shadow: 0 10px 24px rgb(44 76 80 / 7%);
 }
 
-.thesis-trade-card--partial {
-  border-color: #e9dfc6;
-}
-
-.thesis-trade-card--not-realized {
-  border-color: #edd6d1;
-}
-
-.thesis-trade-summary {
+.security-evidence-card {
   display: grid;
   width: 100%;
-  grid-template-columns: 34px minmax(0, 1fr) auto 16px;
+  grid-template-columns: 36px minmax(0, 1fr) auto 17px;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   padding: 13px;
   border: 0;
   background: transparent;
@@ -2556,141 +3375,364 @@ function goToPrinciplesEdit() {
   cursor: pointer;
 }
 
-.thesis-trade-summary:focus-visible {
+.security-evidence-card:hover {
+  background: #fbfcfc;
+}
+
+.security-evidence-card:focus-visible {
   outline: 2px solid #0b8f8b;
   outline-offset: -3px;
 }
 
-.thesis-trade-summary__identity {
+.security-evidence-accordion.is-active .security-evidence-card {
+  background: #f4faf9;
+}
+
+.security-evidence-card__identity {
   display: flex;
   min-width: 0;
   flex-direction: column;
   gap: 2px;
 }
 
-.thesis-trade-summary__identity strong {
+.security-evidence-card__identity strong {
   overflow: hidden;
-  color: #2f4850;
+  color: #2f4a50;
   font-size: var(--font-size-body);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.thesis-trade-summary__identity small {
-  color: #849398;
-  font-size: 10px;
+.security-evidence-card__identity small {
+  overflow: hidden;
+  color: #87979c;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.thesis-trade-summary__verdict {
-  max-width: 128px;
+.security-evidence-card__progress {
   padding: 4px 7px;
   border-radius: 999px;
-  background: #eef7f5;
+  background: #eaf7f4;
   color: #087f7c;
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 800;
-  text-align: center;
+  white-space: nowrap;
 }
 
-.thesis-trade-summary__verdict.is-partial {
-  background: #fff7e8;
-  color: #9a741f;
-}
-
-.thesis-trade-summary__verdict.is-not-realized {
-  background: #fff0ed;
-  color: #c45d4c;
-}
-
-.thesis-trade-summary > .app-icon {
-  color: #87979c;
+.security-evidence-card > .app-icon {
+  color: #8b9a9f;
   transition: transform 0.2s ease;
 }
 
-.thesis-trade-summary > .app-icon.is-open {
+.security-evidence-card > .app-icon.is-open {
+  color: #0b8f8b;
   transform: rotate(180deg);
 }
 
-.thesis-trade-summary__reason {
-  display: -webkit-box;
-  grid-column: 2 / -1;
-  overflow: hidden;
-  color: #687b80;
-  font-size: var(--font-size-caption);
-  line-height: 1.45;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.thesis-trade-detail {
-  padding: 0 14px 14px;
-  border-top: 1px solid #edf1f2;
-}
-
-.thesis-recorded-reason,
-.thesis-verdict-line {
-  padding: 13px 0;
-  border-bottom: 1px solid #edf1f2;
-}
-
-.thesis-recorded-reason > span {
+.security-evidence-detail {
   display: flex;
-  align-items: center;
-  gap: 5px;
-  color: #526a70;
-  font-size: 10px;
-  font-weight: 800;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px;
+  border-top: 1px solid #e7eeee;
 }
 
-.thesis-recorded-reason p,
-.thesis-verdict-line p {
-  margin: 7px 0 0;
-  color: #66797e;
-  font-size: var(--font-size-caption);
-  line-height: 1.55;
+.security-evidence-chart {
+  overflow: hidden;
+  border: 1px solid #d9e5e5;
+  border-radius: 13px;
+  background: #fff;
 }
 
-.thesis-verdict-line {
-  display: grid;
-  grid-template-columns: 20px minmax(0, 1fr);
-  gap: 8px;
-  color: #087f7c;
+.security-evidence-chart__heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 14px 14px 4px;
 }
 
-.thesis-verdict-line > div {
+.security-evidence-chart__heading > div {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.thesis-verdict-line small {
-  color: #849398;
+.security-evidence-chart__heading span,
+.security-evidence-chart__heading small {
+  color: #87969b;
   font-size: 9px;
 }
 
-.thesis-verdict-line strong {
-  color: #31565a;
+.security-evidence-chart__heading strong {
+  color: #2f5055;
+  font-size: var(--font-size-body);
+}
+
+.security-price-plot {
+  position: relative;
+  padding: 2px 34px 0;
+}
+
+.security-price-plot svg {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+
+.security-price-plot svg > line {
+  stroke: #edf1f2;
+  stroke-width: 1;
+}
+
+.security-price-plot polyline {
+  fill: none;
+  stroke: #0b8f8b;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.5;
+}
+
+.security-price-plot g line {
+  opacity: 0.24;
+  stroke-dasharray: 3 3;
+}
+
+.security-price-plot g circle {
+  stroke: #fff;
+  stroke-width: 2;
+}
+
+.security-price-plot g rect {
+  opacity: 0.96;
+}
+
+.security-price-plot g text {
+  fill: #fff;
+  font-size: 7px;
+  font-weight: 800;
+}
+
+.security-price-plot__max,
+.security-price-plot__min {
+  position: absolute;
+  left: 5px;
+  color: #8a999e;
+  font-size: 8px;
+}
+
+.security-price-plot__max {
+  top: 14px;
+}
+
+.security-price-plot__min {
+  bottom: 14px;
+}
+
+.chart-annotation-list {
+  display: grid;
+  gap: 0;
+  padding: 4px 12px 10px;
+  border-top: 1px solid #edf1f2;
+}
+
+.chart-annotation-event {
+  display: grid;
+  grid-template-columns: 28px 62px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid #eef2f2;
+}
+
+.chart-annotation-event:last-child {
+  border-bottom: 0;
+}
+
+.chart-annotation-event__icon {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 8px;
+}
+
+.chart-annotation-event__type {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.chart-annotation-event__type b {
+  color: #476268;
+  font-size: 9px;
+}
+
+.chart-annotation-event__type small {
+  color: #98a4a8;
+  font-size: 8px;
+}
+
+.chart-annotation-event > strong {
+  overflow: hidden;
+  color: #65787d;
+  font-size: 9px;
+  font-weight: 650;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.security-price-unavailable {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px;
+  border: 1px dashed #cedbdc;
+  border-radius: 12px;
+  background: #fafcfc;
+  color: #7a8d92;
+}
+
+.security-price-unavailable span {
+  font-size: 9px;
+}
+
+.security-evidence-basis-section {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.security-evidence-basis-section__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.security-evidence-basis-section__heading strong {
+  color: #38565c;
   font-size: var(--font-size-caption);
 }
 
-.thesis-claims--flat {
-  margin: 0;
+.security-evidence-basis-section__heading span {
+  color: #87979c;
+  font-size: 9px;
 }
 
-.thesis-claims--flat details {
-  padding: 12px 0;
-  border-bottom: 1px solid #edf1f2;
-  border-radius: 0;
-  background: transparent;
+.security-evidence-basis {
+  padding: 13px;
+  border: 1px solid #e0e8e9;
+  border-radius: 12px;
+  background: #fbfcfc;
 }
 
-.thesis-trade-meta {
+.security-evidence-basis__meta {
   display: flex;
-  flex-wrap: wrap;
-  gap: 5px 10px;
-  padding-top: 11px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.security-evidence-basis__meta > span:first-child {
   color: #7c8e93;
   font-size: 9px;
+  font-weight: 750;
+}
+
+.evidence-verdict-badge {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: #e9f7f2;
+  color: #087f7c;
+  font-size: 8px;
+  font-weight: 850;
+}
+
+.evidence-verdict-badge.is-partial {
+  background: #fff7e8;
+  color: #98701c;
+}
+
+.evidence-verdict-badge.is-contradicted {
+  background: #fff0ed;
+  color: #c45d4c;
+}
+
+.evidence-verdict-badge.is-neutral,
+.evidence-verdict-badge.is-pending {
+  background: #eef2f2;
+  color: #718287;
+}
+
+.security-evidence-basis__text {
+  margin: 9px 0 0;
+  color: #324e54;
+  font-size: var(--font-size-body);
+  font-weight: 750;
+  line-height: 1.55;
+}
+
+.security-evidence-judgment {
+  margin-top: 11px;
+  padding-top: 10px;
+  border-top: 1px dashed #d8e1e2;
+}
+
+.security-evidence-judgment > span {
+  color: #71858a;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.security-evidence-judgment > p {
+  margin: 5px 0 0;
+  color: #66797e;
+  font-size: var(--font-size-caption);
+  line-height: 1.6;
+}
+
+.security-evidence-sources {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 9px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.security-evidence-sources a,
+.security-evidence-sources span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #4e7478;
+  font-size: 8px;
+  line-height: 1.45;
+  text-decoration: none;
+}
+
+.evidence-separation-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 11px;
+  border-radius: 10px;
+  background: #f1f7f8;
+  color: #587078;
+}
+
+.evidence-separation-note p {
+  margin: 0;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.evidence-separation-note strong {
+  display: block;
+  color: #365b60;
 }
 
 .decision-detail-enter-active,
@@ -2705,28 +3747,6 @@ function goToPrinciplesEdit() {
 .decision-detail-leave-to {
   opacity: 0;
   transform: translateY(-8px);
-}
-
-.timeline-marker {
-  position: absolute;
-  top: 18px;
-  left: -16px;
-  width: 9px;
-  height: 9px;
-  border: 2px solid #fff;
-  border-radius: 50%;
-  background: #f07a62;
-  box-shadow: 0 0 0 1px #f07a62;
-}
-
-.emotion-card--greed .timeline-marker {
-  background: #d5a43d;
-  box-shadow: 0 0 0 1px #d5a43d;
-}
-
-.emotion-card--haste .timeline-marker {
-  background: #7b83d5;
-  box-shadow: 0 0 0 1px #7b83d5;
 }
 
 .emotion-card__top {
@@ -2748,6 +3768,26 @@ function goToPrinciplesEdit() {
   color: #cf5a44;
   font-size: var(--font-size-caption);
   font-weight: 800;
+}
+
+.emotion-tag.is-followed {
+  background: #e8f7f4;
+  color: #087f7c;
+}
+
+.emotion-tag.is-violated {
+  background: #fff0ed;
+  color: #cc5949;
+}
+
+.emotion-tag.is-difference {
+  background: #f0f1ff;
+  color: #626bc0;
+}
+
+.emotion-tag.is-unassessed {
+  background: #eef2f2;
+  color: #728489;
 }
 
 .emotion-card--greed .emotion-tag {
@@ -3525,20 +4565,6 @@ function goToPrinciplesEdit() {
   line-height: 1.55;
 }
 
-.report-provenance {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-
-.report-provenance span {
-  padding: 4px 7px;
-  border: 1px solid #e0e7e8;
-  border-radius: 999px;
-  color: #77868b;
-  font-size: 9px;
-}
-
 .return-comparison-card {
   margin-top: 10px;
   padding: 17px;
@@ -3687,8 +4713,7 @@ function goToPrinciplesEdit() {
 }
 
 .proposal-card__meta,
-.proposal-facts,
-.proposal-change {
+.proposal-facts {
   display: flex;
   align-items: center;
 }
@@ -3734,15 +4759,13 @@ function goToPrinciplesEdit() {
   color: #087f7c;
 }
 
-.proposal-card__title strong,
-.source-principle {
+.proposal-card__title strong {
   display: block;
   color: #31484f;
   font-size: var(--font-size-caption);
 }
 
 .proposal-card__title p,
-.proposal-description,
 .proposal-narrative {
   margin: 4px 0 0;
   color: #73858b;
@@ -3801,43 +4824,54 @@ function goToPrinciplesEdit() {
   cursor: default;
 }
 
-.source-principle {
-  margin-top: 11px;
-  line-height: 1.45;
-}
-
-.proposal-change {
+.proposal-principle-change {
   display: grid;
-  grid-template-columns: 1fr 18px 1fr;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
   gap: 7px;
-  margin-top: 10px;
+  margin-top: 11px;
 }
 
-.proposal-change > div {
+.proposal-principle-change > div {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  padding: 9px;
+  gap: 5px;
+  padding: 10px;
   border-radius: 9px;
   background: #f4f6f7;
 }
 
-.proposal-change > div:last-child {
-  background: #f0f1fb;
+.proposal-principle-change > div.is-proposed {
+  background: #eef8f6;
 }
 
-.proposal-change small {
+.proposal-principle-change small {
   color: #89979c;
   font-size: 9px;
+  font-weight: 750;
 }
 
-.proposal-change strong {
+.proposal-principle-change p,
+.proposal-principle-change strong {
+  margin: 0;
   color: #3d545b;
   font-size: var(--font-size-caption);
+  line-height: 1.5;
 }
 
-.proposal-change > .app-icon {
+.proposal-principle-change strong {
+  color: #176f6d;
+}
+
+.proposal-principle-change > .app-icon {
+  align-self: center;
+  justify-self: center;
   color: #9ba8ac;
+  transform: rotate(90deg);
+}
+
+.proposal-facts--reinforcement {
+  margin-top: 9px;
 }
 
 .recommendation-card {
@@ -3959,6 +4993,390 @@ function goToPrinciplesEdit() {
   font-size: var(--font-size-caption);
 }
 
+.principle-evaluation-overview {
+  margin-bottom: 14px;
+  padding: 15px;
+  border: 1px solid #dce8e9;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f7fbfb 0%, #f8f8fc 100%);
+}
+
+.principle-evaluation-overview__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.principle-evaluation-overview__title > span {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 11px;
+  background: #e2f3f1;
+  color: #087f7c;
+}
+
+.principle-evaluation-overview__title div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.principle-evaluation-overview__title small {
+  color: #839298;
+  font-size: 10px;
+}
+
+.principle-evaluation-overview__title strong {
+  color: #31484f;
+  font-size: var(--font-size-caption);
+}
+
+.principle-evaluation-counts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 13px;
+}
+
+.principle-evaluation-counts > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 3px;
+  border-radius: 10px;
+  background: #eef3f4;
+  color: #6f7f84;
+}
+
+.principle-evaluation-counts strong {
+  font-size: var(--font-size-body);
+}
+
+.principle-evaluation-counts span {
+  overflow: hidden;
+  max-width: 100%;
+  font-size: 9px;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.principle-evaluation-counts .is-keep {
+  background: #e6f6f3;
+  color: #087f7c;
+}
+
+.principle-evaluation-counts .is-strengthen {
+  background: #fff0eb;
+  color: #cf5b41;
+}
+
+.principle-evaluation-counts .is-review {
+  background: #fff6df;
+  color: #a46b11;
+}
+
+.principle-evaluation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.principle-evaluation-card {
+  overflow: hidden;
+  border: 1px solid #dfe7e9;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.principle-evaluation-card__heading {
+  padding: 15px;
+  border-top: 3px solid #a9b6ba;
+}
+
+.principle-evaluation-card.is-keep .principle-evaluation-card__heading {
+  border-top-color: #2aa39e;
+}
+
+.principle-evaluation-card.is-strengthen .principle-evaluation-card__heading {
+  border-top-color: #ed765c;
+}
+
+.principle-evaluation-card.is-revise .principle-evaluation-card__heading,
+.principle-evaluation-card.is-review .principle-evaluation-card__heading {
+  border-top-color: #d39a37;
+}
+
+.principle-evaluation-verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 9px;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: #eff3f4;
+  color: #63777d;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.is-keep .principle-evaluation-verdict {
+  background: #e5f6f3;
+  color: #087f7c;
+}
+
+.is-strengthen .principle-evaluation-verdict {
+  background: #fff0eb;
+  color: #cf5b41;
+}
+
+.is-revise .principle-evaluation-verdict,
+.is-review .principle-evaluation-verdict {
+  background: #fff6df;
+  color: #a46b11;
+}
+
+.principle-evaluation-card__heading > strong {
+  display: block;
+  color: #263d45;
+  font-size: var(--font-size-body);
+  line-height: 1.45;
+}
+
+.principle-evaluation-card__heading > p {
+  margin: 8px 0 0;
+  color: #71848a;
+  font-size: var(--font-size-caption);
+  line-height: 1.55;
+}
+
+.principle-evaluation-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid #e7edef;
+  background: #f8fafb;
+}
+
+.principle-evaluation-stats > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 11px 3px;
+}
+
+.principle-evaluation-stats small {
+  color: #8a999e;
+  font-size: 9px;
+}
+
+.principle-evaluation-stats strong {
+  color: #40565d;
+  font-size: var(--font-size-caption);
+}
+
+.principle-evaluation-outcomes {
+  padding: 13px 15px;
+  border-top: 1px solid #e7edef;
+}
+
+.principle-evaluation-outcomes__heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+
+.principle-evaluation-outcomes__heading strong {
+  color: #40565d;
+  font-size: var(--font-size-caption);
+}
+
+.principle-evaluation-outcomes__heading small {
+  color: #92a0a4;
+  font-size: 9px;
+}
+
+.principle-evaluation-outcomes__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.principle-evaluation-outcomes__grid > div {
+  padding: 10px;
+  border-radius: 10px;
+  background: #f4f7f8;
+}
+
+.principle-evaluation-outcomes__grid > div:first-child {
+  background: #edf8f6;
+}
+
+.principle-evaluation-outcomes__grid span {
+  color: #64777d;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.principle-evaluation-outcomes__grid p {
+  display: grid;
+  grid-template-columns: auto 1fr auto 1fr;
+  align-items: baseline;
+  gap: 4px;
+  margin: 7px 0 0;
+}
+
+.principle-evaluation-outcomes__grid small {
+  color: #92a0a4;
+  font-size: 8px;
+}
+
+.principle-evaluation-outcomes__grid strong {
+  color: #344c53;
+  font-size: var(--font-size-caption);
+}
+
+.principle-evaluation-suggestion {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 13px 15px 15px;
+  border-top: 1px solid #cfe7e4;
+  background: #f0faf8;
+}
+
+.principle-evaluation-suggestion > span {
+  color: #087f7c;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.principle-evaluation-suggestion > strong {
+  color: #28514f;
+  font-size: var(--font-size-caption);
+  line-height: 1.55;
+}
+
+.principle-evaluation-suggestion > button {
+  display: flex;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 3px;
+  border: 1px solid #77bbb6;
+  border-radius: 10px;
+  background: #fff;
+  color: #087f7c;
+  font: inherit;
+  font-size: var(--font-size-caption);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.principle-evaluation-suggestion > button:disabled {
+  border-color: #cfdedc;
+  color: #718a89;
+  cursor: default;
+}
+
+.principle-evaluation-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 24px 16px;
+  color: #7a8c91;
+  text-align: center;
+}
+
+.principle-evaluation-empty strong {
+  color: #40565d;
+  font-size: var(--font-size-caption);
+}
+
+.principle-evaluation-empty p {
+  margin: 0;
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
+}
+
+.reference-principles {
+  margin-top: 19px;
+  padding-top: 17px;
+  border-top: 1px solid #e3eaec;
+}
+
+.reference-principles__heading > div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #5862a6;
+  font-size: var(--font-size-caption);
+}
+
+.reference-principles__heading > p {
+  margin: 5px 0 11px;
+  color: #839298;
+  font-size: var(--font-size-caption);
+}
+
+.reference-principle-card {
+  padding: 14px;
+  border: 1px solid #dcdef0;
+  border-radius: 14px;
+  background: #f8f8fd;
+}
+
+.reference-principle-card + .reference-principle-card {
+  margin-top: 8px;
+}
+
+.reference-principle-card > small {
+  color: #737bbb;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.reference-principle-card > strong {
+  display: block;
+  margin-top: 6px;
+  color: #3f486f;
+  font-size: var(--font-size-caption);
+}
+
+.reference-principle-card > p {
+  margin: 5px 0 0;
+  color: #6f7894;
+  font-size: var(--font-size-caption);
+  line-height: 1.55;
+}
+
+.reference-principle-card__evidence {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: #fff;
+  color: #626c8c;
+  font-size: 10px;
+}
+
+.reference-principle-card > em {
+  display: block;
+  margin-top: 9px;
+  color: #9299ad;
+  font-size: 9px;
+  font-style: normal;
+  line-height: 1.45;
+}
+
 .proposal-modal {
   position: fixed;
   z-index: 100;
@@ -3979,17 +5397,6 @@ function goToPrinciplesEdit() {
   text-align: center;
 }
 
-.proposal-modal__icon {
-  display: grid;
-  width: 42px;
-  height: 42px;
-  margin: 0 auto 10px;
-  place-items: center;
-  border-radius: 13px;
-  background: #e8f6f4;
-  color: #087f7c;
-}
-
 .proposal-modal__panel > small {
   color: #0b8f8b;
   font-size: 10px;
@@ -3997,35 +5404,10 @@ function goToPrinciplesEdit() {
 }
 
 .proposal-modal__panel h3 {
-  margin: 5px 0 7px;
+  margin: 10px 0 18px;
+  color: #29464c;
   font-size: var(--font-size-body);
-}
-
-.proposal-modal__panel > p {
-  margin: 0;
-  color: #74868c;
-  font-size: var(--font-size-caption);
   line-height: 1.55;
-}
-
-.proposal-modal__value {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin: 15px 0;
-  padding: 12px;
-  border-radius: 11px;
-  background: #f3f8f8;
-}
-
-.proposal-modal__value span {
-  color: #87959a;
-  text-decoration: line-through;
-}
-
-.proposal-modal__value strong {
-  color: #087f7c;
 }
 
 .proposal-modal__panel > .proposal-modal__error {

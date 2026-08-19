@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '')
 
 let currentAccessToken = null
 
@@ -11,7 +11,8 @@ export function getAccessToken() {
 }
 
 export function getApiUrl(endpoint) {
-  return `${API_BASE_URL}${endpoint}`
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
+  return `${API_BASE_URL}${normalizedEndpoint}`
 }
 
 export class ApiError extends Error {

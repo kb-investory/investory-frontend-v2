@@ -37,7 +37,6 @@ async function handleSocialLogin(provider) {
             <h1>오늘의 판단을<br />기록으로 남겨보세요.</h1>
             <span aria-hidden="true" />
           </div>
-
         </div>
 
         <div class="social-login">

@@ -75,14 +75,18 @@ function finishMoodDrag(event) {
     <legend class="mood-selector__title">오늘 시장을 보며 느낀 감정 선택</legend>
 
     <div class="mood-selector__character" aria-live="polite">
-      <Transition name="mood-character" mode="out-in">
+      <template v-for="option in JOURNAL_MOOD_OPTIONS" :key="option.value">
         <img
-          :key="selectedMood.value"
-          :src="selectedMood.image"
-          :alt="`${selectedMood.label}한 표정의 원숭이`"
+          :src="option.image"
+          :alt="option.value === selectedMood.value ? `${option.label}한 표정의 원숭이` : ''"
+          :aria-hidden="option.value === selectedMood.value ? undefined : 'true'"
+          :class="{
+            'mood-selector__character-image--active': option.value === selectedMood.value,
+          }"
           class="mood-selector__character-image"
+          decoding="async"
         />
-      </Transition>
+      </template>
     </div>
 
     <div
@@ -133,6 +137,7 @@ function finishMoodDrag(event) {
 }
 
 .mood-selector__character {
+  position: relative;
   display: grid;
   height: 116px;
   margin: 2px 0 -7px;
@@ -141,13 +146,21 @@ function finishMoodDrag(event) {
 }
 
 .mood-selector__character-image {
+  grid-area: 1 / 1;
   display: block;
   width: 112px;
   height: 112px;
   object-fit: contain;
   transform-origin: center bottom;
-  animation: mood-float 2.4s ease-in-out infinite;
+  opacity: 0;
+  pointer-events: none;
   filter: drop-shadow(0 5px 5px rgba(31, 41, 55, 0.12));
+  transition: opacity 0.16s ease;
+}
+
+.mood-selector__character-image--active {
+  opacity: 1;
+  animation: mood-float 2.4s ease-in-out infinite;
 }
 
 .mood-selector__control {
@@ -236,23 +249,6 @@ function finishMoodDrag(event) {
   outline-offset: 4px;
 }
 
-.mood-character-enter-active,
-.mood-character-leave-active {
-  transition:
-    opacity 0.16s ease,
-    transform 0.16s ease;
-}
-
-.mood-character-enter-from {
-  opacity: 0;
-  transform: translateY(8px) scale(0.92);
-}
-
-.mood-character-leave-to {
-  opacity: 0;
-  transform: translateY(-5px) scale(0.96);
-}
-
 @keyframes mood-float {
   0%,
   100% {
@@ -267,10 +263,6 @@ function finishMoodDrag(event) {
 @media (prefers-reduced-motion: reduce) {
   .mood-selector__character-image {
     animation: none;
-  }
-
-  .mood-character-enter-active,
-  .mood-character-leave-active {
     transition: none;
   }
 }

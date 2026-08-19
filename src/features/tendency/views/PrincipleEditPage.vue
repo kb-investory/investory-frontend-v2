@@ -459,6 +459,10 @@ onBeforeUnmount(() => {
   border-radius: 10px;
 }
 
+.principle-summary > span:only-child {
+  grid-column: 1 / -1;
+}
+
 .principle-summary__current {
   background: #ffffff;
   color: #32474b;
