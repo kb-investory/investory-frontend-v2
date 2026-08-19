@@ -215,7 +215,10 @@ function handleSubmit() {
 
 <style scoped>
 .broker-login-form {
-  display: grid;
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
   gap: 14px;
 }
 
@@ -421,6 +424,8 @@ function handleSubmit() {
 .broker-login-form__action {
   display: grid;
   gap: 7px;
+  margin-top: auto;
+  padding-top: 4px;
 }
 
 .submit-button {
@@ -433,7 +438,7 @@ function handleSubmit() {
   padding: 0 20px;
   border: 0;
   border-radius: 8px;
-  background: var(--slate-strong);
+  background: #263a43;
   color: #ffffff;
   cursor: pointer;
   font-size: var(--font-size-body);

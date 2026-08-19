@@ -1,4 +1,6 @@
 <script setup>
+import { CircleCheck } from '@lucide/vue'
+
 import StockLogo from '@/shared/components/StockLogo.vue'
 
 defineProps({
@@ -15,16 +17,13 @@ function formatCurrency(value) {
 
 <template>
   <article class="holding-card">
-    <StockLogo :stock="holding" :size="38" />
+    <CircleCheck class="holding-card__check" :size="19" aria-hidden="true" />
+    <StockLogo :stock="holding" :size="36" />
     <div class="holding-card__content">
       <strong>{{ holding.securityName }}</strong>
-      <div class="holding-card__details">
-        <span>
-          {{ formatCurrency(holding.quantity) }}주 · 평단 {{ formatCurrency(holding.avgCost) }}원
-        </span>
-        <span>평가금액 {{ formatCurrency(holding.valuationAmount) }}원</span>
-      </div>
+      <span>{{ formatCurrency(holding.quantity) }}주</span>
     </div>
+    <strong class="holding-card__valuation">{{ formatCurrency(holding.valuationAmount) }}원</strong>
   </article>
 </template>
 
@@ -32,13 +31,17 @@ function formatCurrency(value) {
 .holding-card {
   display: flex;
   width: 100%;
-  min-height: 58px;
+  min-height: 56px;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 8px;
+  gap: 8px;
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--color-border-subtle);
   background: #ffffff;
+}
+
+.holding-card__check {
+  flex: 0 0 auto;
+  color: #168c89;
 }
 
 .holding-card__content {
@@ -56,32 +59,18 @@ function formatCurrency(value) {
   white-space: nowrap;
 }
 
-.holding-card__details {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.holding-card__details span {
+.holding-card__content > span {
   color: var(--color-text-muted);
   font-size: var(--font-size-caption);
   font-weight: 500;
   line-height: 1.4;
 }
 
-.holding-card__details span:last-child {
+.holding-card__valuation {
+  flex: 0 0 auto;
   color: var(--slate-strong);
   font-family: var(--font-mono);
+  font-size: var(--font-size-caption);
   font-weight: 700;
-}
-
-@media (max-width: 360px) {
-  .holding-card__details {
-    display: grid;
-    gap: 1px;
-    white-space: normal;
-  }
 }
 </style>
