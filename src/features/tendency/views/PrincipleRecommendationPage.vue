@@ -219,7 +219,7 @@ onBeforeUnmount(() => {
       v-else-if="tendencyStore.recommendationGenerationStatus === 'REQUESTED'"
       class="complete-state"
     >
-      <BaseLoading />
+      <span class="complete-state__spinner"><AppIcon name="loader-circle" :size="26" /></span>
       <strong>추천 원칙을 만들고 있어요</strong>
       <p>분석 결과를 바탕으로 준비 중이에요. 잠시 후 다시 확인해주세요.</p>
     </section>
@@ -583,6 +583,31 @@ onBeforeUnmount(() => {
   margin: 0 0 10px;
   color: #7b8789;
   font-size: var(--font-size-caption);
+}
+
+.complete-state__spinner {
+  display: inline-flex;
+  width: 56px;
+  height: 56px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+  border-radius: 50%;
+  background: #e7f6f5;
+  color: #0b8f8b;
+  animation: complete-state-spin 1s linear infinite;
+}
+
+@keyframes complete-state-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .complete-state__spinner {
+    animation: none;
+  }
 }
 
 .loading-wrapper {

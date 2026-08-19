@@ -378,7 +378,9 @@ onBeforeUnmount(() => {
         </header>
 
         <div class="available-principles-loading">
-          <BaseLoading />
+          <span class="available-principles-loading__spinner">
+            <AppIcon name="loader-circle" :size="20" />
+          </span>
           <p>추천 원칙을 만들고 있어요. 잠시 후 다시 확인해주세요.</p>
         </div>
       </section>
@@ -758,7 +760,31 @@ onBeforeUnmount(() => {
   gap: 8px;
   padding: 24px 0;
   color: #7b8789;
-  font-size: 13px;
+  font-size: var(--font-size-caption);
   text-align: center;
+}
+
+.available-principles-loading__spinner {
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #edf8f7;
+  color: #0a8e89;
+  animation: available-principles-loading-spin 1s linear infinite;
+}
+
+@keyframes available-principles-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .available-principles-loading__spinner {
+    animation: none;
+  }
 }
 </style>
