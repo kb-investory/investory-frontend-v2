@@ -157,6 +157,8 @@ onMounted(loadSettings)
 .notification-settings-content {
   display: grid;
   flex: 1;
+  align-content: start;
+  align-items: start;
   gap: 16px;
   padding: 12px 20px 28px;
 }
@@ -171,7 +173,7 @@ onMounted(loadSettings)
 }
 
 .notification-settings-group > * {
-  padding: 12px 14px;
+  padding: 8px 14px;
 }
 
 .notification-settings-group > *:not(:last-child) {
