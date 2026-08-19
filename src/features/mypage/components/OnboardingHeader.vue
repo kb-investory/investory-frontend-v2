@@ -1,6 +1,4 @@
 <script setup>
-import { ChevronLeft } from '@lucide/vue'
-
 defineProps({
   title: {
     type: String,
@@ -15,8 +13,6 @@ defineProps({
     default: 3,
   },
 })
-
-defineEmits(['back'])
 </script>
 
 <template>
@@ -27,9 +23,6 @@ defineEmits(['back'])
         src="/assets/logos/investory-logo-dark.png"
         alt="Investory"
       />
-      <button type="button" aria-label="뒤로 가기" @click="$emit('back')">
-        <ChevronLeft :size="20" :stroke-width="2.2" />
-      </button>
     </div>
 
     <div class="onboarding-header__heading">
@@ -48,11 +41,12 @@ defineEmits(['back'])
   z-index: 40;
   display: grid;
   width: 100%;
-  min-height: 172px;
-  grid-template-rows: 44px 1fr 3px;
-  gap: 8px;
+  min-height: 148px;
+  grid-template-rows: 44px auto 3px;
+  align-content: start;
+  gap: 6px;
   overflow: hidden;
-  padding: 10px 20px 20px;
+  padding: 10px 20px 16px;
   background:
     radial-gradient(circle at 88% 78%, rgb(24 166 165 / 15%), transparent 34%),
     linear-gradient(145deg, #031a23 0%, #062b34 100%);
@@ -79,29 +73,6 @@ defineEmits(['back'])
   height: 44px;
   object-fit: contain;
   object-position: left center;
-}
-
-.onboarding-header button {
-  display: grid;
-  width: 44px;
-  height: 44px;
-  place-items: center;
-  padding: 0;
-  border: 1px solid rgb(92 235 228 / 34%);
-  border-radius: 50%;
-  background: rgb(0 39 49 / 68%);
-  color: #ffffff;
-  cursor: pointer;
-}
-
-.onboarding-header button:hover {
-  border-color: #5cebe4;
-  background: rgb(35 216 209 / 12%);
-}
-
-.onboarding-header button:focus-visible {
-  outline: 2px solid #5cebe4;
-  outline-offset: 2px;
 }
 
 .onboarding-header h1 {
