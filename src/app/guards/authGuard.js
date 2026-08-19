@@ -11,20 +11,27 @@ export function setupRouterGuards(router) {
       document.title = `${title} | Investory`
     }
 
-    const authStore = useAuthStore()
-    await authStore.initialize()
-
     const requiresAuth = to.meta.requiresAuth ?? !PUBLIC_ROUTE_NAMES.has(to.name)
+
+    const authStore = useAuthStore()
+
+    // 로그인처럼 공개된 화면은 백엔드 인증 확인이 끝날 때까지 막지 않는다.
+    // 이미 인증 상태를 알고 있는 경우에만 홈으로 이동시킨다.
+    if (!requiresAuth) {
+      if (to.name === ROUTE_NAMES.LOGIN && authStore.initialized && authStore.isAuthenticated) {
+        return { name: ROUTE_NAMES.HOME }
+      }
+
+      return true
+    }
+
+    await authStore.initialize()
 
     if (requiresAuth && !authStore.isAuthenticated) {
       return {
         name: ROUTE_NAMES.LOGIN,
         query: to.fullPath === '/' ? undefined : { redirect: to.fullPath },
       }
-    }
-
-    if (to.name === ROUTE_NAMES.LOGIN && authStore.isAuthenticated) {
-      return { name: ROUTE_NAMES.HOME }
     }
 
     const brokerStore = useBrokerConnectionStore()
