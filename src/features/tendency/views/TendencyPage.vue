@@ -335,7 +335,7 @@ onBeforeUnmount(() => {
         <div class="analysis-intro__copy">
           <div class="analysis-intro__eyebrow">
             <AppIcon name="sparkles" :size="14" />
-            <span>90-DAY TENDENCY REPORT</span>
+            <span>90일 투자 리포트</span>
           </div>
           <h2>나의 투자성향은 어떤가요?</h2>
           <p>최근 기록에서 반복되는 선택과<br />매매 행동을 찾았어요.</p>
