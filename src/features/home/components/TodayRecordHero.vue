@@ -142,7 +142,7 @@ function formatCurrency(value) {
   position: relative;
   overflow: hidden;
   min-height: 150px;
-  padding: 4px 24px 50px;
+  padding: 18px 24px 36px;
   color: #ffffff;
   background: transparent;
 }
