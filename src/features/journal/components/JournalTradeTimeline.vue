@@ -1,7 +1,10 @@
 <script setup>
-import { ArrowDownUp, CircleHelp, SquarePen } from '@lucide/vue'
+import { ArrowDownUp, SquarePen } from '@lucide/vue'
+import { computed, ref } from 'vue'
 
-defineProps({
+import JournalTradeNoteSheet from '@/features/journal/components/JournalTradeNoteSheet.vue'
+
+const props = defineProps({
   trades: {
     type: Array,
     default: () => [],
@@ -14,9 +17,37 @@ defineProps({
     type: String,
     default: 'latest',
   },
+  stepNumber: {
+    type: String,
+    default: '3',
+  },
+  histories: {
+    type: Object,
+    default: () => ({}),
+  },
+  historyLoading: {
+    type: Object,
+    default: () => ({}),
+  },
+  historyErrors: {
+    type: Object,
+    default: () => ({}),
+  },
 })
 
-const emit = defineEmits(['update-note', 'toggle-sort'])
+const emit = defineEmits(['update-note', 'toggle-sort', 'load-history', 'open-stock-history'])
+const selectedTrade = ref(null)
+const completedNoteCount = computed(
+  () => props.trades.filter((trade) => String(props.notes[trade.tradeId] ?? '').trim()).length,
+)
+const selectedTradeHistoryKey = computed(() => String(Number(selectedTrade.value?.securityId)))
+const selectedTradeHistory = computed(() => props.histories[selectedTradeHistoryKey.value] || [])
+const selectedTradeHistoryLoading = computed(() =>
+  Boolean(props.historyLoading[selectedTradeHistoryKey.value]),
+)
+const selectedTradeHistoryError = computed(
+  () => props.historyErrors[selectedTradeHistoryKey.value] || '',
+)
 
 function updateNote(tradeId, value) {
   emit('update-note', { tradeId, value })
@@ -33,15 +64,25 @@ function formatTime(value) {
 function formatPrice(value) {
   return `${Number(value).toLocaleString('ko-KR')}원`
 }
+
+function openNoteSheet(trade) {
+  selectedTrade.value = trade
+  emit('load-history', trade)
+}
+
+function updateSelectedNote(value) {
+  if (!selectedTrade.value) return
+  updateNote(selectedTrade.value.tradeId, value)
+}
 </script>
 
 <template>
   <section class="trade-timeline" aria-labelledby="trade-timeline-title">
     <header class="trade-timeline__header">
       <div class="trade-timeline__title-row">
-        <span class="trade-timeline__step" aria-hidden="true">3</span>
+        <span class="trade-timeline__step" aria-hidden="true">{{ stepNumber }}</span>
         <h2 id="trade-timeline-title" class="trade-timeline__title">오늘의 거래 타임라인</h2>
-        <span class="trade-timeline__count">{{ trades.length }}건</span>
+        <span class="trade-timeline__count">{{ completedNoteCount }}/{{ trades.length }}건</span>
       </div>
 
       <button type="button" class="trade-timeline__sort" @click="emit('toggle-sort')">
@@ -49,16 +90,6 @@ function formatPrice(value) {
         {{ sortOrder === 'latest' ? '최신순' : '오래된순' }}
       </button>
     </header>
-
-    <div class="trade-timeline__guide">
-      <span class="trade-timeline__guide-icon">
-        <CircleHelp :size="17" :stroke-width="1.8" aria-hidden="true" />
-      </span>
-      <div>
-        <strong>왜 이 거래를 했나요?</strong>
-        <p>종목을 매수·매도한 이유와 당시 판단 기준을 남겨주세요.</p>
-      </div>
-    </div>
 
     <div v-if="trades.length" class="trade-timeline__list">
       <article v-for="trade in trades" :key="trade.tradeId" class="trade-timeline__item">
@@ -88,17 +119,16 @@ function formatPrice(value) {
             </span>
           </div>
 
-          <label class="trade-timeline__note">
+          <button
+            type="button"
+            class="trade-timeline__note"
+            :class="{ 'trade-timeline__note--empty': !notes[trade.tradeId]?.trim() }"
+            :aria-label="`${trade.securityName} 거래 판단 근거 ${notes[trade.tradeId] ? '수정' : '입력'}`"
+            @click="openNoteSheet(trade)"
+          >
             <SquarePen :size="14" :stroke-width="1.8" aria-hidden="true" />
-            <input
-              :value="notes[trade.tradeId] ?? ''"
-              type="text"
-              maxlength="120"
-              :aria-label="`${trade.securityName} 거래 판단 근거`"
-              :placeholder="notes[trade.tradeId] ? '' : '입력하기'"
-              @input="updateNote(trade.tradeId, $event.target.value)"
-            />
-          </label>
+            <span>{{ notes[trade.tradeId]?.trim() || '판단 근거 입력하기' }}</span>
+          </button>
         </div>
       </article>
     </div>
@@ -107,6 +137,19 @@ function formatPrice(value) {
       오늘 거래 내역이 없습니다. 시장에 대한 생각만 기록할 수 있어요.
     </div>
   </section>
+
+  <JournalTradeNoteSheet
+    :is-open="Boolean(selectedTrade)"
+    :trade="selectedTrade"
+    :model-value="selectedTrade ? (notes[selectedTrade.tradeId] ?? '') : ''"
+    :history="selectedTradeHistory"
+    :loading="selectedTradeHistoryLoading"
+    :error="selectedTradeHistoryError"
+    @close="selectedTrade = null"
+    @update:model-value="updateSelectedNote"
+    @retry="selectedTrade && emit('load-history', selectedTrade)"
+    @open-stock-history="selectedTrade && emit('open-stock-history', selectedTrade)"
+  />
 </template>
 
 <style scoped>
@@ -173,40 +216,6 @@ function formatPrice(value) {
   cursor: pointer;
   font-size: var(--font-size-caption);
   font-weight: 700;
-}
-
-.trade-timeline__guide {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 12px;
-  border: 1px solid #bce8e7;
-  border-radius: 13px;
-  background: #f2fbfb;
-}
-
-.trade-timeline__guide-icon {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  flex: 0 0 auto;
-  place-items: center;
-  border-radius: 9px;
-  background: #e1f6f5;
-  color: var(--brand-teal-deep);
-}
-
-.trade-timeline__guide strong {
-  color: var(--slate-strong);
-  font-family: var(--font-heading);
-  font-size: var(--font-size-caption);
-}
-
-.trade-timeline__guide p {
-  margin: 2px 0 0;
-  color: var(--text-tertiary);
-  font-size: var(--font-size-caption);
-  line-height: 1.4;
 }
 
 .trade-timeline__list {
@@ -313,33 +322,36 @@ function formatPrice(value) {
 
 .trade-timeline__note {
   display: flex;
+  width: 100%;
   min-width: 0;
   height: 42px;
   align-items: center;
   gap: 6px;
   padding: 0 9px;
+  border: 0;
   border-radius: 9px;
   background: #f3faf9;
   color: var(--brand-teal-deep);
+  cursor: pointer;
+  text-align: left;
 }
 
-.trade-timeline__note input {
-  width: 100%;
+.trade-timeline__note span {
   min-width: 0;
-  border: 0;
-  background: transparent;
+  overflow: hidden;
   color: var(--slate-strong);
   font-size: var(--font-size-caption);
   font-weight: 600;
-  outline: 0;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.trade-timeline__note input::placeholder {
+.trade-timeline__note--empty span {
   color: var(--brand-teal-deep);
 }
 
-.trade-timeline__note:focus-within {
+.trade-timeline__note:focus-visible {
+  outline: 0;
   box-shadow: 0 0 0 2px rgba(11, 143, 139, 0.22);
 }
 

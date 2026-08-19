@@ -308,5 +308,109 @@
         }
       ]
     }
+  ],
+  "tradeHistory": [
+    {
+      "tradeId": 701,
+      "securityId": 101,
+      "securityCode": "006400",
+      "securityName": "삼성SDI",
+      "marketType": "KOSPI",
+      "tradeSide": "BUY",
+      "quantity": 4,
+      "unitPrice": 336500,
+      "tradedAt": "2026-08-18T10:22:00+09:00",
+      "note": {
+        "journalTradeNoteId": 851,
+        "rationaleText": "장기 지지선에 가까워져 1차 분할 매수했다."
+      }
+    },
+    {
+      "tradeId": 702,
+      "securityId": 102,
+      "securityCode": "000660",
+      "securityName": "SK하이닉스",
+      "marketType": "KOSPI",
+      "tradeSide": "BUY",
+      "quantity": 3,
+      "unitPrice": 181000,
+      "tradedAt": "2026-08-19T09:41:00+09:00",
+      "note": {
+        "journalTradeNoteId": 852,
+        "rationaleText": "HBM 수요가 이어질 것으로 판단해 계획한 수량만 매수했다."
+      }
+    },
+    {
+      "tradeId": 703,
+      "securityId": 102,
+      "securityCode": "000660",
+      "securityName": "SK하이닉스",
+      "marketType": "KOSPI",
+      "tradeSide": "SELL",
+      "quantity": 2,
+      "unitPrice": 188500,
+      "tradedAt": "2026-08-21T14:08:00+09:00",
+      "note": {
+        "journalTradeNoteId": 853,
+        "rationaleText": "목표 수익 구간에 도달해 일부 수익을 확정했다."
+      }
+    },
+    {
+      "tradeId": 704,
+      "securityId": 103,
+      "securityCode": "035720",
+      "securityName": "카카오",
+      "marketType": "KOSPI",
+      "tradeSide": "BUY",
+      "quantity": 10,
+      "unitPrice": 47200,
+      "tradedAt": "2026-08-12T13:18:00+09:00",
+      "note": null
+    },
+    {
+      "tradeId": 705,
+      "securityId": 104,
+      "securityCode": "035420",
+      "securityName": "NAVER",
+      "marketType": "KOSPI",
+      "tradeSide": "BUY",
+      "quantity": 5,
+      "unitPrice": 207000,
+      "tradedAt": "2026-08-14T11:32:00+09:00",
+      "note": {
+        "journalTradeNoteId": 855,
+        "rationaleText": "광고와 커머스 실적 회복을 기대해 분할 진입했다."
+      }
+    },
+    {
+      "tradeId": 706,
+      "securityId": 105,
+      "securityCode": "005930",
+      "securityName": "삼성전자",
+      "marketType": "KOSPI",
+      "tradeSide": "BUY",
+      "quantity": 8,
+      "unitPrice": 81100,
+      "tradedAt": "2026-08-11T10:02:00+09:00",
+      "note": {
+        "journalTradeNoteId": 856,
+        "rationaleText": "메모리 업황 회복 흐름을 확인하고 첫 비중을 담았다."
+      }
+    },
+    {
+      "tradeId": 707,
+      "securityId": 105,
+      "securityCode": "005930",
+      "securityName": "삼성전자",
+      "marketType": "KOSPI",
+      "tradeSide": "SELL",
+      "quantity": 3,
+      "unitPrice": 83500,
+      "tradedAt": "2026-08-20T15:11:00+09:00",
+      "note": {
+        "journalTradeNoteId": 857,
+        "rationaleText": "단기 급등으로 계획보다 비중이 커져 일부 정리했다."
+      }
+    }
   ]
 }

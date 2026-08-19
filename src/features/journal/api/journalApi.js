@@ -3,12 +3,17 @@ import { getLedgerTrades } from '@/features/ledger/api/ledgerApi'
 import { request } from '@/shared/api/client'
 
 const JOURNAL_TIME_ZONE = 'Asia/Seoul'
+const USE_MOCK_JOURNAL = import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_JOURNAL === 'true'
 const JOURNAL_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
   timeZone: JOURNAL_TIME_ZONE,
   year: 'numeric',
   month: '2-digit',
   day: '2-digit',
 })
+
+function cloneMockData(value) {
+  return JSON.parse(JSON.stringify(value))
+}
 
 function formatLocalDate(date = new Date()) {
   const year = date.getFullYear()
@@ -64,6 +69,32 @@ function findDailyEntryByJournalId(journalId) {
   return journalData.dailyEntries?.find((entry) => entry.journal?.journalId === Number(journalId))
 }
 
+function findMockDailyEntry(journalDate) {
+  return journalData.dailyEntries?.find((entry) => entry.journalDate === journalDate)
+}
+
+function applyMockTradeNotes(entry, tradeNotes = []) {
+  const notesByTradeId = new Map(
+    tradeNotes.map((note) => [Number(note.tradeId), note.rationaleText]),
+  )
+
+  entry.trades.forEach((trade) => {
+    const rationaleText = notesByTradeId.get(Number(trade.tradeId))
+    if (rationaleText === undefined) return
+
+    trade.note = rationaleText
+      ? {
+          journalTradeNoteId: trade.note?.journalTradeNoteId ?? Date.now() + Number(trade.tradeId),
+          journalId: entry.journal?.journalId ?? null,
+          journalDate: entry.journalDate,
+          rationaleText,
+          createdAt: trade.note?.createdAt ?? new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }
+      : null
+  })
+}
+
 export function getDefaultJournalDate() {
   return formatLocalDate(new Date())
 }
@@ -93,11 +124,30 @@ export async function getJournalEntries({ startDate, endDate } = {}) {
   searchParams.set('startDate', resolvedStartDate)
   searchParams.set('endDate', resolvedEndDate)
 
+  if (USE_MOCK_JOURNAL) {
+    const entries = (journalData.journals || []).filter(
+      (journal) =>
+        journal.journalDate >= resolvedStartDate && journal.journalDate <= resolvedEndDate,
+    )
+    return { entries: cloneMockData(entries) }
+  }
+
   return await request(`/journal/entries?${searchParams.toString()}`)
 }
 
 export async function getCalendarActivity({ year, month, startDate, endDate } = {}) {
   const monthKey = year && month ? `${year}-${String(month).padStart(2, '0')}` : null
+  if (USE_MOCK_JOURNAL) {
+    return cloneMockData(
+      (journalData.calendarActivity || []).filter(
+        (activity) =>
+          (!monthKey || activity.activityDate.startsWith(monthKey)) &&
+          (!startDate || activity.activityDate >= startDate) &&
+          (!endDate || activity.activityDate <= endDate),
+      ),
+    )
+  }
+
   const trades = await getLedgerTradesForJournalRange(startDate, endDate)
   const tradeCountByDate = trades.reduce((counts, trade) => {
     const activityDate = trade.journalDate
@@ -111,10 +161,25 @@ export async function getCalendarActivity({ year, month, startDate, endDate } = 
 }
 
 export async function getJournalById(journalId) {
+  if (USE_MOCK_JOURNAL) {
+    const entry = findDailyEntryByJournalId(journalId)
+    if (entry) return cloneMockData(entry)
+  }
+
   return await request(`/journal/entries/${journalId}`)
 }
 
 export async function getJournalEntryOnDate(journalDate = getDefaultJournalDate()) {
+  if (USE_MOCK_JOURNAL) {
+    const entry = findMockDailyEntry(journalDate) || {
+      journalDate,
+      canCreate: true,
+      journal: null,
+      trades: [],
+    }
+    return cloneMockData(entry)
+  }
+
   const entryData = await request(`/journal/entries/on/${journalDate}`)
 
   if (entryData && (!entryData.trades || entryData.trades.length === 0)) {
@@ -140,6 +205,35 @@ export async function getJournalEntryOnDate(journalDate = getDefaultJournalDate(
 export async function createJournal(payload) {
   const journalDate = payload.journalDate || getDefaultJournalDate()
 
+  if (USE_MOCK_JOURNAL) {
+    let entry = findMockDailyEntry(journalDate)
+    if (!entry) {
+      entry = { journalDate, canCreate: true, journal: null, trades: [] }
+      journalData.dailyEntries.push(entry)
+    }
+
+    const journalId =
+      Math.max(0, ...(journalData.journals || []).map((journal) => Number(journal.journalId))) + 1
+    const now = new Date().toISOString()
+    entry.journal = {
+      journalId,
+      journalDate,
+      marketThought: payload.marketThought || '',
+      marketMood: payload.marketMood || null,
+      createdAt: now,
+      updatedAt: now,
+    }
+    entry.canCreate = false
+    applyMockTradeNotes(entry, payload.tradeNotes)
+    journalData.journals.unshift({
+      ...entry.journal,
+      tradeCount: entry.trades.length,
+      tradeNoteCount: entry.trades.filter((trade) => trade.note?.rationaleText).length,
+      trades: [],
+    })
+    return cloneMockData(entry.journal)
+  }
+
   return await request('/journal/entries', {
     method: 'POST',
     body: JSON.stringify({
@@ -155,6 +249,20 @@ export async function createJournal(payload) {
 }
 
 export async function updateJournal(journalId, payload) {
+  if (USE_MOCK_JOURNAL) {
+    const entry = findDailyEntryByJournalId(journalId)
+    if (!entry) throw new Error('수정할 목 투자일지를 찾을 수 없습니다.')
+
+    entry.journal = {
+      ...entry.journal,
+      marketThought: payload.marketThought || '',
+      marketMood: payload.marketMood || null,
+      updatedAt: new Date().toISOString(),
+    }
+    applyMockTradeNotes(entry, payload.tradeNotes)
+    return cloneMockData(entry.journal)
+  }
+
   return await request(`/journal/entries/${journalId}`, {
     method: 'PUT',
     body: JSON.stringify({

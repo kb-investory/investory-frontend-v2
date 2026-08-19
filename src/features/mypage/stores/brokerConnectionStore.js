@@ -11,6 +11,18 @@ import { queryKeys } from '@/shared/api/queryKeys'
 
 const CONNECTION_SESSION_KEY = 'investory:broker-connection'
 const PROVIDER_STALE_TIME = 5 * 60 * 1000
+const CONNECTION_ERROR_MESSAGES = Object.freeze({
+  BRK_007:
+    '선택한 증권사와 로그인한 계정의 소속이 일치하지 않습니다. 선택한 증권사 계정으로 다시 로그인해 주세요.',
+})
+
+function getConnectionErrorMessage(error) {
+  return (
+    CONNECTION_ERROR_MESSAGES[error?.errorCode] ||
+    (error instanceof Error ? error.message : '') ||
+    '증권사 로그인 중 오류가 발생했습니다.'
+  )
+}
 
 function readSavedConnection() {
   try {
@@ -117,10 +129,7 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
     } catch (requestError) {
       connection.value = null
       connectionStatus.value = 'error'
-      connectionError.value =
-        requestError instanceof Error
-          ? requestError.message
-          : '증권사 로그인 중 오류가 발생했습니다.'
+      connectionError.value = getConnectionErrorMessage(requestError)
       throw requestError
     }
   }

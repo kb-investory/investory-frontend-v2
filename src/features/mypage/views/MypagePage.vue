@@ -768,7 +768,7 @@ onMounted(async () => {
 .tendency-insight p {
   margin: 0;
   color: #61777c;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 650;
   line-height: 1.45;
   word-break: keep-all;

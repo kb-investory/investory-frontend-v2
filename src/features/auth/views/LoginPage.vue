@@ -27,24 +27,36 @@ async function handleSocialLogin(provider) {
           <RouterLink class="brand-logo-link" :to="{ name: ROUTE_NAMES.HOME }">
             <img
               class="brand-logo"
-              src="/assets/logos/investory-logo-transparent.png"
+              src="/assets/logos/investory-logo-dark.png"
               alt="Investory 홈으로 이동"
             />
           </RouterLink>
 
           <div class="welcome-message">
-            <span class="welcome-message__line" aria-hidden="true" />
-            <div>
-              <h1>투자 결과보다,<br />판단의 과정을 기록하세요.</h1>
-              <p>차분히 기록하고 돌아보는 투자 동반자</p>
-            </div>
+            <p>INVESTMENT JOURNAL</p>
+            <h1>오늘의 판단을<br />기록으로 남겨보세요.</h1>
+            <span aria-hidden="true" />
           </div>
         </div>
 
         <div class="social-login">
+          <img
+            class="card-sitters card-sitters--left"
+            src="/assets/images/login-sitters-left.png"
+            alt=""
+            aria-hidden="true"
+          />
+          <img
+            class="card-sitters card-sitters--right"
+            src="/assets/images/login-sitters-right.png"
+            alt=""
+            aria-hidden="true"
+          />
+
           <header class="social-login__header">
-            <h2>소셜 계정으로 시작하기</h2>
-            <p>사용 중인 계정으로 간편하게 시작할 수 있어요.</p>
+            <span aria-hidden="true" />
+            <p>소셜 계정으로 계속하기</p>
+            <span aria-hidden="true" />
           </header>
 
           <LoginForm
@@ -83,7 +95,7 @@ async function handleSocialLogin(provider) {
   display: grid;
   min-height: 100svh;
   place-items: center;
-  background: var(--color-border-subtle);
+  background: #031820;
 }
 
 .login-shell {
@@ -92,7 +104,9 @@ async function handleSocialLogin(provider) {
   min-height: min(844px, 100svh);
   flex-direction: column;
   overflow: hidden;
-  background: #ffffff;
+  background:
+    linear-gradient(180deg, rgb(0 17 25 / 48%) 0%, rgb(0 17 25 / 68%) 40%, rgb(0 17 25 / 86%) 100%),
+    url('/assets/images/login-investment-bg.png') center / cover;
 }
 
 .login-content {
@@ -100,22 +114,21 @@ async function handleSocialLogin(provider) {
   flex: 1;
   flex-direction: column;
   justify-content: space-between;
-  gap: 48px;
-  padding: 22px 20px 24px;
+  gap: 24px;
+  padding: 28px 26px 24px;
 }
 
 .brand-intro {
   display: grid;
-  gap: 20px;
+  gap: 18px;
 }
 
 .brand-logo {
   display: block;
-  width: 118px;
-  height: 44px;
-  border-radius: 8px;
+  width: 142px;
+  height: 54px;
   object-fit: contain;
-  object-position: center;
+  object-position: left center;
 }
 
 .brand-logo-link {
@@ -125,37 +138,17 @@ async function handleSocialLogin(provider) {
 }
 
 .brand-logo-link:focus-visible {
-  outline: 2px solid var(--brand-teal-deep);
+  outline: 2px solid #5cebe4;
   outline-offset: 2px;
 }
 
 .welcome-message {
-  display: flex;
-  min-height: 132px;
-  align-items: center;
-  gap: 15px;
-  padding: 18px;
-  border-radius: 12px;
-  background: var(--slate-strong);
-  box-shadow: 0 10px 20px rgb(38 58 67 / 14%);
-}
-
-.welcome-message__line {
-  width: 3px;
-  height: 94px;
-  flex: 0 0 3px;
-  border-radius: 2px;
-  background: var(--brand-teal);
-}
-
-.welcome-message > div {
-  min-width: 0;
-  flex: 1;
+  display: grid;
+  gap: 9px;
 }
 
 .welcome-message h1,
 .welcome-message p,
-.social-login__header h2,
 .social-login__header p,
 .login-status,
 .terms-notice {
@@ -165,39 +158,77 @@ async function handleSocialLogin(provider) {
 .welcome-message h1 {
   color: #ffffff;
   font-family: var(--font-heading);
-  font-size: var(--font-size-title-md);
-  font-weight: 700;
-  letter-spacing: -0.3px;
-  line-height: 1.4;
+  font-size: clamp(25px, 6.8vw, 30px);
+  font-weight: 800;
+  letter-spacing: -0.7px;
+  line-height: 1.22;
 }
 
 .welcome-message p {
-  margin-top: 8px;
-  color: #dce6e9;
-  font-size: var(--font-size-body);
-  line-height: 1.4;
+  color: #5cebe4;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.1px;
+}
+
+.welcome-message > span {
+  width: 48px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #23d8d1 0 68%, rgb(35 216 209 / 30%) 68%);
 }
 
 .social-login {
+  position: relative;
   display: grid;
-  gap: 12px;
+  gap: 10px;
+  margin-top: 48px;
+  padding: 50px 18px 18px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 22px;
+  background: rgb(1 24 32 / 62%);
+  box-shadow: 0 16px 40px rgb(0 9 14 / 22%);
+  backdrop-filter: blur(12px);
+}
+
+.card-sitters {
+  position: absolute;
+  z-index: 1;
+  top: -72px;
+  width: 116px;
+  height: auto;
+  filter: drop-shadow(0 10px 10px rgb(0 8 12 / 28%));
+  pointer-events: none;
+  user-select: none;
+}
+
+.card-sitters--left {
+  left: 8px;
+}
+
+.card-sitters--right {
+  right: 8px;
 }
 
 .social-login__header {
   display: grid;
-  gap: 5px;
-  margin-bottom: 3px;
-}
-
-.social-login__header h2 {
-  font-family: var(--font-heading);
-  font-size: var(--font-size-body);
-  letter-spacing: -0.2px;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
 }
 
 .social-login__header p {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-caption);
+  color: rgb(255 255 255 / 74%);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.social-login__header span {
+  height: 1px;
+  background: rgb(255 255 255 / 20%);
 }
 
 .login-status {
@@ -206,8 +237,8 @@ async function handleSocialLogin(provider) {
   gap: 7px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: var(--brand-red-soft);
-  color: #d33a45;
+  background: rgb(254 235 237 / 94%);
+  color: #c43340;
   font-size: var(--font-size-caption);
   line-height: 1.4;
 }
@@ -216,27 +247,25 @@ async function handleSocialLogin(provider) {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: var(--brand-mist);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-caption);
+  padding: 2px 2px 0;
+  color: rgb(230 248 248 / 72%);
+  font-size: 11px;
 }
 
 .security-notice svg {
-  color: var(--brand-teal-deep);
+  color: #5cebe4;
 }
 
 .terms-notice {
-  color: var(--color-text-subtle);
-  font-size: var(--font-size-caption);
+  color: rgb(230 248 248 / 56%);
+  font-size: 11px;
   line-height: 1.4;
   text-align: center;
 }
 
 @media (min-width: 600px) {
   .login-shell {
-    border: 1px solid var(--color-border);
+    border: 1px solid rgb(255 255 255 / 12%);
     border-radius: 24px;
     box-shadow: 0 24px 70px rgb(24 24 23 / 9%);
   }

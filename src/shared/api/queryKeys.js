@@ -18,6 +18,12 @@ export const queryKeys = Object.freeze({
     stockSearchData: () => ['journal', 'stock-search-data'],
     stockSearch: (keyword) => ['journal', 'stock-search', keyword],
     stockTimeline: (securityCode) => ['journal', 'stock-timeline', securityCode],
+    tradeHistory: (securityId, journalDate) => [
+      'journal',
+      'trade-history',
+      securityId,
+      journalDate,
+    ],
   },
   mypage: {
     all: ['mypage'],
