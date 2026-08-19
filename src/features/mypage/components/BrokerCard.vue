@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+import { CircleCheck } from '@lucide/vue'
 
 const brokerMarks = Object.freeze({
   KIWOOM: 'KW',
@@ -46,22 +47,22 @@ const brokerMark = computed(
   >
     <span class="broker-card__mark" aria-hidden="true">{{ brokerMark }}</span>
     <span class="broker-card__name">{{ broker.brokerName }}</span>
+    <CircleCheck v-if="selected" class="broker-card__check" :size="20" aria-hidden="true" />
   </button>
 </template>
 
 <style scoped>
 .broker-card {
-  display: flex;
+  display: grid;
   width: 100%;
   min-width: 0;
-  height: 66px;
-  flex-direction: column;
+  min-height: 58px;
+  grid-template-columns: 40px 1fr 24px;
   align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding: 5px 6px;
+  gap: 11px;
+  padding: 8px 12px;
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: 11px;
   background: #ffffff;
   color: var(--color-heading);
   cursor: pointer;
@@ -82,9 +83,9 @@ const brokerMark = computed(
 }
 
 .broker-card--selected {
-  border-color: var(--slate-strong);
-  background: var(--slate-strong);
-  color: #ffffff;
+  border-color: #159b97;
+  background: #f1fbfa;
+  color: var(--color-heading);
 }
 
 .broker-card:disabled {
@@ -94,30 +95,34 @@ const brokerMark = computed(
 
 .broker-card__mark {
   display: grid;
-  width: 28px;
-  height: 28px;
+  width: 40px;
+  height: 40px;
   place-items: center;
-  border-radius: 7px;
-  background: var(--bg-primary);
-  color: var(--color-text-muted);
+  border-radius: 10px;
+  background: var(--slate-strong);
+  color: #ffffff;
   font-family: var(--font-mono);
   font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
 .broker-card--selected .broker-card__mark {
-  background: var(--brand-teal);
-  color: var(--slate-strong);
+  background: #159b97;
+  color: #ffffff;
 }
 
 .broker-card__name {
-  width: 100%;
+  min-width: 0;
   overflow: hidden;
-  font-size: var(--font-size-caption);
-  font-weight: 600;
+  font-size: var(--font-size-body);
+  font-weight: 700;
   line-height: 1.4;
-  text-align: center;
+  text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.broker-card__check {
+  color: #168c89;
 }
 </style>

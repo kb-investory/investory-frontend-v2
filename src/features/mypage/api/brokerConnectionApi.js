@@ -107,6 +107,11 @@ export async function getConnectedHoldings({
     connectionId ? request(`/broker/connections/${connectionId}/accounts`) : Promise.resolve(null),
   ])
   const holdings = ledgerHoldingsData?.holdings || []
+  const reasonCount = holdings.filter((holding) =>
+    [holding.rationaleText, holding.reason, holding.investmentRationale].some((value) =>
+      Boolean(String(value ?? '').trim()),
+    ),
+  ).length
 
   return {
     account: {
@@ -114,6 +119,11 @@ export async function getConnectedHoldings({
       brokerCode: brokerCode || '',
       brokerName: connectionAccountsData?.brokerName || brokerName || '',
       accountCount: connectionAccountsData?.accounts?.length ?? 0,
+      reasonCount:
+        connectionAccountsData?.reasonCount ??
+        ledgerHoldingsData?.summary?.reasonCount ??
+        ledgerHoldingsData?.summary?.rationaleCount ??
+        reasonCount,
     },
     snapshotDate: ledgerHoldingsData?.snapshotDate || null,
     totalValuation:
@@ -140,6 +150,7 @@ export async function getConnectedHoldings({
         marketValue: valuationAmount,
         unrealizedProfitLoss: holding.profitLossAmount ?? 0,
         returnRate: holding.returnRate ?? 0,
+        rationaleText: holding.rationaleText || holding.reason || holding.investmentRationale || '',
       }
     }),
   }

@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { ArrowRight, TriangleAlert } from '@lucide/vue'
+import { TriangleAlert } from '@lucide/vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
@@ -79,8 +79,8 @@ function goNext() {
           />
 
           <header class="holdings-intro">
-            <h2>연결된 보유 종목</h2>
-            <p>계좌에서 불러온 종목과 보유 정보를 확인해 주세요.</p>
+            <h2>보유 종목 ({{ brokerStore.holdings.length }})</h2>
+            <span>평가금액</span>
           </header>
 
           <section class="holdings-list" aria-label="연결된 보유 종목 목록">
@@ -95,13 +95,8 @@ function goNext() {
           </section>
 
           <footer class="holdings-action">
-            <div>
-              <strong>보유 종목 확인</strong>
-              <span>총 {{ brokerStore.holdings.length }}개</span>
-            </div>
             <BaseButton full-width :disabled="!brokerStore.holdings.length" @click="goNext">
-              확인하고 계속하기
-              <template #icon><ArrowRight :size="16" /></template>
+              이대로 연결하기
             </BaseButton>
           </footer>
         </template>
@@ -120,24 +115,27 @@ function goNext() {
 
 .onboarding-shell {
   width: min(100%, 390px);
-  min-height: min(844px, 100svh);
+  height: min(844px, 100svh);
   overflow: hidden;
   background: #ffffff;
 }
 
 .holdings-content {
-  display: grid;
+  display: flex;
+  height: calc(100% - 172px);
+  flex-direction: column;
   gap: 10px;
+  overflow-y: auto;
   padding: 10px 20px 14px;
 }
 
 .holdings-intro {
-  display: grid;
-  gap: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .holdings-intro h2,
-.holdings-intro p,
 .holdings-state p,
 .holdings-empty {
   margin: 0;
@@ -150,7 +148,7 @@ function goNext() {
   letter-spacing: -0.2px;
 }
 
-.holdings-intro p {
+.holdings-intro span {
   color: var(--color-text-muted);
   font-size: var(--font-size-caption);
   font-weight: 500;
@@ -159,37 +157,24 @@ function goNext() {
 
 .holdings-list {
   display: grid;
-  gap: 6px;
+  gap: 0;
+  flex: 1;
 }
 
 .holdings-action {
-  display: grid;
-  gap: 10px;
-  padding-top: 9px;
+  position: sticky;
+  bottom: -14px;
+  z-index: 4;
+  margin: auto -20px -14px;
+  padding: 14px 20px;
   border-top: 1px solid var(--color-border-subtle);
-}
-
-.holdings-action > div {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.holdings-action strong {
-  font-size: var(--font-size-caption);
-}
-
-.holdings-action span {
-  color: var(--brand-teal-deep);
-  font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
-  font-weight: 700;
+  background: #ffffff;
 }
 
 .holdings-action :deep(.base-button--primary) {
   min-height: 46px;
   border-radius: 8px;
-  background: var(--slate-strong);
+  background: #263a43;
 }
 
 .holdings-state {

@@ -1,5 +1,5 @@
 <script setup>
-import { Landmark } from '@lucide/vue'
+import { CircleCheck } from '@lucide/vue'
 
 defineProps({
   brokerName: {
@@ -27,21 +27,17 @@ function formatCurrency(value) {
 
 <template>
   <section class="account-summary" aria-label="연결 계좌 요약">
-    <div class="account-summary__top">
-      <div class="account-summary__broker">
-        <span class="account-summary__icon">
-          <Landmark :size="15" />
-        </span>
-        <span>
-          <strong>{{ brokerName }}</strong>
-          <small>연결 계좌 {{ accountCount }}개</small>
-        </span>
-      </div>
-      <span class="account-summary__badge">{{ holdingsCount }}종목</span>
+    <div class="account-summary__broker">
+      <span class="account-summary__icon" aria-hidden="true">{{ brokerName.slice(0, 2) }}</span>
+      <span>
+        <strong>{{ brokerName }}</strong>
+        <small>연결 계좌 {{ accountCount }}개</small>
+      </span>
+      <CircleCheck class="account-summary__check" :size="21" aria-hidden="true" />
     </div>
 
     <div class="account-summary__valuation">
-      <span>총 평가금액</span>
+      <span>보유 종목 {{ holdingsCount }}개 · 총 평가금액</span>
       <strong>{{ formatCurrency(totalValuation) }}</strong>
     </div>
   </section>
@@ -50,27 +46,27 @@ function formatCurrency(value) {
 <style scoped>
 .account-summary {
   display: grid;
-  gap: 7px;
-  padding: 10px 12px;
-  border: 1px solid var(--slate-strong);
-  border-radius: 8px;
-  background: var(--slate-strong);
+  gap: 9px;
+  padding: 11px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: #ffffff;
   box-shadow: 0 4px 12px rgb(0 0 0 / 4%);
 }
 
-.account-summary__top,
 .account-summary__valuation,
 .account-summary__broker {
   display: flex;
   align-items: center;
 }
 
-.account-summary__top,
 .account-summary__valuation {
   justify-content: space-between;
 }
 
 .account-summary__broker {
+  display: grid;
+  grid-template-columns: 40px 1fr 24px;
   gap: 7px;
 }
 
@@ -80,44 +76,41 @@ function formatCurrency(value) {
 }
 
 .account-summary__broker strong {
-  color: #ffffff;
-  font-size: var(--font-size-caption);
+  color: var(--color-heading);
+  font-size: var(--font-size-body);
 }
 
 .account-summary__broker small,
 .account-summary__valuation > span {
-  color: #dce6e9;
+  color: var(--color-text-muted);
   font-size: var(--font-size-caption);
   font-weight: 500;
 }
 
 .account-summary__icon {
   display: grid;
-  width: 28px;
-  height: 28px;
+  width: 40px;
+  height: 40px;
   place-items: center;
   border-radius: 7px;
-  background: var(--brand-teal);
-  color: var(--slate-strong);
-}
-
-.account-summary__badge {
-  padding: 4px 8px;
-  border-radius: 6px;
-  background: rgb(255 255 255 / 9%);
-  color: #dce6e9;
+  background: #159b97;
+  color: #ffffff;
   font-family: var(--font-mono);
   font-size: var(--font-size-caption);
-  font-weight: 700;
+  font-weight: 800;
+}
+
+.account-summary__check {
+  color: #168c89;
 }
 
 .account-summary__valuation {
   padding-top: 8px;
-  border-top: 1px solid rgb(255 255 255 / 14%);
+  border-top: 1px solid var(--color-border-subtle);
 }
 
 .account-summary__valuation strong {
-  color: #ffffff;
+  color: var(--color-heading);
   font-family: var(--font-mono);
   font-size: var(--font-size-body);
 }

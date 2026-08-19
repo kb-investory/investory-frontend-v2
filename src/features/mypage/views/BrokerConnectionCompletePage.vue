@@ -1,6 +1,6 @@
 <script setup>
-import { ref } from 'vue'
-import { ArrowRight, Check, House } from '@lucide/vue'
+import { computed, ref } from 'vue'
+import { Check } from '@lucide/vue'
 import { useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
@@ -11,6 +11,11 @@ const router = useRouter()
 const brokerStore = useBrokerConnectionStore()
 const completing = ref(false)
 const completionError = ref('')
+const reasonCount = computed(
+  () =>
+    brokerStore.account?.reasonCount ??
+    brokerStore.holdings.filter((holding) => Boolean(holding.rationaleText?.trim())).length,
+)
 
 async function goHome() {
   if (completing.value) return
@@ -32,10 +37,7 @@ async function goHome() {
 <template>
   <section class="complete-page">
     <div class="complete-shell">
-      <header class="complete-header">
-        <h1>계좌 연결</h1>
-        <span>완료</span>
-      </header>
+      <img class="complete-logo" src="/assets/logos/investory-logo-dark.png" alt="Investory" />
 
       <main class="complete-content">
         <div class="complete-body">
@@ -44,11 +46,8 @@ async function goHome() {
           </span>
 
           <div class="complete-copy">
-            <h2>계좌 연결이 완료됐어요</h2>
-            <p>
-              연결한 계좌와 보유 종목을 확인할 수 있어요.<br />
-              투자 기록과 자산 관리를 이어가보세요.
-            </p>
+            <h1>계좌 연결이<br />완료됐어요</h1>
+            <p>이제 투자 일지를 작성해보세요.</p>
           </div>
 
           <dl class="complete-summary">
@@ -64,29 +63,19 @@ async function goHome() {
               <dd class="complete-summary__number">{{ brokerStore.holdings.length }}개</dd>
             </div>
             <div>
-              <dt>총 평가금액</dt>
-              <dd>{{ new Intl.NumberFormat('ko-KR').format(brokerStore.totalValuation) }}원</dd>
+              <dt>입력한 보유 근거</dt>
+              <dd class="complete-summary__number">{{ reasonCount }}개</dd>
             </div>
           </dl>
-
-          <aside class="complete-guide">
-            <span><House :size="17" /></span>
-            <div>
-              <strong>연결한 자산을 확인해보세요</strong>
-              <p>홈에서 계좌와 보유 종목 정보를 한눈에 볼 수 있어요.</p>
-            </div>
-          </aside>
         </div>
 
         <footer class="complete-action">
           <BaseButton full-width :disabled="completing" @click="goHome">
-            {{ completing ? '계좌 추가 중...' : '홈에서 자산 확인하기' }}
-            <template #icon><ArrowRight :size="18" /></template>
+            {{ completing ? '연결 마무리 중...' : '홈으로 이동' }}
           </BaseButton>
           <p v-if="completionError" class="complete-action__error" role="alert">
             {{ completionError }}
           </p>
-          <p>연결된 계좌는 마이페이지에서 언제든 관리할 수 있어요.</p>
         </footer>
       </main>
     </div>
@@ -102,69 +91,53 @@ async function goHome() {
 }
 
 .complete-shell {
+  position: relative;
   width: min(100%, 390px);
-  min-height: min(844px, 100svh);
+  height: min(844px, 100svh);
   overflow: hidden;
-  background: #ffffff;
-}
-
-.complete-header {
-  display: flex;
-  width: 100%;
-  height: 54px;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  border-bottom: 1px solid var(--color-border-subtle);
-  background: #ffffff;
-}
-
-.complete-header h1 {
-  margin: 0;
-  font-family: var(--font-heading);
-  font-size: var(--font-size-body);
-  font-weight: 700;
-}
-
-.complete-header span {
-  display: inline-flex;
-  min-height: 24px;
-  align-items: center;
-  justify-content: center;
-  padding: 0 8px;
-  border-radius: var(--radius-pill);
-  background: var(--slate-strong);
+  background:
+    radial-gradient(circle at 50% 30%, rgb(15 143 140 / 24%), transparent 32%),
+    linear-gradient(145deg, #031a23 0%, #062b34 100%);
   color: #ffffff;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
-  font-weight: 700;
+}
+
+.complete-logo {
+  position: absolute;
+  top: 10px;
+  left: 20px;
+  display: block;
+  width: 146px;
+  height: 44px;
+  object-fit: contain;
+  object-position: left center;
 }
 
 .complete-content {
   display: flex;
-  min-height: 728px;
+  height: 100%;
   flex-direction: column;
   justify-content: space-between;
-  padding: 30px 20px 20px;
+  padding: 118px 20px 22px;
 }
 
 .complete-body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 22px;
+  gap: 20px;
 }
 
 .complete-check {
   display: grid;
-  width: 68px;
-  height: 68px;
+  width: 76px;
+  height: 76px;
   place-items: center;
   border-radius: 50%;
-  outline: 4px solid #bfe4e2;
-  background: var(--brand-teal-soft);
-  box-shadow: 0 5px 14px rgb(0 0 0 / 7%);
-  color: var(--slate-strong);
+  border: 1px solid rgb(92 235 228 / 48%);
+  outline: 16px solid rgb(35 216 209 / 8%);
+  background: linear-gradient(145deg, #20c8c1, #087f7c);
+  box-shadow: 0 0 36px rgb(35 216 209 / 23%);
+  color: #ffffff;
 }
 
 .complete-copy {
@@ -174,9 +147,8 @@ async function goHome() {
   text-align: center;
 }
 
-.complete-copy h2,
+.complete-copy h1,
 .complete-copy p,
-.complete-guide p,
 .complete-action p {
   margin: 0;
 }
@@ -186,14 +158,16 @@ async function goHome() {
   font-weight: 700;
 }
 
-.complete-copy h2 {
+.complete-copy h1 {
+  color: #ffffff;
   font-family: var(--font-heading);
-  font-size: var(--font-size-title-md);
-  letter-spacing: -0.5px;
+  font-size: var(--font-size-title-lg);
+  letter-spacing: -0.7px;
+  line-height: 1.35;
 }
 
 .complete-copy p {
-  color: var(--color-text-muted);
+  color: #bfd0d5;
   font-size: var(--font-size-body);
   font-weight: 500;
   line-height: 1.4;
@@ -202,14 +176,15 @@ async function goHome() {
 .complete-summary {
   width: 100%;
   margin: 0;
-  padding: 8px 14px;
-  border-radius: 8px;
-  background: var(--slate-strong);
+  padding: 8px 16px;
+  border: 1px solid rgb(255 255 255 / 13%);
+  border-radius: 12px;
+  background: rgb(38 58 67 / 78%);
 }
 
 .complete-summary > div {
   display: flex;
-  min-height: 48px;
+  min-height: 56px;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid rgb(255 255 255 / 14%);
@@ -221,14 +196,14 @@ async function goHome() {
 
 .complete-summary dt {
   color: #dce6e9;
-  font-size: var(--font-size-caption);
+  font-size: var(--font-size-body);
   font-weight: 500;
 }
 
 .complete-summary dd {
   margin: 0;
   color: #ffffff;
-  font-size: var(--font-size-caption);
+  font-size: var(--font-size-body);
   font-weight: 700;
 }
 
@@ -236,57 +211,22 @@ async function goHome() {
   font-family: var(--font-mono);
 }
 
-.complete-guide {
-  display: grid;
-  width: 100%;
-  grid-template-columns: 34px 1fr;
-  align-items: center;
-  gap: 10px;
-  padding: 0 4px;
-}
-
-.complete-guide > span {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
-  border-radius: 8px;
-  background: var(--brand-teal-soft);
-  color: var(--brand-teal-deep);
-}
-
-.complete-guide > div {
-  display: grid;
-  gap: 3px;
-}
-
-.complete-guide strong {
-  font-size: var(--font-size-caption);
-}
-
-.complete-guide p {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-caption);
-  line-height: 1.4;
-}
-
 .complete-action {
   display: grid;
   gap: 9px;
+  padding: 14px;
+  border-radius: 14px;
+  background: #ffffff;
 }
 
 .complete-action :deep(.base-button--primary) {
   min-height: 50px;
   border-radius: 8px;
-  background: var(--slate-strong);
-}
-
-.complete-action :deep(svg) {
-  color: var(--amber-500);
+  background: #263a43;
 }
 
 .complete-action p {
-  color: var(--color-text-subtle);
+  color: var(--color-text-muted);
   font-size: var(--font-size-caption);
   line-height: 1.4;
   text-align: center;
