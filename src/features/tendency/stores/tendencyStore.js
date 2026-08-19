@@ -227,7 +227,9 @@ export const useTendencyStore = defineStore('tendency', () => {
         }),
         queryClient.fetchQuery({
           queryKey: queryKeys.tendency.recommendations(),
-          queryFn: getRecommendedPrinciples,
+          // vue-query가 queryFn을 (context) => ...로 호출하므로, 인자 없는 참조로
+          // 넘기면 context 객체가 analysisRunId 자리에 그대로 들어가버린다.
+          queryFn: () => getRecommendedPrinciples(),
           staleTime: TENDENCY_STALE_TIME,
         }),
         queryClient.fetchQuery({
