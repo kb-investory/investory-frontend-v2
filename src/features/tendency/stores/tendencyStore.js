@@ -15,8 +15,8 @@ import { queryKeys } from '@/shared/api/queryKeys'
 const APPLIED_RECOMMENDATIONS_KEY = 'investory:applied-recommendations'
 const DAY_IN_MS = 24 * 60 * 60 * 1000
 const TENDENCY_STALE_TIME = 5 * 60 * 1000
-const RECOMMENDATION_POLL_INTERVAL_MS = 1500
-const RECOMMENDATION_POLL_MAX_ATTEMPTS = 5
+const RECOMMENDATION_POLL_INTERVAL_MS = 2000
+const RECOMMENDATION_POLL_MAX_ATTEMPTS = 30
 
 function readStoredIds(key) {
   try {
@@ -44,21 +44,22 @@ function wait(ms) {
 }
 
 // 분석 완료 후 추천 원칙은 백엔드에서 이벤트 리스너로 비동기 생성되기 때문에,
-// 분석 응답을 받자마자 조회하면 아직 새 analysisRunId 기준 추천이 안 만들어져
-// 있을 수 있다. 새 analysisRunId가 반영된 추천이 보일 때까지 짧게 재시도한다.
+// 분석 응답을 받자마자 조회하면 아직 추천이 안 만들어져 있을 수 있다. 서버가
+// analysisRunId별 생성 상태(generationStatus: REQUESTED/SUCCESS/FAILED)를
+// 내려주므로, REQUESTED인 동안만 재시도하고 SUCCESS/FAILED가 되면 즉시 멈춘다.
 async function fetchFreshRecommendations(analysisRunId) {
-  let recommendationData = await getRecommendedPrinciples()
+  if (analysisRunId == null) return getRecommendedPrinciples()
 
-  for (let attempt = 1; attempt < RECOMMENDATION_POLL_MAX_ATTEMPTS; attempt += 1) {
-    const isFresh =
-      analysisRunId == null ||
-      (recommendationData.recommendations || []).some(
-        (recommendation) => String(recommendation.analysisRunId) === String(analysisRunId),
-      )
-    if (isFresh) break
+  let recommendationData = await getRecommendedPrinciples(analysisRunId)
 
+  for (
+    let attempt = 1;
+    attempt < RECOMMENDATION_POLL_MAX_ATTEMPTS &&
+    recommendationData.generationStatus === 'REQUESTED';
+    attempt += 1
+  ) {
     await wait(RECOMMENDATION_POLL_INTERVAL_MS)
-    recommendationData = await getRecommendedPrinciples()
+    recommendationData = await getRecommendedPrinciples(analysisRunId)
   }
 
   return recommendationData
@@ -120,6 +121,7 @@ export const useTendencyStore = defineStore('tendency', () => {
   const analysisAccess = ref(null)
   const loading = ref(false)
   const analyzing = ref(false)
+  const recommendationGenerationStatus = ref(null)
   const loaded = ref(false)
   const error = ref(null)
   const todayTimestamp = ref(getTodayTimestamp())
@@ -252,6 +254,7 @@ export const useTendencyStore = defineStore('tendency', () => {
 
     analyzing.value = true
     error.value = null
+    recommendationGenerationStatus.value = null
 
     try {
       const analysisData = await runTendencyAnalysis()
@@ -261,6 +264,7 @@ export const useTendencyStore = defineStore('tendency', () => {
         fetchFreshRecommendations(analysisData.analysisRunId),
         getTendencyAccessStatus(),
       ])
+      recommendationGenerationStatus.value = recommendationData.generationStatus ?? null
       recommendations.value = recommendationData.recommendations || []
       analysisAccess.value = accessData
       queryClient.setQueryData(queryKeys.tendency.recommendations(), recommendationData)
@@ -420,6 +424,7 @@ export const useTendencyStore = defineStore('tendency', () => {
     analysisAccess,
     loading,
     analyzing,
+    recommendationGenerationStatus,
     error,
     selectionResults,
     behaviorResults,
