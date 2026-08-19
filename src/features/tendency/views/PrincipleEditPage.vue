@@ -102,10 +102,24 @@ function getLocalDateKey(date = new Date()) {
 }
 
 function removePrinciple(principleId) {
+  const removed = draftPrinciples.value.find((principle) => principle.principleId === principleId)
   draftPrinciples.value = draftPrinciples.value.filter(
     (principle) => principle.principleId !== principleId,
   )
   if (editingId.value === principleId) editingId.value = null
+
+  if (removed?.recommendationId != null) {
+    tendencyStore.restoreRecommendation({
+      recommendationId: removed.recommendationId,
+      recommendationText: removed.originalContent,
+      recommendationReason: '',
+      analysisType: {
+        code: removed.category,
+        name: removed.recommendationSource?.tendency?.name || removed.title || '투자성향',
+      },
+      recommendationStatus: 'NEW',
+    })
+  }
 }
 
 function addRecommendation(recommendation) {
