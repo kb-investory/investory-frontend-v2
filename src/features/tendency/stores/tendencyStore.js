@@ -270,6 +270,19 @@ export const useTendencyStore = defineStore('tendency', () => {
     }
   }
 
+  // 원칙 수정 화면에서 채택했던 추천을 다시 빼면, 저장 전까지는 로컬에서 즉시
+  // "추천 원칙 추가하기" 목록으로 되돌려 보여준다. 서버가 recommendationStatus를
+  // NEW로 되돌리는지는 별개 문제라, 저장 후 refreshRecommendations()로 다시 덮어써질 수 있다.
+  function restoreRecommendation(recommendation) {
+    if (recommendation?.recommendationId == null) return
+    const alreadyListed = recommendations.value.some(
+      (existing) => String(existing.recommendationId) === String(recommendation.recommendationId),
+    )
+    if (alreadyListed) return
+
+    recommendations.value = [...recommendations.value, recommendation]
+  }
+
   async function applyRecommendations(recommendationIds) {
     // 이미 채택된 추천을 다시 적용하면 같은 recommendationId를 가진 원칙이 중복 저장되므로 제외한다.
     const adoptedRecommendationIds = new Set(
@@ -394,6 +407,7 @@ export const useTendencyStore = defineStore('tendency', () => {
     analyzeTendencies,
     refreshAnalysisDate,
     getHistoryById,
+    restoreRecommendation,
     applyRecommendations,
     savePrincipleEdits,
     reset,
