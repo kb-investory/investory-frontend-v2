@@ -108,6 +108,7 @@ function goToHoldings() {
             class="selected-broker"
             type="button"
             aria-label="선택한 증권사 변경"
+            :disabled="brokerStore.connectionStatus === 'loading'"
             @click="goBack"
           >
             <span class="selected-broker__mark" aria-hidden="true">
@@ -178,6 +179,11 @@ function goToHoldings() {
   color: var(--color-heading);
   cursor: pointer;
   text-align: left;
+}
+
+.selected-broker:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .selected-broker__mark {
