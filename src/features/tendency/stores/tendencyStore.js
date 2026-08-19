@@ -72,9 +72,11 @@ function mapRecommendationToPrinciple(recommendation, sortOrder, analysisRunId) 
 function normalizePrinciple(principle) {
   const originalContent = principle.originalContent ?? principle.content
   const isUserCreated = principle.recommendationSource?.type === 'USER_CREATED'
+  const recommendationId = principle.recommendationId ?? principle.principleRecommendationId ?? null
 
   return {
     ...principle,
+    recommendationId,
     originalContent,
     isUserModified:
       isUserCreated ||
@@ -112,6 +114,11 @@ export const useTendencyStore = defineStore('tendency', () => {
     recommendations.value.filter(
       (recommendation) =>
         ['NEW', 'SUGGESTED'].includes(recommendation.recommendationStatus) &&
+        !principles.value.some(
+          (principle) =>
+            principle.recommendationId != null &&
+            String(principle.recommendationId) === String(recommendation.recommendationId),
+        ) &&
         (principles.value.length === 0 ||
           !appliedRecommendationIds.value.includes(recommendation.recommendationId)),
     ),
@@ -311,6 +318,8 @@ export const useTendencyStore = defineStore('tendency', () => {
       .filter((recommendation) =>
         normalizedPrinciples.some(
           (principle) =>
+            (principle.recommendationId != null &&
+              String(principle.recommendationId) === String(recommendation.recommendationId)) ||
             String(principle.principleId) === `recommendation-${recommendation.recommendationId}`,
         ),
       )

@@ -356,6 +356,7 @@ function normalizePrinciple(principle) {
   const isDirect = principle.origin?.type === 'DIRECT'
   return {
     principleId: principle.principleSetItemId,
+    recommendationId: principle.recommendationId ?? principle.principleRecommendationId ?? null,
     content: principle.principleText,
     originalContent: principle.principleText,
     category: 'GENERAL',
