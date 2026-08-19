@@ -48,11 +48,20 @@ function openSearch() {
   router.push({ name: ROUTE_NAMES.JOURNAL_SEARCH })
 }
 
-function openJournal({ date }) {
+function openJournal({ date, journal }) {
   selectedDate.value = date
+
+  if (journal) {
+    router.push({
+      name: ROUTE_NAMES.JOURNAL_DATE,
+      params: { date },
+    })
+    return
+  }
+
   router.push({
-    name: ROUTE_NAMES.JOURNAL_DATE,
-    params: { date },
+    name: ROUTE_NAMES.JOURNAL_CREATE,
+    query: { date, from: 'journal' },
   })
 }
 

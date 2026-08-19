@@ -63,14 +63,19 @@ const calendarCells = computed(() => {
       dayOfWeek: date.getDay(),
       inCurrentMonth: date.getMonth() === props.month - 1,
       isToday: dateKey === todayDateKey,
+      isFuture: dateKey > todayDateKey,
       journal,
       activity,
     }
   })
 })
 
+function isCellDisabled(cell) {
+  return !cell.journal && cell.isFuture
+}
+
 function selectDate(cell) {
-  if (!cell.journal) {
+  if (isCellDisabled(cell)) {
     return
   }
 
@@ -114,11 +119,12 @@ function getAriaLabel(cell) {
           'journal-calendar__day--selected': cell.dateKey === selectedDate,
           'journal-calendar__day--has-journal': cell.journal,
           'journal-calendar__day--has-activity': cell.activity,
+          'journal-calendar__day--creatable': !cell.journal && !cell.isFuture,
         }"
         type="button"
         :aria-label="getAriaLabel(cell)"
         :aria-pressed="cell.dateKey === selectedDate"
-        :disabled="!cell.journal"
+        :disabled="isCellDisabled(cell)"
         @click="selectDate(cell)"
       >
         <span class="journal-calendar__date">{{ cell.day }}</span>
@@ -197,11 +203,15 @@ function getAriaLabel(cell) {
   cursor: default;
 }
 
-.journal-calendar__day--has-journal {
+.journal-calendar__day--has-journal,
+.journal-calendar__day--creatable {
   cursor: pointer;
 }
 
 .journal-calendar__day--has-journal:hover:not(.journal-calendar__day--selected):not(
+    .journal-calendar__day--today
+  ),
+.journal-calendar__day--creatable:hover:not(.journal-calendar__day--selected):not(
     .journal-calendar__day--today
   ) {
   background: #f1fbfa;
