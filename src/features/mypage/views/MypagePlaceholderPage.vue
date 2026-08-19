@@ -9,11 +9,6 @@ const route = useRoute()
 const router = useRouter()
 
 const sectionContent = Object.freeze({
-  notifications: {
-    title: '알림 설정',
-    icon: 'bell',
-    description: '알림 설정 화면은 다음 작업에서 연결할 예정이에요.',
-  },
   notices: {
     title: '공지사항',
     icon: 'megaphone',

@@ -213,13 +213,4 @@ export async function getConnectedBrokerages() {
   return accounts
 }
 
-export async function getNotifications() {
-  return []
-}
-
-export async function markNotificationAsRead() {
-  return true
-}
-
 export const getUserProfile = getProfile
-export const getUserNotifications = getNotifications

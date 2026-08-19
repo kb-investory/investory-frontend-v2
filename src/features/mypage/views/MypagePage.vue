@@ -330,7 +330,7 @@ onMounted(async () => {
             <span>연결 계좌 관리</span>
             <AppIcon name="chevron-right" :size="14" />
           </button>
-          <button type="button" @click="goToSection('notifications')">
+          <button type="button" @click="router.push({ name: ROUTE_NAMES.NOTIFICATION_SETTINGS })">
             <AppIcon name="bell" :size="17" />
             <span>알림 설정</span>
             <AppIcon name="chevron-right" :size="14" />

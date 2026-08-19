@@ -29,6 +29,12 @@ export const routes = [
     },
   },
   {
+    path: '/notifications/settings',
+    name: ROUTE_NAMES.NOTIFICATION_SETTINGS,
+    component: () => import('@/features/notifications/views/NotificationSettingsPage.vue'),
+    meta: { title: '알림 설정', layout: 'full-bleed', hideBottomNav: true },
+  },
+  {
     path: '/login',
     name: ROUTE_NAMES.LOGIN,
     component: () => import('@/features/auth/views/LoginPage.vue'),

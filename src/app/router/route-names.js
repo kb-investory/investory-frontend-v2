@@ -1,6 +1,7 @@
 export const ROUTE_NAMES = {
   HOME: 'Home',
   NOTIFICATIONS: 'Notifications',
+  NOTIFICATION_SETTINGS: 'NotificationSettings',
   LOGIN: 'Login',
   OAUTH_CALLBACK: 'OAuthCallback',
   BROKER_CONNECT: 'BrokerConnect',
