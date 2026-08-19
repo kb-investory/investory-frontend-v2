@@ -1,0 +1,39 @@
+{
+  "notifications": [
+    {
+      "notificationId": 501,
+      "notificationType": "TENDENCY_ANALYZED",
+      "title": "투자성향 분석이 완료됐어요",
+      "message": "6가지 성향 결과를 확인해보세요.",
+      "referenceId": 44,
+      "isRead": false,
+      "createdAt": "2026-08-20T09:12:00+09:00",
+      "readAt": null
+    },
+    {
+      "notificationId": 500,
+      "notificationType": "TRADE_INGESTED",
+      "title": "새 거래가 반영됐어요",
+      "message": "증권사 동기화로 신규 거래가 적재됐어요.",
+      "referenceId": 12,
+      "isRead": false,
+      "createdAt": "2026-08-20T08:40:00+09:00",
+      "readAt": null
+    },
+    {
+      "notificationId": 499,
+      "notificationType": "SIMULATION_COMPLETED",
+      "title": "모의투자 실행이 끝났어요",
+      "message": "결과를 확인하고 나의 투자 습관과 비교해보세요.",
+      "referenceId": 87,
+      "isRead": true,
+      "createdAt": "2026-08-19T21:05:00+09:00",
+      "readAt": "2026-08-19T21:10:00+09:00"
+    }
+  ],
+  "settings": {
+    "tradeIngestedEnabled": true,
+    "tendencyAnalyzedEnabled": true,
+    "simulationCompletedEnabled": true
+  }
+}
