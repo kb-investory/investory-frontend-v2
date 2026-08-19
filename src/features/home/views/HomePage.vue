@@ -10,6 +10,7 @@ import TodayRecordHero from '@/features/home/components/TodayRecordHero.vue'
 import WeeklyRecordRhythm from '@/features/home/components/WeeklyRecordRhythm.vue'
 import { useHomeClock } from '@/features/home/composables/useHomeClock'
 import { useHomeStore } from '@/features/home/stores/homeStore'
+import { useMypageStore } from '@/features/mypage/stores/mypageStore'
 import { useNotificationStore } from '@/features/notifications/stores/notificationStore'
 import ReanalysisFloating from '@/features/tendency/components/ReanalysisFloating.vue'
 import { useFloatingCornerSwipe } from '@/features/tendency/composables/useFloatingCornerSwipe'
@@ -21,6 +22,7 @@ const HOME_FLOATING_POSITION_KEY = 'investory:home-floating-position:v1'
 
 const router = useRouter()
 const homeStore = useHomeStore()
+const mypageStore = useMypageStore()
 const notificationStore = useNotificationStore()
 const tendencyStore = useTendencyStore()
 const reanalysisNoticeCollapsed = ref(true)
@@ -88,6 +90,9 @@ async function syncHome() {
 
   syncingHome.value = true
   try {
+    // 연결 계좌를 먼저 증권사와 동기화해 새 거래를 적재한 뒤 화면 데이터를 다시 읽는다.
+    // 동기화 실패는 mypageStore가 자체적으로 흡수하므로 홈 새로고침 자체는 계속 진행된다.
+    await mypageStore.syncAllAccounts()
     await Promise.allSettled([
       homeStore.fetchDashboard({ force: true }),
       homeStore.fetchSummary({ force: true }),
