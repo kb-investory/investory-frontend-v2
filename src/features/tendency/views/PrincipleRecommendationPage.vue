@@ -215,6 +215,15 @@ onBeforeUnmount(() => {
       </footer>
     </main>
 
+    <section
+      v-else-if="tendencyStore.recommendationGenerationStatus === 'REQUESTED'"
+      class="complete-state"
+    >
+      <BaseLoading />
+      <strong>추천 원칙을 만들고 있어요</strong>
+      <p>분석 결과를 바탕으로 준비 중이에요. 잠시 후 다시 확인해주세요.</p>
+    </section>
+
     <section v-else class="complete-state">
       <span><AppIcon name="shield-check" :size="28" /></span>
       <strong>새로운 추천 원칙을 모두 확인했어요</strong>

@@ -369,6 +369,20 @@ onBeforeUnmount(() => {
         </div>
       </section>
 
+      <section
+        v-else-if="!isCreateMode && tendencyStore.recommendationGenerationStatus === 'REQUESTED'"
+        class="edit-section"
+      >
+        <header>
+          <h2><AppIcon name="sparkles" :size="17" />추천 원칙 추가하기</h2>
+        </header>
+
+        <div class="available-principles-loading">
+          <BaseLoading />
+          <p>추천 원칙을 만들고 있어요. 잠시 후 다시 확인해주세요.</p>
+        </div>
+      </section>
+
       <p v-if="saveError" class="save-error" role="alert">{{ saveError }}</p>
 
       <footer class="save-bar">
@@ -735,5 +749,16 @@ onBeforeUnmount(() => {
   min-height: 520px;
   align-items: center;
   justify-content: center;
+}
+
+.available-principles-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 0;
+  color: #7b8789;
+  font-size: 13px;
+  text-align: center;
 }
 </style>
