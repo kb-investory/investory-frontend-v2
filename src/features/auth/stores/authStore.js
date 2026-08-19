@@ -3,7 +3,12 @@ import { ref } from 'vue'
 
 import { queryClient } from '@/app/providers/queryClient'
 import { resetUserSession } from '@/app/services/resetUserSession'
-import { getMe, loginWithOAuth, logout as logoutApi } from '@/features/auth/api/authApi'
+import {
+  getMe,
+  loginWithOAuth,
+  logout as logoutApi,
+  withdrawAccount as withdrawAccountApi,
+} from '@/features/auth/api/authApi'
 import { refreshAccessToken } from '@/modules/auth/services/authService'
 import { queryKeys } from '@/shared/api/queryKeys'
 
@@ -168,6 +173,16 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function withdrawAccount() {
+    try {
+      await withdrawAccountApi()
+    } finally {
+      await resetUserSession()
+      resetAuthState()
+      initialized.value = true
+    }
+  }
+
   return {
     user,
     isAuthenticated,
@@ -180,5 +195,6 @@ export const useAuthStore = defineStore('auth', () => {
     initialize,
     startOauthLogin,
     signOut,
+    withdrawAccount,
   }
 })
