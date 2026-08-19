@@ -54,7 +54,8 @@ async function fetchFreshRecommendations(analysisRunId) {
 
   for (
     let attempt = 1;
-    attempt < RECOMMENDATION_POLL_MAX_ATTEMPTS && recommendationData.generationStatus === 'REQUESTED';
+    attempt < RECOMMENDATION_POLL_MAX_ATTEMPTS &&
+    recommendationData.generationStatus === 'REQUESTED';
     attempt += 1
   ) {
     await wait(RECOMMENDATION_POLL_INTERVAL_MS)
