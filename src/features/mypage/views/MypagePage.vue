@@ -138,9 +138,11 @@ async function confirmWithdrawal() {
 
   try {
     await disconnectSocialAccount()
-    const brokerIds = [...new Set(mypageStore.accounts.map((account) => account.brokerId))]
-    for (const brokerId of brokerIds) {
-      await mypageStore.disconnectBroker(brokerId)
+    const connectionIds = [
+      ...new Set(mypageStore.accounts.map((account) => account.sourceConnectionId)),
+    ]
+    for (const connectionId of connectionIds) {
+      await mypageStore.disconnectBroker(connectionId)
     }
     await withdrawMember()
     await authStore.signOut()
