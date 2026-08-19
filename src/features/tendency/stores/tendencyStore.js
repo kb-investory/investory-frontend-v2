@@ -15,6 +15,8 @@ import { queryKeys } from '@/shared/api/queryKeys'
 const APPLIED_RECOMMENDATIONS_KEY = 'investory:applied-recommendations'
 const DAY_IN_MS = 24 * 60 * 60 * 1000
 const TENDENCY_STALE_TIME = 5 * 60 * 1000
+const RECOMMENDATION_POLL_INTERVAL_MS = 1500
+const RECOMMENDATION_POLL_MAX_ATTEMPTS = 5
 
 function readStoredIds(key) {
   try {
@@ -35,6 +37,31 @@ function getLocalDateKey(date = new Date()) {
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+// 분석 완료 후 추천 원칙은 백엔드에서 이벤트 리스너로 비동기 생성되기 때문에,
+// 분석 응답을 받자마자 조회하면 아직 새 analysisRunId 기준 추천이 안 만들어져
+// 있을 수 있다. 새 analysisRunId가 반영된 추천이 보일 때까지 짧게 재시도한다.
+async function fetchFreshRecommendations(analysisRunId) {
+  let recommendationData = await getRecommendedPrinciples()
+
+  for (let attempt = 1; attempt < RECOMMENDATION_POLL_MAX_ATTEMPTS; attempt += 1) {
+    const isFresh =
+      analysisRunId == null ||
+      (recommendationData.recommendations || []).some(
+        (recommendation) => String(recommendation.analysisRunId) === String(analysisRunId),
+      )
+    if (isFresh) break
+
+    await wait(RECOMMENDATION_POLL_INTERVAL_MS)
+    recommendationData = await getRecommendedPrinciples()
+  }
+
+  return recommendationData
 }
 
 function mapRecommendationToPrinciple(recommendation, sortOrder, analysisRunId) {
@@ -231,7 +258,7 @@ export const useTendencyStore = defineStore('tendency', () => {
       updateAnalysis(analysisData)
       queryClient.setQueryData(queryKeys.tendency.analysis(), analysisData)
       const [recommendationData, accessData] = await Promise.all([
-        getRecommendedPrinciples(),
+        fetchFreshRecommendations(analysisData.analysisRunId),
         getTendencyAccessStatus(),
       ])
       recommendations.value = recommendationData.recommendations || []
