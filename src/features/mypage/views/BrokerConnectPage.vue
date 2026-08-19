@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch } from 'vue'
-import { ArrowRight, LockKeyhole, Search, TriangleAlert } from '@lucide/vue'
+import { Search, TriangleAlert } from '@lucide/vue'
 import { useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
@@ -58,12 +58,6 @@ watch(
       <OnboardingHeader title="계좌 연결" :step="1" @back="goBack" />
 
       <main class="broker-content">
-        <header class="broker-intro">
-          <p class="broker-intro__eyebrow">CHOOSE YOUR BROKER</p>
-          <h2>어느 증권사를<br />연결할까요?</h2>
-          <p>보유 계좌를 안전하게 불러올 증권사를 선택해 주세요.</p>
-        </header>
-
         <label class="search-input">
           <Search :size="18" />
           <input v-model="searchQuery" type="search" placeholder="증권사 이름을 검색하세요" />
@@ -100,26 +94,10 @@ watch(
           </div>
         </section>
 
-        <aside class="security-card">
-          <span class="security-card__icon">
-            <LockKeyhole :size="15" />
-          </span>
-          <span>
-            <strong>읽기 전용으로 안전하게</strong>
-            <small>Investory는 거래 권한과 비밀번호를 저장하지 않아요.</small>
-          </span>
-        </aside>
-
         <div class="broker-action">
           <BaseButton full-width :disabled="!brokerStore.selectedBroker" @click="goToLogin">
-            {{
-              brokerStore.selectedBroker
-                ? `${brokerStore.selectedBroker.brokerName} 연결하기`
-                : '증권사를 선택해 주세요'
-            }}
-            <template #icon><ArrowRight :size="18" /></template>
+            {{ brokerStore.selectedBroker ? '선택한 증권사 연결' : '증권사를 선택해 주세요' }}
           </BaseButton>
-          <p>다음 단계에서 증권사 로그인을 진행해요.</p>
         </div>
       </main>
     </div>
@@ -136,49 +114,24 @@ watch(
 
 .onboarding-shell {
   width: min(100%, 390px);
-  min-height: min(844px, 100svh);
+  height: min(844px, 100svh);
   overflow: hidden;
   background: #ffffff;
 }
 
 .broker-content {
-  display: grid;
-  gap: 16px;
-  padding: 20px 20px 18px;
+  display: flex;
+  height: calc(100% - 172px);
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  padding: 18px 20px 14px;
 }
 
-.broker-intro {
-  display: grid;
-  gap: 7px;
-}
-
-.broker-intro p,
-.broker-intro h2,
 .broker-list__header h3,
 .broker-state p,
 .broker-action p {
   margin: 0;
-}
-
-.broker-intro__eyebrow {
-  color: var(--brand-teal-deep);
-  font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
-  font-weight: 600;
-  letter-spacing: 1.2px;
-}
-
-.broker-intro h2 {
-  font-family: var(--font-heading);
-  font-size: var(--font-size-title-lg);
-  letter-spacing: -0.4px;
-  line-height: 1.4;
-}
-
-.broker-intro > p:last-child {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-body);
-  line-height: 1.4;
 }
 
 .search-input {
@@ -209,6 +162,7 @@ watch(
 .broker-list {
   display: grid;
   gap: 8px;
+  flex: 1;
 }
 
 .broker-list__header {
@@ -228,7 +182,6 @@ watch(
 
 .broker-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -261,56 +214,19 @@ watch(
   font-weight: 700;
 }
 
-.security-card {
-  display: flex;
-  min-height: 52px;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 4px;
-  background: var(--brand-mist);
-}
-
-.security-card__icon {
-  display: grid;
-  width: 30px;
-  height: 30px;
-  flex: 0 0 auto;
-  place-items: center;
-  border-radius: 50%;
-  color: var(--brand-teal-deep);
-}
-
-.security-card > span:last-child {
-  display: grid;
-  min-width: 0;
-  gap: 2px;
-}
-
-.security-card strong {
-  font-size: var(--font-size-caption);
-}
-
-.security-card small {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-caption);
-  line-height: 1.4;
-}
-
 .broker-action {
-  display: grid;
-  gap: 8px;
+  position: sticky;
+  bottom: -14px;
+  z-index: 4;
+  margin: auto -20px -14px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--color-border-subtle);
+  background: #ffffff;
 }
 
 .broker-action :deep(.base-button--primary) {
   border-radius: 8px;
-  background: var(--slate-strong);
-}
-
-.broker-action p {
-  color: var(--color-text-subtle);
-  font-size: var(--font-size-caption);
-  text-align: center;
+  background: #263a43;
 }
 
 @media (min-width: 600px) {

@@ -89,7 +89,7 @@ function goToHoldings() {
 <template>
   <section class="onboarding-page">
     <div class="onboarding-shell">
-      <OnboardingHeader title="계좌 연결" :step="2" @back="goBack" />
+      <OnboardingHeader title="증권사 로그인" :step="2" @back="goBack" />
 
       <main class="broker-login-content">
         <BaseLoading v-if="loadingBroker" />
@@ -104,12 +104,6 @@ function goToHoldings() {
         </div>
 
         <template v-else-if="brokerStore.selectedBroker">
-          <header class="broker-login-intro">
-            <p class="broker-login-intro__eyebrow">BROKER SIGN IN</p>
-            <h2>증권사 로그인</h2>
-            <p>증권사에서 사용하는 아이디와 비밀번호를 입력해 주세요.</p>
-          </header>
-
           <button
             class="selected-broker"
             type="button"
@@ -151,48 +145,23 @@ function goToHoldings() {
 
 .onboarding-shell {
   width: min(100%, 390px);
-  min-height: min(874px, 100svh);
+  height: min(844px, 100svh);
   overflow: hidden;
   background: #ffffff;
 }
 
 .broker-login-content {
-  display: grid;
+  display: flex;
+  height: calc(100% - 172px);
+  flex-direction: column;
   gap: 16px;
-  padding: 20px 20px 18px;
+  overflow-y: auto;
+  padding: 18px 20px 14px;
 }
 
-.broker-login-intro {
-  display: grid;
-  gap: 6px;
-}
-
-.broker-login-intro p,
-.broker-login-intro h2,
 .broker-login-state h2,
 .broker-login-state p {
   margin: 0;
-}
-
-.broker-login-intro__eyebrow {
-  color: var(--brand-teal-deep);
-  font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
-  font-weight: 600;
-  letter-spacing: 1.2px;
-}
-
-.broker-login-intro h2 {
-  font-family: var(--font-heading);
-  font-size: var(--font-size-title-lg);
-  letter-spacing: -0.4px;
-  line-height: 1.4;
-}
-
-.broker-login-intro > p:last-child {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-caption);
-  line-height: 1.4;
 }
 
 .selected-broker {
@@ -203,10 +172,10 @@ function goToHoldings() {
   align-items: center;
   gap: 11px;
   padding: 10px 12px;
-  border: 1px solid var(--slate-strong);
+  border: 1px solid var(--color-border);
   border-radius: 11px;
-  background: var(--slate-strong);
-  color: #ffffff;
+  background: #ffffff;
+  color: var(--color-heading);
   cursor: pointer;
   text-align: left;
 }
@@ -217,8 +186,8 @@ function goToHoldings() {
   height: 40px;
   place-items: center;
   border-radius: 10px;
-  background: var(--brand-teal);
-  color: var(--slate-strong);
+  background: #159b97;
+  color: #ffffff;
   font-family: var(--font-mono);
   font-size: var(--font-size-caption);
   font-weight: 700;
@@ -230,7 +199,7 @@ function goToHoldings() {
 }
 
 .selected-broker__copy small {
-  color: #dce6e9;
+  color: var(--color-text-muted);
   font-size: var(--font-size-caption);
 }
 
@@ -242,7 +211,7 @@ function goToHoldings() {
   display: flex;
   align-items: center;
   gap: 1px;
-  color: #8fa7b0;
+  color: var(--brand-teal-deep);
   font-size: var(--font-size-caption);
 }
 
