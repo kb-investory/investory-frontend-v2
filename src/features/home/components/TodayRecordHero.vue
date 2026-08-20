@@ -151,7 +151,7 @@ function formatCurrency(value) {
   position: relative;
   overflow: hidden;
   min-height: 150px;
-  padding: 18px 24px 36px;
+  padding: 8px 24px 24px;
   color: #ffffff;
   background: transparent;
 }
@@ -159,18 +159,27 @@ function formatCurrency(value) {
 .today-record__heading {
   position: relative;
   z-index: 2;
+  min-height: 118px;
   max-width: 250px;
 }
 
 .today-record__title {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
   margin: 0;
+  transform: translateY(-50%);
 }
 
 .today-record__account-summary {
+  position: absolute;
+  top: -8px;
+  left: 0;
   display: flex;
   align-items: center;
   gap: 7px;
-  margin-bottom: 6px;
+  margin: 0;
   color: #b9d4d7;
   font-size: 10px;
   line-height: 1.35;
