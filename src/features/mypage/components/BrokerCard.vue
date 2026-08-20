@@ -1,6 +1,20 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { CircleCheck } from '@lucide/vue'
+
+const brokerLogos = Object.freeze({
+  KIWOOM: '/assets/brokers/kiwoom.png',
+  MIRAE: '/assets/brokers/mirae-asset.png',
+  MIRAE_ASSET: '/assets/brokers/mirae-asset.png',
+  TOSS: '/assets/brokers/toss-securities.png',
+  TOSS_SEC: '/assets/brokers/toss-securities.png',
+})
+
+const brokerLogoNameRules = Object.freeze([
+  { keyword: '미래에셋', src: brokerLogos.MIRAE_ASSET },
+  { keyword: '키움', src: brokerLogos.KIWOOM },
+  { keyword: '토스', src: brokerLogos.TOSS_SEC },
+])
 
 const brokerMarks = Object.freeze({
   KIWOOM: 'KW',
@@ -30,9 +44,32 @@ const props = defineProps({
 
 defineEmits(['select'])
 
-const brokerMark = computed(
-  () => brokerMarks[props.broker.brokerCode] ?? props.broker.brokerCode.slice(0, 2).toUpperCase(),
+const logoLoadFailed = ref(false)
+const normalizedBrokerCode = computed(() =>
+  String(props.broker.brokerCode ?? '')
+    .trim()
+    .toUpperCase(),
 )
+const brokerLogo = computed(() => {
+  const logoByCode = brokerLogos[normalizedBrokerCode.value]
+
+  if (logoByCode) {
+    return logoByCode
+  }
+
+  const brokerName = String(props.broker.brokerName ?? '')
+
+  return brokerLogoNameRules.find(({ keyword }) => brokerName.includes(keyword))?.src ?? null
+})
+const brokerMark = computed(() => {
+  const code = normalizedBrokerCode.value
+
+  return (brokerMarks[code] ?? code.slice(0, 2)) || 'BR'
+})
+
+watch(brokerLogo, () => {
+  logoLoadFailed.value = false
+})
 </script>
 
 <template>
@@ -45,7 +82,15 @@ const brokerMark = computed(
     :aria-label="`${broker.brokerName} 선택`"
     @click="$emit('select', broker)"
   >
-    <span class="broker-card__mark" aria-hidden="true">{{ brokerMark }}</span>
+    <img
+      v-if="brokerLogo && !logoLoadFailed"
+      class="broker-card__logo"
+      :src="brokerLogo"
+      alt=""
+      aria-hidden="true"
+      @error="logoLoadFailed = true"
+    />
+    <span v-else class="broker-card__mark" aria-hidden="true">{{ brokerMark }}</span>
     <span class="broker-card__name">{{ broker.brokerName }}</span>
     <CircleCheck v-if="selected" class="broker-card__check" :size="20" aria-hidden="true" />
   </button>
@@ -104,6 +149,20 @@ const brokerMark = computed(
   font-family: var(--font-mono);
   font-size: var(--font-size-caption);
   font-weight: 700;
+}
+
+.broker-card__logo {
+  width: 40px;
+  height: 40px;
+  padding: 4px;
+  border: 1px solid #e4e9e8;
+  border-radius: 10px;
+  background: #ffffff;
+  object-fit: contain;
+}
+
+.broker-card--selected .broker-card__logo {
+  border-color: #9edbd8;
 }
 
 .broker-card--selected .broker-card__mark {
