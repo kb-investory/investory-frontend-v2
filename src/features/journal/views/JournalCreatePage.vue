@@ -49,10 +49,6 @@ const dateLabel = computed(() => {
   const weekday = new Intl.DateTimeFormat('ko-KR', { weekday: 'long' }).format(date)
   return `${date.getMonth() + 1}월 ${date.getDate()}일, ${weekday}`
 })
-const monthLabel = computed(() => {
-  const date = new Date(`${journalDate.value}T00:00:00`)
-  return new Intl.DateTimeFormat('ko-KR', { month: '2-digit' }).format(date).replace(/\D/g, '')
-})
 const thoughtPrompts = ['가장 기억난 건', '내 판단 근거는', '다음에는']
 const sortedTrades = computed(() => {
   const trades = [...(journalStore.dailyEntry?.trades ?? [])]
@@ -254,7 +250,6 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
             <CalendarDays :size="19" :stroke-width="2" />
           </span>
           <div class="journal-create-page__date-copy">
-            <p class="journal-create-page__eyebrow">DAILY NOTE · {{ monthLabel }}</p>
             <h2>{{ dateLabel }}</h2>
           </div>
           <span class="journal-create-page__badge">
