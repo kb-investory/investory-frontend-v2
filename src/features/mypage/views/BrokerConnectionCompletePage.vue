@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { Check } from '@lucide/vue'
 import { useRouter } from 'vue-router'
 
@@ -12,11 +12,6 @@ const router = useRouter()
 const brokerStore = useBrokerConnectionStore()
 const completing = ref(false)
 const completionError = ref('')
-const reasonCount = computed(
-  () =>
-    brokerStore.account?.reasonCount ??
-    brokerStore.holdings.filter((holding) => Boolean(holding.rationaleText?.trim())).length,
-)
 
 async function goHome() {
   if (completing.value) return
@@ -69,10 +64,6 @@ async function goHome() {
             <div>
               <dt>보유 종목</dt>
               <dd class="complete-summary__number">{{ brokerStore.holdings.length }}개</dd>
-            </div>
-            <div>
-              <dt>입력한 보유 근거</dt>
-              <dd class="complete-summary__number">{{ reasonCount }}개</dd>
             </div>
           </dl>
         </div>
