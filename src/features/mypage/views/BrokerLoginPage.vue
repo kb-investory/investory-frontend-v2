@@ -90,6 +90,7 @@ function goToHoldings() {
             class="selected-broker"
             type="button"
             aria-label="선택한 증권사 변경"
+            :disabled="brokerStore.connectionStatus === 'loading'"
             @click="goBack"
           >
             <BrokerLogo
@@ -162,6 +163,24 @@ function goToHoldings() {
   color: var(--color-heading);
   cursor: pointer;
   text-align: left;
+}
+
+.selected-broker:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.selected-broker__mark {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 10px;
+  background: #159b97;
+  color: #ffffff;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-caption);
+  font-weight: 700;
 }
 
 .selected-broker__copy {

@@ -1,5 +1,6 @@
 import mypageData from '@/mocks/data/mypage.json'
 import {
+  deleteBrokerConnection,
   getBrokerAccountDetail,
   getBrokerAccounts,
   getBrokerConnectionDetail,
@@ -201,19 +202,9 @@ export async function retryAccountSync(accountId) {
   return await getNormalizedAccounts()
 }
 
-export async function disconnectBroker() {
-  throw new Error('증권사 연결 해제 API가 아직 제공되지 않아요.')
-}
-
-export async function disconnectSocialAccount() {
-  await wait(250)
-  return true
-}
-
-export async function withdrawMember() {
-  await wait(500)
-  window.localStorage.removeItem(MYPAGE_STORAGE_KEY)
-  return { withdrawn: true, journalPolicy: 'RETENTION_POLICY_APPLIED' }
+export async function disconnectBroker(connectionId) {
+  await deleteBrokerConnection(connectionId)
+  return await getNormalizedAccounts()
 }
 
 export async function getAppInfo() {
@@ -225,13 +216,4 @@ export async function getConnectedBrokerages() {
   return accounts
 }
 
-export async function getNotifications() {
-  return []
-}
-
-export async function markNotificationAsRead() {
-  return true
-}
-
 export const getUserProfile = getProfile
-export const getUserNotifications = getNotifications

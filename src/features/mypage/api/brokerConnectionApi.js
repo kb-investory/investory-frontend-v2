@@ -69,6 +69,10 @@ export async function getBrokerConnectionAccounts(connectionId) {
   return await request(`/broker/connections/${connectionId}/accounts`)
 }
 
+export async function deleteBrokerConnection(connectionId) {
+  return await request(`/broker/connections/${connectionId}`, { method: 'DELETE' })
+}
+
 export async function syncBrokerConnection(connectionId) {
   const syncResult = await request(`/broker/connections/${connectionId}/sync`, {
     method: 'POST',

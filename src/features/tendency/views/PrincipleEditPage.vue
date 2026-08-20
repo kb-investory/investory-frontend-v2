@@ -102,10 +102,24 @@ function getLocalDateKey(date = new Date()) {
 }
 
 function removePrinciple(principleId) {
+  const removed = draftPrinciples.value.find((principle) => principle.principleId === principleId)
   draftPrinciples.value = draftPrinciples.value.filter(
     (principle) => principle.principleId !== principleId,
   )
   if (editingId.value === principleId) editingId.value = null
+
+  if (removed?.recommendationId != null) {
+    tendencyStore.restoreRecommendation({
+      recommendationId: removed.recommendationId,
+      recommendationText: removed.originalContent,
+      recommendationReason: '',
+      analysisType: {
+        code: removed.category,
+        name: removed.recommendationSource?.tendency?.name || removed.title || '투자성향',
+      },
+      recommendationStatus: 'NEW',
+    })
+  }
 }
 
 function addRecommendation(recommendation) {
@@ -354,6 +368,22 @@ onBeforeUnmount(() => {
               <AppIcon name="plus" :size="16" />
             </button>
           </article>
+        </div>
+      </section>
+
+      <section
+        v-else-if="!isCreateMode && tendencyStore.recommendationGenerationStatus === 'REQUESTED'"
+        class="edit-section"
+      >
+        <header>
+          <h2><AppIcon name="sparkles" :size="17" />추천 원칙 추가하기</h2>
+        </header>
+
+        <div class="available-principles-loading">
+          <span class="available-principles-loading__spinner">
+            <AppIcon name="loader-circle" :size="20" />
+          </span>
+          <p>추천 원칙을 만들고 있어요. 잠시 후 다시 확인해주세요.</p>
         </div>
       </section>
 
@@ -724,5 +754,40 @@ onBeforeUnmount(() => {
   min-height: 520px;
   align-items: center;
   justify-content: center;
+}
+
+.available-principles-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 0;
+  color: #7b8789;
+  font-size: var(--font-size-caption);
+  text-align: center;
+}
+
+.available-principles-loading__spinner {
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #edf8f7;
+  color: #0a8e89;
+  animation: available-principles-loading-spin 1s linear infinite;
+}
+
+@keyframes available-principles-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .available-principles-loading__spinner {
+    animation: none;
+  }
 }
 </style>

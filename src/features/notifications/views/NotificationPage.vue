@@ -1,66 +1,112 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
+import { ROUTE_NAMES } from '@/app/router/route-names'
 import { useNotificationStore } from '@/features/notifications/stores/notificationStore'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
 
-const NOTIFICATION_CLOCK_INTERVAL = 60 * 1000
+const NOTIFICATION_TYPE_META = Object.freeze({
+  TENDENCY_ANALYZED: { icon: 'sparkles', tone: 'teal' },
+  SIMULATION_COMPLETED: { icon: 'trophy', tone: 'teal' },
+  TRADE_INGESTED: { icon: 'arrow-left-right', tone: 'slate' },
+})
 
-const route = useRoute()
 const router = useRouter()
 const notificationStore = useNotificationStore()
 const activeFilter = ref('all')
-let notificationClockTimer
 
-const visibleNotifications = computed(() =>
-  activeFilter.value === 'unread'
-    ? notificationStore.notifications.filter((notification) => !notification.read)
-    : notificationStore.notifications,
-)
+const visibleNotifications = computed(() => notificationStore.notifications)
 
-async function openNotification(notification) {
-  notificationStore.markAsRead(notification.id)
-  await router.push(notification.destination)
+function getTypeMeta(notificationType) {
+  return NOTIFICATION_TYPE_META[notificationType] || { icon: 'bell', tone: 'slate' }
 }
 
-onMounted(async () => {
-  if (import.meta.env.DEV && route.query.preview === 'true') {
-    notificationStore.loadPreview()
-  } else {
-    await notificationStore.fetchNotifications()
+function formatTime(createdAt) {
+  if (!createdAt) return ''
+
+  const created = new Date(createdAt)
+  const elapsedMinutes = Math.floor((Date.now() - created.getTime()) / 60000)
+
+  if (elapsedMinutes < 1) return '방금'
+  if (elapsedMinutes < 60) return `${elapsedMinutes}분 전`
+  return created.toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' })
+}
+
+// referenceId가 가리키는 대상이 notificationType별로 다르다 (명세 1절).
+// TRADE_INGESTED의 referenceId(connectionId)는 계좌 상세 화면의 accountId와
+// 동일한 값으로 가정한다 — 실제 백엔드 배포 후 확인 필요.
+function getDestination(notification) {
+  switch (notification.notificationType) {
+    case 'TENDENCY_ANALYZED':
+      return {
+        name: ROUTE_NAMES.TENDENCY_HISTORY_DETAIL,
+        params: { analysisRunId: notification.referenceId },
+      }
+    case 'SIMULATION_COMPLETED':
+      return {
+        name: ROUTE_NAMES.MYPAGE_SIMULATION_DETAIL,
+        params: { simulationId: notification.referenceId },
+      }
+    case 'TRADE_INGESTED':
+      return {
+        name: ROUTE_NAMES.MYPAGE_ACCOUNT_DETAIL,
+        params: { accountId: notification.referenceId },
+      }
+    default:
+      return { name: ROUTE_NAMES.HOME }
   }
+}
 
-  notificationClockTimer = window.setInterval(() => {
-    void notificationStore.refreshForCurrentTime()
-  }, NOTIFICATION_CLOCK_INTERVAL)
+async function openNotification(notification) {
+  await notificationStore.markAsRead(notification.notificationId)
+  await router.push(getDestination(notification))
+}
+
+function loadMore() {
+  notificationStore.fetchMoreNotifications({
+    isRead: activeFilter.value === 'unread' ? false : undefined,
+  })
+}
+
+function setFilter(filter) {
+  if (activeFilter.value === filter) return
+  activeFilter.value = filter
+  notificationStore.fetchNotifications({ isRead: filter === 'unread' ? false : undefined })
+}
+
+onMounted(() => {
+  notificationStore.fetchNotifications()
 })
-
-onBeforeUnmount(() => window.clearInterval(notificationClockTimer))
 </script>
 
 <template>
   <div class="notification-page">
     <header class="notification-app-bar">
-      <button type="button" aria-label="홈으로 돌아가기" @click="router.back()">
+      <button type="button" aria-label="이전 화면으로 돌아가기" @click="router.back()">
         <AppIcon name="chevron-left" :size="18" />
       </button>
       <strong>알림</strong>
-      <span />
+      <button
+        type="button"
+        class="notification-app-bar__mark-all"
+        :disabled="!notificationStore.unreadCount"
+        aria-label="모든 알림 읽음 처리"
+        @click="notificationStore.markAllAsRead()"
+      >
+        모두 읽음
+      </button>
     </header>
 
     <main class="notification-page__content">
-      <section class="notification-summary" aria-label="오늘 알림 요약">
+      <section class="notification-summary" aria-label="알림 요약">
         <span class="notification-summary__icon">
           <AppIcon name="bell" :size="21" />
         </span>
         <div>
-          <h2>오늘 확인할 소식</h2>
-          <p>
-            전체 {{ notificationStore.notifications.length }}개 · 읽지 않음
-            {{ notificationStore.unreadCount }}개
-          </p>
+          <h2>새로운 소식</h2>
+          <p>읽지 않음 {{ notificationStore.unreadCount }}개</p>
         </div>
       </section>
 
@@ -70,16 +116,16 @@ onBeforeUnmount(() => window.clearInterval(notificationClockTimer))
           role="tab"
           :aria-selected="activeFilter === 'all'"
           :class="{ 'is-active': activeFilter === 'all' }"
-          @click="activeFilter = 'all'"
+          @click="setFilter('all')"
         >
-          전체 {{ notificationStore.notifications.length }}
+          전체
         </button>
         <button
           type="button"
           role="tab"
           :aria-selected="activeFilter === 'unread'"
           :class="{ 'is-active': activeFilter === 'unread' }"
-          @click="activeFilter = 'unread'"
+          @click="setFilter('unread')"
         >
           읽지 않음 {{ notificationStore.unreadCount }}
         </button>
@@ -89,46 +135,58 @@ onBeforeUnmount(() => window.clearInterval(notificationClockTimer))
         <BaseLoading />
       </section>
 
-      <section v-else-if="visibleNotifications.length" class="notification-list">
-        <article
-          v-for="notification in visibleNotifications"
-          :key="notification.id"
-          class="notification-card"
-          :class="[
-            `notification-card--${notification.tone}`,
-            { 'notification-card--read': notification.read },
-          ]"
+      <template v-else-if="visibleNotifications.length">
+        <section class="notification-list">
+          <article
+            v-for="notification in visibleNotifications"
+            :key="notification.notificationId"
+            class="notification-card"
+            :class="[
+              `notification-card--${getTypeMeta(notification.notificationType).tone}`,
+              { 'notification-card--read': notification.isRead },
+            ]"
+          >
+            <div class="notification-card__meta">
+              <span class="notification-card__type-icon">
+                <AppIcon :name="getTypeMeta(notification.notificationType).icon" :size="17" />
+              </span>
+              <span class="notification-card__time">{{ formatTime(notification.createdAt) }}</span>
+              <span
+                v-if="!notification.isRead"
+                class="notification-card__unread"
+                aria-label="읽지 않은 알림"
+              />
+            </div>
+
+            <h3>{{ notification.title }}</h3>
+
+            <div class="notification-card__footer">
+              <p>{{ notification.message }}</p>
+              <button type="button" @click="openNotification(notification)">
+                확인
+                <AppIcon name="arrow-right" :size="13" />
+              </button>
+            </div>
+          </article>
+        </section>
+
+        <button
+          v-if="notificationStore.hasMore"
+          type="button"
+          class="notification-load-more"
+          :disabled="notificationStore.loadingMore"
+          @click="loadMore"
         >
-          <div class="notification-card__meta">
-            <span class="notification-card__type-icon">
-              <AppIcon :name="notification.icon" :size="17" />
-            </span>
-            <span class="notification-card__time">{{ notification.timeLabel }}</span>
-            <span
-              v-if="!notification.read"
-              class="notification-card__unread"
-              aria-label="읽지 않은 알림"
-            />
-          </div>
-
-          <h3>{{ notification.title }}</h3>
-
-          <div class="notification-card__footer">
-            <p>{{ notification.description }}</p>
-            <button type="button" @click="openNotification(notification)">
-              {{ notification.actionLabel }}
-              <AppIcon name="arrow-right" :size="13" />
-            </button>
-          </div>
-        </article>
-      </section>
+          {{ notificationStore.loadingMore ? '불러오는 중...' : '더보기' }}
+        </button>
+      </template>
 
       <section v-else class="notification-state notification-state--empty">
         <span><AppIcon name="bell" :size="22" /></span>
         <h2>
           {{ activeFilter === 'unread' ? '읽지 않은 알림이 없어요' : '새로운 알림이 없어요' }}
         </h2>
-        <p>새로운 투자 기록이 생기면 이곳에서 알려드릴게요.</p>
+        <p>새로운 소식이 생기면 이곳에서 알려드릴게요.</p>
       </section>
 
       <p v-if="notificationStore.error" class="notification-page__error" role="status">
@@ -148,28 +206,46 @@ onBeforeUnmount(() => window.clearInterval(notificationClockTimer))
 .notification-app-bar {
   display: grid;
   min-height: 64px;
-  grid-template-columns: 36px 1fr 36px;
+  grid-template-columns: 36px 1fr auto;
   align-items: center;
+  gap: 8px;
   padding: 12px 16px 10px;
   background: #ffffff;
 }
 
 .notification-app-bar button {
+  border: 1px solid #e1e8e8;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.notification-app-bar > button:first-child {
   display: grid;
   width: 34px;
   height: 34px;
   place-items: center;
-  border: 1px solid #e1e8e8;
   border-radius: 50%;
-  background: #ffffff;
   color: #263a3f;
-  cursor: pointer;
 }
 
 .notification-app-bar strong {
   color: #263a3f;
   font-size: var(--font-size-body);
   text-align: center;
+}
+
+.notification-app-bar__mark-all {
+  min-height: 34px;
+  padding: 0 10px;
+  border-radius: 999px;
+  color: #0b8f8b;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.notification-app-bar__mark-all:disabled {
+  color: #a6b4b6;
+  cursor: default;
 }
 
 .notification-app-bar button:focus-visible {
@@ -376,6 +452,22 @@ onBeforeUnmount(() => window.clearInterval(notificationClockTimer))
 .notification-tabs button:focus-visible {
   outline: 2px solid #0b8f8b;
   outline-offset: 2px;
+}
+
+.notification-load-more {
+  min-height: 42px;
+  border: 1px solid #c9dceb;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #245c7b;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.notification-load-more:disabled {
+  color: #a6b4b6;
+  cursor: default;
 }
 
 .notification-state {

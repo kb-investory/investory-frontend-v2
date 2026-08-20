@@ -455,11 +455,12 @@ export async function getTendencyAccessStatus() {
   }
 }
 
-export async function getRecommendedPrinciples() {
+export async function getRecommendedPrinciples(analysisRunId) {
   if (USE_MOCK_TENDENCY) {
     return { recommendations: clone(tendencyData.suggestedPrinciples || []) }
   }
-  return await request('/principle/recommendations')
+  const query = analysisRunId != null ? `?analysisRunId=${analysisRunId}` : ''
+  return await request(`/principle/recommendations${query}`)
 }
 
 export async function saveUserPrinciples({ analysisRunId, principles }) {

@@ -297,8 +297,8 @@ export const useMypageStore = defineStore('mypage', () => {
     }
   }
 
-  async function disconnectBroker(brokerId) {
-    const response = await disconnectBrokerApi(brokerId)
+  async function disconnectBroker(connectionId) {
+    const response = await disconnectBrokerApi(connectionId)
     accounts.value = response.accounts
     queryClient.setQueryData(queryKeys.mypage.accounts(), { accounts: accounts.value })
     await invalidateAccountQueries()
