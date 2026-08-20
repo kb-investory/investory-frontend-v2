@@ -7,23 +7,9 @@ import { ROUTE_NAMES } from '@/app/router/route-names'
 import BrokerLoginForm from '@/features/mypage/components/BrokerLoginForm.vue'
 import OnboardingHeader from '@/features/mypage/components/OnboardingHeader.vue'
 import { useBrokerConnectionStore } from '@/features/mypage/stores/brokerConnectionStore'
+import BrokerLogo from '@/shared/components/BrokerLogo.vue'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
-
-const brokerMarks = Object.freeze({
-  KIWOOM: 'KW',
-  MIRAE_ASSET: 'MA',
-  KIS: 'KI',
-  NH_SEC: 'NH',
-  SAMSUNG_SEC: 'SS',
-  KB_SEC: 'KB',
-  SHINHAN_SEC: 'SH',
-  HANA_SEC: 'HN',
-  TOSS_SEC: 'TS',
-  KAKAOPAY_SEC: 'KP',
-  DAISHIN_SEC: 'DS',
-  YUANTA_SEC: 'YA',
-})
 
 const route = useRoute()
 const router = useRouter()
@@ -31,10 +17,6 @@ const brokerStore = useBrokerConnectionStore()
 const pageError = ref('')
 const loadingBroker = ref(false)
 const routeBrokerId = computed(() => Number(route.query.brokerId))
-const brokerMark = computed(() => {
-  const code = brokerStore.selectedBroker?.brokerCode ?? ''
-  return brokerMarks[code] ?? code.slice(0, 2).toUpperCase()
-})
 
 onMounted(loadSelectedBroker)
 
@@ -110,9 +92,11 @@ function goToHoldings() {
             aria-label="선택한 증권사 변경"
             @click="goBack"
           >
-            <span class="selected-broker__mark" aria-hidden="true">
-              {{ brokerMark }}
-            </span>
+            <BrokerLogo
+              :broker-code="brokerStore.selectedBroker.brokerCode"
+              :broker-name="brokerStore.selectedBroker.brokerName"
+              :size="40"
+            />
             <span class="selected-broker__copy">
               <small>선택한 증권사</small>
               <strong>{{ brokerStore.selectedBroker.brokerName }}</strong>
@@ -178,19 +162,6 @@ function goToHoldings() {
   color: var(--color-heading);
   cursor: pointer;
   text-align: left;
-}
-
-.selected-broker__mark {
-  display: grid;
-  width: 40px;
-  height: 40px;
-  place-items: center;
-  border-radius: 10px;
-  background: #159b97;
-  color: #ffffff;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
-  font-weight: 700;
 }
 
 .selected-broker__copy {

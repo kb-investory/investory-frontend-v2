@@ -73,6 +73,9 @@ function normalizeAccount(account, connectionsById) {
   const connection = connectionsById.get(Number(account.connectionId))
   return {
     ...account,
+    brokerCode: account.brokerCode || connection?.brokerCode || connection?.providerCode || '',
+    brokerName:
+      account.brokerName || connection?.brokerName || connection?.providerName || '연결 증권사',
     accountType: ACCOUNT_TYPE_LABELS[account.accountType] || account.accountType || '계좌',
     accountNumber: account.accountNoMasked || '',
     ...normalizeConnectionStatus(connection),

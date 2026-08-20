@@ -2,6 +2,8 @@
 import { computed } from 'vue'
 import { Moon } from '@lucide/vue'
 
+import BrokerLogo from '@/shared/components/BrokerLogo.vue'
+
 import RunningMonkey from './RunningMonkey.vue'
 
 const props = defineProps({
@@ -49,10 +51,17 @@ function formatCurrency(value) {
     <div class="today-record__intro">
       <div class="today-record__heading">
         <div v-if="assetSummary" class="today-record__account-summary">
-          <strong>{{ assetSummary.accountName }}</strong>
-          <span>
-            보유 {{ assetSummary.holdingCount }}종목 ·
-            {{ formatCurrency(assetSummary.totalValuation) }}원
+          <BrokerLogo
+            :broker-code="assetSummary.brokerCode"
+            :broker-name="assetSummary.brokerName"
+            :size="32"
+          />
+          <span class="today-record__account-copy">
+            <strong>{{ assetSummary.accountName }}</strong>
+            <span>
+              보유 {{ assetSummary.holdingCount }}종목 ·
+              {{ formatCurrency(assetSummary.totalValuation) }}원
+            </span>
           </span>
         </div>
         <h1 id="today-record-title" class="today-record__title">
@@ -159,8 +168,8 @@ function formatCurrency(value) {
 
 .today-record__account-summary {
   display: flex;
-  align-items: baseline;
-  gap: 6px;
+  align-items: center;
+  gap: 7px;
   margin-bottom: 6px;
   color: #b9d4d7;
   font-size: 10px;
@@ -177,7 +186,13 @@ function formatCurrency(value) {
   text-overflow: ellipsis;
 }
 
-.today-record__account-summary span {
+.today-record__account-copy {
+  display: grid;
+  gap: 1px;
+}
+
+.today-record__account-summary .today-record__account-copy,
+.today-record__account-copy > span {
   overflow: hidden;
   min-width: 0;
   text-overflow: ellipsis;

@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ROUTE_NAMES } from '@/app/router/route-names'
 import { useMypageStore } from '@/features/mypage/stores/mypageStore'
 import AppIcon from '@/shared/components/AppIcon.vue'
+import BrokerLogo from '@/shared/components/BrokerLogo.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
 
 const route = useRoute()
@@ -96,7 +97,11 @@ onMounted(() => mypageStore.fetchAccountDetail(accountId.value))
     <main v-else-if="account" class="detail-content">
       <section class="account-hero">
         <div class="account-hero__top">
-          <span class="account-hero__icon"><AppIcon name="activity" :size="20" /></span>
+          <BrokerLogo
+            :broker-code="account.brokerCode"
+            :broker-name="account.brokerName"
+            :size="38"
+          />
           <div>
             <h1>{{ account.brokerName }}</h1>
             <p>{{ account.accountType }} · {{ account.accountNumber }}</p>
@@ -261,15 +266,6 @@ onMounted(() => mypageStore.fetchAccountDetail(accountId.value))
   grid-template-columns: 38px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
-}
-.account-hero__icon {
-  display: grid;
-  width: 38px;
-  height: 38px;
-  place-items: center;
-  border-radius: 10px;
-  background: #eaf9f8;
-  color: #078f8a;
 }
 .account-hero h1 {
   margin: 0;

@@ -72,6 +72,7 @@ function goNext() {
 
         <template v-else-if="brokerStore.account">
           <ConnectedAccountSummary
+            :broker-code="brokerStore.account.brokerCode"
             :broker-name="brokerStore.account.brokerName"
             :account-count="brokerStore.account.accountCount"
             :holdings-count="brokerStore.holdings.length"
