@@ -112,14 +112,20 @@ function getLocalDateKey(date = new Date()) {
   return `${year}-${month}-${day}`
 }
 
+// 추천 기반 원칙은 어떤 투자성향에서 나왔는지가 핵심 정보라 성향명을 노출한다.
+// 원칙 편집 화면(PrincipleEditPage.getSourceLabel)과 같은 우선순위를 쓴다.
+function getPrincipleSourceLabel(principle) {
+  return principle.recommendationSource?.tendency?.name ?? principle.title ?? '투자성향'
+}
+
 function formatPrincipleMeta(principle) {
   const isUserPrinciple =
     principle.isUserModified || principle.recommendationSource?.type === 'USER_CREATED'
 
-  if (!isUserPrinciple) return '기본원칙'
+  if (!isUserPrinciple) return `${getPrincipleSourceLabel(principle)} 기반`
 
   const date = principle.modifiedDate || principle.appliedDate
-  return `${formatDate(date || getLocalDateKey())} · 사용자 작성 원칙`
+  return `${formatDate(date || getLocalDateKey())} · 사용자 입력`
 }
 
 function openHistoryDetail(historyItem) {
