@@ -360,7 +360,6 @@ onBeforeUnmount(() => {
       <div v-if="tendencyStore.isAnalysisLocked" class="analysis-cooldown-notice">
         <AppIcon name="calendar-range" :size="14" />
         <span>
-          다음 재분석까지 D-{{ tendencyStore.daysUntilAnalysis }} ·
           {{ formatDate(tendencyStore.analysisAccess?.analysisAvailableDate) }}부터 다시 분석할 수
           있어요
         </span>
@@ -1167,7 +1166,8 @@ onBeforeUnmount(() => {
 
 .analysis-intro {
   position: relative;
-  min-height: 158px;
+  height: 158px;
+  box-sizing: border-box;
   overflow: hidden;
   padding: 15px 17px;
   border: 1px solid #214650;
@@ -1643,7 +1643,8 @@ onBeforeUnmount(() => {
 .principle-status {
   position: relative;
   display: grid;
-  min-height: 158px;
+  height: 158px;
+  box-sizing: border-box;
   align-content: start;
   gap: 8px;
   overflow: hidden;
@@ -1680,6 +1681,9 @@ onBeforeUnmount(() => {
 }
 
 .principle-status header strong {
+  position: absolute;
+  top: 0;
+  right: 0;
   padding: 4px 8px;
   border: 1px solid #64d0ca;
   border-radius: 99px;
@@ -1716,17 +1720,17 @@ onBeforeUnmount(() => {
   position: relative;
   z-index: 2;
   display: grid;
-  width: 65%;
+  width: 63%;
   gap: 8px;
 }
 
 .principle-status__monkey {
   position: absolute;
-  right: -7px;
-  bottom: -11px;
+  right: 2px;
+  bottom: 2px;
   z-index: 1;
-  width: 142px;
-  height: 142px;
+  width: 120px;
+  height: 120px;
   object-fit: contain;
   mix-blend-mode: screen;
   pointer-events: none;
