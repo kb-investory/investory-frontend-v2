@@ -157,7 +157,6 @@ function formatCurrency(value, { signed = false } = {}) {
     <section class="journal-digest__trades" aria-labelledby="trade-records-title">
       <header>
         <h3 id="trade-records-title">거래별 판단 기록</h3>
-        <span v-if="trades.length">{{ trades.length }} TRADES</span>
       </header>
 
       <div v-if="trades.length" class="journal-digest__trade-list">
@@ -399,7 +398,6 @@ function formatCurrency(value, { signed = false } = {}) {
   display: flex;
   min-height: 24px;
   align-items: center;
-  justify-content: space-between;
 }
 
 .journal-digest__trades h3 {
@@ -407,14 +405,6 @@ function formatCurrency(value, { signed = false } = {}) {
   color: var(--text-primary, #181817);
   font-family: var(--font-heading);
   font-size: var(--font-size-body);
-}
-
-.journal-digest__trades > header span {
-  color: var(--text-tertiary, #94948e);
-  font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
-  font-weight: 600;
-  letter-spacing: 0.6px;
 }
 
 .journal-digest__trade-list {
