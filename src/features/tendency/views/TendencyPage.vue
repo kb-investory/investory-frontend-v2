@@ -374,7 +374,6 @@ onBeforeUnmount(() => {
         <div class="tendency-combination__cards">
           <TendencyGroupCard
             label="투자 선택 성향"
-            :summary="tendencyStore.analysis.groupSummaries.selection"
             :results="tendencyStore.selectionResults"
             icon="target"
             variant="selection"
@@ -383,7 +382,6 @@ onBeforeUnmount(() => {
 
           <TendencyGroupCard
             label="매매 행동 성향"
-            :summary="tendencyStore.analysis.groupSummaries.behavior"
             :results="tendencyStore.behaviorResults"
             icon="activity"
             variant="behavior"
