@@ -10,15 +10,30 @@ defineProps({
     type: Boolean,
     default: false,
   },
+  showLogo: {
+    type: Boolean,
+    default: true,
+  },
 })
 </script>
 
 <template>
-  <section class="primary-tab-header" :class="{ 'primary-tab-header--flat-bottom': flatBottom }">
+  <section
+    class="primary-tab-header"
+    :class="{
+      'primary-tab-header--flat-bottom': flatBottom,
+      'primary-tab-header--without-logo': !showLogo,
+    }"
+  >
     <PrimaryAppHeader
       class="primary-tab-header__app-bar"
       logo-src="/assets/logos/investory-logo-dark.png"
+      :show-logo="showLogo"
     >
+      <template #left>
+        <slot name="left" />
+      </template>
+
       <template #right>
         <slot name="right" />
       </template>
@@ -94,6 +109,24 @@ defineProps({
 
 .primary-tab-header__app-bar :deep(.primary-app-header__side--right) {
   grid-column: 2;
+}
+
+.primary-tab-header--without-logo .primary-tab-header__app-bar {
+  grid-template-columns: 44px minmax(0, 1fr) 54px;
+}
+
+.primary-tab-header--without-logo
+  .primary-tab-header__app-bar
+  :deep(.primary-app-header__side--left) {
+  display: flex;
+  grid-column: 1;
+}
+
+.primary-tab-header--without-logo
+  .primary-tab-header__app-bar
+  :deep(.primary-app-header__side--right) {
+  grid-column: 3;
+  width: 54px;
 }
 
 .primary-tab-header__app-bar :deep(.primary-app-header__logo-link) {

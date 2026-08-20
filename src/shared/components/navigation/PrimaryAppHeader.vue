@@ -16,6 +16,10 @@ defineProps({
     type: Boolean,
     default: false,
   },
+  showLogo: {
+    type: Boolean,
+    default: true,
+  },
 })
 </script>
 
@@ -25,7 +29,11 @@ defineProps({
       <slot name="left" />
     </div>
 
-    <RouterLink class="primary-app-header__logo-link" :to="{ name: ROUTE_NAMES.HOME }">
+    <RouterLink
+      v-if="showLogo"
+      class="primary-app-header__logo-link"
+      :to="{ name: ROUTE_NAMES.HOME }"
+    >
       <img class="primary-app-header__logo" :src="logoSrc" :alt="logoAlt" />
     </RouterLink>
 

@@ -15,6 +15,13 @@ const notice = ref('')
 const detailOpen = ref(false)
 const disconnecting = ref(false)
 
+function goToBrokerConnect() {
+  router.push({
+    name: ROUTE_NAMES.BROKER_CONNECT,
+    query: { from: 'mypage-accounts' },
+  })
+}
+
 const overallStatus = computed(() => {
   if (!mypageStore.accounts.length) return '미연결'
   if (mypageStore.errorAccountCount) return '확인 필요'
@@ -198,11 +205,7 @@ onMounted(() => mypageStore.fetchAccounts())
           </div>
         </section>
 
-        <button
-          type="button"
-          class="add-account-button"
-          @click="router.push({ name: ROUTE_NAMES.BROKER_CONNECT })"
-        >
+        <button type="button" class="add-account-button" @click="goToBrokerConnect">
           <AppIcon name="plus" :size="15" /> 계좌 추가
         </button>
       </template>
@@ -211,7 +214,7 @@ onMounted(() => mypageStore.fetchAccounts())
         <span><AppIcon name="wallet-cards" :size="28" /></span>
         <h2>연결된 계좌가 없어요</h2>
         <p>증권사 계좌를 연결하면 자산과 거래 내역을 한곳에서 확인할 수 있어요.</p>
-        <button type="button" @click="router.push({ name: ROUTE_NAMES.BROKER_CONNECT })">
+        <button type="button" @click="goToBrokerConnect">
           계좌 연결하기 <AppIcon name="arrow-right" :size="15" />
         </button>
       </section>

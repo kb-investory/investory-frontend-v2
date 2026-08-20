@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { Search, TriangleAlert } from '@lucide/vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
 import BrokerCard from '@/features/mypage/components/BrokerCard.vue'
@@ -10,6 +10,7 @@ import { useBrokerConnectionStore } from '@/features/mypage/stores/brokerConnect
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
 
+const route = useRoute()
 const router = useRouter()
 const brokerStore = useBrokerConnectionStore()
 const searchQuery = ref('')
@@ -23,6 +24,11 @@ async function loadBrokers(query = '') {
 }
 
 function goBack() {
+  if (route.query.from === 'mypage-accounts') {
+    router.push({ name: ROUTE_NAMES.MYPAGE_ACCOUNTS })
+    return
+  }
+
   router.push({ name: ROUTE_NAMES.LOGIN })
 }
 
@@ -33,7 +39,10 @@ function goToLogin() {
 
   router.push({
     name: ROUTE_NAMES.BROKER_LOGIN,
-    query: { brokerId: brokerStore.selectedBroker.brokerId },
+    query: {
+      brokerId: brokerStore.selectedBroker.brokerId,
+      ...(route.query.from ? { from: route.query.from } : {}),
+    },
   })
 }
 
