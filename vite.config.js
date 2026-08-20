@@ -16,8 +16,8 @@ export default defineConfig(({ mode }) => {
     plugins: [vue(), vueDevTools()],
     server: {
       proxy: {
-        // 파이썬 로컬 AI 서버 전용 엔드포인트
-        '^/api/(simulations|simulation-bots)': {
+        // 파이썬 로컬 AI 서버 전용 엔드포인트 (시뮬레이션/봇/원칙 전부 /api/simulation 하위)
+        '^/api/simulation': {
           target: pythonAiUrl,
           changeOrigin: true,
         },

@@ -270,7 +270,7 @@ export async function getSimulationHistory() {
       },
     ]
   }
-  return await request('/simulations/history')
+  return await request('/simulation/history')
 }
 
 export async function getInitialCapital(startDate, accountId, { signal } = {}) {
@@ -291,7 +291,7 @@ export async function getInitialCapital(startDate, accountId, { signal } = {}) {
     start_date: startDate,
     account_id: accountId,
   }).toString()
-  return await request(`/simulations/initial-capital?${query}`, { signal })
+  return await request(`/simulation/initial-capital?${query}`, { signal })
 }
 
 export async function getSimulationOverview(params = {}) {
@@ -306,14 +306,14 @@ export async function getSimulationOverview(params = {}) {
   if (params.startDate) searchParams.set('start_date', params.startDate)
   if (params.accountId) searchParams.set('account_id', params.accountId)
   const query = searchParams.toString()
-  return await request(`/simulations/overview${query ? `?${query}` : ''}`)
+  return await request(`/simulation/overview${query ? `?${query}` : ''}`)
 }
 
 export async function getLatestSimulationResult() {
   if (USE_MOCK_SIMULATION) {
     return await normalizeSimulationResult(withMockSecurityNames(simulationData.latest))
   }
-  const data = await request('/simulations/latest')
+  const data = await request('/simulation/latest')
   return await normalizeSimulationResult(data)
 }
 
@@ -342,7 +342,7 @@ export async function compileSimulationBot(payload = {}) {
       personalBotId: 1,
     }
   }
-  return await request('/simulation-bots/compile', {
+  return await request('/simulation/bots/compile', {
     method: 'POST',
     body: JSON.stringify(requestBody),
   })
@@ -359,12 +359,12 @@ export async function getSimulationBotCompileJob(jobId) {
       message: 'AI 원칙 봇 전략 생성이 완료되었습니다.',
     }
   }
-  return await request(`/simulation-bots/compile-jobs/${jobId}`)
+  return await request(`/simulation/bots/compile-jobs/${jobId}`)
 }
 
 export async function getSimulationComparators() {
   if (USE_MOCK_SIMULATION) return clone(simulationData.comparators)
-  return await request('/simulation-bots/comparators')
+  return await request('/simulation/bots/comparators')
 }
 
 export async function runSimulation(payload = {}) {
@@ -384,7 +384,7 @@ export async function runSimulation(payload = {}) {
       persistenceStatus: 'COMPLETED',
     })
   }
-  const response = await request('/simulations/run', {
+  const response = await request('/simulation/run', {
     method: 'POST',
     body: JSON.stringify(requestBody),
   })
@@ -397,11 +397,11 @@ export async function getSimulationDetail(simulationId) {
       withMockSecurityNames(getMockSimulationDetail(simulationId)),
     )
   }
-  const response = await request(`/simulations/${simulationId}`)
+  const response = await request(`/simulation/${simulationId}`)
   return await normalizeSimulationResult(response)
 }
 
-// GET /simulations/{simulationId}/report
+// GET /simulation/{simulationId}/report
 export async function getSimulationReport(simulationId) {
   if (USE_MOCK_SIMULATION) {
     const report =
@@ -420,7 +420,7 @@ export async function getSimulationReport(simulationId) {
       },
     })
   }
-  const response = await request(`/simulations/${simulationId}/report`)
+  const response = await request(`/simulation/${simulationId}/report`)
   return await normalizeSimulationReport(response)
 }
 
@@ -428,7 +428,7 @@ export async function acceptSimulationPrincipleProposal(simulationId, recommenda
   if (USE_MOCK_SIMULATION) {
     return { simulationId, recommendationId, status: 'ACCEPTED' }
   }
-  return await request('/principles/proposals/accept', {
+  return await request('/simulation/principles/proposals/accept', {
     method: 'POST',
     body: JSON.stringify({ simulationId, recommendationId }),
   })
