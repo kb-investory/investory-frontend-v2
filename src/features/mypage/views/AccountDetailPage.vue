@@ -65,7 +65,7 @@ async function disconnectBroker() {
   if (!account.value || disconnecting.value) return
   disconnecting.value = true
   try {
-    await mypageStore.disconnectBroker(account.value.brokerId)
+    await mypageStore.disconnectBroker(account.value.sourceConnectionId)
     await router.replace({ name: ROUTE_NAMES.MYPAGE_ACCOUNTS })
   } catch (error) {
     syncNotice.value = error instanceof Error ? error.message : '증권사 연결을 해제하지 못했어요.'

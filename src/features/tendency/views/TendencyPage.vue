@@ -112,14 +112,20 @@ function getLocalDateKey(date = new Date()) {
   return `${year}-${month}-${day}`
 }
 
+// 추천 기반 원칙은 어떤 투자성향에서 나왔는지가 핵심 정보라 성향명을 노출한다.
+// 원칙 편집 화면(PrincipleEditPage.getSourceLabel)과 같은 우선순위를 쓴다.
+function getPrincipleSourceLabel(principle) {
+  return principle.recommendationSource?.tendency?.name ?? principle.title ?? '투자성향'
+}
+
 function formatPrincipleMeta(principle) {
   const isUserPrinciple =
     principle.isUserModified || principle.recommendationSource?.type === 'USER_CREATED'
 
-  if (!isUserPrinciple) return '기본원칙'
+  if (!isUserPrinciple) return `${getPrincipleSourceLabel(principle)} 기반`
 
   const date = principle.modifiedDate || principle.appliedDate
-  return `${formatDate(date || getLocalDateKey())} · 사용자 작성 원칙`
+  return `${formatDate(date || getLocalDateKey())} · 사용자 입력`
 }
 
 function openHistoryDetail(historyItem) {
@@ -354,6 +360,7 @@ onBeforeUnmount(() => {
       <div v-if="tendencyStore.isAnalysisLocked" class="analysis-cooldown-notice">
         <AppIcon name="calendar-range" :size="14" />
         <span>
+          다음 재분석까지 D-{{ tendencyStore.daysUntilAnalysis }} ·
           {{ formatDate(tendencyStore.analysisAccess?.analysisAvailableDate) }}부터 다시 분석할 수
           있어요
         </span>
@@ -893,7 +900,10 @@ onBeforeUnmount(() => {
   position: absolute;
   z-index: 4;
   top: 50%;
-  transform: translate(-50%, -52%);
+  /* 스프라이트 캐릭터의 발이 프레임 중앙이 아니라 아래쪽(~86%)에 있어서,
+     박스 전체를 게이지바에 맞추면 발이 게이지바보다 아래로 처진다.
+     발 위치가 게이지바 중앙에 오도록 위로 더 끌어올린다. */
+  transform: translate(-50%, -86%);
   transition: left 1s linear;
   will-change: left;
 }
@@ -1093,6 +1103,18 @@ onBeforeUnmount(() => {
   color: #7c8587;
   font-size: var(--font-size-caption);
   line-height: 1.45;
+}
+
+.analysis-cooldown-notice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 13px;
+  border-radius: 12px;
+  background: #eef4f4;
+  color: #526467;
+  font-size: var(--font-size-caption);
+  font-weight: 700;
 }
 
 .tendency-combination {

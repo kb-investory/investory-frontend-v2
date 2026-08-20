@@ -36,7 +36,7 @@ const {
   preventClickAfterSwipe: preventReanalysisClick,
 } = useFloatingCornerSwipe(HOME_FLOATING_POSITION_KEY)
 let reanalysisMidnightTimer
-let notificationClockTimer
+let notificationBadgeTimer
 
 const journalRoute = {
   name: ROUTE_NAMES.JOURNAL_CREATE,
@@ -144,14 +144,14 @@ onMounted(async () => {
   ])
   tendencyStore.refreshAnalysisDate()
   scheduleMidnightRefresh()
-  notificationClockTimer = window.setInterval(() => {
-    void notificationStore.refreshForCurrentTime()
+  notificationBadgeTimer = window.setInterval(() => {
+    void notificationStore.refreshUnreadCount()
   }, 60 * 1000)
 })
 
 onBeforeUnmount(() => {
   window.clearTimeout(reanalysisMidnightTimer)
-  window.clearInterval(notificationClockTimer)
+  window.clearInterval(notificationBadgeTimer)
 })
 </script>
 

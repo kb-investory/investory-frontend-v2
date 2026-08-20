@@ -61,7 +61,7 @@ async function disconnectSelectedBroker() {
   if (!account || disconnecting.value) return
   disconnecting.value = true
   try {
-    await mypageStore.disconnectBroker(account.brokerId)
+    await mypageStore.disconnectBroker(account.sourceConnectionId)
     detailOpen.value = false
     notice.value = `${account.brokerName} 연결을 해제했어요. 기존 투자 일지는 보존됩니다.`
   } catch (error) {

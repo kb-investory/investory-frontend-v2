@@ -2,6 +2,7 @@ import {
   getMe as serviceGetMe,
   getOauthAuthorizationUrl,
   logout as serviceLogout,
+  withdrawAccount as serviceWithdrawAccount,
 } from '@/modules/auth/services/authService'
 
 export async function getMe() {
@@ -19,5 +20,10 @@ export async function loginWithOAuth(provider) {
 
 export async function logout() {
   await serviceLogout()
+  return true
+}
+
+export async function withdrawAccount() {
+  await serviceWithdrawAccount()
   return true
 }

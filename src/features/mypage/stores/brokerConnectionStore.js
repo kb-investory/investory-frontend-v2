@@ -52,6 +52,7 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
       Boolean(savedConnection?.account),
   )
   let latestProviderRequestId = 0
+  let pendingConnectionRequest = null
 
   const hasVerifiedConnection = computed(() => {
     const status = connection.value?.status || connection.value?.connectionStatus
@@ -115,23 +116,39 @@ export const useBrokerConnectionStore = defineStore('brokerConnection', () => {
       throw new Error('증권사를 먼저 선택해 주세요.')
     }
 
+    const brokerId = selectedBroker.value.brokerId
+
+    if (pendingConnectionRequest) {
+      if (pendingConnectionRequest.brokerId === brokerId) {
+        return pendingConnectionRequest.promise
+      }
+      throw new Error('이전 증권사 연동 요청이 아직 처리 중이에요. 잠시 후 다시 시도해 주세요.')
+    }
+
     connectionStatus.value = 'loading'
     connectionError.value = ''
 
-    try {
-      connection.value = await createBrokerConnection({
-        brokerId: selectedBroker.value.brokerId,
-        ...credentials,
-      })
+    const promise = (async () => {
+      try {
+        connection.value = await createBrokerConnection({
+          brokerId,
+          ...credentials,
+        })
 
-      connectionStatus.value = 'success'
-      return connection.value
-    } catch (requestError) {
-      connection.value = null
-      connectionStatus.value = 'error'
-      connectionError.value = getConnectionErrorMessage(requestError)
-      throw requestError
-    }
+        connectionStatus.value = 'success'
+        return connection.value
+      } catch (requestError) {
+        connection.value = null
+        connectionStatus.value = 'error'
+        connectionError.value = getConnectionErrorMessage(requestError)
+        throw requestError
+      } finally {
+        pendingConnectionRequest = null
+      }
+    })()
+
+    pendingConnectionRequest = { brokerId, promise }
+    return promise
   }
 
   async function fetchHoldings() {

@@ -3,7 +3,6 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
-import { disconnectSocialAccount, withdrawMember } from '@/features/mypage/api/mypageApi'
 import { useMypageStore } from '@/features/mypage/stores/mypageStore'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import SimulationParticipantAvatar from '@/features/simulation/components/SimulationParticipantAvatar.vue'
@@ -137,13 +136,7 @@ async function confirmWithdrawal() {
   actionError.value = ''
 
   try {
-    await disconnectSocialAccount()
-    const brokerIds = [...new Set(mypageStore.accounts.map((account) => account.brokerId))]
-    for (const brokerId of brokerIds) {
-      await mypageStore.disconnectBroker(brokerId)
-    }
-    await withdrawMember()
-    await authStore.signOut()
+    await authStore.withdrawAccount()
     await router.replace({ name: ROUTE_NAMES.LOGIN })
   } catch {
     actionError.value = '회원 탈퇴를 처리하지 못했어요. 다시 시도해주세요.'
@@ -337,7 +330,7 @@ onMounted(async () => {
             <span>연결 계좌 관리</span>
             <AppIcon name="chevron-right" :size="14" />
           </button>
-          <button type="button" @click="goToSection('notifications')">
+          <button type="button" @click="router.push({ name: ROUTE_NAMES.NOTIFICATION_SETTINGS })">
             <AppIcon name="bell" :size="17" />
             <span>알림 설정</span>
             <AppIcon name="chevron-right" :size="14" />
@@ -423,9 +416,9 @@ onMounted(async () => {
           </span>
           <h2>회원 탈퇴 전 확인해주세요</h2>
           <ul>
-            <li>소셜 로그인 연결과 연결 계좌가 모두 해제돼요.</li>
-            <li>회원 데이터는 서비스 보존·파기 정책에 따라 처리돼요.</li>
-            <li>연결 해제 전 작성한 투자 일지는 정책에 따라 보존될 수 있어요.</li>
+            <li>연결된 모든 증권사 계좌와 거래·보유 데이터가 삭제돼요.</li>
+            <li>작성한 투자 일지와 투자원칙도 모두 삭제돼요.</li>
+            <li>탈퇴 후에는 삭제된 데이터를 복구할 수 없어요.</li>
           </ul>
           <label>
             본인 확인을 위해 이메일을 입력해주세요

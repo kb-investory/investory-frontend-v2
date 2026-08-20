@@ -15,6 +15,8 @@ import { queryKeys } from '@/shared/api/queryKeys'
 const APPLIED_RECOMMENDATIONS_KEY = 'investory:applied-recommendations'
 const DAY_IN_MS = 24 * 60 * 60 * 1000
 const TENDENCY_STALE_TIME = 5 * 60 * 1000
+const RECOMMENDATION_POLL_INTERVAL_MS = 2000
+const RECOMMENDATION_POLL_MAX_ATTEMPTS = 30
 
 function readStoredIds(key) {
   try {
@@ -35,6 +37,10 @@ function getLocalDateKey(date = new Date()) {
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 function mapRecommendationToPrinciple(recommendation, sortOrder, analysisRunId) {
@@ -93,6 +99,7 @@ export const useTendencyStore = defineStore('tendency', () => {
   const analysisAccess = ref(null)
   const loading = ref(false)
   const analyzing = ref(false)
+  const recommendationGenerationStatus = ref(null)
   const loaded = ref(false)
   const error = ref(null)
   const todayTimestamp = ref(getTodayTimestamp())
@@ -198,7 +205,9 @@ export const useTendencyStore = defineStore('tendency', () => {
         }),
         queryClient.fetchQuery({
           queryKey: queryKeys.tendency.recommendations(),
-          queryFn: getRecommendedPrinciples,
+          // vue-query가 queryFn을 (context) => ...로 호출하므로, 인자 없는 참조로
+          // 넘기면 context 객체가 analysisRunId 자리에 그대로 들어가버린다.
+          queryFn: () => getRecommendedPrinciples(),
           staleTime: TENDENCY_STALE_TIME,
         }),
         queryClient.fetchQuery({
@@ -220,25 +229,51 @@ export const useTendencyStore = defineStore('tendency', () => {
     }
   }
 
+  function applyRecommendationData(recommendationData) {
+    recommendationGenerationStatus.value = recommendationData.generationStatus ?? null
+    recommendations.value = recommendationData.recommendations || []
+    queryClient.setQueryData(queryKeys.tendency.recommendations(), recommendationData)
+  }
+
+  // 추천 생성이 아직 REQUESTED면, 분석 결과 화면은 이미 떴으니 사용자를 막지 않고
+  // 백그라운드에서 계속 폴링만 한다. recommendationGenerationStatus를 구독하는
+  // 화면(추천 목록 섹션 등)이 REQUESTED 동안 자체적으로 로딩 상태를 보여주면 된다.
+  async function pollRecommendationGenerationInBackground(analysisRunId) {
+    try {
+      for (let attempt = 1; attempt < RECOMMENDATION_POLL_MAX_ATTEMPTS; attempt += 1) {
+        await wait(RECOMMENDATION_POLL_INTERVAL_MS)
+        const recommendationData = await getRecommendedPrinciples(analysisRunId)
+        applyRecommendationData(recommendationData)
+        if (recommendationData.generationStatus !== 'REQUESTED') return
+      }
+    } catch {
+      // 백그라운드 폴링 실패는 분석 결과 자체엔 영향을 주지 않는다.
+    }
+  }
+
   async function analyzeTendencies() {
     if (analyzing.value || isAnalysisLocked.value) return
 
     analyzing.value = true
     error.value = null
+    recommendationGenerationStatus.value = null
 
     try {
       const analysisData = await runTendencyAnalysis()
       updateAnalysis(analysisData)
       queryClient.setQueryData(queryKeys.tendency.analysis(), analysisData)
       const [recommendationData, accessData] = await Promise.all([
-        getRecommendedPrinciples(),
+        getRecommendedPrinciples(analysisData.analysisRunId),
         getTendencyAccessStatus(),
       ])
-      recommendations.value = recommendationData.recommendations || []
+      applyRecommendationData(recommendationData)
       analysisAccess.value = accessData
-      queryClient.setQueryData(queryKeys.tendency.recommendations(), recommendationData)
       queryClient.setQueryData(queryKeys.tendency.access(), accessData)
       await queryClient.invalidateQueries({ queryKey: queryKeys.mypage.overview(), exact: true })
+
+      if (recommendationData.generationStatus === 'REQUESTED') {
+        pollRecommendationGenerationInBackground(analysisData.analysisRunId)
+      }
     } catch (analysisError) {
       error.value = analysisError
     } finally {
@@ -268,6 +303,19 @@ export const useTendencyStore = defineStore('tendency', () => {
     } catch {
       // 추천 목록 갱신 실패는 저장 결과에 영향을 주지 않는다.
     }
+  }
+
+  // 원칙 수정 화면에서 채택했던 추천을 다시 빼면, 저장 전까지는 로컬에서 즉시
+  // "추천 원칙 추가하기" 목록으로 되돌려 보여준다. 서버가 recommendationStatus를
+  // NEW로 되돌리는지는 별개 문제라, 저장 후 refreshRecommendations()로 다시 덮어써질 수 있다.
+  function restoreRecommendation(recommendation) {
+    if (recommendation?.recommendationId == null) return
+    const alreadyListed = recommendations.value.some(
+      (existing) => String(existing.recommendationId) === String(recommendation.recommendationId),
+    )
+    if (alreadyListed) return
+
+    recommendations.value = [...recommendations.value, recommendation]
   }
 
   async function applyRecommendations(recommendationIds) {
@@ -380,6 +428,7 @@ export const useTendencyStore = defineStore('tendency', () => {
     analysisAccess,
     loading,
     analyzing,
+    recommendationGenerationStatus,
     error,
     selectionResults,
     behaviorResults,
@@ -394,6 +443,7 @@ export const useTendencyStore = defineStore('tendency', () => {
     analyzeTendencies,
     refreshAnalysisDate,
     getHistoryById,
+    restoreRecommendation,
     applyRecommendations,
     savePrincipleEdits,
     reset,
