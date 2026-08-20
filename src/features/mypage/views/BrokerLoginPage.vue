@@ -48,7 +48,10 @@ async function loadSelectedBroker() {
 
 function goBack() {
   brokerStore.resetConnectionRequest()
-  router.push({ name: ROUTE_NAMES.BROKER_CONNECT })
+  router.push({
+    name: ROUTE_NAMES.BROKER_CONNECT,
+    query: route.query.from ? { from: route.query.from } : {},
+  })
 }
 
 async function handleLogin(credentials) {
@@ -63,7 +66,10 @@ async function handleLogin(credentials) {
 function goToHoldings() {
   return router.push({
     name: ROUTE_NAMES.BROKER_HOLDINGS,
-    query: { brokerId: brokerStore.selectedBroker?.brokerId },
+    query: {
+      brokerId: brokerStore.selectedBroker?.brokerId,
+      ...(route.query.from ? { from: route.query.from } : {}),
+    },
   })
 }
 </script>

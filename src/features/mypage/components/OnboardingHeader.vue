@@ -1,5 +1,6 @@
 <script setup>
 import PrimaryTabHeader from '@/shared/components/navigation/PrimaryTabHeader.vue'
+import AppIcon from '@/shared/components/AppIcon.vue'
 
 defineProps({
   title: {
@@ -15,10 +16,23 @@ defineProps({
     default: 3,
   },
 })
+
+const emit = defineEmits(['back'])
 </script>
 
 <template>
-  <PrimaryTabHeader :title="title" flat-bottom>
+  <PrimaryTabHeader :title="title" :show-logo="false" flat-bottom>
+    <template #left>
+      <button
+        type="button"
+        class="onboarding-header__back"
+        aria-label="이전 단계로 이동"
+        @click="emit('back')"
+      >
+        <AppIcon name="chevron-left" :size="22" />
+      </button>
+    </template>
+
     <template #right>
       <span class="onboarding-header__step">{{ step }} / {{ totalSteps }}</span>
     </template>
@@ -26,6 +40,25 @@ defineProps({
 </template>
 
 <style scoped>
+.onboarding-header__back {
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.onboarding-header__back:hover {
+  border-color: rgb(86 235 229 / 72%) !important;
+  background: #075863 !important;
+  box-shadow: 0 0 20px rgb(22 201 196 / 22%) !important;
+  transform: translateY(-1px);
+}
+
+.onboarding-header__back:active {
+  transform: scale(0.96);
+}
+
 .onboarding-header__step {
   display: grid;
   min-width: 54px;

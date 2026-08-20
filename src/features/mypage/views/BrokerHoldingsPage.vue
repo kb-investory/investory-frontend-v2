@@ -43,14 +43,20 @@ async function loadHoldings() {
 function goBack() {
   router.push({
     name: ROUTE_NAMES.BROKER_LOGIN,
-    query: { brokerId: brokerStore.selectedBroker?.brokerId },
+    query: {
+      brokerId: brokerStore.selectedBroker?.brokerId,
+      ...(route.query.from ? { from: route.query.from } : {}),
+    },
   })
 }
 
 function goNext() {
   router.push({
     name: ROUTE_NAMES.BROKER_COMPLETE,
-    query: { brokerId: brokerStore.selectedBroker?.brokerId },
+    query: {
+      brokerId: brokerStore.selectedBroker?.brokerId,
+      ...(route.query.from ? { from: route.query.from } : {}),
+    },
   })
 }
 </script>

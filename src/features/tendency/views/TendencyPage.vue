@@ -360,7 +360,6 @@ onBeforeUnmount(() => {
       <div v-if="tendencyStore.isAnalysisLocked" class="analysis-cooldown-notice">
         <AppIcon name="calendar-range" :size="14" />
         <span>
-          다음 재분석까지 D-{{ tendencyStore.daysUntilAnalysis }} ·
           {{ formatDate(tendencyStore.analysisAccess?.analysisAvailableDate) }}부터 다시 분석할 수
           있어요
         </span>
@@ -375,7 +374,6 @@ onBeforeUnmount(() => {
         <div class="tendency-combination__cards">
           <TendencyGroupCard
             label="투자 선택 성향"
-            :summary="tendencyStore.analysis.groupSummaries.selection"
             :results="tendencyStore.selectionResults"
             icon="target"
             variant="selection"
@@ -384,7 +382,6 @@ onBeforeUnmount(() => {
 
           <TendencyGroupCard
             label="매매 행동 성향"
-            :summary="tendencyStore.analysis.groupSummaries.behavior"
             :results="tendencyStore.behaviorResults"
             icon="activity"
             variant="behavior"
@@ -549,9 +546,8 @@ onBeforeUnmount(() => {
             class="principle-card"
             @click="openPrincipleEdit"
           >
-            <span>{{ String(index + 1).padStart(2, '0') }}</span>
             <div>
-              <strong>{{ principle.content }}</strong>
+              <strong>{{ index + 1 }}. {{ principle.content }}</strong>
               <p>{{ formatPrincipleMeta(principle) }}</p>
             </div>
             <span class="principle-card__actions" aria-hidden="true">
@@ -1167,7 +1163,8 @@ onBeforeUnmount(() => {
 
 .analysis-intro {
   position: relative;
-  min-height: 158px;
+  height: 158px;
+  box-sizing: border-box;
   overflow: hidden;
   padding: 15px 17px;
   border: 1px solid #214650;
@@ -1643,7 +1640,8 @@ onBeforeUnmount(() => {
 .principle-status {
   position: relative;
   display: grid;
-  min-height: 158px;
+  height: 158px;
+  box-sizing: border-box;
   align-content: start;
   gap: 8px;
   overflow: hidden;
@@ -1680,6 +1678,9 @@ onBeforeUnmount(() => {
 }
 
 .principle-status header strong {
+  position: absolute;
+  top: 0;
+  right: 0;
   padding: 4px 8px;
   border: 1px solid #64d0ca;
   border-radius: 99px;
@@ -1716,17 +1717,17 @@ onBeforeUnmount(() => {
   position: relative;
   z-index: 2;
   display: grid;
-  width: 65%;
+  width: 63%;
   gap: 8px;
 }
 
 .principle-status__monkey {
   position: absolute;
-  right: -7px;
-  bottom: -11px;
+  right: 2px;
+  bottom: 2px;
   z-index: 1;
-  width: 142px;
-  height: 142px;
+  width: 120px;
+  height: 120px;
   object-fit: contain;
   mix-blend-mode: screen;
   pointer-events: none;
@@ -1761,7 +1762,7 @@ onBeforeUnmount(() => {
 .principle-card {
   display: grid;
   width: 100%;
-  grid-template-columns: 38px minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   min-height: 78px;
@@ -1776,20 +1777,6 @@ onBeforeUnmount(() => {
   text-align: left;
 }
 
-.principle-card > span {
-  display: inline-flex;
-  width: 38px;
-  height: 38px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9px;
-  background: #0b9b96;
-  color: #fff;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
-  font-weight: 800;
-}
-
 .principle-card > div {
   display: grid;
   gap: 5px;
@@ -1797,8 +1784,8 @@ onBeforeUnmount(() => {
 
 .principle-card strong {
   color: #273a3f;
-  font-size: var(--font-size-caption);
-  line-height: 1.5;
+  font-size: var(--font-size-body);
+  line-height: 1.4;
 }
 
 .principle-card p {

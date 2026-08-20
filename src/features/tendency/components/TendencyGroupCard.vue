@@ -6,10 +6,6 @@ defineProps({
     type: String,
     required: true,
   },
-  summary: {
-    type: String,
-    required: true,
-  },
   results: {
     type: Array,
     required: true,
@@ -48,7 +44,6 @@ function getResultIcon(dimensionCode) {
       </span>
       <div>
         <p class="group-card__label">{{ label }}</p>
-        <h2 class="group-card__summary">{{ summary }}</h2>
       </div>
     </header>
 
@@ -118,8 +113,7 @@ function getResultIcon(dimensionCode) {
   color: #53e0d7;
 }
 
-.group-card__label,
-.group-card__summary {
+.group-card__label {
   margin: 0;
 }
 
@@ -128,16 +122,6 @@ function getResultIcon(dimensionCode) {
   font-size: 13px;
   font-weight: 750;
   line-height: 1.3;
-}
-
-.group-card__summary {
-  grid-column: 1 / -1;
-  color: #181817;
-  font-family: var(--font-heading);
-  font-size: 13px;
-  font-weight: 750;
-  line-height: 1.35;
-  letter-spacing: -0.035em;
 }
 
 .group-card__results {
