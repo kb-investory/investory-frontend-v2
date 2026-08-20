@@ -249,7 +249,9 @@ onBeforeUnmount(() => {
     </section>
 
     <section
-      v-else-if="tendencyStore.isAnalysisLocked && activeTab === '투자성향'"
+      v-else-if="
+        tendencyStore.isAnalysisLocked && !tendencyStore.analysis && activeTab === '투자성향'
+      "
       class="analysis-locked"
     >
       <header class="analysis-locked__header">
@@ -348,6 +350,15 @@ onBeforeUnmount(() => {
           aria-hidden="true"
         />
       </section>
+
+      <div v-if="tendencyStore.isAnalysisLocked" class="analysis-cooldown-notice">
+        <AppIcon name="calendar-range" :size="14" />
+        <span>
+          다음 재분석까지 D-{{ tendencyStore.daysUntilAnalysis }} ·
+          {{ formatDate(tendencyStore.analysisAccess?.analysisAvailableDate) }}부터 다시 분석할 수
+          있어요
+        </span>
+      </div>
 
       <section class="tendency-combination">
         <header class="tendency-combination__header">
@@ -1086,6 +1097,18 @@ onBeforeUnmount(() => {
   color: #7c8587;
   font-size: var(--font-size-caption);
   line-height: 1.45;
+}
+
+.analysis-cooldown-notice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 13px;
+  border-radius: 12px;
+  background: #eef4f4;
+  color: #526467;
+  font-size: var(--font-size-caption);
+  font-weight: 700;
 }
 
 .tendency-combination {
