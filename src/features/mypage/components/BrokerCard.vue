@@ -3,6 +3,8 @@ import { computed, ref, watch } from 'vue'
 import { CircleCheck } from '@lucide/vue'
 
 const brokerLogos = Object.freeze({
+  KB: '/assets/brokers/kb-securities.png',
+  KB_SEC: '/assets/brokers/kb-securities.png',
   KIWOOM: '/assets/brokers/kiwoom.png',
   MIRAE: '/assets/brokers/mirae-asset.png',
   MIRAE_ASSET: '/assets/brokers/mirae-asset.png',
@@ -11,6 +13,7 @@ const brokerLogos = Object.freeze({
 })
 
 const brokerLogoNameRules = Object.freeze([
+  { keyword: 'KB증권', src: brokerLogos.KB_SEC },
   { keyword: '미래에셋', src: brokerLogos.MIRAE_ASSET },
   { keyword: '키움', src: brokerLogos.KIWOOM },
   { keyword: '토스', src: brokerLogos.TOSS_SEC },
