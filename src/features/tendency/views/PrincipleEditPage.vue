@@ -275,14 +275,13 @@ onBeforeUnmount(() => {
 
         <div class="current-principles">
           <article
-            v-for="(principle, index) in draftPrinciples"
+            v-for="principle in draftPrinciples"
             :key="principle.principleId"
             class="edit-principle"
           >
             <div class="edit-principle__body">
               <span>{{ getSourceMeta(principle) }}</span>
               <div class="edit-principle__content">
-                <strong class="edit-principle__number">{{ index + 1 }}.</strong>
                 <textarea
                   v-if="editingId === principle.principleId"
                   v-model="principle.content"
@@ -584,10 +583,6 @@ onBeforeUnmount(() => {
   min-width: 0;
   align-items: flex-start;
   gap: 4px;
-}
-
-.edit-principle__number {
-  flex: 0 0 auto;
 }
 
 .edit-principle__content textarea {
