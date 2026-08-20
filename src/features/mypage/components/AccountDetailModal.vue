@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 
 import AppIcon from '@/shared/components/AppIcon.vue'
+import BrokerLogo from '@/shared/components/BrokerLogo.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
 
 const props = defineProps({
@@ -67,7 +68,11 @@ function formatTime(value, { withDay = false } = {}) {
       <div v-else class="detail-modal__content">
         <section class="account-hero">
           <div class="account-hero__top">
-            <span class="account-hero__icon"><AppIcon name="activity" :size="19" /></span>
+            <BrokerLogo
+              :broker-code="account.brokerCode"
+              :broker-name="account.brokerName"
+              :size="34"
+            />
             <div>
               <h3>{{ account.brokerName }}</h3>
               <p>{{ account.accountType }} · {{ account.accountNumber }}</p>
@@ -233,15 +238,6 @@ function formatTime(value, { withDay = false } = {}) {
   grid-template-columns: 34px minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
-}
-.account-hero__icon {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
-  border-radius: 9px;
-  background: #e9f8f7;
-  color: #078f8a;
 }
 .account-hero h3,
 .account-hero p {

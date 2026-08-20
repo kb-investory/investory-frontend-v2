@@ -6,6 +6,7 @@ import { ROUTE_NAMES } from '@/app/router/route-names'
 import AccountDetailModal from '@/features/mypage/components/AccountDetailModal.vue'
 import { useMypageStore } from '@/features/mypage/stores/mypageStore'
 import AppIcon from '@/shared/components/AppIcon.vue'
+import BrokerLogo from '@/shared/components/BrokerLogo.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
 
 const router = useRouter()
@@ -161,7 +162,11 @@ onMounted(() => mypageStore.fetchAccounts())
               @click="openAccount(account)"
               @keydown.enter="openAccount(account)"
             >
-              <span class="account-card__icon"><AppIcon name="landmark" :size="17" /></span>
+              <BrokerLogo
+                :broker-code="account.brokerCode"
+                :broker-name="account.brokerName"
+                :size="34"
+              />
               <div class="account-card__main">
                 <div>
                   <strong>{{ account.brokerName }}</strong>
@@ -386,15 +391,6 @@ onMounted(() => mypageStore.fetchAccounts())
 }
 .account-card:last-child {
   border-bottom: 0;
-}
-.account-card__icon {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
-  border-radius: 9px;
-  background: #eaf7f6;
-  color: #178d88;
 }
 .account-card__main {
   min-width: 0;

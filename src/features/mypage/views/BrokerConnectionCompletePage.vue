@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
 import { useBrokerConnectionStore } from '@/features/mypage/stores/brokerConnectionStore'
+import BrokerLogo from '@/shared/components/BrokerLogo.vue'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
 
 const router = useRouter()
@@ -53,9 +54,16 @@ async function goHome() {
           <dl class="complete-summary">
             <div>
               <dt>연결 계좌</dt>
-              <dd>
-                {{ brokerStore.account?.brokerName || '연결 증권사' }} ·
-                {{ brokerStore.account?.accountCount || 0 }}개
+              <dd class="complete-summary__account">
+                <BrokerLogo
+                  :broker-code="brokerStore.account?.brokerCode"
+                  :broker-name="brokerStore.account?.brokerName"
+                  :size="32"
+                />
+                <span>
+                  {{ brokerStore.account?.brokerName || '연결 증권사' }} ·
+                  {{ brokerStore.account?.accountCount || 0 }}개
+                </span>
               </dd>
             </div>
             <div>
@@ -210,6 +218,12 @@ async function goHome() {
 
 .complete-summary__number {
   font-family: var(--font-mono);
+}
+
+.complete-summary__account {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .complete-action {

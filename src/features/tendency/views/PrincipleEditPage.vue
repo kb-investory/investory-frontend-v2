@@ -279,16 +279,18 @@ onBeforeUnmount(() => {
             :key="principle.principleId"
             class="edit-principle"
           >
-            <span class="edit-principle__index">{{ String(index + 1).padStart(2, '0') }}</span>
             <div class="edit-principle__body">
               <span>{{ getSourceMeta(principle) }}</span>
-              <textarea
-                v-if="editingId === principle.principleId"
-                v-model="principle.content"
-                rows="3"
-                :aria-label="`${getSourceLabel(principle)} 원칙 문구 수정`"
-              />
-              <strong v-else>{{ principle.content }}</strong>
+              <div class="edit-principle__content">
+                <strong class="edit-principle__number">{{ index + 1 }}.</strong>
+                <textarea
+                  v-if="editingId === principle.principleId"
+                  v-model="principle.content"
+                  rows="3"
+                  :aria-label="`${getSourceLabel(principle)} 원칙 문구 수정`"
+                />
+                <strong v-else>{{ principle.content }}</strong>
+              </div>
             </div>
             <button
               type="button"
@@ -550,7 +552,7 @@ onBeforeUnmount(() => {
 
 .edit-principle {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) 32px;
+  grid-template-columns: minmax(0, 1fr) 32px;
   grid-template-rows: repeat(2, auto);
   align-items: center;
   gap: 6px 10px;
@@ -566,20 +568,6 @@ onBeforeUnmount(() => {
   border-bottom: 0;
 }
 
-.edit-principle__index {
-  display: inline-flex;
-  width: 44px;
-  height: 44px;
-  grid-row: 1 / 3;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  background: #0b918c;
-  color: #ffffff;
-  font-size: var(--font-size-caption);
-  font-weight: 700;
-}
-
 .edit-principle__body,
 .available-principles article > div {
   display: grid;
@@ -589,6 +577,21 @@ onBeforeUnmount(() => {
 
 .edit-principle__body {
   grid-row: 1 / 3;
+}
+
+.edit-principle__content {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.edit-principle__number {
+  flex: 0 0 auto;
+}
+
+.edit-principle__content textarea {
+  min-width: 0;
 }
 
 .edit-principle strong,

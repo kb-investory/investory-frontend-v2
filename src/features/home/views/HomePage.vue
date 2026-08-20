@@ -58,6 +58,8 @@ const connectedAssetSummary = computed(() => {
 
   return {
     accountName: firstAccount.accountName || firstAccount.brokerName,
+    brokerCode: firstAccount.brokerCode,
+    brokerName: firstAccount.brokerName,
     holdingCount: homeStore.holdings.length,
     totalValuation: homeStore.summary.totalMarketValue,
   }

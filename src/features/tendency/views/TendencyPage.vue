@@ -1230,6 +1230,19 @@ onBeforeUnmount(() => {
   white-space: nowrap;
 }
 
+.analysis-cooldown-notice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 13px;
+  border-radius: 12px;
+  background: #eef4f4;
+  color: #526467;
+  font-size: var(--font-size-caption);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .analysis-intro__monkey {
   position: absolute;
   right: 2px;
@@ -1630,11 +1643,11 @@ onBeforeUnmount(() => {
 .principle-status {
   position: relative;
   display: grid;
-  min-height: 174px;
+  min-height: 158px;
   align-content: start;
-  gap: 17px;
+  gap: 8px;
   overflow: hidden;
-  padding: 16px 17px 18px;
+  padding: 15px 17px;
   border: 1px solid #214650;
   border-radius: 18px;
   background:
@@ -1667,7 +1680,7 @@ onBeforeUnmount(() => {
 }
 
 .principle-status header strong {
-  padding: 5px 9px;
+  padding: 4px 8px;
   border: 1px solid #64d0ca;
   border-radius: 99px;
   background: #0b8f8b;
@@ -1684,7 +1697,7 @@ onBeforeUnmount(() => {
 
 .principle-status h2 {
   font-size: 18px;
-  line-height: 1.35;
+  line-height: 1.3;
   letter-spacing: -0.035em;
 }
 
@@ -1696,7 +1709,7 @@ onBeforeUnmount(() => {
 .principle-status p {
   color: #b9ced1;
   font-size: var(--font-size-caption);
-  line-height: 1.45;
+  line-height: 1.4;
 }
 
 .principle-status__copy {
@@ -1704,7 +1717,7 @@ onBeforeUnmount(() => {
   z-index: 2;
   display: grid;
   width: 65%;
-  gap: 10px;
+  gap: 8px;
 }
 
 .principle-status__monkey {

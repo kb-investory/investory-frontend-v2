@@ -1,7 +1,13 @@
 <script setup>
 import { CircleCheck } from '@lucide/vue'
 
+import BrokerLogo from '@/shared/components/BrokerLogo.vue'
+
 defineProps({
+  brokerCode: {
+    type: String,
+    default: '',
+  },
   brokerName: {
     type: String,
     required: true,
@@ -28,7 +34,7 @@ function formatCurrency(value) {
 <template>
   <section class="account-summary" aria-label="연결 계좌 요약">
     <div class="account-summary__broker">
-      <span class="account-summary__icon" aria-hidden="true">{{ brokerName.slice(0, 2) }}</span>
+      <BrokerLogo :broker-code="brokerCode" :broker-name="brokerName" :size="40" />
       <span>
         <strong>{{ brokerName }}</strong>
         <small>연결 계좌 {{ accountCount }}개</small>
@@ -85,19 +91,6 @@ function formatCurrency(value) {
   color: var(--color-text-muted);
   font-size: var(--font-size-caption);
   font-weight: 500;
-}
-
-.account-summary__icon {
-  display: grid;
-  width: 40px;
-  height: 40px;
-  place-items: center;
-  border-radius: 7px;
-  background: #159b97;
-  color: #ffffff;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
-  font-weight: 800;
 }
 
 .account-summary__check {

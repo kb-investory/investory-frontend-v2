@@ -157,7 +157,7 @@ function formatCurrency(value, { signed = false } = {}) {
     <section class="journal-digest__trades" aria-labelledby="trade-records-title">
       <header>
         <h3 id="trade-records-title">거래별 판단 기록</h3>
-        <span>{{ trades.length }} TRADES</span>
+        <span v-if="trades.length">{{ trades.length }} TRADES</span>
       </header>
 
       <div v-if="trades.length" class="journal-digest__trade-list">
