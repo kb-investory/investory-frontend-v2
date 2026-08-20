@@ -546,9 +546,8 @@ onBeforeUnmount(() => {
             class="principle-card"
             @click="openPrincipleEdit"
           >
-            <span>{{ String(index + 1).padStart(2, '0') }}</span>
             <div>
-              <strong>{{ principle.content }}</strong>
+              <strong>{{ index + 1 }}. {{ principle.content }}</strong>
               <p>{{ formatPrincipleMeta(principle) }}</p>
             </div>
             <span class="principle-card__actions" aria-hidden="true">
@@ -1763,7 +1762,7 @@ onBeforeUnmount(() => {
 .principle-card {
   display: grid;
   width: 100%;
-  grid-template-columns: 38px minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   min-height: 78px;
@@ -1778,20 +1777,6 @@ onBeforeUnmount(() => {
   text-align: left;
 }
 
-.principle-card > span {
-  display: inline-flex;
-  width: 38px;
-  height: 38px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9px;
-  background: #0b9b96;
-  color: #fff;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
-  font-weight: 800;
-}
-
 .principle-card > div {
   display: grid;
   gap: 5px;
@@ -1799,8 +1784,8 @@ onBeforeUnmount(() => {
 
 .principle-card strong {
   color: #273a3f;
-  font-size: var(--font-size-caption);
-  line-height: 1.5;
+  font-size: var(--font-size-body);
+  line-height: 1.4;
 }
 
 .principle-card p {
