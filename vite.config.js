@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
         // 파이썬 로컬 AI 서버 전용 엔드포인트
-        '^/api/v1/(simulations|simulation-bots)': {
+        '^/api/(simulations|simulation-bots)': {
           target: pythonAiUrl,
           changeOrigin: true,
         },
