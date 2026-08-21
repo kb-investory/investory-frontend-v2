@@ -7,8 +7,7 @@ import RunningMonkey from '@/features/home/components/RunningMonkey.vue'
 import ReanalysisFloating from '@/features/tendency/components/ReanalysisFloating.vue'
 import RecommendationFloating from '@/features/tendency/components/RecommendationFloating.vue'
 import TendencyChangeModal from '@/features/tendency/components/TendencyChangeModal.vue'
-import TendencyDetailModal from '@/features/tendency/components/TendencyDetailModal.vue'
-import TendencyGroupCard from '@/features/tendency/components/TendencyGroupCard.vue'
+import TendencyResultCarousel from '@/features/tendency/components/TendencyResultCarousel.vue'
 import { useFloatingCornerSwipe } from '@/features/tendency/composables/useFloatingCornerSwipe'
 import { useTendencyStore } from '@/features/tendency/stores/tendencyStore'
 import AppIcon from '@/shared/components/AppIcon.vue'
@@ -25,7 +24,7 @@ const route = useRoute()
 const router = useRouter()
 const tendencyStore = useTendencyStore()
 const activeTab = ref(route.query.tab === 'principles' ? '투자원칙' : '투자성향')
-const selectedResult = ref(null)
+const currentTendencyIndex = ref(0)
 const selectedHistory = ref(null)
 const selectedRoadmapHistory = ref(null)
 let reanalysisMidnightTimer
@@ -57,6 +56,10 @@ const analysisMarkerPercent = computed(() =>
 )
 const historyAnalysisCount = computed(() => tendencyStore.history.length)
 const roadmapHistory = computed(() => [...tendencyStore.history].reverse())
+const combinedTendencyResults = computed(() => [
+  ...tendencyStore.selectionResults,
+  ...tendencyStore.behaviorResults,
+])
 
 function getRoadmapY(progress) {
   return 116 - 48 * Math.sin(Math.PI * progress) + 14 * Math.sin(Math.PI * 2 * progress)
@@ -367,27 +370,20 @@ onBeforeUnmount(() => {
 
       <section class="tendency-combination">
         <header class="tendency-combination__header">
-          <h2>나의 성향 조합</h2>
-          <p>6가지 성향 버튼을 누르면 각 성향의 상세 설명을 확인할 수 있어요</p>
+          <div class="tendency-combination__title-row">
+            <h2>나의 성향 조합</h2>
+            <span>
+              {{ String(currentTendencyIndex + 1).padStart(2, '0') }} /
+              {{ String(combinedTendencyResults.length).padStart(2, '0') }}
+            </span>
+          </div>
+          <p>좌우로 넘기며 6가지 성향과 상세 분석을 한 번에 확인해 보세요</p>
         </header>
 
-        <div class="tendency-combination__cards">
-          <TendencyGroupCard
-            label="투자 선택 성향"
-            :results="tendencyStore.selectionResults"
-            icon="target"
-            variant="selection"
-            @select="selectedResult = $event"
-          />
-
-          <TendencyGroupCard
-            label="매매 행동 성향"
-            :results="tendencyStore.behaviorResults"
-            icon="activity"
-            variant="behavior"
-            @select="selectedResult = $event"
-          />
-        </div>
+        <TendencyResultCarousel
+          :results="combinedTendencyResults"
+          @change="currentTendencyIndex = $event"
+        />
       </section>
 
       <section class="roadmap-card">
@@ -610,12 +606,6 @@ onBeforeUnmount(() => {
         선택한 투자원칙은 나만 확인할 수 있어요
       </p>
     </main>
-
-    <TendencyDetailModal
-      v-if="selectedResult"
-      :result="selectedResult"
-      @close="selectedResult = null"
-    />
 
     <TendencyChangeModal
       v-if="selectedHistory"
@@ -1125,6 +1115,20 @@ onBeforeUnmount(() => {
   gap: 4px;
 }
 
+.tendency-combination__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tendency-combination__title-row > span {
+  color: #0b7f7b;
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+}
+
 .tendency-combination__header h2 {
   margin: 0;
   color: #24373d;
@@ -1135,17 +1139,6 @@ onBeforeUnmount(() => {
   margin: 0;
   color: #8a9496;
   font-size: var(--font-size-caption);
-}
-
-.tendency-combination__cards {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: stretch;
-  gap: 8px;
-}
-
-.tendency-combination__cards :deep(.group-card) {
-  height: 100%;
 }
 
 .analysis-report-card {
