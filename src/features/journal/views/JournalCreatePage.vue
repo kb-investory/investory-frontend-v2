@@ -10,7 +10,9 @@ import JournalMoodPanel from '@/features/journal/components/JournalMoodPanel.vue
 import JournalTradeTimeline from '@/features/journal/components/JournalTradeTimeline.vue'
 import { getDefaultJournalDate } from '@/features/journal/api/journalApi'
 import { useJournalStore } from '@/features/journal/stores/journalStore'
+import { useTendencyStore } from '@/features/tendency/stores/tendencyStore'
 import { queryKeys } from '@/shared/api/queryKeys'
+import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
 import BaseTextarea from '@/shared/components/inputs/BaseTextarea.vue'
@@ -22,6 +24,7 @@ const DRAFT_KEY_PREFIX = 'investory:journal-draft:'
 const route = useRoute()
 const router = useRouter()
 const journalStore = useJournalStore()
+const tendencyStore = useTendencyStore()
 
 const form = reactive({
   marketMood: 'CALM',
@@ -33,6 +36,9 @@ const autoSaveStatus = ref('작성 내용을 불러오는 중…')
 const validationMessage = ref('')
 const resultMessage = ref('')
 const isHydrating = ref(true)
+const isPrincipleModalOpen = ref(false)
+const principleLoading = ref(false)
+const principleError = ref('')
 const tradeHistories = reactive({})
 const tradeHistoryLoading = reactive({})
 const tradeHistoryErrors = reactive({})
@@ -175,6 +181,41 @@ function appendThoughtPrompt(prompt) {
   form.marketThought = `${form.marketThought}${separator}${prompt}: `
 }
 
+async function openPrincipleModal() {
+  isPrincipleModalOpen.value = true
+  principleError.value = ''
+
+  if (tendencyStore.principles.length) return
+
+  principleLoading.value = true
+  try {
+    await tendencyStore.fetchTendencies()
+    if (tendencyStore.error) {
+      principleError.value = '원칙을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'
+    }
+  } catch {
+    principleError.value = '원칙을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'
+  } finally {
+    principleLoading.value = false
+  }
+}
+
+function closePrincipleModal() {
+  isPrincipleModalOpen.value = false
+}
+
+function goToPrincipleEdit() {
+  closePrincipleModal()
+  router.push({ path: '/tendency/principles/edit' })
+}
+
+function getPrincipleMeta(principle) {
+  if (principle.recommendationSource?.type === 'USER_CREATED' || principle.isUserModified) {
+    return '직접 작성한 원칙'
+  }
+  return principle.recommendationSource?.tendency?.name ?? principle.title ?? '나의 투자원칙'
+}
+
 async function handleSubmit() {
   validationMessage.value = ''
   resultMessage.value = ''
@@ -252,10 +293,16 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
           <div class="journal-create-page__date-copy">
             <h2>{{ dateLabel }}</h2>
           </div>
-          <span class="journal-create-page__badge">
-            <span class="journal-create-page__today-dot" aria-hidden="true" />
-            오늘 1회
-          </span>
+          <button
+            type="button"
+            class="journal-create-page__principle-button"
+            aria-label="나의 투자원칙 보기"
+            title="나의 투자원칙 보기"
+            @click="openPrincipleModal"
+          >
+            <AppIcon name="book-open" :size="19" />
+            <span>투자원칙</span>
+          </button>
         </section>
 
         <section class="journal-create-page__step-card" aria-labelledby="mood-step-title">
@@ -340,6 +387,77 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
         </p>
       </main>
 
+      <Teleport to="body">
+        <div
+          v-if="isPrincipleModalOpen"
+          class="journal-principle-modal__overlay"
+          @click.self="closePrincipleModal"
+        >
+          <section
+            class="journal-principle-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="journal-principle-modal-title"
+          >
+            <header class="journal-principle-modal__header">
+              <div>
+                <h2 id="journal-principle-modal-title">나의 투자원칙</h2>
+                <p>오늘의 판단을 기록할 때 잠깐 확인해보세요.</p>
+              </div>
+              <button
+                type="button"
+                class="journal-principle-modal__close"
+                aria-label="나의 투자원칙 모달 닫기"
+                @click="closePrincipleModal"
+              >
+                <AppIcon name="x" :size="20" />
+              </button>
+            </header>
+
+            <div v-if="principleLoading" class="journal-principle-modal__state">
+              <AppIcon name="loader-circle" :size="22" class="spin" />
+              <p>나의 원칙을 불러오는 중이에요.</p>
+            </div>
+
+            <div v-else-if="principleError" class="journal-principle-modal__state">
+              <AppIcon name="triangle-alert" :size="22" />
+              <p>{{ principleError }}</p>
+              <button type="button" @click="openPrincipleModal">다시 불러오기</button>
+            </div>
+
+            <div v-else-if="tendencyStore.principles.length" class="journal-principle-list">
+              <article
+                v-for="(principle, index) in tendencyStore.principles"
+                :key="principle.principleId ?? index"
+                class="journal-principle-item"
+              >
+                <span class="journal-principle-item__number">{{ index + 1 }}</span>
+                <div>
+                  <strong>{{ principle.content }}</strong>
+                  <span>{{ getPrincipleMeta(principle) }}</span>
+                </div>
+              </article>
+            </div>
+
+            <div v-else class="journal-principle-modal__state journal-principle-modal__state--empty">
+              <span class="journal-principle-modal__empty-icon">
+                <AppIcon name="book-open" :size="24" />
+              </span>
+              <strong>아직 등록한 원칙이 없어요</strong>
+              <p>나만의 기준을 등록하면 일지를 쓸 때 바로 확인할 수 있어요.</p>
+              <BaseButton variant="secondary" @click="goToPrincipleEdit">
+                원칙 등록하러가기
+                <template #iconRight><AppIcon name="arrow-right" :size="16" /></template>
+              </BaseButton>
+            </div>
+
+            <footer v-if="tendencyStore.principles.length" class="journal-principle-modal__footer">
+              <button type="button" @click="goToPrincipleEdit">원칙 수정하러가기</button>
+            </footer>
+          </section>
+        </div>
+      </Teleport>
+
       <footer class="journal-create-page__save">
         <BaseButton full-width :disabled="!canSubmit" @click="handleSubmit">
           <template #iconLeft>
@@ -423,25 +541,35 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
   line-height: 1.25;
 }
 
-.journal-create-page__badge {
-  display: inline-flex;
-  height: 28px;
+.journal-create-page__principle-button {
+  display: flex;
+  width: 52px;
+  height: 46px;
+  flex: 0 0 auto;
+  flex-direction: column;
   align-items: center;
-  gap: 5px;
-  padding: 0 10px;
-  border-radius: 14px;
+  justify-content: center;
+  gap: 2px;
+  border: 1px solid #cce7e4;
+  border-radius: 12px;
   background: #ffffff;
-  color: var(--teal-deep);
-  font-size: var(--font-size-caption);
-  font-weight: 700;
-  white-space: nowrap;
+  color: var(--brand-teal-deep);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 750;
+  line-height: 1;
+  transition: 0.15s ease;
 }
 
-.journal-create-page__today-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--brand-teal);
+.journal-create-page__principle-button:hover {
+  border-color: var(--brand-teal);
+  background: #e7f7f5;
+}
+
+.journal-create-page__principle-button:focus-visible,
+.journal-principle-modal button:focus-visible {
+  outline: 2px solid var(--brand-teal);
+  outline-offset: 2px;
 }
 
 .journal-create-page__step-card {
@@ -601,6 +729,199 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
   font-size: var(--font-size-caption);
   line-height: 1.4;
   text-align: center;
+}
+
+.journal-principle-modal__overlay {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(24, 36, 39, 0.42);
+}
+
+.journal-principle-modal {
+  display: flex;
+  width: min(100%, 360px);
+  max-height: min(620px, calc(100vh - 32px));
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #dce9e8;
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 18px 42px rgba(27, 50, 55, 0.2);
+}
+
+.journal-principle-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 22px 20px 16px;
+  border-bottom: 1px solid #edf2f2;
+}
+
+.journal-principle-modal__header h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-title-md);
+  font-weight: 800;
+}
+
+.journal-principle-modal__header p {
+  margin: 5px 0 0;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+}
+
+.journal-principle-modal__close {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: #f3f6f6;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.journal-principle-list {
+  display: grid;
+  gap: 9px;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+.journal-principle-item {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  padding: 13px 12px;
+  border: 1px solid #e1eceb;
+  border-radius: 14px;
+  background: #f8fcfb;
+}
+
+.journal-principle-item__number {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 9px;
+  background: #dff3f0;
+  color: var(--brand-teal-deep);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-caption);
+  font-weight: 800;
+}
+
+.journal-principle-item > div {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+}
+
+.journal-principle-item strong {
+  color: var(--text-primary);
+  font-size: var(--font-size-body-sm);
+  font-weight: 700;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+.journal-principle-item span:last-child {
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.journal-principle-modal__state {
+  display: flex;
+  min-height: 190px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 24px 20px;
+  color: var(--brand-teal-deep);
+  text-align: center;
+}
+
+.journal-principle-modal__state p {
+  max-width: 250px;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
+}
+
+.journal-principle-modal__state > button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #cfe5e3;
+  border-radius: 9px;
+  background: #ffffff;
+  color: var(--brand-teal-deep);
+  cursor: pointer;
+  font-size: var(--font-size-caption);
+  font-weight: 700;
+}
+
+.journal-principle-modal__state--empty {
+  align-items: stretch;
+}
+
+.journal-principle-modal__empty-icon {
+  display: grid;
+  width: 50px;
+  height: 50px;
+  align-self: center;
+  place-items: center;
+  border-radius: 15px;
+  background: #e8f7f5;
+  color: var(--brand-teal-deep);
+}
+
+.journal-principle-modal__state--empty strong {
+  color: var(--text-primary);
+  font-size: var(--font-size-body);
+}
+
+.journal-principle-modal__state--empty :deep(.base-button) {
+  width: 100%;
+  margin-top: 3px;
+}
+
+.journal-principle-modal__footer {
+  padding: 0 20px 20px;
+}
+
+.journal-principle-modal__footer button {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #cfe5e3;
+  border-radius: 11px;
+  background: #ffffff;
+  color: var(--brand-teal-deep);
+  cursor: pointer;
+  font-size: var(--font-size-body-sm);
+  font-weight: 700;
+}
+
+.spin {
+  animation: journal-principle-modal-spin 1s linear infinite;
+}
+
+@keyframes journal-principle-modal-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 360px) {
