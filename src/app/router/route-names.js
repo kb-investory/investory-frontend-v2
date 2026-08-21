@@ -1,4 +1,5 @@
 export const ROUTE_NAMES = {
+  WELCOME: 'Welcome',
   HOME: 'Home',
   NOTIFICATIONS: 'Notifications',
   NOTIFICATION_SETTINGS: 'NotificationSettings',
