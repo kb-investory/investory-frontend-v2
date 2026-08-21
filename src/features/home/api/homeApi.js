@@ -37,6 +37,12 @@ function getStreakDays(activityDates, today) {
   let streakDays = 0
   let cursor = new Date(today)
 
+  // 오늘 기록은 아직 작성 중일 수 있으므로, 오늘이 비어 있으면 어제부터 연속 기록을 센다.
+  // 오늘 기록이 존재하는 경우에는 오늘부터 그대로 계산한다.
+  if (!activityDates.has(formatLocalDate(cursor))) {
+    cursor = addDays(cursor, -1)
+  }
+
   while (activityDates.has(formatLocalDate(cursor))) {
     streakDays += 1
     cursor = addDays(cursor, -1)
