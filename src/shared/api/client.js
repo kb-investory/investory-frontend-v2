@@ -16,6 +16,10 @@ export function setAuthExpiredHandler(handler) {
   onAuthExpired = handler
 }
 
+// 탈퇴한 회원의 토큰은 형식상 유효해 401이 아닌 403(AUTH_005)으로 내려온다.
+// 갱신해도 회원 상태가 복구되지 않으므로 재시도 없이 바로 세션을 초기화한다.
+const WITHDRAWN_ACCOUNT_ERROR_CODE = 'AUTH_005'
+
 export function getApiUrl(endpoint) {
   const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
   return `${API_BASE_URL}${normalizedEndpoint}`
@@ -110,5 +114,17 @@ export async function request(endpoint, options = {}) {
     return request(endpoint, { ...fetchOptions, skipAuthRetry: true })
   }
 
-  return parseResponse(response)
+  try {
+    return await parseResponse(response)
+  } catch (error) {
+    if (
+      error instanceof ApiError &&
+      error.status === 403 &&
+      error.errorCode === WITHDRAWN_ACCOUNT_ERROR_CODE
+    ) {
+      setAccessToken(null)
+      onAuthExpired?.()
+    }
+    throw error
+  }
 }
