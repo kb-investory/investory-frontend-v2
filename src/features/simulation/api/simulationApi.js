@@ -5,6 +5,8 @@ import { request } from '@/shared/api/client'
 
 const USE_MOCK_SIMULATION =
   import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_SIMULATION === 'true'
+const USE_LIVE_SIMULATION_FIXTURES =
+  import.meta.env.DEV && import.meta.env.VITE_USE_LIVE_SIMULATION_FIXTURES === 'true'
 
 const MOCK_SECURITY_BY_ID = Object.freeze({
   101: { securityCode: '000660', securityName: 'SK하이닉스' },
@@ -15,7 +17,44 @@ const MOCK_SECURITY_BY_ID = Object.freeze({
 })
 
 function clone(value) {
-  return structuredClone(value)
+  try {
+    return structuredClone(value)
+  } catch {
+    // Pinia에서 전달된 Vue Proxy도 목 저장 흐름에서 안전하게 복사한다.
+    return JSON.parse(JSON.stringify(value))
+  }
+}
+
+let liveSimulationFixturesPromise = null
+
+async function getLiveSimulationFixtures() {
+  if (!USE_LIVE_SIMULATION_FIXTURES) return null
+  if (!liveSimulationFixturesPromise) {
+    liveSimulationFixturesPromise = Promise.all(
+      ['live_bot.json', 'live_run.json', 'report_snapshot.json'].map(async (fileName) => {
+        const response = await fetch(`/${fileName}`)
+        if (!response.ok) throw new Error(`${fileName} fixture를 불러오지 못했습니다.`)
+        return await response.json()
+      }),
+    )
+      .then(([bot, run, reportSnapshot]) => ({ bot, run, reportSnapshot }))
+      .catch(() => null)
+  }
+
+  return await liveSimulationFixturesPromise
+}
+
+function getLiveReport(fixtures) {
+  const liveReport = fixtures?.run?.report
+  if (!liveReport) return null
+
+  return {
+    ...clone(fixtures.reportSnapshot ?? {}),
+    ...clone(liveReport),
+    referencePrinciples:
+      liveReport.referencePrinciples ?? clone(fixtures.reportSnapshot?.referencePrinciples ?? []),
+    simulationRunId: liveReport.simulationRunId ?? fixtures.run.runId,
+  }
 }
 
 function withMockSecurityNames(data) {
@@ -114,17 +153,26 @@ async function enrichSecurityDetails(items) {
 async function normalizeSimulationReport(data) {
   if (!data) return data
 
-  const rawKeyTradeReviews = data.keyTradeReviews ?? data.decisionReviews ?? []
+  const report =
+    data.report && typeof data.report === 'object'
+      ? {
+          ...data.report,
+          simulationRunId:
+            data.report.simulationRunId ?? data.simulationRunId ?? data.runId ?? data.simulationId,
+        }
+      : data
+
+  const rawKeyTradeReviews = report.keyTradeReviews ?? report.decisionReviews ?? []
   const [keyTradeReviews, decisionReviews, evidenceReviews, securityEvidenceReviews] =
     await Promise.all([
       enrichSecurityDetails(rawKeyTradeReviews),
-      enrichSecurityDetails(data.decisionReviews),
-      enrichSecurityDetails(data.evidenceReviews),
-      enrichSecurityDetails(data.securityEvidenceReviews),
+      enrichSecurityDetails(report.decisionReviews),
+      enrichSecurityDetails(report.evidenceReviews),
+      enrichSecurityDetails(report.securityEvidenceReviews),
     ])
 
   return {
-    ...data,
+    ...report,
     keyTradeReviews,
     decisionReviews: decisionReviews?.length ? decisionReviews : keyTradeReviews,
     evidenceReviews,
@@ -225,6 +273,8 @@ function normalizePositionSnapshot(snapshot) {
 async function normalizeSimulationResult(data) {
   if (!data) return data
 
+  const embeddedReport = data.report ? await normalizeSimulationReport(data.report) : null
+
   const dailyPerformance = normalizeDailyPerformanceArray(
     data.dailyPerformance || data.dailySnapshots,
   )
@@ -243,6 +293,8 @@ async function normalizeSimulationResult(data) {
 
   return {
     ...data,
+    simulationRunId: data.simulationRunId ?? data.runId ?? embeddedReport?.simulationRunId,
+    report: embeddedReport ?? data.report,
     dailyPerformance,
     dailySnapshots: dailyPerformance,
     simulatedTrades,
@@ -335,11 +387,14 @@ export async function compileSimulationBot(payload = {}) {
     profile: payload.profile ?? DEFAULT_HARDCODED_PROFILE,
   }
   if (USE_MOCK_SIMULATION) {
+    const liveFixtures = await getLiveSimulationFixtures()
     return {
       ...clone(simulationData.compileResponse),
       status: 'COMPLETED',
       progressPercent: 100,
       personalBotId: 1,
+      ruleSchema: clone(liveFixtures?.bot ?? simulationData.compileResponse.ruleSchema),
+      compiledBot: clone(liveFixtures?.bot ?? null),
     }
   }
   return await request('/simulation/bots/compile', {
@@ -376,9 +431,12 @@ export async function runSimulation(payload = {}) {
     accountId: payload.accountId,
   }
   if (USE_MOCK_SIMULATION) {
+    const liveFixtures = await getLiveSimulationFixtures()
     const mockResult = withMockSecurityNames(simulationData.run)
     return await normalizeSimulationResult({
       ...mockResult,
+      simulationRunId: liveFixtures?.run?.runId ?? mockResult.simulationRunId,
+      report: getLiveReport(liveFixtures),
       periodStart: payload.periodStart ?? mockResult.periodStart,
       periodEnd: payload.periodEnd ?? mockResult.periodEnd,
       persistenceStatus: 'COMPLETED',
@@ -404,8 +462,11 @@ export async function getSimulationDetail(simulationId) {
 // GET /simulation/{simulationId}/report
 export async function getSimulationReport(simulationId) {
   if (USE_MOCK_SIMULATION) {
+    const liveFixtures = await getLiveSimulationFixtures()
     const report =
-      simulationReportData.reports?.[String(simulationId)] ?? simulationReportData.reports?.['101']
+      getLiveReport(liveFixtures) ??
+      simulationReportData.reports?.[String(simulationId)] ??
+      simulationReportData.reports?.['101']
     return await normalizeSimulationReport({
       ...clone(report),
       reportVersion: report?.reportVersion ?? 'DETERMINISTIC_V13',

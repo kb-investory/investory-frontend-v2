@@ -247,8 +247,10 @@ export const useSimulationStore = defineStore('simulation', () => {
   async function fetchSimulationReport(simulationId, { background = false, force = false } = {}) {
     const resolvedId =
       simulationId ??
+      latestResult.value?.runId ??
       latestResult.value?.simulationRunId ??
-      latestResult.value?.simulationRun?.simulationRunId
+      latestResult.value?.simulationRun?.simulationRunId ??
+      latestResult.value?.report?.simulationRunId
 
     if (!resolvedId) {
       console.warn('[SimulationStore] fetchSimulationReport: simulationId를 찾을 수 없습니다.', {
@@ -415,7 +417,7 @@ export const useSimulationStore = defineStore('simulation', () => {
         accountId: simulationAccountId.value,
       })
       latestResult.value = filterResultBySelectedParticipants(result)
-      simulationReport.value = null
+      simulationReport.value = latestResult.value?.report ?? null
       simulationReportError.value = null
       await queryClient.invalidateQueries({
         queryKey: queryKeys.simulation.overview(),
