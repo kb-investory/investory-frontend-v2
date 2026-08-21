@@ -546,12 +546,14 @@ onBeforeUnmount(() => {
             class="principle-card"
             @click="openPrincipleEdit"
           >
+            <span class="principle-card__index" aria-hidden="true">
+              {{ String(index + 1).padStart(2, '0') }}
+            </span>
             <div>
-              <strong>{{ index + 1 }}. {{ principle.content }}</strong>
+              <strong>{{ principle.content }}</strong>
               <p>{{ formatPrincipleMeta(principle) }}</p>
             </div>
             <span class="principle-card__actions" aria-hidden="true">
-              <AppIcon name="shield-check" :size="17" />
               <AppIcon name="chevron-right" :size="16" />
             </span>
           </button>
@@ -1762,7 +1764,7 @@ onBeforeUnmount(() => {
 .principle-card {
   display: grid;
   width: 100%;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   min-height: 78px;
@@ -1775,6 +1777,20 @@ onBeforeUnmount(() => {
   cursor: pointer;
   font: inherit;
   text-align: left;
+}
+
+.principle-card__index {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #0f9f9b;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .principle-card > div {
