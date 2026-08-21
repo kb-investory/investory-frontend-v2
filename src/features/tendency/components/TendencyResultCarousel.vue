@@ -101,6 +101,13 @@ function getConfidence(result) {
   return TENDENCY_CONFIDENCE[result?.dimension?.code] ?? 80
 }
 
+function usesStockMajorityEvidence(result) {
+  return (
+    ['LOSS_RESPONSE', 'PROFIT_RESPONSE'].includes(result?.dimension?.code) &&
+    result?.type?.rationale?.items?.some((item) => item.unit === '종목')
+  )
+}
+
 function getResultTypeIcon(result) {
   return (
     getTendencyTypeConfig(result?.dimension?.code)?.options?.find(
@@ -242,7 +249,10 @@ onMounted(() =>
                 :size="16"
               />
             </span>
-            <h3>{{ index === activeIndex ? selectedOption.name : result.type.name }}</h3>
+            <div class="result-summary-card__title-copy">
+              <small>{{ result.dimension.name }}</small>
+              <h3>{{ index === activeIndex ? selectedOption.name : result.type.name }}</h3>
+            </div>
           </div>
           <p>
             {{
@@ -333,6 +343,10 @@ onMounted(() =>
             <span>일치도</span>
           </div>
         </div>
+        <p v-if="usesStockMajorityEvidence(activeResult)" class="result-slide__evidence-method">
+          <AppIcon name="bar-chart" :size="13" />
+          <span>종목별 대응 유형을 먼저 판정한 뒤, 가장 많은 유형을 최종 성향으로 선택했어요.</span>
+        </p>
         <dl>
           <div v-for="item in activeResult.type.rationale?.items || []" :key="item.label">
             <dt>
@@ -500,6 +514,12 @@ onMounted(() =>
   color: #8ee6df;
 }
 
+.result-summary-card__title-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
 .result-summary-card h3,
 .result-summary-card p,
 .result-slide h4,
@@ -514,6 +534,17 @@ onMounted(() =>
   overflow: hidden;
   font-size: 20px;
   letter-spacing: -0.045em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.result-summary-card__title-copy small {
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -757,6 +788,25 @@ onMounted(() =>
   color: #789092;
   font-size: 8px;
   font-weight: 700;
+}
+
+.result-slide__evidence-method {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 9px;
+  border-radius: 10px;
+  background: #f1f8f7;
+  color: #5e7778;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.result-slide__evidence-method svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: #0b918d;
 }
 
 .result-slide__evidence dl > div {

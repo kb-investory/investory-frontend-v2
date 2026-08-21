@@ -96,6 +96,8 @@ function formatEvidenceValue(value) {
 }
 
 function evidenceItem(label, value, unit, description) {
+  if (value === undefined || value === null || value === '') return null
+
   return {
     type: unit === '%' ? 'PERCENT' : 'COUNT',
     label,
@@ -103,6 +105,176 @@ function evidenceItem(label, value, unit, description) {
     unit,
     description,
   }
+}
+
+function getEvidenceValue(evidence, paths) {
+  for (const path of paths) {
+    const value = path.split('.').reduce((current, key) => current?.[key], evidence)
+    if (value !== undefined && value !== null && value !== '') return value
+  }
+
+  return undefined
+}
+
+function getTypeCountPaths(typeCodes) {
+  const containers = [
+    'labelCounts',
+    'typeCounts',
+    'stockLabelCounts',
+    'stockTypeCounts',
+    'countsByType',
+    'distribution',
+  ]
+
+  return containers.flatMap((container) =>
+    typeCodes.flatMap((typeCode) => [
+      `${container}.${typeCode}`,
+      `${container}.${typeCode.toLowerCase()}`,
+    ]),
+  )
+}
+
+function getResponseStockEvidence(dimensionCode, evidence) {
+  const sharedCategories = [
+    {
+      label: '보유형 종목',
+      paths: [
+        'holdStocks',
+        'holdStockCount',
+        'holdingStocks',
+        'holdingStockCount',
+        'hold_stocks',
+        'hold_stock_count',
+        ...getTypeCountPaths(['HOLD']),
+      ],
+      description: '추가 거래 없이 보유형 대응으로 판정된 종목 수예요.',
+    },
+    {
+      label: '혼합대응형 종목',
+      paths: [
+        'mixedStocks',
+        'mixedStockCount',
+        'mixedResponseStocks',
+        'mixedResponseStockCount',
+        'mixed_stocks',
+        'mixed_stock_count',
+        ...getTypeCountPaths(['MIXED', 'MIXED_RESPONSE']),
+      ],
+      description: '한 가지 행동으로 구분하기 어려운 종목 수예요.',
+    },
+  ]
+  const responseCategories =
+    dimensionCode === 'LOSS_RESPONSE'
+      ? [
+          {
+            label: '손절형 종목',
+            paths: [
+              'stopLossStocks',
+              'stopLossStockCount',
+              'netSellStocks',
+              'netSellStockCount',
+              'sellStocks',
+              'sellStockCount',
+              'net_sell_stocks',
+              'net_sell_stock_count',
+              ...getTypeCountPaths(['STOP_LOSS', 'SELL']),
+            ],
+            description: '손실 구간에서 순매도 또는 손절형 대응으로 판정된 종목 수예요.',
+          },
+          {
+            label: '추가매수형 종목',
+            paths: [
+              'averagingDownStocks',
+              'averagingDownStockCount',
+              'additionalPurchaseStocks',
+              'additionalPurchaseStockCount',
+              'netBuyStocks',
+              'netBuyStockCount',
+              'buyStocks',
+              'buyStockCount',
+              'net_buy_stocks',
+              'net_buy_stock_count',
+              ...getTypeCountPaths(['AVERAGING_DOWN', 'ADDITIONAL_PURCHASE', 'BUY']),
+            ],
+            description: '손실 구간에서 추가매수형 대응으로 판정된 종목 수예요.',
+          },
+          ...sharedCategories,
+        ]
+      : [
+          {
+            label: '차익실현형 종목',
+            paths: [
+              'takeProfitStocks',
+              'takeProfitStockCount',
+              'profitRealizationStocks',
+              'profitRealizationStockCount',
+              'netSellStocks',
+              'netSellStockCount',
+              'sellStocks',
+              'sellStockCount',
+              'net_sell_stocks',
+              'net_sell_stock_count',
+              ...getTypeCountPaths(['TAKE_PROFIT', 'PROFIT_REALIZATION', 'SELL']),
+            ],
+            description: '수익 구간에서 차익실현형 대응으로 판정된 종목 수예요.',
+          },
+          {
+            label: '추가매수형 종목',
+            paths: [
+              'averagingUpStocks',
+              'averagingUpStockCount',
+              'additionalPurchaseStocks',
+              'additionalPurchaseStockCount',
+              'netBuyStocks',
+              'netBuyStockCount',
+              'buyStocks',
+              'buyStockCount',
+              'net_buy_stocks',
+              'net_buy_stock_count',
+              ...getTypeCountPaths(['AVERAGING_UP', 'ADDITIONAL_PURCHASE', 'BUY']),
+            ],
+            description: '수익 구간에서 추가매수형 대응으로 판정된 종목 수예요.',
+          },
+          ...sharedCategories,
+        ]
+  const categories = responseCategories.map((category) => ({
+    ...category,
+    value: getEvidenceValue(evidence, category.paths),
+  }))
+  const explicitTotal = getEvidenceValue(evidence, [
+    'totalStocks',
+    'totalStockCount',
+    'analyzedStocks',
+    'analyzedStockCount',
+    'targetStockCount',
+    'securityCount',
+    'totalSecurities',
+    'totalSymbols',
+    'symbolCount',
+    'total_stocks',
+    'total_stock_count',
+    'analyzed_stock_count',
+  ])
+  const numericCategoryValues = categories
+    .map((category) => Number(category.value))
+    .filter(Number.isFinite)
+  const derivedTotal = numericCategoryValues.length
+    ? numericCategoryValues.reduce((sum, value) => sum + value, 0)
+    : undefined
+  const total = explicitTotal ?? derivedTotal
+  const items = [
+    evidenceItem(
+      '분석 종목',
+      total,
+      '종목',
+      '종목별 대응 성향을 판정할 수 있었던 전체 종목 수예요.',
+    ),
+    ...categories.map((category) =>
+      evidenceItem(category.label, category.value, '종목', category.description),
+    ),
+  ].filter(Boolean)
+
+  return items.length ? items : null
 }
 
 function mapEvidenceItems(dimensionCode, evidence) {
@@ -139,7 +311,10 @@ function mapEvidenceItems(dimensionCode, evidence) {
         evidenceItem('이벤트 근거', evidence.event, '%', '뉴스와 공시를 근거로 남긴 비율이에요.'),
       ]
     case 'LOSS_RESPONSE':
-    case 'PROFIT_RESPONSE':
+    case 'PROFIT_RESPONSE': {
+      const stockEvidence = getResponseStockEvidence(dimensionCode, evidence)
+      if (stockEvidence) return stockEvidence
+
       return [
         evidenceItem(
           '분석 일수',
@@ -160,7 +335,8 @@ function mapEvidenceItems(dimensionCode, evidence) {
           '해당 손익 구간에서 순매수한 일수예요.',
         ),
         evidenceItem('보유 일수', evidence.holdDays, '일', '추가 거래 없이 보유한 일수예요.'),
-      ]
+      ].filter(Boolean)
+    }
     case 'HOLDING_PERIOD':
       return [
         evidenceItem(
@@ -250,9 +426,7 @@ function normalizeAnalysisItem(item) {
       description: item.typeDescription,
       rationale: {
         summary: item.typeDescription,
-        items: mapEvidenceItems(item.dimensionCode, evidence).filter(
-          (evidenceValue) => evidenceValue.value !== 'undefined',
-        ),
+        items: mapEvidenceItems(item.dimensionCode, evidence).filter(Boolean),
       },
     },
   }
