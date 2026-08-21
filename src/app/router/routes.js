@@ -229,6 +229,7 @@ export const routes = [
     path: '/simulation/result',
     name: ROUTE_NAMES.SIMULATION_RESULT,
     component: () => import('@/features/simulation/views/SimulationPage.vue'),
+    alias: ['/simulation/result/mock=:mockId', '/simulation/result/mock/:mockId'],
     meta: {
       title: '시뮬레이션 - 결과',
       layout: 'full-bleed',
