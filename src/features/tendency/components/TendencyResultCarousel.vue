@@ -42,18 +42,16 @@ const typeOptions = computed(() => {
   if (!activeResult.value) return null
 
   const fallbackOption = {
-      code: activeResult.value.type.code,
-      name: activeResult.value.type.name,
-      description: activeResult.value.type.description,
-      icon: RESULT_ICONS[activeResult.value.dimension.code] || 'target',
+    code: activeResult.value.type.code,
+    name: activeResult.value.type.name,
+    description: activeResult.value.type.description,
+    icon: RESULT_ICONS[activeResult.value.dimension.code] || 'target',
   }
   const options = activeConfig.value?.options?.length
     ? activeConfig.value.options
     : [fallbackOption]
 
-  return [...options].sort((option) =>
-    option.code === activeResult.value.type.code ? -1 : 1,
-  )
+  return [...options].sort((option) => (option.code === activeResult.value.type.code ? -1 : 1))
 })
 const selectedOption = computed(() => {
   if (!activeResult.value) return null
@@ -103,11 +101,20 @@ function getConfidence(result) {
   return TENDENCY_CONFIDENCE[result?.dimension?.code] ?? 80
 }
 
+function usesStockMajorityEvidence(result) {
+  return (
+    ['LOSS_RESPONSE', 'PROFIT_RESPONSE'].includes(result?.dimension?.code) &&
+    result?.type?.rationale?.items?.some((item) => item.unit === '종목')
+  )
+}
+
 function getResultTypeIcon(result) {
   return (
     getTendencyTypeConfig(result?.dimension?.code)?.options?.find(
       (option) => option.code === result?.type?.code,
-    )?.icon ?? RESULT_ICONS[result?.dimension?.code] ?? 'target'
+    )?.icon ??
+    RESULT_ICONS[result?.dimension?.code] ??
+    'target'
   )
 }
 
@@ -242,7 +249,10 @@ onMounted(() =>
                 :size="16"
               />
             </span>
-            <h3>{{ index === activeIndex ? selectedOption.name : result.type.name }}</h3>
+            <div class="result-summary-card__title-copy">
+              <small>{{ result.dimension.name }}</small>
+              <h3>{{ index === activeIndex ? selectedOption.name : result.type.name }}</h3>
+            </div>
           </div>
           <p>
             {{
@@ -257,15 +267,15 @@ onMounted(() =>
     </div>
 
     <nav class="result-carousel__dots" aria-label="투자성향 슬라이드 위치">
-        <button
-          v-for="(result, index) in results"
-          :key="result.dimension.code"
-          type="button"
-          :class="{ 'is-active': index === activeIndex }"
-          :aria-label="`${index + 1}번째 성향 ${result.type.name} 보기`"
-          :aria-current="index === activeIndex ? 'true' : undefined"
-          @click="moveTo(index)"
-        />
+      <button
+        v-for="(result, index) in results"
+        :key="result.dimension.code"
+        type="button"
+        :class="{ 'is-active': index === activeIndex }"
+        :aria-label="`${index + 1}번째 성향 ${result.type.name} 보기`"
+        :aria-current="index === activeIndex ? 'true' : undefined"
+        @click="moveTo(index)"
+      />
     </nav>
 
     <article class="result-slide" aria-live="polite">
@@ -333,6 +343,10 @@ onMounted(() =>
             <span>일치도</span>
           </div>
         </div>
+        <p v-if="usesStockMajorityEvidence(activeResult)" class="result-slide__evidence-method">
+          <AppIcon name="bar-chart" :size="13" />
+          <span>종목별 대응 유형을 먼저 판정한 뒤, 가장 많은 유형을 최종 성향으로 선택했어요.</span>
+        </p>
         <dl>
           <div v-for="item in activeResult.type.rationale?.items || []" :key="item.label">
             <dt>
@@ -500,6 +514,12 @@ onMounted(() =>
   color: #8ee6df;
 }
 
+.result-summary-card__title-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
 .result-summary-card h3,
 .result-summary-card p,
 .result-slide h4,
@@ -514,6 +534,17 @@ onMounted(() =>
   overflow: hidden;
   font-size: 20px;
   letter-spacing: -0.045em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.result-summary-card__title-copy small {
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -582,8 +613,12 @@ onMounted(() =>
   background: #ffffff;
   color: #426064;
   cursor: pointer;
-  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease,
-    color 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .result-slide__type-scroll button:hover {
@@ -667,12 +702,16 @@ onMounted(() =>
 
 .result-slide__type-prev {
   left: 0;
-  box-shadow: 8px 0 12px 4px rgba(255, 255, 255, 0.94), 0 4px 10px rgba(16, 87, 86, 0.15);
+  box-shadow:
+    8px 0 12px 4px rgba(255, 255, 255, 0.94),
+    0 4px 10px rgba(16, 87, 86, 0.15);
 }
 
 .result-slide__type-next {
   right: 0;
-  box-shadow: -8px 0 12px 4px rgba(255, 255, 255, 0.94), 0 4px 10px rgba(16, 87, 86, 0.15);
+  box-shadow:
+    -8px 0 12px 4px rgba(255, 255, 255, 0.94),
+    0 4px 10px rgba(16, 87, 86, 0.15);
 }
 
 .result-slide__type-arrow:focus-visible {
@@ -749,6 +788,25 @@ onMounted(() =>
   color: #789092;
   font-size: 8px;
   font-weight: 700;
+}
+
+.result-slide__evidence-method {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 9px;
+  border-radius: 10px;
+  background: #f1f8f7;
+  color: #5e7778;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.result-slide__evidence-method svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: #0b918d;
 }
 
 .result-slide__evidence dl > div {
@@ -837,7 +895,9 @@ onMounted(() =>
   border-radius: 999px;
   background: #cbd8d8;
   cursor: pointer;
-  transition: width 0.2s ease, background-color 0.2s ease;
+  transition:
+    width 0.2s ease,
+    background-color 0.2s ease;
 }
 
 .result-carousel__dots button.is-active {
