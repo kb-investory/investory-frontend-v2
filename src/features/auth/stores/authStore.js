@@ -9,7 +9,7 @@ import {
   logout as logoutApi,
   withdrawAccount as withdrawAccountApi,
 } from '@/features/auth/api/authApi'
-import { refreshAccessToken } from '@/modules/auth/services/authService'
+import { setAuthExpiredHandler } from '@/shared/api/client'
 import { queryKeys } from '@/shared/api/queryKeys'
 
 const USE_TEST_AUTH = import.meta.env.DEV && import.meta.env.VITE_USE_TEST_AUTH === 'true'
@@ -51,6 +51,10 @@ export const useAuthStore = defineStore('auth', () => {
     oauthMessage.value = ''
   }
 
+  // 공용 API 클라이언트가 401 응답 후 토큰 갱신까지 실패했을 때(리프레시 토큰 만료)
+  // 인증 상태를 초기화할 수 있도록 콜백을 등록해둔다. 다음 라우터 이동 시 authGuard가 로그인으로 보낸다.
+  setAuthExpiredHandler(resetAuthState)
+
   async function fetchUser({ force = false } = {}) {
     loading.value = true
     try {
@@ -64,18 +68,9 @@ export const useAuthStore = defineStore('auth', () => {
         await queryClient.invalidateQueries({ queryKey: queryKeys.auth.currentUser(), exact: true })
       }
 
-      const fetchCurrentUser = async () => {
-        try {
-          return await getMe()
-        } catch (error) {
-          if (error?.status !== 401) throw error
-          await refreshAccessToken()
-          return await getMe()
-        }
-      }
       user.value = await queryClient.fetchQuery({
         queryKey: queryKeys.auth.currentUser(),
-        queryFn: fetchCurrentUser,
+        queryFn: getMe,
         staleTime: 5 * 60 * 1000,
       })
       isAuthenticated.value = true
