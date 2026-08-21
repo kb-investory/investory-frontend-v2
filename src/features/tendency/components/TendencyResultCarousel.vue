@@ -42,18 +42,16 @@ const typeOptions = computed(() => {
   if (!activeResult.value) return null
 
   const fallbackOption = {
-      code: activeResult.value.type.code,
-      name: activeResult.value.type.name,
-      description: activeResult.value.type.description,
-      icon: RESULT_ICONS[activeResult.value.dimension.code] || 'target',
+    code: activeResult.value.type.code,
+    name: activeResult.value.type.name,
+    description: activeResult.value.type.description,
+    icon: RESULT_ICONS[activeResult.value.dimension.code] || 'target',
   }
   const options = activeConfig.value?.options?.length
     ? activeConfig.value.options
     : [fallbackOption]
 
-  return [...options].sort((option) =>
-    option.code === activeResult.value.type.code ? -1 : 1,
-  )
+  return [...options].sort((option) => (option.code === activeResult.value.type.code ? -1 : 1))
 })
 const selectedOption = computed(() => {
   if (!activeResult.value) return null
@@ -107,7 +105,9 @@ function getResultTypeIcon(result) {
   return (
     getTendencyTypeConfig(result?.dimension?.code)?.options?.find(
       (option) => option.code === result?.type?.code,
-    )?.icon ?? RESULT_ICONS[result?.dimension?.code] ?? 'target'
+    )?.icon ??
+    RESULT_ICONS[result?.dimension?.code] ??
+    'target'
   )
 }
 
@@ -257,15 +257,15 @@ onMounted(() =>
     </div>
 
     <nav class="result-carousel__dots" aria-label="투자성향 슬라이드 위치">
-        <button
-          v-for="(result, index) in results"
-          :key="result.dimension.code"
-          type="button"
-          :class="{ 'is-active': index === activeIndex }"
-          :aria-label="`${index + 1}번째 성향 ${result.type.name} 보기`"
-          :aria-current="index === activeIndex ? 'true' : undefined"
-          @click="moveTo(index)"
-        />
+      <button
+        v-for="(result, index) in results"
+        :key="result.dimension.code"
+        type="button"
+        :class="{ 'is-active': index === activeIndex }"
+        :aria-label="`${index + 1}번째 성향 ${result.type.name} 보기`"
+        :aria-current="index === activeIndex ? 'true' : undefined"
+        @click="moveTo(index)"
+      />
     </nav>
 
     <article class="result-slide" aria-live="polite">
@@ -582,8 +582,12 @@ onMounted(() =>
   background: #ffffff;
   color: #426064;
   cursor: pointer;
-  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease,
-    color 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .result-slide__type-scroll button:hover {
@@ -667,12 +671,16 @@ onMounted(() =>
 
 .result-slide__type-prev {
   left: 0;
-  box-shadow: 8px 0 12px 4px rgba(255, 255, 255, 0.94), 0 4px 10px rgba(16, 87, 86, 0.15);
+  box-shadow:
+    8px 0 12px 4px rgba(255, 255, 255, 0.94),
+    0 4px 10px rgba(16, 87, 86, 0.15);
 }
 
 .result-slide__type-next {
   right: 0;
-  box-shadow: -8px 0 12px 4px rgba(255, 255, 255, 0.94), 0 4px 10px rgba(16, 87, 86, 0.15);
+  box-shadow:
+    -8px 0 12px 4px rgba(255, 255, 255, 0.94),
+    0 4px 10px rgba(16, 87, 86, 0.15);
 }
 
 .result-slide__type-arrow:focus-visible {
@@ -837,7 +845,9 @@ onMounted(() =>
   border-radius: 999px;
   background: #cbd8d8;
   cursor: pointer;
-  transition: width 0.2s ease, background-color 0.2s ease;
+  transition:
+    width 0.2s ease,
+    background-color 0.2s ease;
 }
 
 .result-carousel__dots button.is-active {
