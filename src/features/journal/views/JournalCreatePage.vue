@@ -439,7 +439,10 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
               </article>
             </div>
 
-            <div v-else class="journal-principle-modal__state journal-principle-modal__state--empty">
+            <div
+              v-else
+              class="journal-principle-modal__state journal-principle-modal__state--empty"
+            >
               <span class="journal-principle-modal__empty-icon">
                 <AppIcon name="book-open" :size="24" />
               </span>

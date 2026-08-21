@@ -167,8 +167,7 @@ function getPositivePrinciples(report) {
     )
     .map((evaluation) => ({
       ...evaluation,
-      conclusion:
-        evaluation.evaluationReason ?? '이번 회차에서 원칙을 안정적으로 지켰어요.',
+      conclusion: evaluation.evaluationReason ?? '이번 회차에서 원칙을 안정적으로 지켰어요.',
     }))
 }
 
@@ -193,10 +192,7 @@ function getPrincipleImpacts(report, divergenceMoments) {
       reason: '',
     }
 
-    current.violationCount = Math.max(
-      current.violationCount,
-      asNumber(details.violationCount, 0),
-    )
+    current.violationCount = Math.max(current.violationCount, asNumber(details.violationCount, 0))
     current.botBetterCount += asNumber(details.botBetterCount, 0)
     if (!current.reason) {
       current.reason =
@@ -239,16 +235,13 @@ function getPrincipleImpacts(report, divergenceMoments) {
       const violatedMatch = decision.principleMatches?.find(
         (match) => match.judgment === 'VIOLATED',
       )
-      addImpact(
-        decision.matchedPrinciple ?? violatedMatch ?? decision.principleReview,
-        {
-          violationCount: 1,
-          reason:
-            decision.judgmentReason ??
-            decision.principleReview?.violationReason ??
-            violatedMatch?.reason,
-        },
-      )
+      addImpact(decision.matchedPrinciple ?? violatedMatch ?? decision.principleReview, {
+        violationCount: 1,
+        reason:
+          decision.judgmentReason ??
+          decision.principleReview?.violationReason ??
+          violatedMatch?.reason,
+      })
     })
 
   return [...impacts.values()]
@@ -266,7 +259,9 @@ export function buildSimulationOutcomeModel({ latestResult, report }) {
   const winnerVariantType =
     report?.outcome?.winnerVariantType ?? ranking[0]?.variantType ?? 'ACTUAL_USER'
   const winner =
-    ranking.find((participant) => participant.variantType === winnerVariantType) ?? ranking[0] ?? null
+    ranking.find((participant) => participant.variantType === winnerVariantType) ??
+    ranking[0] ??
+    null
   const reviewSummary = getPrincipleReviewSummary(report)
   const assessedCount = asNumber(reviewSummary.assessedTradeCount)
   const followedCount = asNumber(reviewSummary.followedCount)
@@ -305,8 +300,7 @@ export function buildSimulationOutcomeModel({ latestResult, report }) {
     divergenceReview: report?.divergenceReview ?? null,
     divergenceMoments,
     referenceReview: report?.referenceReview ?? null,
-    referencePrinciples:
-      report?.referenceReview?.references ?? report?.referencePrinciples ?? [],
+    referencePrinciples: report?.referenceReview?.references ?? report?.referencePrinciples ?? [],
     marketLuck: report?.performanceContext?.luckCheck ?? null,
     reportOutcome: report?.outcome ?? null,
   }

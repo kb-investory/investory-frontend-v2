@@ -94,12 +94,7 @@ function createDecision({
   }
 }
 
-function createSummary({
-  followedCount,
-  violatedCount,
-  assessedTradeCount,
-  totalTradeCount,
-}) {
+function createSummary({ followedCount, violatedCount, assessedTradeCount, totalTradeCount }) {
   return {
     followedCount,
     violatedCount,
@@ -207,7 +202,8 @@ const SCENARIOS = Object.freeze({
         violatedCount: 2,
         totalCount: 3,
         evaluationReason: '수익 중인 종목의 힘을 믿고 손절 기준을 두 번 미뤘어요.',
-        suggestion: '손절 기준에 도달하면 투자 근거를 다시 확인한 뒤 정한 비율만큼 먼저 줄여보세요.',
+        suggestion:
+          '손절 기준에 도달하면 투자 근거를 다시 확인한 뒤 정한 비율만큼 먼저 줄여보세요.',
       }),
       createEvaluation({
         principleSetItemId: 'no-impulse-buy',
@@ -282,7 +278,8 @@ const SCENARIOS = Object.freeze({
         followedCount: 2,
         violatedCount: 2,
         totalCount: 4,
-        evaluationReason: '원칙 봇은 손실 직후의 추가 매수를 기다렸지만, 실제 거래에서는 바로 대응했어요.',
+        evaluationReason:
+          '원칙 봇은 손실 직후의 추가 매수를 기다렸지만, 실제 거래에서는 바로 대응했어요.',
         suggestion: '손실 직후 1시간 대기 원칙을 실제 주문 전 확인 단계로 고정해보세요.',
       }),
       createEvaluation({
@@ -355,22 +352,26 @@ const SCENARIOS = Object.freeze({
         { section: 'MOAT', sectionLabel: '경쟁 우위' },
         { section: 'PATIENCE', sectionLabel: '기다림의 기준' },
       ],
-      disclaimer: '유명 투자봇의 원칙은 참고용이에요. 내 투자 기간과 감당 가능한 위험에 맞는 것만 골라보세요.',
+      disclaimer:
+        '유명 투자봇의 원칙은 참고용이에요. 내 투자 기간과 감당 가능한 위험에 맞는 것만 골라보세요.',
       references: [
         {
           referenceId: 'famous-valuation',
           title: '내가 이해할 수 있는 사업인지 먼저 확인하기',
-          description: '가격보다 사업의 구조와 장기적으로 돈을 벌 수 있는 이유를 먼저 설명할 수 있어야 해요.',
+          description:
+            '가격보다 사업의 구조와 장기적으로 돈을 벌 수 있는 이유를 먼저 설명할 수 있어야 해요.',
         },
         {
           referenceId: 'famous-moat',
           title: '오래 유지될 경쟁 우위가 있는지 살펴보기',
-          description: '브랜드, 비용 구조, 네트워크 효과처럼 시간이 지나도 쉽게 사라지지 않는 강점을 점검해보세요.',
+          description:
+            '브랜드, 비용 구조, 네트워크 효과처럼 시간이 지나도 쉽게 사라지지 않는 강점을 점검해보세요.',
         },
         {
           referenceId: 'famous-patience',
           title: '좋은 기업이라면 충분히 기다릴 기간 정하기',
-          description: '단기 가격 변동에 반응하기보다, 투자 근거가 바뀌었을 때만 매매하는 기준을 세워보세요.',
+          description:
+            '단기 가격 변동에 반응하기보다, 투자 근거가 바뀌었을 때만 매매하는 기준을 세워보세요.',
         },
       ],
     },
@@ -397,7 +398,8 @@ const SCENARIOS = Object.freeze({
       medianReturnPercent: 8.4,
       actualUserPercentile: 71.4,
       periodSummary: '상승 흐름이 강했던 기간이라 매수 시점만 맞아도 여러 전략이 수익을 냈어요.',
-      disclaimer: '무작위 매매가 1위였다는 사실은 원칙이 나쁘다는 뜻도, 좋다는 뜻도 아니에요. 다른 기간에서 다시 확인해보세요.',
+      disclaimer:
+        '무작위 매매가 1위였다는 사실은 원칙이 나쁘다는 뜻도, 좋다는 뜻도 아니에요. 다른 기간에서 다시 확인해보세요.',
     },
   },
   6: {

@@ -40,9 +40,7 @@ let copyFeedbackTimer = null
 const mockScenarioId = computed(() => route.query.mock ?? route.params.mockId ?? null)
 const mockScenario = computed(() => buildSimulationResultMock(mockScenarioId.value))
 const isMockPreview = computed(() => Boolean(mockScenario.value))
-const displayedLatestResult = computed(
-  () => mockScenario.value?.latestResult ?? props.latestResult,
-)
+const displayedLatestResult = computed(() => mockScenario.value?.latestResult ?? props.latestResult)
 const displayedReport = computed(() => mockScenario.value?.report ?? props.report)
 
 onBeforeUnmount(() => {
@@ -166,7 +164,8 @@ const scenarioMeta = computed(() => {
       description:
         '무작위 매매가 1위였습니다. 이번 회차 수익률로는 원칙의 좋고 나쁨을 판단하지 마세요.',
       closingTitle: '이번 결과는 평가보다 보류가 맞아요',
-      closingDescription: '시장 운의 영향을 줄이려면 다른 기간에서도 같은 원칙을 다시 확인해보세요.',
+      closingDescription:
+        '시장 운의 영향을 줄이려면 다른 기간에서도 같은 원칙을 다시 확인해보세요.',
       primaryLabel: '다른 기간으로 다시 하기',
     },
     [SIMULATION_OUTCOME_SCENARIOS.UNKNOWN]: {
@@ -250,7 +249,10 @@ const keyFacts = computed(() => {
 
   if (outcome.value.scenario === SIMULATION_OUTCOME_SCENARIOS.MARKET_LUCK) {
     return [
-      { label: '무작위 수익 확률', value: formatPercent(outcome.value.marketLuck?.profitableRunPercent) },
+      {
+        label: '무작위 수익 확률',
+        value: formatPercent(outcome.value.marketLuck?.profitableRunPercent),
+      },
       { label: '무작위 실험', value: `${outcome.value.marketLuck?.runCount ?? 0}회` },
     ]
   }
@@ -301,7 +303,7 @@ const principleNumberMap = computed(() => {
     const principleText =
       typeof principle === 'string'
         ? principle
-        : principle?.principleText ?? principle?.title ?? principle?.violatedPrinciple
+        : (principle?.principleText ?? principle?.title ?? principle?.violatedPrinciple)
     if (principleText && !numbers.has(principleText)) {
       numbers.set(principleText, numbers.size + 1)
     }
@@ -372,7 +374,7 @@ function getPrincipleNumber(principle) {
   const principleText =
     typeof principle === 'string'
       ? principle
-      : principle?.principleText ?? principle?.title ?? principle?.violatedPrinciple
+      : (principle?.principleText ?? principle?.title ?? principle?.violatedPrinciple)
   return principleNumberMap.value.get(principleText) ?? 1
 }
 
@@ -443,7 +445,11 @@ function handleSecondaryAction() {
       <AppIcon name="loader-circle" :size="18" class="spin" />
       <span>거래 근거를 정리하고 있어요.</span>
     </div>
-    <div v-else-if="reportError && !isMockPreview" class="report-status report-status--error" role="alert">
+    <div
+      v-else-if="reportError && !isMockPreview"
+      class="report-status report-status--error"
+      role="alert"
+    >
       <AppIcon name="triangle-alert" :size="18" />
       <span>상세 분석을 불러오지 못했어요. 순위 결과는 그대로 확인할 수 있습니다.</span>
     </div>
@@ -515,9 +521,7 @@ function handleSecondaryAction() {
               잘 지킨 원칙
             </span>
             <div class="principle-title-line">
-              <span class="principle-index-badge">
-                원칙 {{ getPrincipleNumber(principle) }}
-              </span>
+              <span class="principle-index-badge"> 원칙 {{ getPrincipleNumber(principle) }} </span>
               <h3>{{ principle.principleText }}</h3>
             </div>
             <p>{{ principle.conclusion }}</p>
@@ -643,9 +647,7 @@ function handleSecondaryAction() {
                 </span>
               </div>
               <div class="principle-title-line">
-                <span class="principle-index-badge">
-                  원칙 {{ getPrincipleNumber(impact) }}
-                </span>
+                <span class="principle-index-badge"> 원칙 {{ getPrincipleNumber(impact) }} </span>
                 <h3>{{ impact.principleText }}</h3>
               </div>
               <p>{{ impact.reason }}</p>
@@ -656,13 +658,10 @@ function handleSecondaryAction() {
             단순히 봇과 선택이 달랐던 거래가 아니라, 원칙 위반이 확인된 경우만 모았어요.
           </p>
         </div>
-
       </section>
     </template>
 
-    <template
-      v-else-if="outcome.scenario === SIMULATION_OUTCOME_SCENARIOS.FAMOUS_STRATEGY_AHEAD"
-    >
+    <template v-else-if="outcome.scenario === SIMULATION_OUTCOME_SCENARIOS.FAMOUS_STRATEGY_AHEAD">
       <section class="result-section evidence-section" aria-labelledby="reference-title">
         <div class="section-heading">
           <span class="section-icon"><AppIcon name="notebook" :size="21" /></span>
@@ -704,7 +703,8 @@ function handleSecondaryAction() {
                   type="button"
                   class="reference-card__copy"
                   :class="{
-                    'reference-card__copy--copied': copiedReferenceId === getReferenceId(reference, index),
+                    'reference-card__copy--copied':
+                      copiedReferenceId === getReferenceId(reference, index),
                   }"
                   :aria-label="
                     copiedReferenceId === getReferenceId(reference, index)
@@ -719,7 +719,9 @@ function handleSecondaryAction() {
                   @click="copyReference(reference, index)"
                 >
                   <AppIcon
-                    :name="copiedReferenceId === getReferenceId(reference, index) ? 'check' : 'copy'"
+                    :name="
+                      copiedReferenceId === getReferenceId(reference, index) ? 'check' : 'copy'
+                    "
                     :size="14"
                   />
                   <span v-if="copiedReferenceId === getReferenceId(reference, index)">
@@ -755,7 +757,9 @@ function handleSecondaryAction() {
         <div class="luck-visual">
           <div class="luck-visual__header">
             <span>무작위 매매 {{ outcome.marketLuck?.runCount ?? 0 }}회</span>
-            <strong>수익 확률 {{ formatPercent(outcome.marketLuck?.profitableRunPercent, 1) }}</strong>
+            <strong
+              >수익 확률 {{ formatPercent(outcome.marketLuck?.profitableRunPercent, 1) }}</strong
+            >
           </div>
           <div class="luck-scale">
             <span class="luck-scale__line"></span>
@@ -777,7 +781,10 @@ function handleSecondaryAction() {
           <div>
             <strong>원숭이의 1위는 원칙의 패배가 아니에요</strong>
             <p>
-              {{ outcome.marketLuck?.periodSummary ?? '특정 기간의 시장 방향이 결과를 크게 좌우했을 수 있어요.' }}
+              {{
+                outcome.marketLuck?.periodSummary ??
+                '특정 기간의 시장 방향이 결과를 크게 좌우했을 수 있어요.'
+              }}
             </p>
           </div>
         </div>
@@ -880,8 +887,7 @@ function handleSecondaryAction() {
   border: 1px solid color-mix(in srgb, var(--result-accent) 18%, white);
   border-radius: 24px;
   background:
-    linear-gradient(150deg, rgba(255, 255, 255, 0.96) 8%, transparent 56%),
-    var(--result-soft);
+    linear-gradient(150deg, rgba(255, 255, 255, 0.96) 8%, transparent 56%), var(--result-soft);
   box-shadow: 0 12px 32px rgba(28, 49, 57, 0.07);
   text-align: center;
 }
@@ -1885,7 +1891,6 @@ function handleSecondaryAction() {
     grid-template-columns: 16px 32px minmax(0, 1fr) auto;
     gap: 7px;
   }
-
 }
 
 @media (prefers-reduced-motion: reduce) {

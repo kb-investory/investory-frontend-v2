@@ -1,86 +1,75 @@
 {
- "exit": {
-  "stop_loss_rate": -0.12,
-  "max_holding_days": 90,
-  "take_profit_rate": 0.25,
-  "sell_on_negative_disclosure": true
- },
- "audit": {
-  "ai_confidence": 0.9,
-  "principle_conflicts": [
-   {
-    "reason": "손실이 발생한 구간에서 매도하는 손절 규칙과 손실 구간에서는 매도하지 않는 원칙이 서로 모순되기 때문.",
-    "conflict_type": "CONTRADICTION",
-    "first_principle_text": "포트 내 각 개별 포지션에 대해 손실이 12%에 도달하면 자동으로 매도하는 손절 규칙을 설정한다.",
-    "second_principle_text": "손실 구간에서도 매도하지 않고, 일정 수익 목표를 달성했을 때만 매도하는 규칙을 따라라. 구체적으로는 진입가 대비 25% 상승 시 전량 매도한다."
-   }
-  ],
-  "interpreted_principles": [
-   {
-    "status": "CONFIRMED",
-    "stated_rules": [
-     "exit.stop_loss_rate"
-    ],
-    "ai_mapped_rule": "exit.stop_loss_rate",
-    "ai_mapped_rules": [
-     "exit.stop_loss_rate"
-    ],
-    "unmappable_reason": "",
-    "user_natural_text": "포트 내 각 개별 포지션에 대해 손실이 12%에 도달하면 자동으로 매도하는 손절 규칙을 설정한다."
-   },
-   {
-    "status": "CONFIRMED",
-    "stated_rules": [
-     "exit.take_profit_rate"
-    ],
-    "ai_mapped_rule": "exit.take_profit_rate",
-    "ai_mapped_rules": [
-     "exit.take_profit_rate"
-    ],
-    "unmappable_reason": "",
-    "user_natural_text": "손실 구간에서도 매도하지 않고, 일정 수익 목표를 달성했을 때만 매도하는 규칙을 따라라. 구체적으로는 진입가 대비 25% 상승 시 전량 매도한다."
-   }
-  ],
-  "needs_user_confirmation": []
- },
- "entry": {
-  "max_5day_return": 0.15,
-  "moving_average_condition": "NONE",
-  "require_positive_disclosure": false
- },
- "universe": {
-  "exclude_halted": true,
-  "min_market_cap": 50000000000.0,
-  "allowed_markets": [
-   "KOSPI",
-   "KOSDAQ"
-  ],
-  "exclude_administrative": true,
-  "min_daily_trading_value": 1000000000.0
- },
- "portfolio": {
-  "max_sector_weight": 0.4,
-  "max_position_count": 5,
-  "max_single_position_weight": 0.2
- },
- "rebalance": {
-  "period": "MONTHLY",
-  "min_holding_days_before_rebalance": 14
- },
- "selection": {
-  "factor_weights": {
-   "trend": 0.15,
-   "value": 0.2,
-   "growth": 0.3,
-   "quality": 0.2,
-   "disclosure": 0.15
+  "exit": {
+    "stop_loss_rate": -0.12,
+    "max_holding_days": 90,
+    "take_profit_rate": 0.25,
+    "sell_on_negative_disclosure": true
   },
-  "min_passing_score": 70.0
- },
- "additional_buy": {
-  "allowed": true,
-  "additional_weight": 0.05,
-  "trigger_drop_rate": -0.05,
-  "max_additional_count": 2
- }
+  "audit": {
+    "ai_confidence": 0.9,
+    "principle_conflicts": [
+      {
+        "reason": "손실이 발생한 구간에서 매도하는 손절 규칙과 손실 구간에서는 매도하지 않는 원칙이 서로 모순되기 때문.",
+        "conflict_type": "CONTRADICTION",
+        "first_principle_text": "포트 내 각 개별 포지션에 대해 손실이 12%에 도달하면 자동으로 매도하는 손절 규칙을 설정한다.",
+        "second_principle_text": "손실 구간에서도 매도하지 않고, 일정 수익 목표를 달성했을 때만 매도하는 규칙을 따라라. 구체적으로는 진입가 대비 25% 상승 시 전량 매도한다."
+      }
+    ],
+    "interpreted_principles": [
+      {
+        "status": "CONFIRMED",
+        "stated_rules": ["exit.stop_loss_rate"],
+        "ai_mapped_rule": "exit.stop_loss_rate",
+        "ai_mapped_rules": ["exit.stop_loss_rate"],
+        "unmappable_reason": "",
+        "user_natural_text": "포트 내 각 개별 포지션에 대해 손실이 12%에 도달하면 자동으로 매도하는 손절 규칙을 설정한다."
+      },
+      {
+        "status": "CONFIRMED",
+        "stated_rules": ["exit.take_profit_rate"],
+        "ai_mapped_rule": "exit.take_profit_rate",
+        "ai_mapped_rules": ["exit.take_profit_rate"],
+        "unmappable_reason": "",
+        "user_natural_text": "손실 구간에서도 매도하지 않고, 일정 수익 목표를 달성했을 때만 매도하는 규칙을 따라라. 구체적으로는 진입가 대비 25% 상승 시 전량 매도한다."
+      }
+    ],
+    "needs_user_confirmation": []
+  },
+  "entry": {
+    "max_5day_return": 0.15,
+    "moving_average_condition": "NONE",
+    "require_positive_disclosure": false
+  },
+  "universe": {
+    "exclude_halted": true,
+    "min_market_cap": 50000000000.0,
+    "allowed_markets": ["KOSPI", "KOSDAQ"],
+    "exclude_administrative": true,
+    "min_daily_trading_value": 1000000000.0
+  },
+  "portfolio": {
+    "max_sector_weight": 0.4,
+    "max_position_count": 5,
+    "max_single_position_weight": 0.2
+  },
+  "rebalance": {
+    "period": "MONTHLY",
+    "min_holding_days_before_rebalance": 14
+  },
+  "selection": {
+    "factor_weights": {
+      "trend": 0.15,
+      "value": 0.2,
+      "growth": 0.3,
+      "quality": 0.2,
+      "disclosure": 0.15
+    },
+    "min_passing_score": 70.0
+  },
+  "additional_buy": {
+    "allowed": true,
+    "additional_weight": 0.05,
+    "trigger_drop_rate": -0.05,
+    "max_additional_count": 2
+  }
 }
