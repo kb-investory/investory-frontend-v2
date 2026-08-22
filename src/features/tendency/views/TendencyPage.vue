@@ -33,11 +33,13 @@ const PRINCIPLE_ICONS = Object.freeze({
 const PRINCIPLE_TENDENCY_ICONS = Object.freeze({
   '손실 대응형': 'shield-check',
   '고변동 집중형': 'chart-pie',
+  '분할 매수 3단계형': 'chart-pie',
   차익실현형: 'trending-up',
   기업분석형: 'search',
   장기투자형: 'calendar-range',
   원칙일치형: 'refresh-cw',
   보유형: 'shield-check',
+  '감정 매매 방지 쿨다운형': 'compass',
 })
 
 const route = useRoute()
@@ -135,17 +137,27 @@ function getPrincipleSourceLabel(principle) {
 }
 
 function isUserWrittenPrinciple(principle) {
-  return (
-    principle.isUserModified ||
-    principle.recommendationSource?.type === 'USER_CREATED' ||
-    (!principle.recommendationId && principle.recommendationSource?.type !== 'TENDENCY_ANALYSIS')
-  )
+  const sourceType = principle.recommendationSource?.type
+
+  if (sourceType === 'TENDENCY_ANALYSIS' || principle.recommendationSource?.tendency) return false
+  return sourceType === 'USER_CREATED' || !principle.recommendationId
 }
 
 function getPrincipleHeaderLabel(principle) {
   if (isUserWrittenPrinciple(principle)) return '직접 작성'
 
   return getPrincipleSourceLabel(principle).replace(/형$/, '')
+}
+
+function getPrincipleKeywordIcon(text) {
+  if (/감정|충동|쿨다운|추격|복수/.test(text)) return 'compass'
+  if (/손실|손절|리스크|위험|하락|보유/.test(text)) return 'shield-check'
+  if (/수익|익절|차익|매도/.test(text)) return 'trending-up'
+  if (/분할 매수|비중|집중|자산|포트폴리오/.test(text)) return 'chart-pie'
+  if (/기업|분석|근거|실적/.test(text)) return 'search'
+  if (/장기|기간|분기/.test(text)) return 'calendar-range'
+  if (/원칙|이행|일지|기록|점검/.test(text)) return 'refresh-cw'
+  return ''
 }
 
 function getPrincipleIcon(principle) {
@@ -156,6 +168,8 @@ function getPrincipleIcon(principle) {
     PRINCIPLE_ICONS[principle.category] ||
     PRINCIPLE_ICONS[tendency?.code] ||
     PRINCIPLE_TENDENCY_ICONS[tendency?.name] ||
+    getPrincipleKeywordIcon(tendency?.name || principle.title || '') ||
+    getPrincipleKeywordIcon(principle.content || '') ||
     'sparkles'
   )
 }
