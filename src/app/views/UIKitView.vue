@@ -8,6 +8,7 @@ import QuoteCard from '@/shared/components/cards/QuoteCard.vue'
 import StockCard from '@/shared/components/cards/StockCard.vue'
 import TendencyCard from '@/shared/components/cards/TendencyCard.vue'
 import InfoBanner from '@/shared/components/feedback/InfoBanner.vue'
+import PageLoading from '@/shared/components/feedback/PageLoading.vue'
 import TimerProgressBar from '@/shared/components/feedback/TimerProgressBar.vue'
 import BaseTextarea from '@/shared/components/inputs/BaseTextarea.vue'
 import BaseToggle from '@/shared/components/inputs/BaseToggle.vue'
@@ -22,6 +23,7 @@ const search = ref('')
 const textarea = ref('')
 const notifyToggle = ref(true)
 const segmentedTab = ref('투자성향')
+const pageLoadingActive = ref(false)
 
 const navTabs = [
   { label: '홈', icon: 'house', active: true },
@@ -153,6 +155,22 @@ const navTabs = [
               />
 
               <TimerProgressBar label="오늘 일지 마감까지" timer-text="03:42:18" :percentage="45" />
+            </div>
+          </article>
+
+          <!-- 05 / PAGE LOADING -->
+          <article class="ui-kit__card">
+            <header class="ui-kit__card-header">
+              <span class="ui-kit__section-category">05 / PAGE LOADING</span>
+              <h2 class="ui-kit__section-title">페이지 전환 시 로딩 (원숭이)</h2>
+            </header>
+
+            <div class="ui-kit__card-body">
+              <BaseButton variant="ghost" @click="pageLoadingActive = !pageLoadingActive">
+                {{ pageLoadingActive ? '로딩 끄기' : '페이지 로딩 데모 보기' }}
+              </BaseButton>
+
+              <PageLoading :active="pageLoadingActive" />
             </div>
           </article>
         </div>

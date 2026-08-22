@@ -1,6 +1,6 @@
 <script setup>
 import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import SimulationComparatorSelect from '@/features/simulation/components/SimulationComparatorSelect.vue'
 import SimulationConditionSetup from '@/features/simulation/components/SimulationConditionSetup.vue'
@@ -11,7 +11,7 @@ import SimulationResultSummary from '@/features/simulation/components/Simulation
 import SimulationWysmiGuide from '@/features/simulation/components/SimulationWysmiGuide.vue'
 import { useSimulationFlow } from '@/features/simulation/composables/useSimulationFlow'
 import { useSimulationStore } from '@/features/simulation/stores/simulationStore'
-import AppIcon from '@/shared/components/AppIcon.vue'
+import PageLoading from '@/shared/components/feedback/PageLoading.vue'
 
 const simulationStore = useSimulationStore()
 const { selectedComparatorTypes: selectedComparators } = storeToRefs(simulationStore)
@@ -28,6 +28,8 @@ const {
   restartFlow,
   goBack,
 } = useSimulationFlow(simulationStore, pageRoot)
+
+const isInitialLoading = computed(() => simulationStore.loading && !simulationStore.overview)
 </script>
 
 <template>
@@ -41,14 +43,11 @@ const {
 
     <div class="mobile-page__content">
       <!-- Loading State -->
-      <div v-if="simulationStore.loading && !simulationStore.overview" class="loading-state">
-        <AppIcon name="loader-circle" :size="24" class="spin" />
-        <span>시뮬레이션 데이터를 불러오는 중...</span>
-      </div>
+      <PageLoading :active="isInitialLoading" />
 
       <!-- Screen 1A: Insufficient Data Guidance State (/simulation/wysmi) -->
       <SimulationWysmiGuide
-        v-else-if="effectiveMode === 'wysmi'"
+        v-if="!isInitialLoading && effectiveMode === 'wysmi'"
         :eligible-days="simulationStore.eligibleDays"
         :min-required-days="simulationStore.MIN_REQUIRED_DAYS"
         :data-error="simulationStore.overview?.dataError"
@@ -56,7 +55,7 @@ const {
 
       <!-- Screen 1: Ready State / Main Entry Screen (/simulation/dashboard) & Interactive Flow -->
       <div
-        v-else
+        v-else-if="!isInitialLoading"
         class="flow-container"
         :class="{ 'flow-container--subflow': currentStep !== 'home' }"
       >
@@ -136,29 +135,6 @@ const {
   display: flex;
   flex-direction: column;
   flex: 1;
-}
-
-.loading-state {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 64px 20px;
-  color: var(--text-secondary);
-  font-size: var(--font-size-body);
-}
-
-.spin {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 .flow-container {
