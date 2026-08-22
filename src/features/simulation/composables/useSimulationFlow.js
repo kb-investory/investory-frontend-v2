@@ -56,7 +56,11 @@ export function useSimulationFlow(simulationStore, pageRoot) {
     }
 
     if (step === 'result') {
-      void simulationStore.startSimulationReportRefresh()
+      const selectedSimulationId = route.query.runId
+      if (selectedSimulationId) {
+        await simulationStore.fetchSimulationDetail(selectedSimulationId)
+      }
+      void simulationStore.startSimulationReportRefresh(selectedSimulationId)
     } else {
       simulationStore.stopSimulationReportRefresh()
     }
@@ -72,7 +76,7 @@ export function useSimulationFlow(simulationStore, pageRoot) {
     simulationStore.stopSimulationReportRefresh()
   })
 
-  watch(currentStep, async (step) => {
+  watch([currentStep, () => route.query.runId], async ([step]) => {
     await nextTick()
     pageRoot.value?.closest('.mobile-main')?.scrollTo({ top: 0 })
     await prepareStep(step)
@@ -85,6 +89,16 @@ export function useSimulationFlow(simulationStore, pageRoot) {
   function startBotCreation() {
     simulationStore.resetBotCompilation()
     return navigateToStep('comparator_select')
+  }
+
+  function openSimulationRecord(record) {
+    const simulationRunId = record?.simulationRunId
+    if (!simulationRunId) return navigateToStep('result')
+
+    return router.push({
+      name: ROUTE_BY_STEP.result,
+      query: { runId: String(simulationRunId) },
+    })
   }
 
   async function startLiveSimulation(conditions) {
@@ -126,6 +140,7 @@ export function useSimulationFlow(simulationStore, pageRoot) {
     effectiveMode,
     flowHeader,
     livePreparationPending,
+    openSimulationRecord,
     startBotCreation,
     startLiveSimulation,
     finishLiveSimulation,

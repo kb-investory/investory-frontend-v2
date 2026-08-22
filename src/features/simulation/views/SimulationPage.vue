@@ -23,13 +23,12 @@ const {
   finishLiveSimulation,
   restartFlow,
   goBack,
+  openSimulationRecord,
   livePreparationPending,
 } = useSimulationFlow(simulationStore, pageRoot)
 
 const isInitialLoading = computed(() => simulationStore.loading && !simulationStore.overview)
-const isComparatorPending = computed(
-  () => simulationStore.loading || livePreparationPending.value,
-)
+const isComparatorPending = computed(() => simulationStore.loading || livePreparationPending.value)
 </script>
 
 <template>
@@ -70,6 +69,7 @@ const isComparatorPending = computed(
           :latest-result="simulationStore.latestResult"
           :history-records="simulationStore.historyRecords"
           @start-simulation="startBotCreation"
+          @select-record="openSimulationRecord"
         />
 
         <!-- Step 1C-2: Comparator Bot Selection + Condition Setup (merged) -->

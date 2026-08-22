@@ -244,7 +244,9 @@ function formatDateKey(value) {
             </span>
           </div>
 
-          <span class="pending-card__eyebrow"><AppIcon name="sparkles" :size="12" /> 라이브 대시</span>
+          <span class="pending-card__eyebrow"
+            ><AppIcon name="sparkles" :size="12" /> 라이브 대시</span
+          >
           <h3>참가자들이 출발선에 모이고 있어요</h3>
           <p>
             선택한 {{ participantCount }}명의 투자 기록과<br />

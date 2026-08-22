@@ -4,6 +4,7 @@ import { computed, ref } from 'vue'
 import { queryClient } from '@/app/providers/queryClient'
 import {
   compileSimulationBot,
+  getSimulationDetail,
   getInitialCapital,
   getLatestSimulationResult,
   getSimulationBotCompileJob,
@@ -178,6 +179,25 @@ export const useSimulationStore = defineStore('simulation', () => {
       console.error('Failed to fetch simulation overview:', error)
     } finally {
       loading.value = false
+    }
+  }
+
+  async function fetchSimulationDetail(simulationId) {
+    if (!simulationId) return null
+
+    try {
+      const detail = await queryClient.fetchQuery({
+        queryKey: queryKeys.simulation.detail(simulationId),
+        queryFn: () => getSimulationDetail(simulationId),
+        staleTime: SIMULATION_STALE_TIME,
+      })
+      latestResult.value = detail
+      simulationReport.value = null
+      simulationReportError.value = null
+      return detail
+    } catch (error) {
+      simulationReportError.value = error
+      return null
     }
   }
 
@@ -576,6 +596,7 @@ export const useSimulationStore = defineStore('simulation', () => {
     isBotCompileFailed,
     MIN_REQUIRED_DAYS,
     fetchOverview,
+    fetchSimulationDetail,
     fetchComparators,
     fetchInitialCapital,
     fetchSimulationReport,
