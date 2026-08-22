@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { Moon } from '@lucide/vue'
 
-import RunningMonkey from './RunningMonkey.vue'
+import RunningMonkey from '@/shared/components/RunningMonkey.vue'
 
 const props = defineProps({
   today: {

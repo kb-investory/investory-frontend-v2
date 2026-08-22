@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
-import RunningMonkey from '@/features/home/components/RunningMonkey.vue'
+import RunningMonkey from '@/shared/components/RunningMonkey.vue'
 import ReanalysisFloating from '@/features/tendency/components/ReanalysisFloating.vue'
 import RecommendationFloating from '@/features/tendency/components/RecommendationFloating.vue'
 import TendencyChangeModal from '@/features/tendency/components/TendencyChangeModal.vue'
