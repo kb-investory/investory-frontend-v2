@@ -15,6 +15,7 @@ import { queryKeys } from '@/shared/api/queryKeys'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
 import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
+import CharacterSpinner from '@/shared/components/feedback/CharacterSpinner.vue'
 import BaseTextarea from '@/shared/components/inputs/BaseTextarea.vue'
 import AppBar from '@/shared/components/navigation/AppBar.vue'
 
@@ -415,8 +416,7 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
             </header>
 
             <div v-if="principleLoading" class="journal-principle-modal__state">
-              <AppIcon name="loader-circle" :size="22" class="spin" />
-              <p>나의 원칙을 불러오는 중이에요.</p>
+              <CharacterSpinner active text="나의 원칙을 불러오는 중이에요." />
             </div>
 
             <div v-else-if="principleError" class="journal-principle-modal__state">
@@ -915,16 +915,6 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
   cursor: pointer;
   font-size: var(--font-size-body-sm);
   font-weight: 700;
-}
-
-.spin {
-  animation: journal-principle-modal-spin 1s linear infinite;
-}
-
-@keyframes journal-principle-modal-spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 @media (max-width: 360px) {
