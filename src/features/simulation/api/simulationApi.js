@@ -485,16 +485,6 @@ export async function getSimulationReport(simulationId) {
   return await normalizeSimulationReport(response)
 }
 
-export async function acceptSimulationPrincipleProposal(simulationId, recommendationId) {
-  if (USE_MOCK_SIMULATION) {
-    return { simulationId, recommendationId, status: 'ACCEPTED' }
-  }
-  return await request('/simulation/principles/proposals/accept', {
-    method: 'POST',
-    body: JSON.stringify({ simulationId, recommendationId }),
-  })
-}
-
 export async function getSimulationMessages() {
   return clone(simulationData.messages)
 }
