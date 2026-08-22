@@ -116,9 +116,17 @@ const CLASS_LABEL_KO = {
   WILD: '무작위',
 }
 
+const LEVEL_LABEL_BY_TYPE = {
+  FAMOUS_STRATEGY: '워렌 버핏',
+}
+
 function toClassLabel(value) {
   if (!value) return ''
   return CLASS_LABEL_KO[value] ?? value
+}
+
+function getLevelLabel(bot) {
+  return LEVEL_LABEL_BY_TYPE[bot?.variantType] ?? bot?.level ?? ''
 }
 
 function getBotTone(bot) {
@@ -214,7 +222,7 @@ function handleModalAction() {
             :disabled="bot.fixed || isPersonalBotUnavailable(bot)"
             @click="toggleBotSelection(bot)"
           >
-            <span class="pick-card__level">{{ bot.level }}</span>
+            <span class="pick-card__level">{{ getLevelLabel(bot) }}</span>
 
             <span class="pick-card__portrait">
               <SimulationCharacterPortrait :variant-type="bot.variantType" />

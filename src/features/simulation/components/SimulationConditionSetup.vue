@@ -2,7 +2,6 @@
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
 
-import SimulationParticipantAvatar from '@/features/simulation/components/SimulationParticipantAvatar.vue'
 import SimulationStepHeading from '@/features/simulation/components/SimulationStepHeading.vue'
 import { useSimulationConditions } from '@/features/simulation/composables/useSimulationConditions'
 import { useSimulationStore } from '@/features/simulation/stores/simulationStore'
@@ -34,8 +33,13 @@ const props = defineProps({
 
 const emit = defineEmits(['start'])
 const simulationStore = useSimulationStore()
-const { selectedComparatorTypes, isBotCompileComplete, isBotCompileFailed, botCompileProgress } =
-  storeToRefs(simulationStore)
+const {
+  selectedComparatorTypes,
+  isBotCompiling,
+  isBotCompileComplete,
+  isBotCompileFailed,
+  botCompileProgress,
+} = storeToRefs(simulationStore)
 
 /**
  * 봇 선택 화면과 한 화면으로 합쳐지면서, 선택을 바꿀 때마다 참가자 수와 초기자금이
@@ -83,6 +87,7 @@ const {
 const canStart = computed(
   () =>
     !props.isPending &&
+    !isBotCompiling.value &&
     isBotCompileComplete.value &&
     !capitalLoading.value &&
     !capitalError.value &&
@@ -228,20 +233,18 @@ function formatDateKey(value) {
         aria-label="시뮬레이션 준비 중"
       >
         <div class="pending-card">
-          <span class="pending-card__eyebrow">SETTING UP THE RACE</span>
-
-          <div class="pending-character" aria-hidden="true">
-            <span class="pending-character__orbit pending-character__orbit--one"></span>
-            <span class="pending-character__orbit pending-character__orbit--two"></span>
-            <span class="pending-character__glow"></span>
-            <span class="pending-character__avatar">
-              <SimulationParticipantAvatar variant-type="PERSONAL_BOT" :size="72" />
+          <div class="pending-card__hero" aria-hidden="true">
+            <img
+              class="pending-card__hero-image"
+              src="/assets/images/simulation/live-race-hero.png"
+              alt=""
+            />
+            <span class="pending-card__hero-status">
+              <AppIcon name="loader-circle" :size="12" class="pending-spinner" /> LIVE MATCH
             </span>
-            <i class="pending-character__dot pending-character__dot--one"></i>
-            <i class="pending-character__dot pending-character__dot--two"></i>
-            <i class="pending-character__dot pending-character__dot--three"></i>
           </div>
 
+          <span class="pending-card__eyebrow"><AppIcon name="sparkles" :size="12" /> 라이브 대시</span>
           <h3>참가자들이 출발선에 모이고 있어요</h3>
           <p>
             선택한 {{ participantCount }}명의 투자 기록과<br />
@@ -298,7 +301,8 @@ function formatDateKey(value) {
   max-width: 330px;
   flex-direction: column;
   align-items: center;
-  padding: 27px 20px 22px;
+  overflow: hidden;
+  padding: 0 20px 22px;
   border: 1px solid rgb(255 255 255 / 58%);
   border-radius: 24px;
   background: rgb(255 255 255 / 97%);
@@ -306,98 +310,57 @@ function formatDateKey(value) {
   text-align: center;
 }
 
+.pending-card__hero {
+  position: relative;
+  width: calc(100% + 40px);
+  aspect-ratio: 1;
+  overflow: hidden;
+  margin-bottom: 15px;
+  background: #081a28;
+}
+
+.pending-card__hero::after {
+  position: absolute;
+  inset: 0;
+  background: rgb(3 16 24 / 16%);
+  content: '';
+  pointer-events: none;
+}
+
+.pending-card__hero-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.pending-card__hero-status {
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
+  border: 1px solid rgb(255 255 255 / 28%);
+  border-radius: 999px;
+  background: rgb(4 22 31 / 72%);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
 .pending-card__eyebrow {
   color: #0b8f8b;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.1em;
-}
-
-.pending-character {
-  position: relative;
-  display: grid;
-  width: 142px;
-  height: 142px;
-  margin: 10px 0 4px;
-  place-items: center;
-}
-
-.pending-character__glow {
-  position: absolute;
-  width: 94px;
-  height: 94px;
-  border-radius: 50%;
-  background: #dff5f3;
-  box-shadow: 0 0 42px rgb(11 143 139 / 24%);
-  animation: pending-glow 1.7s ease-in-out infinite;
-}
-
-.pending-character__avatar {
-  position: relative;
-  z-index: 2;
-  display: grid;
-  width: 88px;
-  height: 88px;
-  place-items: center;
-  border: 5px solid #fff;
-  border-radius: 50%;
-  background: #e8f7f6;
-  box-shadow: 0 10px 24px rgb(38 58 67 / 18%);
-  animation: pending-float 1.8s ease-in-out infinite;
-}
-
-.pending-character__orbit {
-  position: absolute;
-  border: 1px solid #b9dcd9;
-  border-radius: 50%;
-}
-
-.pending-character__orbit--one {
-  width: 116px;
-  height: 116px;
-  animation: pending-orbit 5s linear infinite;
-}
-
-.pending-character__orbit--two {
-  width: 140px;
-  height: 140px;
-  border-style: dashed;
-  opacity: 0.52;
-  animation: pending-orbit 8s linear infinite reverse;
-}
-
-.pending-character__dot {
-  position: absolute;
-  z-index: 3;
-  width: 8px;
-  height: 8px;
-  border: 2px solid #fff;
-  border-radius: 50%;
-  background: #0b8f8b;
-  box-shadow: 0 2px 5px rgb(38 58 67 / 18%);
-}
-
-.pending-character__dot--one {
-  top: 21px;
-  right: 31px;
-  animation: pending-dot 1.2s ease-in-out infinite;
-}
-
-.pending-character__dot--two {
-  bottom: 21px;
-  left: 30px;
-  background: #e8b931;
-  animation: pending-dot 1.2s 0.3s ease-in-out infinite;
-}
-
-.pending-character__dot--three {
-  right: 9px;
-  bottom: 57px;
-  width: 6px;
-  height: 6px;
-  background: #7b83d5;
-  animation: pending-dot 1.2s 0.6s ease-in-out infinite;
 }
 
 .pending-card h3 {
@@ -508,34 +471,6 @@ function formatDateKey(value) {
 }
 
 @keyframes pending-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes pending-float {
-  0%,
-  100% {
-    transform: translateY(2px);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
-}
-
-@keyframes pending-glow {
-  0%,
-  100% {
-    opacity: 0.64;
-    transform: scale(0.92);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.06);
-  }
-}
-
-@keyframes pending-orbit {
   to {
     transform: rotate(360deg);
   }
@@ -790,10 +725,6 @@ function formatDateKey(value) {
 
 @media (prefers-reduced-motion: reduce) {
   .pending-spinner,
-  .pending-character__glow,
-  .pending-character__avatar,
-  .pending-character__orbit,
-  .pending-character__dot,
   .pending-steps span.is-active b,
   .pending-progress i {
     animation: none;

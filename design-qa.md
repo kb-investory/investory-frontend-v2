@@ -39,3 +39,98 @@ Codex 인앱 브라우저에서 `http://localhost:5174/simulation`에 접근했�
 - 브라우저 콘솔 오류와 BUY/SELL/HOLD 조합의 실제 문구를 확인한다.
 
 final result: blocked
+
+---
+
+# Principle card design QA
+
+## Comparison target
+
+- Source visual truth: `C:/Users/tkddn/AppData/Local/Temp/codex-clipboard-8c4d135b-26d9-406b-8acb-7d5b7f9c307f.png`
+- Implementation screenshot: `C:/Users/tkddn/Documents/investory-frontend/design-qa-principles-implementation.png`
+- Focused implementation screenshot: `C:/Users/tkddn/Documents/investory-frontend/design-qa-principles-list.png`
+- Combined comparison input: `C:/Users/tkddn/Documents/investory-frontend/design-qa-principles-comparison.png`
+- Route/state: `http://127.0.0.1:5174/tendency?tab=principles`, mock-authenticated state, 3 active principles
+- Source pixels: 833 x 751
+- Implementation pixels: 557 x 820; CSS viewport 572 x 842
+- Focused implementation region: 338.7 x 407.3 CSS px
+- Normalization: the supplied reference is a wider visual mock and the implementation is shown inside the existing mobile app shell, so comparison was focused on card composition, spacing rhythm, icon treatment, copy hierarchy, and responsive behavior rather than absolute pixel scale.
+
+## Findings
+
+No actionable P0/P1/P2 findings remain.
+
+- [P3][intentional] Directly written principles use the pencil icon instead of the reference's category illustrations, as explicitly requested.
+- [P3][intentional] The existing page status panel and previously selected heading treatment remain outside the principle-card scope; repeated small header text was removed as requested.
+
+## Fidelity review
+
+- Typography: existing SUIT tokens remain in use; principle copy stays at 16px with 600 weight and 1.5 line height.
+- Spacing/layout: each card uses a 64px icon area, flexible text column, and 20px trailing chevron. Three cards fit without horizontal overflow; text wraps within the content column.
+- Colors/tokens: recommendation cards use the existing teal family; direct-written cards use a restrained lavender treatment for the pencil state; origin badges retain their semantic colors.
+- Image/assets: no new raster or custom SVG asset was needed. Icons use the existing Lucide-backed `AppIcon` component.
+- Copy/content: `원칙 01`, source badge, principle content, and the existing edit CTA are preserved.
+
+## Verification
+
+- Primary tab state was visible and active.
+- `원칙 전체 편집` was visible and enabled.
+- Browser console error log was empty.
+- App root and principle paper had no horizontal overflow.
+- `npm run lint`: passed with 6 pre-existing `no-console` warnings in `src/features/simulation/stores/simulationStore.js`.
+- `npm run build`: passed.
+- `git diff --check`: passed.
+
+## Implementation checklist
+
+- [x] Add source-based principle icon mapping.
+- [x] Use pencil icon for directly written principles.
+- [x] Use tendency/category icon for recommendation-based principles.
+- [x] Match reference card composition with icon, number, badge, copy, and chevron.
+- [x] Verify mobile wrapping and overflow.
+
+final result: passed
+
+---
+
+# Simulation pending modal design QA
+
+## Comparison target
+
+- Source visual truth: `C:/Users/tkddn/AppData/Local/Temp/codex-clipboard-c0b43463-dfea-4b3b-9032-22a12985c340.png`
+- Implementation screenshot: `C:/Users/tkddn/Documents/investory-frontend/design-qa-simulation-pending.png`
+- Route/state: `/simulation/comparators`, 4 selected participants, pending modal visible
+- Source pixels: 1254 x 1254
+- Implementation pixels: 557 x 820; CSS viewport 572 x 842
+- Normalization: the supplied square artwork is displayed as a full square hero inside the existing mobile modal, so the image is not cropped.
+
+## Findings
+
+No actionable P0/P1/P2 findings remain.
+
+- [P3][resolved] The previous fixed-height, `object-fit: cover` treatment cropped the supplied artwork. The hero now uses a square aspect ratio and `object-fit: contain` so all four participants remain visible.
+- [P3][intentional] The `LIVE MATCH` status pill overlays the artwork to preserve the live-state cue without changing the supplied image.
+
+## Fidelity review
+
+- Image/assets: the supplied reference is used as the actual `live-race-hero.png` asset; no recreated illustration was substituted.
+- Layout: the full square image leads the modal, followed by the live label, title, description, preparation steps, progress indicator, and waiting copy.
+- Contrast: a dark status pill and subtle image overlay keep the live-state text legible over the artwork.
+- Motion/state: the preparation modal is held for at least 3 seconds before navigation on the successful simulation path.
+
+## Verification
+
+- Browser screenshot captured with the pending modal visible.
+- The complete four-quadrant image was visually confirmed without top/bottom cropping.
+- `npm run lint`: passed with 6 pre-existing `no-console` warnings in `src/features/simulation/stores/simulationStore.js`.
+- `npm run build`: passed.
+- `git diff --check`: passed.
+
+## Implementation checklist
+
+- [x] Use the supplied square illustration in the waiting modal.
+- [x] Remove image cropping by preserving the full artwork aspect ratio.
+- [x] Keep the waiting modal visible for a minimum of 3 seconds on the successful start path.
+- [x] Verify the rendered mobile state in the in-app browser.
+
+final result: passed

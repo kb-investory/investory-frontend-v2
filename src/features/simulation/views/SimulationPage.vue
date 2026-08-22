@@ -23,9 +23,13 @@ const {
   finishLiveSimulation,
   restartFlow,
   goBack,
+  livePreparationPending,
 } = useSimulationFlow(simulationStore, pageRoot)
 
 const isInitialLoading = computed(() => simulationStore.loading && !simulationStore.overview)
+const isComparatorPending = computed(
+  () => simulationStore.loading || livePreparationPending.value,
+)
 </script>
 
 <template>
@@ -74,7 +78,7 @@ const isInitialLoading = computed(() => simulationStore.loading && !simulationSt
           :period-start="simulationStore.overview?.eligiblePeriod?.startDate"
           :period-end="simulationStore.overview?.eligiblePeriod?.endDate"
           :account-id="simulationStore.simulationAccountId"
-          :is-pending="simulationStore.loading"
+          :is-pending="isComparatorPending"
           @start="startLiveSimulation"
         />
 

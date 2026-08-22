@@ -1,4 +1,4 @@
-import { computed, nextTick, onBeforeUnmount, onMounted, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
@@ -19,6 +19,7 @@ const FLOW_HEADERS = Object.freeze({
   live: { title: '라이브 시뮬레이션', step: '' },
   result: { title: '시뮬레이션 결과', step: '' },
 })
+const MIN_LIVE_PREPARATION_MS = 3000
 
 export function useSimulationFlow(simulationStore, pageRoot) {
   const route = useRoute()
@@ -28,6 +29,7 @@ export function useSimulationFlow(simulationStore, pageRoot) {
   const flowHeader = computed(
     () => FLOW_HEADERS[currentStep.value] ?? { title: '시뮬레이션', step: '' },
   )
+  const livePreparationPending = ref(false)
   const effectiveMode = computed(() => {
     if (route.name === ROUTE_NAMES.SIMULATION_WYSMI || route.query.state === 'wysmi') {
       return 'wysmi'
@@ -87,8 +89,17 @@ export function useSimulationFlow(simulationStore, pageRoot) {
 
   async function startLiveSimulation(conditions) {
     simulationStore.setSimulationConditions(conditions)
-    await simulationStore.executeSimulation(conditions)
-    return navigateToStep('live')
+    livePreparationPending.value = true
+
+    try {
+      await Promise.all([
+        simulationStore.executeSimulation(conditions),
+        new Promise((resolve) => window.setTimeout(resolve, MIN_LIVE_PREPARATION_MS)),
+      ])
+      return navigateToStep('live')
+    } finally {
+      livePreparationPending.value = false
+    }
   }
 
   function finishLiveSimulation() {
@@ -114,6 +125,7 @@ export function useSimulationFlow(simulationStore, pageRoot) {
     currentStep,
     effectiveMode,
     flowHeader,
+    livePreparationPending,
     startBotCreation,
     startLiveSimulation,
     finishLiveSimulation,
