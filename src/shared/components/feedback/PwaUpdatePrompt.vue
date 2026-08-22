@@ -3,11 +3,10 @@ import { ref } from 'vue'
 import { useRegisterSW } from 'virtual:pwa-register/vue'
 
 const updating = ref(false)
-const { needRefresh, offlineReady, updateServiceWorker } = useRegisterSW({ immediate: true })
+const { needRefresh, updateServiceWorker } = useRegisterSW({ immediate: true })
 
 function closePrompt() {
   needRefresh.value = false
-  offlineReady.value = false
 }
 
 async function updateApp() {
@@ -23,31 +22,23 @@ async function updateApp() {
 <template>
   <Transition name="pwa-prompt">
     <aside
-      v-if="needRefresh || offlineReady"
+      v-if="needRefresh"
       class="pwa-update-prompt"
       role="dialog"
       aria-labelledby="pwa-update-title"
       aria-describedby="pwa-update-description"
     >
       <div class="pwa-update-prompt__copy">
-        <strong id="pwa-update-title">
-          {{ needRefresh ? '새 버전이 준비됐어요' : '오프라인 준비가 끝났어요' }}
-        </strong>
-        <p id="pwa-update-description">
-          {{
-            needRefresh
-              ? '업데이트하면 최신 기능을 바로 사용할 수 있어요.'
-              : '앱 기본 화면은 오프라인에서도 열 수 있어요. 투자 데이터는 연결 후 표시됩니다.'
-          }}
-        </p>
+        <strong id="pwa-update-title"> 새 버전이 준비됐어요 </strong>
+        <p id="pwa-update-description">업데이트하면 최신 기능을 바로 사용할 수 있어요.</p>
       </div>
 
       <div class="pwa-update-prompt__actions">
-        <button v-if="needRefresh" type="button" :disabled="updating" @click="updateApp">
+        <button type="button" :disabled="updating" @click="updateApp">
           {{ updating ? '업데이트 중' : '지금 업데이트' }}
         </button>
         <button type="button" class="pwa-update-prompt__dismiss" @click="closePrompt">
-          {{ needRefresh ? '나중에' : '확인' }}
+          나중에
         </button>
       </div>
     </aside>
