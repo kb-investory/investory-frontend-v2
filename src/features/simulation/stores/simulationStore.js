@@ -4,6 +4,7 @@ import { computed, ref } from 'vue'
 import { queryClient } from '@/app/providers/queryClient'
 import {
   compileSimulationBot,
+  getSimulationDetail,
   getInitialCapital,
   getLatestSimulationResult,
   getSimulationBotCompileJob,
@@ -23,6 +24,7 @@ const SIMULATION_STALE_TIME = 60 * 1000
 const COMPARATOR_STALE_TIME = 10 * 60 * 1000
 const REPORT_REFRESH_INTERVAL = 5000
 const REPORT_REFRESH_LIMIT = 12
+const MIN_PERSONAL_BOT_COMPILE_MS = 3000
 
 export const useSimulationStore = defineStore('simulation', () => {
   const overview = ref(null)
@@ -180,6 +182,25 @@ export const useSimulationStore = defineStore('simulation', () => {
     }
   }
 
+  async function fetchSimulationDetail(simulationId) {
+    if (!simulationId) return null
+
+    try {
+      const detail = await queryClient.fetchQuery({
+        queryKey: queryKeys.simulation.detail(simulationId),
+        queryFn: () => getSimulationDetail(simulationId),
+        staleTime: SIMULATION_STALE_TIME,
+      })
+      latestResult.value = detail
+      simulationReport.value = null
+      simulationReportError.value = null
+      return detail
+    } catch (error) {
+      simulationReportError.value = error
+      return null
+    }
+  }
+
   async function fetchComparators() {
     comparatorsLoading.value = true
     comparatorsError.value = null
@@ -318,16 +339,26 @@ export const useSimulationStore = defineStore('simulation', () => {
     if (isBotCompiling.value || isBotCompileComplete.value) return
 
     const requestId = ++compileRequestId
+    const compileStartedAt = Date.now()
     botCompileStatus.value = 'QUEUED'
     botCompileProgress.value = 0
     botCompileJobId.value = null
     botCompileError.value = null
 
+    async function waitForMinimumCompileDuration() {
+      const remaining = MIN_PERSONAL_BOT_COMPILE_MS - (Date.now() - compileStartedAt)
+      if (remaining > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remaining))
+      }
+    }
+
     try {
       let job = await compileSimulationBot()
       if (requestId !== compileRequestId) return
       botCompileJobId.value = job.jobId
-      botCompileStatus.value = job.status ?? 'RUNNING'
+      botCompileStatus.value = ['COMPLETED', 'FAILED'].includes(job.status)
+        ? 'RUNNING'
+        : (job.status ?? 'RUNNING')
       botCompileProgress.value = job.progressPercent ?? 0
 
       for (
@@ -339,15 +370,27 @@ export const useSimulationStore = defineStore('simulation', () => {
         if (requestId !== compileRequestId) return
         job = await getSimulationBotCompileJob(job.jobId)
         if (requestId !== compileRequestId) return
-        botCompileStatus.value = job.status
         botCompileProgress.value = job.progressPercent ?? botCompileProgress.value
+
+        if (job.status === 'COMPLETED') {
+          botCompileProgress.value = 100
+          break
+        }
+        if (job.status === 'FAILED') break
+        botCompileStatus.value = job.status ?? 'RUNNING'
       }
 
-      if (botCompileStatus.value !== 'COMPLETED') {
+      if (job.status !== 'COMPLETED') {
         throw new Error('투자봇 생성이 완료되지 않았습니다.')
       }
+
+      // 컴파일이 빠르게 끝나도 카드의 로더와 버튼 잠금 상태를 최소 3초 유지한다.
+      await waitForMinimumCompileDuration()
+      if (requestId !== compileRequestId) return
       personalBotId.value = job.personalBotId ?? null
+      botCompileStatus.value = 'COMPLETED'
     } catch (error) {
+      await waitForMinimumCompileDuration()
       if (requestId !== compileRequestId) return
       botCompileStatus.value = 'FAILED'
       botCompileError.value = error
@@ -553,6 +596,7 @@ export const useSimulationStore = defineStore('simulation', () => {
     isBotCompileFailed,
     MIN_REQUIRED_DAYS,
     fetchOverview,
+    fetchSimulationDetail,
     fetchComparators,
     fetchInitialCapital,
     fetchSimulationReport,

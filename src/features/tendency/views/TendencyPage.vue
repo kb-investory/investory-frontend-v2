@@ -19,6 +19,28 @@ import SegmentedControl from '@/shared/components/navigation/SegmentedControl.vu
 const RECOMMENDATION_NOTICE_COLLAPSED_KEY = 'investory:recommendation-notice-collapsed:v4'
 const REANALYSIS_NOTICE_COLLAPSED_KEY = 'investory:reanalysis-notice-collapsed:v8'
 const FLOATING_POSITION_KEY = 'investory:tendency-floating-position:v2'
+const PRINCIPLE_ICONS = Object.freeze({
+  RISK_MANAGEMENT: 'shield-check',
+  PORTFOLIO_RISK_ALLOCATION: 'chart-pie',
+  BUY_STRATEGY: 'chart-pie',
+  BUY_JUDGMENT_BASIS: 'search',
+  INVESTMENT_HORIZON: 'calendar-range',
+  LOSS_RESPONSE: 'shield-check',
+  PROFIT_RESPONSE: 'trending-up',
+  PRINCIPLE_FULFILLMENT: 'refresh-cw',
+  PSYCHOLOGY: 'compass',
+})
+const PRINCIPLE_TENDENCY_ICONS = Object.freeze({
+  '손실 대응형': 'shield-check',
+  '고변동 집중형': 'chart-pie',
+  '분할 매수 3단계형': 'chart-pie',
+  차익실현형: 'trending-up',
+  기업분석형: 'search',
+  장기투자형: 'calendar-range',
+  원칙일치형: 'refresh-cw',
+  보유형: 'shield-check',
+  '감정 매매 방지 쿨다운형': 'compass',
+})
 
 const route = useRoute()
 const router = useRouter()
@@ -108,27 +130,48 @@ function formatHistoryChange(change) {
   return `${dimension} → ${change.currentType}`
 }
 
-function getLocalDateKey(date = new Date()) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
 // 추천 기반 원칙은 어떤 투자성향에서 나왔는지가 핵심 정보라 성향명을 노출한다.
 // 원칙 편집 화면(PrincipleEditPage.getSourceLabel)과 같은 우선순위를 쓴다.
 function getPrincipleSourceLabel(principle) {
   return principle.recommendationSource?.tendency?.name ?? principle.title ?? '투자성향'
 }
 
-function formatPrincipleMeta(principle) {
-  const isUserPrinciple =
-    principle.isUserModified || principle.recommendationSource?.type === 'USER_CREATED'
+function isUserWrittenPrinciple(principle) {
+  const sourceType = principle.recommendationSource?.type
 
-  if (!isUserPrinciple) return `${getPrincipleSourceLabel(principle)} 기반`
+  if (sourceType === 'TENDENCY_ANALYSIS' || principle.recommendationSource?.tendency) return false
+  return sourceType === 'USER_CREATED' || !principle.recommendationId
+}
 
-  const date = principle.modifiedDate || principle.appliedDate
-  return `${formatDate(date || getLocalDateKey())} · 사용자 입력`
+function getPrincipleHeaderLabel(principle) {
+  if (isUserWrittenPrinciple(principle)) return '직접 작성'
+
+  return getPrincipleSourceLabel(principle).replace(/형$/, '')
+}
+
+function getPrincipleKeywordIcon(text) {
+  if (/감정|충동|쿨다운|추격|복수/.test(text)) return 'compass'
+  if (/손실|손절|리스크|위험|하락|보유/.test(text)) return 'shield-check'
+  if (/수익|익절|차익|매도/.test(text)) return 'trending-up'
+  if (/분할 매수|비중|집중|자산|포트폴리오/.test(text)) return 'chart-pie'
+  if (/기업|분석|근거|실적/.test(text)) return 'search'
+  if (/장기|기간|분기/.test(text)) return 'calendar-range'
+  if (/원칙|이행|일지|기록|점검/.test(text)) return 'refresh-cw'
+  return ''
+}
+
+function getPrincipleIcon(principle) {
+  if (isUserWrittenPrinciple(principle)) return 'pencil'
+
+  const tendency = principle.recommendationSource?.tendency
+  return (
+    PRINCIPLE_ICONS[principle.category] ||
+    PRINCIPLE_ICONS[tendency?.code] ||
+    PRINCIPLE_TENDENCY_ICONS[tendency?.name] ||
+    getPrincipleKeywordIcon(tendency?.name || principle.title || '') ||
+    getPrincipleKeywordIcon(principle.content || '') ||
+    'sparkles'
+  )
 }
 
 function openHistoryDetail(historyItem) {
@@ -529,30 +572,39 @@ onBeforeUnmount(() => {
       </section>
 
       <section v-if="tendencyStore.principles.length" class="my-principles">
-        <header>
-          <h2>나의 투자원칙</h2>
-          <p>선택한 원칙은 일지와 회고에 적용돼요.</p>
-        </header>
-
-        <div class="principle-list" aria-label="적용 중인 투자 원칙">
-          <button
-            v-for="(principle, index) in tendencyStore.principles"
-            :key="principle.principleId"
-            type="button"
-            class="principle-card"
-            @click="openPrincipleEdit"
-          >
-            <span class="principle-card__index" aria-hidden="true">
-              {{ String(index + 1).padStart(2, '0') }}
-            </span>
-            <div>
-              <strong>{{ principle.content }}</strong>
-              <p>{{ formatPrincipleMeta(principle) }}</p>
-            </div>
-            <span class="principle-card__actions" aria-hidden="true">
-              <AppIcon name="chevron-right" :size="16" />
-            </span>
-          </button>
+        <div class="principle-paper">
+          <div class="principle-list" aria-label="적용 중인 투자 원칙">
+            <article
+              v-for="(principle, index) in tendencyStore.principles"
+              :key="principle.principleId"
+              class="principle-card"
+            >
+              <header class="principle-card__header">
+                <span
+                  class="principle-card__icon"
+                  :class="{ 'is-user-written': isUserWrittenPrinciple(principle) }"
+                  aria-hidden="true"
+                >
+                  <AppIcon :name="getPrincipleIcon(principle)" :size="14" />
+                </span>
+                <div class="principle-card__meta">
+                  <span class="principle-card__index">
+                    원칙 {{ String(index + 1).padStart(2, '0') }}
+                  </span>
+                  <span class="principle-card__separator" aria-hidden="true">·</span>
+                  <span
+                    class="principle-card__origin"
+                    :class="{ 'is-user-written': isUserWrittenPrinciple(principle) }"
+                  >
+                    {{ getPrincipleHeaderLabel(principle) }}
+                  </span>
+                </div>
+              </header>
+              <div class="principle-card__content">
+                <strong>{{ principle.content }}</strong>
+              </div>
+            </article>
+          </div>
         </div>
       </section>
 
@@ -563,7 +615,7 @@ onBeforeUnmount(() => {
         @click="openPrincipleEdit"
       >
         <AppIcon name="pencil" :size="16" />
-        수정하기
+        원칙 전체 편집
       </button>
 
       <section v-else class="principles-empty-visual">
@@ -1749,74 +1801,119 @@ onBeforeUnmount(() => {
   font-size: var(--font-size-caption);
 }
 
+.principle-paper {
+  padding: 0;
+}
+
 .principle-list {
   display: grid;
   gap: 8px;
 }
 
 .principle-card {
-  display: grid;
-  width: 100%;
-  grid-template-columns: 34px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  min-height: 78px;
-  padding: 12px;
-  border: 1px solid #dfe7e7;
+  display: flex;
+  min-height: 94px;
+  flex-direction: column;
+  gap: 6px;
+  padding: 11px 14px 10px;
+  border: 1px solid #dce8e7;
   border-radius: 15px;
-  background: #ffffff;
-  box-shadow: 0 3px 10px rgba(38, 58, 67, 0.025);
+  background: #fff;
+  box-shadow:
+    0 2px 3px rgba(27, 73, 77, 0.03),
+    0 10px 24px rgba(27, 73, 77, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
   color: inherit;
-  cursor: pointer;
-  font: inherit;
   text-align: left;
 }
 
-.principle-card__index {
-  display: inline-flex;
-  width: 34px;
-  height: 34px;
+.principle-card__header {
+  display: flex;
+  min-width: 0;
   align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: #0f9f9b;
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  gap: 7px;
 }
 
-.principle-card > div {
-  display: grid;
+.principle-card__icon {
+  display: inline-flex;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #cfe6e4;
+  border-radius: 8px;
+  background: #edf8f7;
+  color: #187f80;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.principle-card__icon.is-user-written {
+  border-color: #ded7e9;
+  background: #f3eff7;
+  color: #746487;
+}
+
+.principle-card__index {
+  display: block;
+  color: #347f7a;
+  font-family: var(--font-heading);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.principle-card__meta {
+  display: flex;
+  min-width: 0;
+  align-items: center;
   gap: 5px;
+  overflow: hidden;
+}
+
+.principle-card__content {
+  min-width: 0;
 }
 
 .principle-card strong {
+  display: -webkit-box;
   color: #273a3f;
-  font-size: var(--font-size-body);
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
   line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  word-break: keep-all;
 }
 
-.principle-card p {
-  margin: 0;
-  color: #9aa2a4;
-  font-size: var(--font-size-caption);
-  line-height: 1.4;
+.principle-card__separator {
+  color: #9aa8a9;
+  font-size: 12px;
+  font-weight: 700;
 }
 
-.principle-card__actions {
-  display: inline-flex;
-  width: auto !important;
-  height: auto !important;
-  align-items: center;
-  gap: 4px;
-  border-radius: 0 !important;
-  background: transparent !important;
-  color: #0b8f8b;
+.principle-card__origin {
+  min-width: 0;
+  color: #356f6b;
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.principle-card__actions :last-child {
-  color: #93a0a2;
+.principle-card__origin.is-user-written {
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: #f1edf6;
+  color: #746487;
 }
 
 .principle-edit-button {

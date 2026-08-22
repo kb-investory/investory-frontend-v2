@@ -1,4 +1,4 @@
-import { computed, nextTick, onBeforeUnmount, onMounted, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
@@ -6,7 +6,6 @@ import { ROUTE_NAMES } from '@/app/router/route-names'
 const ROUTE_BY_STEP = Object.freeze({
   home: ROUTE_NAMES.SIMULATION_DASHBOARD,
   comparator_select: ROUTE_NAMES.SIMULATION_COMPARATORS,
-  condition_setup: ROUTE_NAMES.SIMULATION_SETUP,
   live: ROUTE_NAMES.SIMULATION_LIVE,
   result: ROUTE_NAMES.SIMULATION_RESULT,
 })
@@ -16,11 +15,11 @@ const STEP_BY_ROUTE = Object.freeze(
 )
 
 const FLOW_HEADERS = Object.freeze({
-  comparator_select: { title: '비교 봇 선택', step: '1 / 2' },
-  condition_setup: { title: '시뮬레이션 준비', step: '2 / 2' },
+  comparator_select: { title: '시뮬레이션 준비', step: '' },
   live: { title: '라이브 시뮬레이션', step: '' },
   result: { title: '시뮬레이션 결과', step: '' },
 })
+const MIN_LIVE_PREPARATION_MS = 3000
 
 export function useSimulationFlow(simulationStore, pageRoot) {
   const route = useRoute()
@@ -30,6 +29,7 @@ export function useSimulationFlow(simulationStore, pageRoot) {
   const flowHeader = computed(
     () => FLOW_HEADERS[currentStep.value] ?? { title: '시뮬레이션', step: '' },
   )
+  const livePreparationPending = ref(false)
   const effectiveMode = computed(() => {
     if (route.name === ROUTE_NAMES.SIMULATION_WYSMI || route.query.state === 'wysmi') {
       return 'wysmi'
@@ -56,7 +56,11 @@ export function useSimulationFlow(simulationStore, pageRoot) {
     }
 
     if (step === 'result') {
-      void simulationStore.startSimulationReportRefresh()
+      const selectedSimulationId = route.query.runId
+      if (selectedSimulationId) {
+        await simulationStore.fetchSimulationDetail(selectedSimulationId)
+      }
+      void simulationStore.startSimulationReportRefresh(selectedSimulationId)
     } else {
       simulationStore.stopSimulationReportRefresh()
     }
@@ -72,7 +76,7 @@ export function useSimulationFlow(simulationStore, pageRoot) {
     simulationStore.stopSimulationReportRefresh()
   })
 
-  watch(currentStep, async (step) => {
+  watch([currentStep, () => route.query.runId], async ([step]) => {
     await nextTick()
     pageRoot.value?.closest('.mobile-main')?.scrollTo({ top: 0 })
     await prepareStep(step)
@@ -87,15 +91,29 @@ export function useSimulationFlow(simulationStore, pageRoot) {
     return navigateToStep('comparator_select')
   }
 
-  function handleConfirmComparators(botTypes) {
-    simulationStore.setSelectedComparators(botTypes)
-    return navigateToStep('condition_setup')
+  function openSimulationRecord(record) {
+    const simulationRunId = record?.simulationRunId
+    if (!simulationRunId) return navigateToStep('result')
+
+    return router.push({
+      name: ROUTE_BY_STEP.result,
+      query: { runId: String(simulationRunId) },
+    })
   }
 
   async function startLiveSimulation(conditions) {
     simulationStore.setSimulationConditions(conditions)
-    await simulationStore.executeSimulation(conditions)
-    return navigateToStep('live')
+    livePreparationPending.value = true
+
+    try {
+      await Promise.all([
+        simulationStore.executeSimulation(conditions),
+        new Promise((resolve) => window.setTimeout(resolve, MIN_LIVE_PREPARATION_MS)),
+      ])
+      return navigateToStep('live')
+    } finally {
+      livePreparationPending.value = false
+    }
   }
 
   function finishLiveSimulation() {
@@ -110,8 +128,7 @@ export function useSimulationFlow(simulationStore, pageRoot) {
   function goBack() {
     const previousStep = {
       comparator_select: 'home',
-      condition_setup: 'comparator_select',
-      live: 'condition_setup',
+      live: 'comparator_select',
       result: 'home',
     }[currentStep.value]
 
@@ -122,8 +139,9 @@ export function useSimulationFlow(simulationStore, pageRoot) {
     currentStep,
     effectiveMode,
     flowHeader,
+    livePreparationPending,
+    openSimulationRecord,
     startBotCreation,
-    handleConfirmComparators,
     startLiveSimulation,
     finishLiveSimulation,
     restartFlow,

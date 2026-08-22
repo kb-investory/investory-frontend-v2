@@ -300,8 +300,19 @@
       "principleId": 1,
       "title": "손절매 기준 준수",
       "content": "매수가 대비 -5% 도달 시 투자 근거를 확인하고 50% 분할 손절하기",
+      "recommendationId": 201,
+      "originalContent": "매수가 대비 -5% 도달 시 투자 근거를 확인하고 50% 분할 손절하기",
       "category": "RISK_MANAGEMENT",
-      "isActive": true
+      "isActive": true,
+      "isUserModified": false,
+      "recommendationSource": {
+        "type": "TENDENCY_ANALYSIS",
+        "label": "투자성향 기반 추천",
+        "analysisRunId": 1,
+        "tendency": {
+          "name": "손실 대응형"
+        }
+      }
     },
     {
       "principleId": 2,

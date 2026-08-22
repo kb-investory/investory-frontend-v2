@@ -1,25 +1,72 @@
 <script setup>
 import { storeToRefs } from 'pinia'
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 
-import SimulationParticipantAvatar from '@/features/simulation/components/SimulationParticipantAvatar.vue'
+import SimulationCharacterPortrait from '@/features/simulation/components/SimulationCharacterPortrait.vue'
+import SimulationConditionSetup from '@/features/simulation/components/SimulationConditionSetup.vue'
+import SimulationStepHeading from '@/features/simulation/components/SimulationStepHeading.vue'
 import { useSimulationStore } from '@/features/simulation/stores/simulationStore'
 import AppIcon from '@/shared/components/AppIcon.vue'
-import BaseButton from '@/shared/components/buttons/BaseButton.vue'
 
-const emit = defineEmits(['confirm'])
+defineProps({
+  periodStart: {
+    type: String,
+    default: '',
+  },
+  periodEnd: {
+    type: String,
+    default: '',
+  },
+  accountId: {
+    type: Number,
+    default: null,
+  },
+  isPending: {
+    type: Boolean,
+    default: false,
+  },
+})
+
+const emit = defineEmits(['start'])
 
 const simulationStore = useSimulationStore()
 const {
   actualParticipant,
   comparatorRoster: roster,
-  botCompileProgress,
   isBotCompiling,
   isBotCompileComplete,
   isBotCompileFailed,
   selectedComparatorTypes: selectedComparators,
   selectedParticipantCount: selectedBotCount,
 } = storeToRefs(simulationStore)
+const conditionPanel = ref(null)
+
+/**
+ * 로스터를 다 채우면 다음 할 일(기간 설정)이 화면 위로 오도록 스크롤한다.
+ * 진입 시점에 이미 가득 차 있으므로, 사용자가 직접 채워 넣어 늘어난 순간에만 움직인다.
+ */
+watch(selectedBotCount, (count, previous) => {
+  if (count <= previous) return
+  if (count < roster.value.length) return
+  void nextTick(scrollToPeriodStep)
+})
+
+function scrollToPeriodStep() {
+  const panelRoot = conditionPanel.value?.$el
+  const target = panelRoot?.querySelector('.period-card')
+  // 스크롤되는 건 문서가 아니라 모바일 프레임의 본문 영역이다.
+  const scroller = panelRoot?.closest('.mobile-main')
+  if (!target || !scroller) return
+
+  const offset = target.getBoundingClientRect().top - scroller.getBoundingClientRect().top
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  scroller.scrollTo({
+    top: scroller.scrollTop + offset - 12,
+    behavior: prefersReducedMotion ? 'auto' : 'smooth',
+  })
+}
+
 const activeBot = ref(null)
 const botModal = ref(null)
 
@@ -41,9 +88,46 @@ const hiddenRuleLabels = new Set([
   '보유 시 매도 선택 확률',
 ])
 
+const ruleIconByLabel = {
+  '종목 선택': 'target',
+  포트폴리오: 'chart-pie',
+  매도: 'log-out',
+  매수: 'shield-check',
+}
+
+function getRuleIcon(rule) {
+  return ruleIconByLabel[rule?.label] ?? 'sliders-horizontal'
+}
+
 const displayedRules = computed(() =>
   (activeBot.value?.rules ?? []).filter((rule) => !hiddenRuleLabels.has(rule.label)).slice(0, 4),
 )
+
+/**
+ * className/level은 백엔드(/simulation/bots/comparators)가 내려주는 값이라
+ * 화면에서만 한국어로 바꾼다. 모르는 값은 그대로 통과시켜 데이터가 바뀌어도 깨지지 않게 한다.
+ */
+const CLASS_LABEL_KO = {
+  'PLAYER 01': '실제 참가자',
+  PLAYER: '실제 참가자',
+  PERSONAL: '내 원칙',
+  LEGEND: '가치 투자',
+  'WILD CARD': '무작위',
+  WILD: '무작위',
+}
+
+const LEVEL_LABEL_BY_TYPE = {
+  FAMOUS_STRATEGY: '워렌 버핏',
+}
+
+function toClassLabel(value) {
+  if (!value) return ''
+  return CLASS_LABEL_KO[value] ?? value
+}
+
+function getLevelLabel(bot) {
+  return LEVEL_LABEL_BY_TYPE[bot?.variantType] ?? bot?.level ?? ''
+}
 
 function getBotTone(bot) {
   return (
@@ -81,17 +165,6 @@ function handleModalAction() {
   if (!activeBot.value || activeBot.value.fixed) return
   toggleBotSelection(activeBot.value)
 }
-
-function handlePrimaryAction() {
-  if (isBotCompileFailed.value) {
-    void simulationStore.compilePersonalBot()
-    return
-  }
-
-  if (isBotCompileComplete.value) {
-    emit('confirm', selectedComparators.value)
-  }
-}
 </script>
 
 <template>
@@ -99,129 +172,116 @@ function handlePrimaryAction() {
     <div class="challenger-intro">
       <div class="challenger-intro__eyebrow">
         <AppIcon name="trophy" :size="14" />
-        <span>CHOOSE YOUR CHALLENGERS</span>
+        <span>함께 겨룰 상대 고르기</span>
       </div>
       <h2>누구와 겨뤄볼까요?</h2>
-      <p>최대 4명의 투자봇을 선택할 수 있어요.</p>
+      <p>실제 나와 함께 달릴 투자봇을 최대 {{ roster.length }}개까지 고를 수 있어요.</p>
     </div>
 
-    <section class="player-card" aria-label="고정 참가자">
-      <div class="player-card__avatar">
-        <SimulationParticipantAvatar variant-type="ACTUAL_USER" :size="44" />
-      </div>
-      <div class="player-card__info">
-        <span>{{ actualParticipant?.className ?? 'PLAYER 01' }}</span>
-        <strong>{{ actualParticipant?.variantName ?? '실제 나' }}</strong>
-        <small>{{ actualParticipant?.description ?? '실제 매매 내역 그대로 참가' }}</small>
-      </div>
-      <span class="player-card__fixed">고정 참가</span>
-    </section>
+    <SimulationStepHeading step="01" title="시뮬레이션 로스터 선택">
+      <template #meta>{{ selectedBotCount + 1 }} / {{ roster.length + 1 }}</template>
+    </SimulationStepHeading>
 
-    <div class="versus-divider" aria-hidden="true">
-      <i></i>
-      <b>VS</b>
-      <i></i>
-    </div>
-
-    <div class="roster-header">
-      <strong>투자봇 로스터</strong>
-      <span>{{ selectedBotCount }}명 선택 · 최대 4명</span>
-    </div>
-
-    <div class="roster-list">
-      <article
-        v-for="bot in roster"
-        :key="bot.variantType"
-        class="roster-card"
-        :class="[`roster-card--${getBotTone(bot)}`, { 'is-selected': isSelected(bot) }]"
-      >
-        <button
-          type="button"
-          class="roster-card__details"
-          :disabled="isPersonalBotUnavailable(bot)"
-          @click="openBotModal(bot)"
-        >
-          <div class="roster-card__avatar">
-            <SimulationParticipantAvatar :variant-type="bot.variantType" :size="48" />
-            <span>{{ bot.level }}</span>
-          </div>
-
-          <div class="roster-card__content">
-            <span class="roster-card__class">{{ bot.className }}</span>
-            <span
-              v-if="isPersonalBotLoading(bot)"
-              class="roster-card__title-skeleton"
-              aria-label="나의 투자봇 생성 중"
-            ></span>
-            <strong v-else-if="bot.variantType === 'PERSONAL_BOT' && isBotCompileFailed">
-              투자봇 생성 실패
-            </strong>
-            <strong v-else>{{ bot.variantName }}</strong>
-            <small>{{ bot.description }}</small>
-            <div class="roster-card__traits">
-              <span v-for="trait in bot.traits" :key="trait">{{ trait }}</span>
-            </div>
-            <span class="roster-card__detail">
-              자세히 보기 <AppIcon name="chevron-right" :size="11" />
+    <div class="roster-panel">
+      <section class="player-card" aria-label="고정 참가자">
+        <div class="player-card__portrait">
+          <SimulationCharacterPortrait variant-type="ACTUAL_USER" />
+        </div>
+        <div class="player-card__info">
+          <span class="player-card__meta">
+            <span class="player-card__class">
+              {{ toClassLabel(actualParticipant?.className) || '실제 참가자' }}
             </span>
-          </div>
-        </button>
-
-        <button
-          type="button"
-          class="roster-card__select"
-          :class="{ 'is-selected': isSelected(bot) }"
-          :aria-label="
-            bot.fixed
-              ? `${bot.variantName} 고정 참가`
-              : isSelected(bot)
-                ? `${bot.variantName} 선택 해제`
-                : `${bot.variantName} 선택`
-          "
-          :aria-pressed="isSelected(bot)"
-          :disabled="bot.fixed || isPersonalBotUnavailable(bot)"
-          @click="toggleBotSelection(bot)"
-        >
-          <AppIcon
-            v-if="isPersonalBotLoading(bot)"
-            name="loader-circle"
-            :size="16"
-            class="roster-card__loader"
-          />
-          <AppIcon
-            v-else-if="bot.variantType === 'PERSONAL_BOT' && isBotCompileFailed"
-            name="triangle-alert"
-            :size="16"
-          />
-          <AppIcon v-else :name="isSelected(bot) ? 'check' : 'plus'" :size="16" />
-        </button>
-      </article>
-    </div>
-
-    <div class="challenger-action">
-      <BaseButton
-        variant="primary"
-        full-width
-        :disabled="!isBotCompileComplete && !isBotCompileFailed"
-        aria-live="polite"
-        @click="handlePrimaryAction"
-      >
-        <template v-if="isBotCompileFailed">
-          <AppIcon name="refresh-cw" :size="17" />
-          <span>투자봇 다시 생성하기</span>
-        </template>
-        <template v-else-if="!isBotCompileComplete">
-          <AppIcon name="loader-circle" :size="17" class="roster-card__loader" />
-          <span>
-            {{ `투자봇 생성 중 ${botCompileProgress}%` }}
+            <span class="player-card__fixed">고정 참가</span>
           </span>
-        </template>
-        <template v-else>
-          <span>{{ selectedBotCount }}명의 투자봇으로 계속</span>
-          <AppIcon name="swords" :size="18" />
-        </template>
-      </BaseButton>
+          <strong>{{ actualParticipant?.variantName ?? '실제 나' }}</strong>
+          <small>{{ actualParticipant?.description ?? '실제 매매 내역 그대로 참가' }}</small>
+        </div>
+      </section>
+
+      <div class="versus-badge" aria-hidden="true">VS</div>
+
+      <div class="roster-grid">
+        <article
+          v-for="bot in roster"
+          :key="bot.variantType"
+          class="pick-card"
+          :class="[`pick-card--${getBotTone(bot)}`, { 'is-selected': isSelected(bot) }]"
+        >
+          <button
+            type="button"
+            class="pick-card__stage"
+            :aria-label="
+              bot.fixed
+                ? `${bot.variantName} 고정 참가`
+                : isSelected(bot)
+                  ? `${bot.variantName} 선택 해제`
+                  : `${bot.variantName} 선택`
+            "
+            :aria-pressed="isSelected(bot)"
+            :disabled="bot.fixed || isPersonalBotUnavailable(bot)"
+            @click="toggleBotSelection(bot)"
+          >
+            <span class="pick-card__level">{{ getLevelLabel(bot) }}</span>
+
+            <span class="pick-card__portrait">
+              <SimulationCharacterPortrait :variant-type="bot.variantType" />
+            </span>
+
+            <span class="pick-card__marker" aria-hidden="true">
+              <AppIcon
+                v-if="isPersonalBotLoading(bot)"
+                name="loader-circle"
+                :size="14"
+                class="roster-card__loader"
+              />
+              <AppIcon
+                v-else-if="bot.variantType === 'PERSONAL_BOT' && isBotCompileFailed"
+                name="triangle-alert"
+                :size="14"
+              />
+              <AppIcon v-else-if="isSelected(bot)" name="check" :size="14" />
+            </span>
+
+            <span class="pick-card__name">
+              <span
+                v-if="isPersonalBotLoading(bot)"
+                class="roster-card__title-skeleton"
+                aria-label="나의 투자봇 생성 중"
+              ></span>
+              <strong v-else-if="bot.variantType === 'PERSONAL_BOT' && isBotCompileFailed">
+                생성 실패
+              </strong>
+              <strong v-else>{{ bot.variantName }}</strong>
+              <small>{{ toClassLabel(bot.className) }}</small>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            class="pick-card__info"
+            :aria-label="`${bot.variantName} 자세히 보기`"
+            :disabled="isPersonalBotUnavailable(bot)"
+            @click="openBotModal(bot)"
+          >
+            <AppIcon name="info" :size="13" />
+            <span>상세보기</span>
+          </button>
+        </article>
+      </div>
     </div>
+
+    <div class="step-divider" role="separator"></div>
+
+    <SimulationConditionSetup
+      v-if="periodStart && periodEnd"
+      ref="conditionPanel"
+      :period-start="periodStart"
+      :period-end="periodEnd"
+      :account-id="accountId"
+      :is-pending="isPending"
+      @start="emit('start', $event)"
+    />
 
     <div
       v-if="activeBot"
@@ -247,28 +307,36 @@ function handlePrimaryAction() {
 
         <div class="bot-modal__content">
           <header class="bot-modal__header">
-            <div class="bot-modal__avatar">
-              <SimulationParticipantAvatar :variant-type="activeBot.variantType" :size="54" />
+            <div class="bot-modal__portrait">
+              <SimulationCharacterPortrait :variant-type="activeBot.variantType" />
             </div>
             <div class="bot-modal__identity">
               <span class="bot-modal__class" :class="`bot-modal__class--${getBotTone(activeBot)}`">
                 {{ botTypeLabel }}
               </span>
               <h3>{{ activeBot.variantName }}</h3>
-              <p>{{ activeBot.description }}</p>
+              <div v-if="activeBot.traits?.length" class="bot-modal__traits" aria-label="전략 특징">
+                <span v-for="trait in activeBot.traits" :key="trait">{{ trait }}</span>
+              </div>
             </div>
           </header>
 
-          <div class="bot-modal__summary">
-            <AppIcon name="sparkles" :size="18" />
-            <div>
-              <span>한 줄 요약</span>
-              <strong>{{ activeBot.summary }}</strong>
-            </div>
-          </div>
+          <p class="bot-modal__summary">{{ activeBot.summary }}</p>
 
-          <section v-if="activeBot.traits?.length" class="bot-modal__traits" aria-label="전략 특징">
-            <span v-for="trait in activeBot.traits" :key="trait">{{ trait }}</span>
+          <section v-if="displayedRules.length" class="bot-modal__section bot-modal__rules">
+            <div class="bot-modal__section-title">
+              <AppIcon name="sliders-horizontal" :size="16" />
+              <strong>이렇게 움직여요</strong>
+            </div>
+            <dl>
+              <div v-for="rule in displayedRules" :key="rule.key ?? rule.label">
+                <dt>
+                  <AppIcon :name="getRuleIcon(rule)" :size="15" />
+                  <span>{{ rule.label }}</span>
+                </dt>
+                <dd>{{ rule.value }}</dd>
+              </div>
+            </dl>
           </section>
 
           <section
@@ -276,31 +344,18 @@ function handlePrimaryAction() {
             class="bot-modal__section bot-modal__principles"
           >
             <div class="bot-modal__section-title">
-              <AppIcon name="compass" :size="17" />
-              <strong>이렇게 투자해요</strong>
+              <AppIcon name="compass" :size="16" />
+              <strong>지키는 원칙</strong>
             </div>
-            <ul>
+            <ol>
               <li
-                v-for="principle in displayedPrinciples"
-                :key="principle.principleId ?? principle.text"
+                v-for="(principle, idx) in displayedPrinciples"
+                :key="principle.principleId ?? principle.text ?? idx"
               >
-                <AppIcon name="check" :size="14" />
+                <span class="bot-modal__step">{{ idx + 1 }}</span>
                 <p>{{ principle.text ?? principle }}</p>
               </li>
-            </ul>
-          </section>
-
-          <section v-if="displayedRules.length" class="bot-modal__section bot-modal__rules">
-            <div class="bot-modal__section-title">
-              <AppIcon name="sliders-horizontal" :size="17" />
-              <strong>핵심 기준</strong>
-            </div>
-            <dl>
-              <div v-for="rule in displayedRules" :key="rule.key ?? rule.label">
-                <dt>{{ rule.label }}</dt>
-                <dd>{{ rule.value }}</dd>
-              </div>
-            </dl>
+            </ol>
           </section>
 
           <div v-if="activeBot.dataEvidence" class="bot-modal__data">
@@ -377,24 +432,29 @@ function handlePrimaryAction() {
 
 .player-card {
   display: flex;
-  min-height: 78px;
+  min-height: 116px;
   align-items: center;
   gap: 12px;
-  padding: 12px 14px;
+  padding: 10px 14px;
   border-radius: 16px;
-  background: #263a43;
   color: #fff;
+  background: #263a43;
 }
 
-.player-card__avatar {
-  display: grid;
-  width: 48px;
-  height: 48px;
-  flex: 0 0 auto;
-  place-items: center;
+/* 어두운 카드라 pick-card의 어두운 발밑 그림자는 보이지 않는다.
+   PLAYER 01 라벨과 같은 금색 계열 스포트라이트로 바닥선을 만든다. */
+.player-card__portrait {
+  --portrait-baseline: 7%;
+
+  position: relative;
   overflow: hidden;
-  border-radius: 15px;
-  background: rgb(255 255 255 / 12%);
+  width: 78px;
+  height: 100px;
+  flex: 0 0 auto;
+  border-radius: 14px;
+  background:
+    radial-gradient(ellipse 60% 18% at 50% 92%, rgb(232 185 49 / 30%) 0%, transparent 70%),
+    rgb(255 255 255 / 8%);
 }
 
 .player-card__info {
@@ -402,14 +462,24 @@ function handlePrimaryAction() {
   min-width: 0;
   flex: 1;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
-.player-card__info > span {
+.player-card__meta {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.player-card__class {
+  overflow: hidden;
   color: #e8b931;
   font-family: var(--font-mono);
   font-size: var(--font-size-caption);
   font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .player-card__info strong {
@@ -427,250 +497,234 @@ function handlePrimaryAction() {
 
 .player-card__fixed {
   flex: 0 0 auto;
-  padding: 7px 9px;
-  border-radius: 10px;
-  background: rgb(255 255 255 / 10%);
-  font-size: var(--font-size-caption);
+  padding: 3px 7px;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 12%);
+  font-size: 10px;
   font-weight: 700;
+  white-space: nowrap;
 }
 
-.versus-divider {
-  display: flex;
-  height: 30px;
-  align-items: center;
-  gap: 10px;
-}
-
-.versus-divider i {
+/* 01 단계가 실제 나 카드와 로스터로 쪼개져 보이지 않도록 하나의 판 안에 묶는다. */
+.step-divider {
   height: 1px;
-  flex: 1;
-  background: #dce6e9;
+  margin: 4px 2px 2px;
+  border: 0;
+  background: linear-gradient(90deg, transparent 0%, #dde6e8 18%, #dde6e8 82%, transparent 100%);
 }
 
-.versus-divider b {
+.roster-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #e2eaec;
+  border-radius: 20px;
+  background: #f7fafb;
+}
+
+/* 가로줄로 나누면 두 덩어리로 읽혀서, 경계를 걸치는 배지로 두 영역을 잇는다. */
+.versus-badge {
+  position: relative;
+  z-index: 2;
   display: grid;
   width: 30px;
   height: 30px;
+  align-self: center;
+  margin: -16px 0;
   place-items: center;
+  border: 3px solid #f7fafb;
   border-radius: 50%;
+  color: #ffffff;
   background: #0b8f8b;
-  color: #fff;
   font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
-}
-
-.roster-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.roster-header strong {
-  color: #181817;
-  font-size: var(--font-size-body);
+  font-size: 11px;
   font-weight: 800;
 }
 
-.roster-header span {
-  padding: 6px 8px;
-  border: 1px solid #dce6e9;
-  border-radius: 10px;
-  color: #384f59;
-  font-size: var(--font-size-caption);
-  font-weight: 700;
-}
-
-.roster-list {
-  display: flex;
-  flex-direction: column;
+.roster-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
-.roster-card {
+.pick-card {
+  position: relative;
   display: flex;
-  width: 100%;
-  min-height: 112px;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border: 1.5px solid #dce6e9;
+  overflow: hidden;
+  flex-direction: column;
+  border: 1px solid #dbe5e8;
   border-radius: 16px;
-  background: #fff;
-  color: inherit;
-  font-family: inherit;
-  text-align: left;
-  cursor: pointer;
+  background: linear-gradient(180deg, #f6fafb 0%, #e6eef1 100%);
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
 }
 
-.roster-card--personal.is-selected {
-  border-color: #263a43;
+.pick-card.is-selected {
+  border-color: #087f7c;
+  box-shadow: 0 6px 18px rgb(8 127 124 / 22%);
+  transform: translateY(-2px);
 }
 
-.roster-card--legend.is-selected {
-  border-color: #b78600;
+.pick-card--legend.is-selected {
+  border-color: #9b6c00;
+  box-shadow: 0 6px 18px rgb(155 108 0 / 22%);
 }
 
-.roster-card--random:not(.is-selected) {
-  border-color: #e6e7e8;
-  background: #fafafa;
-  opacity: 0.72;
+.pick-card--random.is-selected {
+  border-color: #a9662f;
+  box-shadow: 0 6px 18px rgb(169 102 47 / 22%);
 }
 
-.roster-card__details {
+.pick-card__stage {
+  position: relative;
   display: flex;
-  min-width: 0;
-  flex: 1;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
   padding: 0;
   border: 0;
   background: transparent;
-  color: inherit;
-  font-family: inherit;
-  text-align: left;
   cursor: pointer;
 }
 
-.roster-card__details:disabled {
-  cursor: wait;
+.pick-card__stage:disabled {
+  cursor: default;
+  opacity: 0.55;
 }
 
-.roster-card__avatar {
+.pick-card__level {
+  position: absolute;
+  z-index: 2;
+  top: 6px;
+  left: 6px;
+  padding: 2px 5px;
+  border-radius: 6px;
+  color: #ffffff;
+  background: rgb(38 58 67 / 78%);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.pick-card__marker {
+  position: absolute;
+  z-index: 2;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border: 1px solid #cfdde1;
+  border-radius: 50%;
+  color: #ffffff;
+  background: #ffffff;
+}
+
+.pick-card.is-selected .pick-card__marker {
+  border-color: #087f7c;
+  background: #087f7c;
+}
+
+.pick-card--legend.is-selected .pick-card__marker {
+  border-color: #9b6c00;
+  background: #9b6c00;
+}
+
+.pick-card--random.is-selected .pick-card__marker {
+  border-color: #a9662f;
+  background: #a9662f;
+}
+
+/* 캐릭터가 서 있는 무대. 발밑 그림자로 바닥선을 만들어 3종의 키를 같아 보이게 한다. */
+.pick-card__portrait {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+
+  --portrait-baseline: 8%;
+}
+
+.pick-card__portrait::after {
+  position: absolute;
+  right: 16%;
+  bottom: 6%;
+  left: 16%;
+  height: 7px;
+  border-radius: 50%;
+  background: rgb(30 60 70 / 16%);
+  content: '';
+  filter: blur(2.5px);
+}
+
+.pick-card__name {
   display: flex;
-  width: 60px;
-  height: 72px;
-  flex: 0 0 auto;
+  width: 100%;
+  min-height: 40px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  border-radius: 14px;
-  background: #dce6e9;
+  gap: 1px;
+  padding: 0 4px 6px;
 }
 
-.roster-card--legend .roster-card__avatar {
-  background: #fff2bd;
-}
-
-.roster-card--random .roster-card__avatar {
-  background: #f3ebfb;
-}
-
-.roster-card__avatar > span {
-  font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
-  font-weight: 700;
-}
-
-.roster-card__content {
-  display: flex;
-  min-width: 0;
-  flex: 1;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.roster-card__class {
-  color: #263a43;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
-  font-weight: 700;
-}
-
-.roster-card--legend .roster-card__class {
-  color: #805c00;
-}
-
-.roster-card--random .roster-card__class {
-  color: #6d4d8f;
-}
-
-.roster-card__content > strong {
-  color: #181817;
-  font-size: var(--font-size-body);
+.pick-card__name strong {
+  overflow: hidden;
+  max-width: 100%;
+  color: #20373f;
+  font-size: 12px;
   font-weight: 800;
+  letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pick-card__name small {
+  overflow: hidden;
+  max-width: 100%;
+  color: #7c8b90;
+  font-size: 9px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pick-card__info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  gap: 3px;
+  padding: 8px 4px;
+  border: 0;
+  border-top: 1px solid rgb(30 60 70 / 8%);
+  color: #5d7379;
+  background: rgb(255 255 255 / 55%);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.pick-card__info:disabled {
+  cursor: default;
+  opacity: 0.45;
 }
 
 .roster-card__title-skeleton {
-  width: min(132px, 82%);
-  height: 15px;
+  width: 68%;
+  height: 12px;
   border-radius: 5px;
   background: #dce6e9;
   animation: skeleton-pulse 1.15s ease-in-out infinite alternate;
 }
 
-.roster-card__content > small {
-  overflow: hidden;
-  color: #666662;
-  font-size: var(--font-size-caption);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.roster-card__traits {
-  display: flex;
-  gap: 5px;
-}
-
-.roster-card__traits span {
-  padding: 4px 6px;
-  border-radius: 6px;
-  background: #edf1f2;
-  color: #384f59;
-  font-size: var(--font-size-caption);
-  font-weight: 700;
-}
-
-.roster-card--legend .roster-card__traits span {
-  background: #fff3ca;
-  color: #805c00;
-}
-
-.roster-card--random .roster-card__traits span {
-  background: #f3ebfb;
-  color: #6d4d8f;
-}
-
-.roster-card__detail {
-  display: inline-flex;
-  align-items: center;
-  color: #384f59;
-  font-size: var(--font-size-caption);
-  font-weight: 700;
-}
-
-.roster-card__select {
-  display: grid;
-  width: 28px;
-  height: 28px;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid #dce6e9;
-  border-radius: 50%;
-  background: #fff;
-  color: #94948e;
-  cursor: pointer;
-}
-
-.roster-card.is-selected .roster-card__select {
-  border-color: #263a43;
-  background: #263a43;
-  color: #fff;
-}
-
-.roster-card__select:disabled {
-  cursor: default;
-}
-
 .roster-card__loader {
   animation: loader-spin 0.85s linear infinite;
 }
-
-.roster-card--legend.is-selected .roster-card__select {
-  border-color: #9b6c00;
-  background: #9b6c00;
-}
-
 .challenger-action {
   position: fixed;
   z-index: 30;
@@ -756,179 +810,141 @@ function handlePrimaryAction() {
 
 .bot-modal__header {
   display: flex;
-  min-height: 78px;
   align-items: center;
-  gap: 14px;
-  padding-right: 42px;
+  gap: 12px;
 }
 
-.bot-modal__avatar {
-  display: flex;
-  width: 72px;
-  height: 72px;
+/* 선택 화면과 같은 캐릭터를 써서 어떤 봇을 보고 있는지 즉시 알아보게 한다. */
+.bot-modal__portrait {
+  --portrait-baseline: 8%;
+
+  position: relative;
+  overflow: hidden;
+  width: 84px;
+  height: 96px;
   flex: 0 0 auto;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border-radius: 22px;
-  background: #e8f4f3;
+  border-radius: 16px;
+  background:
+    radial-gradient(ellipse 58% 16% at 50% 91%, rgb(8 127 124 / 22%) 0%, transparent 70%),
+    linear-gradient(180deg, #f4f9fa 0%, #e6eef1 100%);
 }
 
-.bot-modal--legend .bot-modal__avatar {
-  background: #fff3cf;
+.bot-modal--legend .bot-modal__portrait {
+  background:
+    radial-gradient(ellipse 58% 16% at 50% 91%, rgb(155 108 0 / 22%) 0%, transparent 70%),
+    linear-gradient(180deg, #fdf8ec 0%, #f3e9d3 100%);
 }
 
-.bot-modal--random .bot-modal__avatar {
-  background: #f3ebfb;
+.bot-modal--random .bot-modal__portrait {
+  background:
+    radial-gradient(ellipse 58% 16% at 50% 91%, rgb(169 102 47 / 22%) 0%, transparent 70%),
+    linear-gradient(180deg, #fdf6ef 0%, #f3e6d8 100%);
 }
 
 .bot-modal__identity {
   display: flex;
   min-width: 0;
+  flex: 1;
   flex-direction: column;
   align-items: flex-start;
-  gap: 6px;
+  gap: 5px;
 }
 
 .bot-modal__class {
-  padding: 5px 8px;
+  display: inline-flex;
+  padding: 3px 8px;
   border-radius: 999px;
-  background: #edf1f2;
-  color: #40545b;
-  font-size: var(--font-size-caption);
-  font-weight: 700;
+  color: #087f7c;
+  background: #e8f7f6;
+  font-size: 10px;
+  font-weight: 800;
 }
 
 .bot-modal__class--legend {
-  background: #fff3ca;
-  color: #805c00;
+  color: #8a6000;
+  background: #f8eed6;
 }
 
 .bot-modal__class--random {
-  background: #f3ebfb;
-  color: #6d4d8f;
+  color: #a9662f;
+  background: #f8e9db;
 }
 
 .bot-modal h3 {
   margin: 0;
-  color: #181817;
-  font-family: var(--font-heading);
-  font-size: 24px;
-  font-weight: 800;
-}
-
-.bot-modal__identity p {
-  margin: 0;
-  color: #6f7e84;
-  font-size: var(--font-size-caption);
-  line-height: 1.45;
-}
-
-.bot-modal__summary {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 14px;
-  border: 0;
-  border-radius: 16px;
-  background: #eef8f7;
-  color: #087f7c;
-}
-
-.bot-modal__summary > div {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.bot-modal__summary span {
-  color: #087f7c;
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.bot-modal__summary strong {
-  color: #263a43;
-  font-size: 14px;
-  line-height: 1.5;
+  color: #20373f;
+  font-size: var(--font-size-title-md);
+  font-weight: 850;
+  letter-spacing: -0.03em;
 }
 
 .bot-modal__traits {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
+  gap: 4px;
 }
 
 .bot-modal__traits span {
-  padding: 7px 10px;
-  border: 1px solid #dce6e8;
+  padding: 2px 7px;
+  border: 1px solid #dce6e9;
   border-radius: 999px;
-  background: #fff;
-  color: #40545b;
-  font-size: var(--font-size-caption);
+  color: #5d7379;
+  background: #ffffff;
+  font-size: 10px;
   font-weight: 700;
 }
 
+/* description과 중복되던 자리. 한 문장 요약만 남겨 인용문처럼 보여준다. */
+.bot-modal__summary {
+  margin: 0;
+  padding: 12px 14px;
+  border-left: 3px solid #a9dfdc;
+  border-radius: 0 12px 12px 0;
+  color: #3f565e;
+  background: #f4fafa;
+  font-size: var(--font-size-body-sm, 13px);
+  line-height: 1.6;
+  word-break: keep-all;
+}
+
+.bot-modal--legend .bot-modal__summary {
+  border-left-color: #e0c47a;
+  background: #fdf9f0;
+}
+
+.bot-modal--random .bot-modal__summary {
+  border-left-color: #e8bd93;
+  background: #fdf7f1;
+}
+
 .bot-modal__section {
-  overflow: hidden;
-  border: 1px solid #e1e7e9;
-  border-radius: 16px;
-  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
 }
 
 .bot-modal__section-title {
   display: flex;
-  min-height: 41px;
   align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
-  padding: 0 14px;
-  border-bottom: 1px solid #edf1f2;
-}
-
-.bot-modal__section-title strong {
-  color: #263a43;
-  font-size: 14px;
-  font-weight: 800;
-}
-
-.bot-modal__principles ul {
-  display: flex;
-  margin: 0;
-  padding: 10px 14px 12px;
-  flex-direction: column;
-  gap: 4px;
-  list-style: none;
-}
-
-.bot-modal__principles li {
-  display: flex;
-  min-height: 31px;
-  align-items: flex-start;
-  gap: 9px;
-}
-
-.bot-modal__principles li > svg {
-  display: grid;
-  width: 20px;
-  height: 20px;
-  flex: 0 0 auto;
-  margin-top: 1px;
-  padding: 3px;
-  border-radius: 50%;
-  background: #e7f5f3;
+  gap: 6px;
   color: #087f7c;
 }
 
-.bot-modal__principles p {
-  margin: 0;
-  color: #263a43;
-  font-size: 13px;
-  line-height: 1.5;
+.bot-modal__section-title strong {
+  color: #20373f;
+  font-size: var(--font-size-body-sm, 13px);
+  font-weight: 800;
 }
 
+/* 봇마다 값을 나란히 비교하는 곳이라 라벨/값을 좌우로 붙여 스펙표처럼 읽히게 한다. */
 .bot-modal__rules dl {
+  display: flex;
   margin: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #e4ebec;
+  border-radius: 13px;
+  background: #ffffff;
 }
 
 .bot-modal__rules dl > div {
@@ -936,28 +952,86 @@ function handlePrimaryAction() {
   min-height: 44px;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  padding: 0 14px;
-  border-bottom: 1px solid #edf1f2;
+  gap: 12px;
+  padding: 9px 12px;
+  border-bottom: 1px solid #eef3f4;
 }
 
 .bot-modal__rules dl > div:last-child {
-  border-bottom: 0;
+  border-bottom: none;
 }
 
 .bot-modal__rules dt {
-  color: #718188;
-  font-size: var(--font-size-caption);
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+  color: #6d7f85;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.bot-modal__rules dt > svg {
+  color: #9fb3b8;
 }
 
 .bot-modal__rules dd {
   margin: 0;
-  color: #263a43;
+  color: #20373f;
   font-size: 13px;
   font-weight: 800;
   text-align: right;
+  word-break: keep-all;
 }
 
+.bot-modal__principles ol {
+  display: flex;
+  margin: 0;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.bot-modal__principles li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+
+.bot-modal__step {
+  display: grid;
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+  place-items: center;
+  margin-top: 1px;
+  border-radius: 50%;
+  color: #087f7c;
+  background: #e8f7f6;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.bot-modal--legend .bot-modal__step {
+  color: #8a6000;
+  background: #f8eed6;
+}
+
+.bot-modal--random .bot-modal__step {
+  color: #a9662f;
+  background: #f8e9db;
+}
+
+.bot-modal__principles p {
+  margin: 0;
+  color: #45595f;
+  font-size: 12.5px;
+  line-height: 1.55;
+  word-break: keep-all;
+}
 .bot-modal__data {
   display: flex;
   align-items: flex-start;

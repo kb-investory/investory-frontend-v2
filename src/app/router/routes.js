@@ -212,16 +212,9 @@ export const routes = [
     },
   },
   {
+    // 조건 설정은 비교 봇 선택 화면으로 합쳐졌다. 기존 경로는 그대로 이어준다.
     path: '/simulation/setup',
-    name: ROUTE_NAMES.SIMULATION_SETUP,
-    component: () => import('@/features/simulation/views/SimulationPage.vue'),
-    meta: {
-      title: '시뮬레이션 - 조건 설정',
-      layout: 'full-bleed',
-      hideBottomNav: true,
-      frameHeight: 980,
-      mainBottomPadding: 84,
-    },
+    redirect: '/simulation/comparators',
   },
   {
     path: '/simulation/live',
@@ -297,8 +290,10 @@ export const routes = [
   {
     path: '/mypage/simulations/:simulationId',
     name: ROUTE_NAMES.MYPAGE_SIMULATION_DETAIL,
-    component: () => import('@/features/mypage/views/MypageSimulationDetailPage.vue'),
-    meta: { title: '시뮬레이션 결과', layout: 'full-bleed', hideBottomNav: true },
+    redirect: (route) => ({
+      name: ROUTE_NAMES.SIMULATION_RESULT,
+      query: { runId: String(route.params.simulationId) },
+    }),
   },
   {
     path: '/mypage/support/:section',

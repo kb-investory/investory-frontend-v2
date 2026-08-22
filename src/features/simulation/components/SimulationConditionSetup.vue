@@ -1,5 +1,8 @@
 <script setup>
-import SimulationParticipantAvatar from '@/features/simulation/components/SimulationParticipantAvatar.vue'
+import { storeToRefs } from 'pinia'
+import { computed } from 'vue'
+
+import SimulationStepHeading from '@/features/simulation/components/SimulationStepHeading.vue'
 import { useSimulationConditions } from '@/features/simulation/composables/useSimulationConditions'
 import { useSimulationStore } from '@/features/simulation/stores/simulationStore'
 import AppIcon from '@/shared/components/AppIcon.vue'
@@ -22,10 +25,6 @@ const props = defineProps({
     type: Number,
     required: true,
   },
-  selectedBotTypes: {
-    type: Array,
-    default: () => ['FAMOUS_STRATEGY', 'RANDOM_BOT'],
-  },
   isPending: {
     type: Boolean,
     default: false,
@@ -35,6 +34,34 @@ const props = defineProps({
 const emit = defineEmits(['start'])
 const simulationStore = useSimulationStore()
 const {
+  selectedComparatorTypes,
+  isBotCompiling,
+  isBotCompileComplete,
+  isBotCompileFailed,
+  botCompileProgress,
+} = storeToRefs(simulationStore)
+
+/**
+ * 봇 선택 화면과 한 화면으로 합쳐지면서, 선택을 바꿀 때마다 참가자 수와 초기자금이
+ * 즉시 갱신돼야 한다. useSimulationConditions가 props를 반응형으로 읽으므로
+ * selectedBotTypes만 스토어를 보게 getter로 위임한다.
+ */
+const conditionSource = {
+  get periodStart() {
+    return props.periodStart
+  },
+  get periodEnd() {
+    return props.periodEnd
+  },
+  get accountId() {
+    return props.accountId
+  },
+  get selectedBotTypes() {
+    return selectedComparatorTypes.value
+  },
+}
+
+const {
   startOffset,
   endOffset,
   currentInitialCapital,
@@ -43,7 +70,6 @@ const {
   snapshotDate,
   initialHoldings,
   maxOffset,
-  participants,
   participantCount,
   selectedDays,
   startPercent,
@@ -56,17 +82,26 @@ const {
   formatDate,
   formatCurrency,
   getConditions,
-} = useSimulationConditions(props, simulationStore.fetchInitialCapital)
+} = useSimulationConditions(conditionSource, simulationStore.fetchInitialCapital)
 
-function startSimulation() {
-  if (
-    props.isPending ||
-    capitalLoading.value ||
-    capitalError.value ||
-    !currentInitialCapital.value
-  ) {
+const canStart = computed(
+  () =>
+    !props.isPending &&
+    !isBotCompiling.value &&
+    isBotCompileComplete.value &&
+    !capitalLoading.value &&
+    !capitalError.value &&
+    currentInitialCapital.value !== null,
+)
+
+function handlePrimaryAction() {
+  // 봇 생성이 실패한 상태에서는 같은 버튼이 재시도 역할을 한다.
+  if (isBotCompileFailed.value) {
+    void simulationStore.compilePersonalBot()
     return
   }
+
+  if (!canStart.value) return
 
   emit('start', getConditions())
 }
@@ -79,57 +114,20 @@ function formatDateKey(value) {
 
 <template>
   <div class="setup-page">
-    <header class="setup-intro">
-      <span class="setup-intro__eyebrow">
-        <AppIcon name="flag" :size="13" />
-        FINAL SETUP
-      </span>
-      <h2>참가자와 시작점을 확인해요</h2>
-      <p>시작점을 옮기면 모든 참가자가 같은 시점에서 출발해요.</p>
-    </header>
-
-    <section class="participants-panel">
-      <div class="participants-panel__header">
-        <span>PARTICIPANTS · {{ participantCount }}</span>
-        <strong>READY</strong>
-      </div>
-
-      <div class="participant-list" :class="{ 'is-compact': participantCount === 4 }">
-        <article
-          v-for="participant in participants"
-          :key="participant.type"
-          class="participant-card"
-          :class="`participant-card--${participant.tone}`"
-        >
-          <div class="participant-card__avatar">
-            <SimulationParticipantAvatar :variant-type="participant.type" :size="38" />
-          </div>
-          <span>{{ participant.className }}</span>
-          <strong>{{ participant.name }}</strong>
-          <small><i></i>준비 완료</small>
-        </article>
-      </div>
-    </section>
-
     <section class="period-card">
-      <div class="period-card__header">
-        <div>
-          <h3>시뮬레이션 기간</h3>
-          <p>양쪽 핸들을 움직여 기간을 정하세요</p>
-        </div>
-        <strong>총 {{ selectedDays }}일</strong>
-      </div>
+      <SimulationStepHeading step="02" title="시뮬레이션 기간">
+        <template #meta>총 {{ selectedDays }}일</template>
+      </SimulationStepHeading>
 
-      <div class="date-summary">
-        <div class="date-summary__item date-summary__item--start">
-          <span><i></i>시작</span>
+      <div class="date-span">
+        <div class="date-span__end">
+          <span>시작</span>
           <strong>{{ formatDate(selectedStartDate) }}</strong>
-          <small>첫 매수 일지 · 09:00</small>
         </div>
-        <div class="date-summary__item date-summary__item--end">
-          <span><i></i>종료</span>
+        <AppIcon name="arrow-right" :size="15" class="date-span__arrow" />
+        <div class="date-span__end date-span__end--to">
+          <span>종료</span>
           <strong>{{ formatDate(selectedEndDate) }}</strong>
-          <small>최근 완료 일지 · 15:30</small>
         </div>
       </div>
 
@@ -158,62 +156,69 @@ function formatDateKey(value) {
       </div>
 
       <div class="range-limits">
-        <span>최초&nbsp; {{ formatDate(dateAtOffset(0)) }}</span>
-        <span>최근&nbsp; {{ formatDate(dateAtOffset(maxOffset)) }}</span>
+        <span>{{ formatDate(dateAtOffset(0)) }}</span>
+        <span>{{ formatDate(dateAtOffset(maxOffset)) }}</span>
       </div>
 
-      <div class="period-hint">
+      <p class="period-hint">
         <AppIcon name="calendar-range" :size="13" />
         <span>거래·일지가 모두 있는 구간에서만 선택할 수 있어요.</span>
-      </div>
+      </p>
     </section>
 
-    <section class="same-condition">
-      <div class="same-condition__icon">
-        <AppIcon name="swords" :size="19" />
-      </div>
-      <div>
-        <strong>{{ participantCount }}명 · 같은 시점 · 같은 투자금</strong>
-        <span v-if="capitalLoading" class="capital-status capital-status--loading" role="status">
-          <AppIcon name="loader-circle" :size="13" class="pending-spinner" />
-          초기자금 갱신 중
+    <section class="capital-card" aria-label="초기 자금">
+      <div class="capital-card__head">
+        <span class="capital-card__icon" aria-hidden="true">
+          <AppIcon name="swords" :size="16" />
         </span>
-        <span v-else-if="capitalError" class="capital-status capital-status--error" role="alert">
-          {{ capitalError }}
-        </span>
-        <template v-else-if="currentInitialCapital !== null">
-          <span>
-            실제 나 + 투자봇 {{ participantCount - 1 }}명 · ₩{{
-              formatCurrency(currentInitialCapital)
-            }}
-          </span>
-          <small
-            >보유 기준 {{ formatDateKey(snapshotDate) }} · {{ initialHoldings.length }}종목</small
-          >
-        </template>
+        <span class="capital-card__label">1인당 초기 자금</span>
+        <span class="capital-card__badge">{{ participantCount }}명 동일</span>
       </div>
-      <AppIcon
-        v-if="!capitalLoading && !capitalError && currentInitialCapital !== null"
-        name="circle-check"
-        :size="17"
-      />
+
+      <p v-if="capitalLoading" class="capital-status capital-status--loading" role="status">
+        <AppIcon name="loader-circle" :size="14" class="pending-spinner" />
+        초기자금 갱신 중
+      </p>
+      <p v-else-if="capitalError" class="capital-status capital-status--error" role="alert">
+        {{ capitalError }}
+      </p>
+      <template v-else-if="currentInitialCapital !== null">
+        <strong class="capital-card__amount">
+          <i>₩</i>{{ formatCurrency(currentInitialCapital) }}
+        </strong>
+        <small class="capital-card__meta">
+          보유 기준 {{ formatDateKey(snapshotDate) }} · {{ initialHoldings.length }}종목 · 실제 나
+          포함 {{ participantCount }}명에게 동일 적용
+        </small>
+      </template>
     </section>
 
     <div class="setup-action">
       <BaseButton
         variant="primary"
         full-width
-        :disabled="
-          isPending || capitalLoading || Boolean(capitalError) || currentInitialCapital === null
-        "
-        @click="startSimulation"
+        aria-live="polite"
+        :disabled="!canStart && !isBotCompileFailed"
+        @click="handlePrimaryAction"
       >
-        <template v-if="isPending">
+        <template v-if="isBotCompileFailed">
+          <AppIcon name="refresh-cw" :size="17" />
+          <span>투자봇 다시 생성하기</span>
+        </template>
+        <template v-else-if="!isBotCompileComplete">
+          <AppIcon name="loader-circle" :size="17" class="pending-spinner" />
+          <span>{{ `투자봇 생성 중 ${botCompileProgress}%` }}</span>
+        </template>
+        <template v-else-if="isPending">
           <AppIcon name="loader-circle" :size="17" class="pending-spinner" />
           <span>시뮬레이션 준비 중</span>
         </template>
+        <template v-else-if="capitalLoading">
+          <AppIcon name="loader-circle" :size="17" class="pending-spinner" />
+          <span>초기자금 확인 중</span>
+        </template>
         <template v-else>
-          <span>이 조건으로 시뮬레이션 시작</span>
+          <span>{{ participantCount }}명으로 시뮬레이션 시작</span>
           <AppIcon name="rocket" :size="17" />
         </template>
       </BaseButton>
@@ -228,20 +233,20 @@ function formatDateKey(value) {
         aria-label="시뮬레이션 준비 중"
       >
         <div class="pending-card">
-          <span class="pending-card__eyebrow">SETTING UP THE RACE</span>
-
-          <div class="pending-character" aria-hidden="true">
-            <span class="pending-character__orbit pending-character__orbit--one"></span>
-            <span class="pending-character__orbit pending-character__orbit--two"></span>
-            <span class="pending-character__glow"></span>
-            <span class="pending-character__avatar">
-              <SimulationParticipantAvatar variant-type="PERSONAL_BOT" :size="72" />
+          <div class="pending-card__hero" aria-hidden="true">
+            <img
+              class="pending-card__hero-image"
+              src="/assets/images/simulation/live-race-hero.png"
+              alt=""
+            />
+            <span class="pending-card__hero-status">
+              <AppIcon name="loader-circle" :size="12" class="pending-spinner" /> LIVE MATCH
             </span>
-            <i class="pending-character__dot pending-character__dot--one"></i>
-            <i class="pending-character__dot pending-character__dot--two"></i>
-            <i class="pending-character__dot pending-character__dot--three"></i>
           </div>
 
+          <span class="pending-card__eyebrow"
+            ><AppIcon name="sparkles" :size="12" /> 라이브 대시</span
+          >
           <h3>참가자들이 출발선에 모이고 있어요</h3>
           <p>
             선택한 {{ participantCount }}명의 투자 기록과<br />
@@ -298,7 +303,8 @@ function formatDateKey(value) {
   max-width: 330px;
   flex-direction: column;
   align-items: center;
-  padding: 27px 20px 22px;
+  overflow: hidden;
+  padding: 0 20px 22px;
   border: 1px solid rgb(255 255 255 / 58%);
   border-radius: 24px;
   background: rgb(255 255 255 / 97%);
@@ -306,98 +312,57 @@ function formatDateKey(value) {
   text-align: center;
 }
 
+.pending-card__hero {
+  position: relative;
+  width: calc(100% + 40px);
+  aspect-ratio: 1;
+  overflow: hidden;
+  margin-bottom: 15px;
+  background: #081a28;
+}
+
+.pending-card__hero::after {
+  position: absolute;
+  inset: 0;
+  background: rgb(3 16 24 / 16%);
+  content: '';
+  pointer-events: none;
+}
+
+.pending-card__hero-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.pending-card__hero-status {
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
+  border: 1px solid rgb(255 255 255 / 28%);
+  border-radius: 999px;
+  background: rgb(4 22 31 / 72%);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
 .pending-card__eyebrow {
   color: #0b8f8b;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.1em;
-}
-
-.pending-character {
-  position: relative;
-  display: grid;
-  width: 142px;
-  height: 142px;
-  margin: 10px 0 4px;
-  place-items: center;
-}
-
-.pending-character__glow {
-  position: absolute;
-  width: 94px;
-  height: 94px;
-  border-radius: 50%;
-  background: #dff5f3;
-  box-shadow: 0 0 42px rgb(11 143 139 / 24%);
-  animation: pending-glow 1.7s ease-in-out infinite;
-}
-
-.pending-character__avatar {
-  position: relative;
-  z-index: 2;
-  display: grid;
-  width: 88px;
-  height: 88px;
-  place-items: center;
-  border: 5px solid #fff;
-  border-radius: 50%;
-  background: #e8f7f6;
-  box-shadow: 0 10px 24px rgb(38 58 67 / 18%);
-  animation: pending-float 1.8s ease-in-out infinite;
-}
-
-.pending-character__orbit {
-  position: absolute;
-  border: 1px solid #b9dcd9;
-  border-radius: 50%;
-}
-
-.pending-character__orbit--one {
-  width: 116px;
-  height: 116px;
-  animation: pending-orbit 5s linear infinite;
-}
-
-.pending-character__orbit--two {
-  width: 140px;
-  height: 140px;
-  border-style: dashed;
-  opacity: 0.52;
-  animation: pending-orbit 8s linear infinite reverse;
-}
-
-.pending-character__dot {
-  position: absolute;
-  z-index: 3;
-  width: 8px;
-  height: 8px;
-  border: 2px solid #fff;
-  border-radius: 50%;
-  background: #0b8f8b;
-  box-shadow: 0 2px 5px rgb(38 58 67 / 18%);
-}
-
-.pending-character__dot--one {
-  top: 21px;
-  right: 31px;
-  animation: pending-dot 1.2s ease-in-out infinite;
-}
-
-.pending-character__dot--two {
-  bottom: 21px;
-  left: 30px;
-  background: #e8b931;
-  animation: pending-dot 1.2s 0.3s ease-in-out infinite;
-}
-
-.pending-character__dot--three {
-  right: 9px;
-  bottom: 57px;
-  width: 6px;
-  height: 6px;
-  background: #7b83d5;
-  animation: pending-dot 1.2s 0.6s ease-in-out infinite;
 }
 
 .pending-card h3 {
@@ -513,34 +478,6 @@ function formatDateKey(value) {
   }
 }
 
-@keyframes pending-float {
-  0%,
-  100% {
-    transform: translateY(2px);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
-}
-
-@keyframes pending-glow {
-  0%,
-  100% {
-    opacity: 0.64;
-    transform: scale(0.92);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.06);
-  }
-}
-
-@keyframes pending-orbit {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 @keyframes pending-dot {
   0%,
   100% {
@@ -560,265 +497,51 @@ function formatDateKey(value) {
   }
 }
 
-.setup-intro {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.setup-intro__eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: #087f7c;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
-  font-weight: 700;
-}
-
-.setup-intro h2 {
-  margin: 0;
-  color: #181817;
-  font-family: var(--font-heading);
-  font-size: var(--font-size-title-md);
-  font-weight: 800;
-  letter-spacing: -0.5px;
-}
-
-.setup-intro p {
-  margin: 0;
-  color: #8c8c87;
-  font-size: var(--font-size-caption);
-}
-
-.participants-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 13px 12px 16px;
-  border-radius: 16px;
-  background: #263a43;
-}
-
-.participants-panel__header {
+.date-span {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 10px;
+  margin-top: 13px;
+  padding: 12px 14px;
+  border: 1px solid #e6edee;
+  border-radius: 13px;
+  background: #f8fbfb;
 }
 
-.participants-panel__header > span {
-  color: #a8bdc5;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
-  font-weight: 700;
-}
-
-.participants-panel__header > strong {
-  padding: 5px 12px;
-  border-radius: 999px;
-  background: #34515c;
-  color: #74d3cf;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
-}
-
-.participant-list {
+.date-span__end {
   display: flex;
-  justify-content: center;
-  gap: 9px;
-}
-
-.participant-card {
-  display: flex;
-  width: 76px;
   min-width: 0;
-  height: 121px;
+  flex: 1;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 7px 16px rgb(10 27 34 / 14%);
-  animation: participant-float 3.5s ease-in-out infinite;
-  animation-delay: 0.32s;
-  will-change: transform;
-}
-
-.participant-card:nth-child(2) {
-  animation-delay: 0s;
-}
-
-.participant-card:nth-child(3) {
-  animation-delay: 0.32s;
-}
-
-.participant-list.is-compact .participant-card:nth-child(2),
-.participant-list.is-compact .participant-card:nth-child(3) {
-  animation-delay: 0s;
-}
-
-.participant-list.is-compact .participant-card:nth-child(1),
-.participant-list.is-compact .participant-card:nth-child(4) {
-  animation-delay: 0.32s;
-}
-
-.participant-list.is-compact .participant-card {
-  width: calc((100% - 27px) / 4);
-}
-
-.participant-card__avatar {
-  display: grid;
-  width: 48px;
-  height: 43px;
-  place-items: center;
-  border-radius: 10px;
-  background: #f3f6f6;
-}
-
-.participant-card--personal .participant-card__avatar {
-  background: #e4eff2;
-}
-
-.participant-card--legend .participant-card__avatar {
-  background: #e7f8f6;
-}
-
-.participant-card--wild .participant-card__avatar {
-  background: #f4ebfb;
-}
-
-.participant-card > span {
-  color: #263a43;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
-  font-weight: 700;
-}
-
-.participant-card--personal > span {
-  padding: 3px 5px;
-  border-radius: 4px;
-  background: #e7f0f2;
-}
-
-.participant-card--legend > span {
-  color: #087f7c;
-}
-
-.participant-card--wild > span {
-  color: #6d4d8f;
-}
-
-.participant-card > strong {
-  overflow: hidden;
-  max-width: calc(100% - 8px);
-  color: #181817;
-  font-size: var(--font-size-caption);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.participant-card > small {
-  display: inline-flex;
-  align-items: center;
   gap: 3px;
-  color: #8a999e;
-  font-size: var(--font-size-caption);
-  white-space: nowrap;
 }
 
-.participant-card > small i,
-.date-summary__item span i {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #24b78f;
+.date-span__end--to {
+  align-items: flex-end;
 }
 
-.period-card {
-  padding: 15px;
-  border: 1px solid #dce6e9;
-  border-radius: 16px;
-  background: #fff;
-}
-
-.period-card__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.period-card__header h3 {
-  margin: 0 0 5px;
-  color: #263a43;
-  font-size: var(--font-size-body);
+/* 실제로 고르는 값이라 날짜를 가장 크게 두고, 라벨은 한 단계 낮춘다. */
+.date-span__end span {
+  color: #8b9a9f;
+  font-size: 10px;
   font-weight: 800;
+  letter-spacing: 0.02em;
 }
 
-.period-card__header p {
-  margin: 0;
-  color: #94948e;
-  font-size: var(--font-size-caption);
-}
-
-.period-card__header > strong {
-  padding: 6px 9px;
-  border-radius: 10px;
-  background: #effaf9;
-  color: #087f7c;
-  font-size: var(--font-size-caption);
-}
-
-.date-summary {
-  display: grid;
-  margin-top: 14px;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.date-summary__item {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 5px;
-  padding: 11px 10px;
-  border-radius: 12px;
-  background: #f1f5f6;
-}
-
-.date-summary__item--end {
-  background: #f5f3ef;
-}
-
-.date-summary__item span {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  color: #6f7f85;
-  font-size: var(--font-size-caption);
-  font-weight: 700;
-}
-
-.date-summary__item--end span i {
-  background: #40545b;
-}
-
-.date-summary__item strong {
+.date-span__end strong {
   overflow: hidden;
-  color: #181817;
+  color: #20373f;
   font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.date-summary__item small {
-  overflow: hidden;
-  color: #a0a09a;
-  font-size: var(--font-size-caption);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.date-span__arrow {
+  flex: 0 0 auto;
+  color: #a9bcc1;
 }
 
 .date-range {
@@ -884,87 +607,113 @@ function formatDateKey(value) {
 .range-limits {
   display: flex;
   justify-content: space-between;
-  color: #a0a09a;
+  padding: 0 4px;
+  color: #adbabe;
   font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
+  font-size: 10px;
+  font-weight: 700;
 }
 
 .period-hint {
   display: flex;
-  margin-top: 13px;
+  margin: 12px 0 0;
   align-items: center;
   gap: 6px;
-  padding: 8px 10px;
-  border-radius: 9px;
-  background: #f6f8f9;
-  color: #89969a;
-  font-size: var(--font-size-caption);
+  color: #97a5a9;
+  font-size: 11px;
+  line-height: 1.4;
 }
 
-.same-condition {
+/* 금액이 이 카드의 핵심인데 이전에는 12px 본문 안에 섞여 잘려 나가기까지 했다.
+   금액만 큰 모노 숫자로 끌어올리고 나머지는 라벨/메타로 내린다. */
+.capital-card {
   display: flex;
-  min-height: 72px;
-  align-items: center;
-  gap: 11px;
-  padding: 12px;
+  flex-direction: column;
+  gap: 6px;
+  padding: 13px 15px 14px;
   border: 1px solid #bfe6e3;
   border-radius: 14px;
   background: #f3fbfa;
-  color: #087f7c;
 }
 
-.same-condition__icon {
+.capital-card__head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.capital-card__icon {
   display: grid;
-  width: 38px;
-  height: 38px;
+  width: 26px;
+  height: 26px;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: 11px;
+  border-radius: 8px;
+  color: #087f7c;
   background: #e2f7f5;
 }
 
-.same-condition > div:nth-child(2) {
-  display: flex;
-  min-width: 0;
+.capital-card__label {
   flex: 1;
-  flex-direction: column;
-  gap: 5px;
+  color: #3f565e;
+  font-size: 12px;
+  font-weight: 800;
 }
 
-.same-condition strong {
-  color: #263a43;
-  font-size: var(--font-size-caption);
-}
-
-.same-condition span {
-  overflow: hidden;
-  color: #77868b;
-  font-size: var(--font-size-caption);
-  text-overflow: ellipsis;
+.capital-card__badge {
+  flex: 0 0 auto;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: #087f7c;
+  background: #e2f7f5;
+  font-size: 10px;
+  font-weight: 800;
   white-space: nowrap;
 }
 
-.same-condition small {
-  color: #8b999d;
-  font-size: var(--font-size-caption);
+.capital-card__amount {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  color: #16323b;
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 850;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
 }
 
-.same-condition .capital-status {
+.capital-card__amount i {
+  color: #6f8a90;
+  font-size: 17px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.capital-card__meta {
+  color: #8b999d;
+  font-size: 11px;
+  line-height: 1.45;
+  word-break: keep-all;
+}
+
+.capital-status {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+  margin: 2px 0;
+  font-size: 12px;
+  font-weight: 700;
 }
 
-.same-condition .capital-status--loading {
+.capital-status--loading {
   color: #087f7c;
 }
 
-.same-condition .capital-status--error {
-  overflow: visible;
+.capital-status--error {
   color: #c35050;
   line-height: 1.4;
-  text-overflow: unset;
-  white-space: normal;
+  word-break: keep-all;
 }
 
 .setup-action {
@@ -976,28 +725,8 @@ function formatDateKey(value) {
   transform: translateX(-50%);
 }
 
-@keyframes participant-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  38% {
-    transform: translateY(-4px);
-  }
-
-  72% {
-    transform: translateY(1px);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .participant-card,
   .pending-spinner,
-  .pending-character__glow,
-  .pending-character__avatar,
-  .pending-character__orbit,
-  .pending-character__dot,
   .pending-steps span.is-active b,
   .pending-progress i {
     animation: none;

@@ -1,11 +1,12 @@
 <script setup>
+import { storeToRefs } from 'pinia'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import AppIcon from '@/shared/components/AppIcon.vue'
 import SimulationLiveReturnChart from '@/features/simulation/components/SimulationLiveReturnChart.vue'
 import SimulationParticipantAvatar from '@/features/simulation/components/SimulationParticipantAvatar.vue'
-import { getDecisionReasonText } from '@/features/simulation/utils/decisionReason'
-import { getSecurityDisplayName } from '@/features/simulation/utils/securityDisplayName'
+import { resolveParticipantName } from '@/features/simulation/utils/participantName'
+import { useSimulationStore } from '@/features/simulation/stores/simulationStore'
 
 const props = defineProps({
   participants: {
@@ -86,6 +87,14 @@ const props = defineProps({
 
 const emit = defineEmits(['complete'])
 
+const simulationStore = useSimulationStore()
+const { comparators } = storeToRefs(simulationStore)
+
+// 순위와 거래 알림이 서로 다른 이름을 쓰지 않도록 한 곳에서 해석한다.
+function displayName(participant) {
+  return resolveParticipantName(participant, comparators.value)
+}
+
 const progress = ref(0)
 const speed = ref(1)
 const isPlaying = ref(true)
@@ -101,36 +110,6 @@ const timelineDates = computed(() =>
         .filter(Boolean),
     ),
   ].sort(),
-)
-
-const currentSimulationTimestamp = computed(() => {
-  if (timelineDates.value.length < 2) return null
-
-  const start = new Date(`${timelineDates.value[0]}T00:00:00`).getTime()
-  const end = new Date(`${timelineDates.value.at(-1)}T23:59:59`).getTime()
-  return start + (end - start) * (progress.value / 100)
-})
-
-const completedTrades = computed(() =>
-  props.simulatedTrades
-    .filter((trade) => {
-      const timestamp = new Date(trade.tradedAt).getTime()
-      return (
-        Number.isFinite(timestamp) &&
-        currentSimulationTimestamp.value &&
-        timestamp <= currentSimulationTimestamp.value
-      )
-    })
-    .sort((a, b) => new Date(a.tradedAt).getTime() - new Date(b.tradedAt).getTime()),
-)
-
-const latestTrade = computed(() => completedTrades.value.at(-1) ?? null)
-
-const latestTradeParticipant = computed(() =>
-  props.participants.find(
-    (participant) =>
-      String(participant.variantId) === String(latestTrade.value?.simulationVariantId),
-  ),
 )
 
 const performanceByVariant = computed(() => {
@@ -260,14 +239,6 @@ function goToNextStep() {
   emit('complete')
 }
 
-function openLatestTrade() {
-  if (!latestTrade.value) return
-  liveChart.value?.openTradeView(
-    latestTrade.value.simulationVariantId,
-    latestTrade.value.simulatedTradeId,
-  )
-}
-
 onMounted(() => {
   startSimulation()
 })
@@ -278,6 +249,14 @@ onUnmounted(() => {
 
 function formatCurrency(val) {
   return new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(val)
+}
+
+function formatCompactCurrency(val) {
+  const amount = Number(val) || 0
+  if (amount >= 100000000) return `${(amount / 100000000).toFixed(amount % 100000000 ? 1 : 0)}억원`
+  if (amount >= 10000)
+    return `${new Intl.NumberFormat('ko-KR').format(Math.round(amount / 10000))}만원`
+  return `${new Intl.NumberFormat('ko-KR').format(amount)}원`
 }
 
 function formatSignedCurrency(val) {
@@ -295,21 +274,6 @@ function formatPeriodDate(date) {
   const [year, month, day] = date.split('-')
   return `${year.slice(-2)}.${month}.${day}.`
 }
-
-function getTradeSideLabel(tradeSide) {
-  return (
-    {
-      BUY: '매수',
-      SELL: '매도',
-      ADD: '추가 매수',
-      REDUCE: '비중 축소',
-    }[tradeSide] ?? tradeSide
-  )
-}
-
-function getTradeDirection(tradeSide) {
-  return ['BUY', 'ADD'].includes(tradeSide) ? 'buy' : 'sell'
-}
 </script>
 
 <template>
@@ -318,16 +282,30 @@ function getTradeDirection(tradeSide) {
     <div class="live-header">
       <!-- Playback Speed Controls -->
       <div class="live-header__controls">
-        <span class="speed-controls__label">재생 속도</span>
+        <div class="live-header__status" aria-live="polite">
+          <i></i>
+          <span v-if="progress >= 100">완료</span>
+          <span v-else-if="isPlaying">진행 중</span>
+          <span v-else>일시정지</span>
+        </div>
         <div class="speed-controls">
-          <button class="play-btn" :disabled="progress >= 100" @click="togglePlay">
+          <button
+            class="play-btn"
+            type="button"
+            :disabled="progress >= 100"
+            :aria-label="isPlaying ? '일시정지' : '재생'"
+            @click="togglePlay"
+          >
             <AppIcon :name="isPlaying ? 'pause' : 'play'" :size="15" />
           </button>
           <button
             v-for="s in [1, 2, 5, 10]"
             :key="s"
+            type="button"
             class="speed-btn"
             :class="{ active: speed === s }"
+            :aria-label="`${s}배속`"
+            :aria-pressed="speed === s"
             @click="setSpeed(s)"
           >
             {{ s }}×
@@ -335,45 +313,27 @@ function getTradeDirection(tradeSide) {
         </div>
       </div>
     </div>
+    <section class="simulation-conditions" aria-label="시뮬레이션 조건">
+      <div class="simulation-condition">
+        <AppIcon name="calendar-range" :size="16" />
+        <div>
+          <span>기간</span>
+          <strong>
+            {{ formatPeriodDate(periodStart || timelineDates[0]) }} ~
+            {{ formatPeriodDate(periodEnd || timelineDates.at(-1)) }}
+          </strong>
+        </div>
+      </div>
+      <div class="simulation-condition">
+        <AppIcon name="wallet-cards" :size="16" />
+        <div>
+          <span>초기 자금</span>
+          <strong>{{ formatCompactCurrency(initialCapital) }}</strong>
+        </div>
+      </div>
+    </section>
 
-    <button
-      :key="latestTrade?.simulatedTradeId ?? 'waiting'"
-      type="button"
-      class="live-trade-alert"
-      :class="{ 'is-waiting': !latestTrade }"
-      :disabled="!latestTrade"
-      @click="openLatestTrade"
-    >
-      <span class="live-trade-alert__avatar">
-        <SimulationParticipantAvatar
-          v-if="latestTradeParticipant"
-          :variant-type="latestTradeParticipant.variantType"
-          :size="40"
-        />
-        <span v-else class="live-trade-alert__waiting-icon">
-          <AppIcon name="activity" :size="17" />
-        </span>
-      </span>
-      <span class="live-trade-alert__content">
-        <small v-if="latestTrade">
-          <b :class="`is-${getTradeDirection(latestTrade.tradeSide)}`">
-            {{ getTradeSideLabel(latestTrade.tradeSide) }}
-          </b>
-          {{ latestTradeParticipant?.variantName ?? '참가자' }}
-        </small>
-        <small v-else>거래 신호를 기다리고 있어요</small>
-        <strong v-if="latestTrade">
-          {{ getSecurityDisplayName(latestTrade) }}
-          {{ latestTrade.quantity }}주
-        </strong>
-        <strong v-else>매수·매도가 발생하면 바로 알려드릴게요</strong>
-        <span v-if="latestTrade"> 주당 {{ formatCurrency(latestTrade.unitPrice) }} </span>
-        <p v-if="latestTrade" class="live-trade-alert__reason">
-          <b>판단 근거</b>
-          {{ getDecisionReasonText(latestTrade.decisionReason) }}
-        </p>
-      </span>
-    </button>
+    <!-- Live Participant Rankings -->
 
     <SimulationLiveReturnChart
       ref="liveChart"
@@ -387,38 +347,20 @@ function getTradeDirection(tradeSide) {
       :total-days="150"
     />
 
-    <section class="simulation-conditions" aria-label="시뮬레이션 조건">
-      <div class="simulation-condition">
-        <AppIcon name="calendar-range" :size="16" />
-        <div>
-          <span>시뮬레이션 기간</span>
-          <strong>
-            {{ formatPeriodDate(periodStart || timelineDates[0]) }} ~
-            {{ formatPeriodDate(periodEnd || timelineDates.at(-1)) }}
-          </strong>
-        </div>
-      </div>
-      <div class="simulation-condition">
-        <AppIcon name="wallet-cards" :size="16" />
-        <div>
-          <span>초기 자금</span>
-          <strong>{{ formatCurrency(initialCapital) }}</strong>
-        </div>
-      </div>
-    </section>
-
-    <!-- Live Participant Rankings -->
     <div class="rankings-box">
       <div class="rankings-box__header">
-        <h3 class="rankings-title">현재 순위</h3>
-        <span>손익 · 수익률</span>
+        <div>
+          <small>순위 변동</small>
+          <h3 class="rankings-title">실시간 순위</h3>
+        </div>
+        <span>{{ Math.round(progress) }}% 지점 · 손익</span>
       </div>
 
-      <div class="rankings-list">
+      <TransitionGroup tag="div" name="rank" class="rankings-list">
         <div v-for="(bot, index) in rankedParticipants" :key="bot.variantId" class="rank-row">
           <b class="rank-badge" :class="{ 'rank-badge--top': index === 0 }">{{ index + 1 }}</b>
-          <SimulationParticipantAvatar :variant-type="bot.variantType" :size="20" />
-          <strong class="rank-name">{{ bot.variantName }}</strong>
+          <SimulationParticipantAvatar :variant-type="bot.variantType" :size="24" />
+          <strong class="rank-name">{{ displayName(bot) }}</strong>
           <div class="rank-performance">
             <span
               :class="{
@@ -438,12 +380,12 @@ function getTradeDirection(tradeSide) {
             </strong>
           </div>
         </div>
-      </div>
+      </TransitionGroup>
     </div>
 
     <button type="button" class="next-step-btn" @click="goToNextStep">
-      <span>결과 확인하러 가기</span>
-      <AppIcon name="arrow-right" :size="16" />
+      <span>{{ progress >= 100 ? '최종 결과 확인하기' : '결과 바로 확인하기' }}</span>
+      <AppIcon :name="progress >= 100 ? 'flag' : 'arrow-right'" :size="16" />
     </button>
   </div>
 </template>
@@ -452,7 +394,7 @@ function getTradeDirection(tradeSide) {
 .live-runner-container {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   width: 100%;
 }
 
@@ -468,10 +410,21 @@ function getTradeDirection(tradeSide) {
   gap: 12px;
 }
 
-.speed-controls__label {
-  color: #263a43;
+.live-header__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #bcd0d5;
   font-size: var(--font-size-caption);
   font-weight: 700;
+}
+
+.live-header__status i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #14b8b3;
+  box-shadow: 0 0 0 5px rgb(20 184 179 / 12%);
 }
 
 .speed-controls {
@@ -479,12 +432,13 @@ function getTradeDirection(tradeSide) {
   align-items: center;
   gap: 3px;
   padding: 3px;
-  border: 1px solid #dfe8eb;
-  border-radius: 13px;
-  background: #f7fafb;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 12px;
+  background: rgb(7 31 39 / 36%);
 }
 
 .speed-btn {
+  position: relative;
   min-width: 34px;
   height: 34px;
   padding: 0 8px;
@@ -493,21 +447,22 @@ function getTradeDirection(tradeSide) {
   font-family: var(--font-mono);
   font-size: var(--font-size-caption);
   font-weight: 700;
-  color: #66777d;
+  color: #a9c0c6;
   border-radius: 9px;
   cursor: pointer;
 }
 
 .speed-btn.active {
-  background: #0b6b68;
-  color: #ffffff;
+  background: #14b8b3;
+  color: #06272e;
   box-shadow: 0 4px 10px rgb(11 107 104 / 20%);
 }
 
 .play-btn {
+  position: relative;
   border: none;
-  background: #263a43;
-  color: #ffffff;
+  background: rgb(255 255 255 / 92%);
+  color: #17303a;
   width: 34px;
   height: 34px;
   border-radius: 9px;
@@ -517,146 +472,42 @@ function getTradeDirection(tradeSide) {
   cursor: pointer;
 }
 
+/* 버튼을 키우면 320px에서 컨트롤 줄이 넘치므로,
+   보이는 크기는 두고 탭 영역만 44px로 넓힌다. */
+.speed-btn::after,
+.play-btn::after {
+  position: absolute;
+  inset: -5px;
+  content: '';
+}
+
 .play-btn:disabled {
   cursor: default;
   opacity: 0.45;
 }
 
-.live-trade-alert {
-  display: grid;
-  grid-template-columns: 40px minmax(0, 1fr);
-  width: 100%;
-  height: 132px;
-  box-sizing: border-box;
-  overflow: hidden;
-  align-items: center;
-  gap: 11px;
-  padding: 12px 13px;
-  border: 1px solid #b9e2e1;
-  border-radius: 14px;
-  background: #f1fbfa;
-  color: #263a43;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  animation: trade-alert-in 0.36s ease-out;
-}
-
-.live-trade-alert.is-waiting {
-  border-color: #dce5e8;
-  background: #f7f9fa;
-  cursor: default;
-}
-
-.live-trade-alert__avatar {
-  align-self: start;
-}
-
-.live-trade-alert__waiting-icon {
-  display: inline-grid;
-  width: 40px;
-  height: 40px;
-  place-items: center;
-  border-radius: 50%;
-  background: #e9eff1;
-  color: #91a0a6;
-}
-
-.live-trade-alert__content {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.live-trade-alert__content small {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  color: #078f90;
-  font-size: var(--font-size-caption);
-  font-weight: 700;
-}
-
-.live-trade-alert__content small b {
-  padding: 3px 5px;
-  border-radius: 5px;
-  background: #fee8e9;
-  color: #df464e;
-  font-size: var(--font-size-caption);
-}
-
-.live-trade-alert__content small b.is-sell {
-  background: #e8f1fc;
-  color: #3478d4;
-}
-
-.live-trade-alert.is-waiting small {
-  color: #819197;
-}
-
-.live-trade-alert__content strong {
-  overflow: hidden;
-  color: #182a30;
-  font-size: var(--font-size-caption);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.live-trade-alert__content > span {
-  color: #819197;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
-}
-
-.live-trade-alert__reason {
-  display: -webkit-box;
-  margin: 4px 0 0;
-  overflow: hidden;
-  color: #5f737b;
-  font-size: var(--font-size-caption);
-  line-height: 1.45;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  min-height: calc(1.45em * 2);
-}
-
-.live-trade-alert__reason b {
-  margin-right: 4px;
-  color: #078f90;
-}
-
-@keyframes trade-alert-in {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .simulation-conditions {
   display: grid;
-  grid-template-columns: 1fr;
-  overflow: hidden;
-  border: 1px solid #dce5e8;
-  border-radius: 16px;
-  background: #fff;
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 0.85fr);
+  gap: 8px;
+  border: 0;
+  background: transparent;
 }
 
 .simulation-condition {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   min-width: 0;
-  padding: 13px 14px;
+  min-height: 42px;
+  padding: 7px 9px;
+  border: 1px solid rgb(255 255 255 / 9%);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 5%);
 }
 
 .simulation-condition + .simulation-condition {
-  border-top: 1px solid #e7edef;
+  border-top-color: rgb(255 255 255 / 9%);
 }
 
 .simulation-condition .app-icon {
@@ -667,21 +518,22 @@ function getTradeDirection(tradeSide) {
   display: flex;
   flex: 1;
   min-width: 0;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
 }
 
 .simulation-condition span {
-  color: #87979d;
-  font-size: var(--font-size-caption);
+  color: #7f9aa2;
+  font-size: 10px;
 }
 
 .simulation-condition strong {
   overflow: hidden;
-  color: #182a30;
+  color: #eef5f6;
   font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
+  max-width: 100%;
+  font-size: 11px;
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -690,18 +542,18 @@ function getTradeDirection(tradeSide) {
 .rankings-box {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 15px 16px 12px;
-  background: #ffffff;
-  border: 1px solid #dde5e8;
-  border-radius: 16px;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgb(255 255 255 / 9%);
+  border-radius: 18px;
+  background: rgb(8 31 39 / 32%);
 }
 
 .rankings-title {
   margin: 0;
   font-size: var(--font-size-body);
   font-weight: 700;
-  color: #263a43;
+  color: #eef5f6;
 }
 
 .rankings-box__header {
@@ -711,28 +563,52 @@ function getTradeDirection(tradeSide) {
   gap: 12px;
 }
 
+.rankings-box__header > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rankings-box__header small {
+  color: #5bc7c4;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
 .rankings-box__header > span {
-  color: #97a3a7;
+  color: #8ba4ab;
   font-size: var(--font-size-caption);
 }
 
 .rankings-list {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 4px;
 }
 
 .rank-row {
   display: grid;
-  grid-template-columns: 25px 20px minmax(0, 1fr) auto;
+  grid-template-columns: 26px 24px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 7px;
-  min-height: 32px;
-  border-bottom: 1px solid #edf1f2;
+  gap: 8px;
+  min-height: 42px;
+  padding: 4px 6px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  transition:
+    background-color 0.25s ease,
+    border-color 0.25s ease;
 }
 
-.rank-row:last-child {
-  border-bottom: 0;
+.rank-row:first-child {
+  border-color: rgb(115 216 214 / 17%);
+  background: rgb(20 184 179 / 8%);
+}
+
+.rank-move {
+  transition: transform 0.68s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .rank-badge {
@@ -743,14 +619,14 @@ function getTradeDirection(tradeSide) {
   font-family: var(--font-mono);
   font-size: var(--font-size-caption);
   font-weight: 700;
-  color: #69787e;
-  background: #f1f2ef;
+  color: #b9ccd1;
+  background: rgb(255 255 255 / 10%);
   border-radius: 7px;
 }
 
 .rank-badge--top {
-  color: #0a908f;
-  background: #e6f7f6;
+  color: #06272e;
+  background: #7fd8d6;
 }
 
 .rank-dot {
@@ -774,8 +650,8 @@ function getTradeDirection(tradeSide) {
 
 .rank-name {
   overflow: hidden;
-  color: #263a43;
-  font-size: var(--font-size-caption);
+  color: #eef5f6;
+  font-size: 12px;
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -798,11 +674,11 @@ function getTradeDirection(tradeSide) {
 }
 
 .positive {
-  color: #ff4d55;
+  color: #ff7b80;
 }
 
 .negative {
-  color: #2f70d9;
+  color: #6aa8f5;
 }
 
 .next-step-btn {
@@ -820,14 +696,14 @@ function getTradeDirection(tradeSide) {
   padding: 12px 18px;
   border: 0;
   border-radius: 14px;
-  background: #263f48;
-  color: #fff;
+  background: #14b8b3;
+  color: #06272e;
   font-size: var(--font-size-body);
   font-weight: 700;
   line-height: 1.2;
   white-space: nowrap;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgb(38 58 67 / 18%);
+  box-shadow: 0 10px 24px rgb(6 39 46 / 38%);
   transform: translateX(-50%);
   transition:
     transform 0.2s ease,
@@ -836,8 +712,8 @@ function getTradeDirection(tradeSide) {
 
 .next-step-btn:hover {
   transform: translate(-50%, -1px);
-  background: #1f363e;
-  box-shadow: 0 10px 24px rgb(31 54 62 / 24%);
+  background: #29c5c0;
+  box-shadow: 0 12px 28px rgb(6 39 46 / 42%);
 }
 
 .next-step-btn:active {
@@ -851,5 +727,17 @@ function getTradeDirection(tradeSide) {
 
 .live-runner-container.has-next-step {
   padding-bottom: 72px;
+}
+
+@media (max-width: 350px) {
+  .simulation-conditions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rank-move {
+    transition: none;
+  }
 }
 </style>
