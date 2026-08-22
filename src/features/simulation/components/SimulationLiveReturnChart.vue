@@ -1,4 +1,5 @@
 <script setup>
+import { storeToRefs } from 'pinia'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import * as echarts from 'echarts/core'
 import { LineChart, ScatterChart } from 'echarts/charts'
@@ -6,6 +7,8 @@ import { GridComponent, MarkPointComponent, TooltipComponent } from 'echarts/com
 import { SVGRenderer } from 'echarts/renderers'
 
 import AppIcon from '@/shared/components/AppIcon.vue'
+import { resolveParticipantName } from '@/features/simulation/utils/participantName'
+import { useSimulationStore } from '@/features/simulation/stores/simulationStore'
 import { getDecisionReasonText } from '@/features/simulation/utils/decisionReason'
 import { getSecurityDisplayName } from '@/features/simulation/utils/securityDisplayName'
 import StockLogo from '@/shared/components/StockLogo.vue'
@@ -53,6 +56,14 @@ const props = defineProps({
     default: 150,
   },
 })
+
+const chartSimulationStore = useSimulationStore()
+const { comparators: chartComparators } = storeToRefs(chartSimulationStore)
+
+// 순위와 범례가 같은 화면에서 다른 이름을 쓰지 않도록 동일한 해석기를 쓴다.
+function chartDisplayName(participant) {
+  return resolveParticipantName(participant, chartComparators.value)
+}
 
 const chartElement = ref(null)
 const selectedViewId = ref('all')
@@ -138,6 +149,25 @@ const currentSimulationTimestamp = computed(() => {
   return start + (end - start) * (Math.min(Math.max(props.progress, 0), 100) / 100)
 })
 
+const visibleTradeEvents = computed(() =>
+  (props.simulatedTrades ?? [])
+    .filter((trade) => {
+      const timestamp = new Date(trade.tradedAt).getTime()
+      return Number.isFinite(timestamp) && timestamp <= currentSimulationTimestamp.value
+    })
+    .sort((a, b) => new Date(b.tradedAt).getTime() - new Date(a.tradedAt).getTime()),
+)
+
+const latestVisibleTrade = computed(() => visibleTradeEvents.value.at(0) ?? null)
+const visibleTradeEventCount = computed(() => visibleTradeEvents.value.length)
+
+const latestVisibleTradeParticipant = computed(() =>
+  props.participants.find(
+    (participant) =>
+      String(participant.variantId) === String(latestVisibleTrade.value?.simulationVariantId),
+  ),
+)
+
 const performanceByVariant = computed(() => {
   const grouped = new Map()
 
@@ -192,7 +222,7 @@ const chartSeries = computed(() => {
 
     return {
       id: String(participant.variantId),
-      name: participant.variantName,
+      name: chartDisplayName(participant),
       variantType: participant.variantType,
       type: 'line',
       data,
@@ -200,12 +230,22 @@ const chartSeries = computed(() => {
       showSymbol: false,
       symbol: 'circle',
       lineStyle: {
-        width: participant.variantType === 'PERSONAL_BOT' ? 3 : 2,
+        width: participant.variantType === 'PERSONAL_BOT' ? 4 : 2.4,
+        opacity: participant.variantType === 'PERSONAL_BOT' ? 1 : 0.88,
       },
+      areaStyle:
+        participant.variantType === 'PERSONAL_BOT'
+          ? {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: 'rgba(14, 165, 166, 0.22)' },
+                { offset: 1, color: 'rgba(14, 165, 166, 0)' },
+              ]),
+            }
+          : undefined,
       markPoint: {
         silent: true,
         symbol: markerSymbolByVariantType[participant.variantType] ?? 'circle',
-        symbolSize: 22,
+        symbolSize: participant.variantType === 'PERSONAL_BOT' ? 30 : 26,
         label: {
           show: selectedViewId.value === 'all',
           position: 'right',
@@ -213,7 +253,7 @@ const chartSeries = computed(() => {
           offset: [0, (participantIndex - 1.5) * 2],
           color: '#DCE7EA',
           fontFamily: 'SUIT Variable, SUIT, sans-serif',
-          fontSize: 8,
+          fontSize: 9,
           fontWeight: 700,
           backgroundColor: 'rgba(23, 45, 53, 0.82)',
           borderColor: colorByVariantType[participant.variantType] ?? '#66777D',
@@ -341,6 +381,17 @@ const rankedSeries = computed(() =>
     .map((series, index) => ({ ...series, rank: index + 1 })),
 )
 
+const raceLeader = computed(() => rankedSeries.value[0] ?? null)
+const raceRunnerUp = computed(() => rankedSeries.value[1] ?? null)
+const raceLeaderGap = computed(() => {
+  if (!raceLeader.value?.point || !raceRunnerUp.value?.point) return 0
+  return Math.max(raceLeader.value.point[1] - raceRunnerUp.value.point[1], 0)
+})
+
+const raceLeaderGapLabel = computed(() =>
+  raceLeaderGap.value < 0.05 ? '2위와 초접전 중' : `2위와 ${raceLeaderGap.value.toFixed(1)}%p 차이`,
+)
+
 const cameraFocus = computed(() => {
   if (selectedViewId.value === 'all' || !rankedSeries.value.length) {
     return { mode: 'full', ids: rankedSeries.value.map((series) => series.id) }
@@ -379,9 +430,15 @@ const transactionParticipants = computed(() =>
     icon: viewIconByVariantType[participant.variantType] ?? 'circle-help',
     avatar: markerSymbolByVariantType[participant.variantType]?.replace('image://', ''),
     shortLabel: shortLabelByVariantType[participant.variantType] ?? '참가자',
-    name: participant.variantName,
+    name: chartDisplayName(participant),
     variantType: participant.variantType,
   })),
+)
+
+const selectedTradeParticipant = computed(() =>
+  transactionParticipants.value.find(
+    (participant) => participant.id === selectedTradeParticipantId.value,
+  ),
 )
 
 function getTradeDirection(tradeSide) {
@@ -397,6 +454,10 @@ function getTradeSideLabel(tradeSide) {
       REDUCE: '비중 축소',
     }[tradeSide] ?? tradeSide
   )
+}
+
+function getParticipantAvatar(participant) {
+  return markerSymbolByVariantType[participant?.variantType]?.replace('image://', '') ?? null
 }
 
 const visibleTransactions = computed(() =>
@@ -769,11 +830,11 @@ function updateChart() {
       animationDurationUpdate: 0,
       animationEasingUpdate: 'linear',
       grid: {
-        top: 16,
+        top: 22,
         // 전체 보기에서 끝점 오른쪽의 작은 수익률 말풍선이 잘리지 않을 공간만 확보한다.
-        right: cameraFocus.value.mode === 'full' ? 48 : 12,
-        bottom: 26,
-        left: 38,
+        right: cameraFocus.value.mode === 'full' ? 54 : 14,
+        bottom: 30,
+        left: 42,
       },
       tooltip: {
         trigger: 'axis',
@@ -824,7 +885,7 @@ function updateChart() {
         axisTick: { show: false },
         splitLine: {
           lineStyle: {
-            color: '#3A535C',
+            color: 'rgba(132, 163, 172, 0.2)',
             type: 'dashed',
           },
         },
@@ -969,12 +1030,12 @@ onBeforeUnmount(() => {
       <div class="live-return-chart__session">
         <i></i>
         <div>
-          <small v-if="selectedContentView === 'trades'">LIVE TRANSACTIONS</small>
+          <small>{{ selectedContentView === 'chart' ? '실시간 레이스' : '실시간 거래' }}</small>
           <strong>
             {{ selectedContentView === 'chart' ? currentSimulationDate : '매수·매도 흐름' }}
           </strong>
           <span v-if="selectedContentView === 'chart'">
-            DAY {{ currentSimulationDay }} / {{ totalDays }}
+            {{ currentSimulationDay }}일 / {{ totalDays }}일
           </span>
         </div>
       </div>
@@ -1001,13 +1062,86 @@ onBeforeUnmount(() => {
     </div>
 
     <div v-show="selectedContentView === 'chart'" class="live-return-chart__graph-content">
-      <div class="live-return-chart__progress" aria-label="시뮬레이션 진행률">
-        <span>진행률</span>
-        <div><i :style="{ width: `${progress}%` }"></i></div>
-        <strong>{{ Math.round(progress) }}%</strong>
+      <div v-if="raceLeader" class="live-return-chart__leader" aria-live="polite">
+        <span class="live-return-chart__leader-rank">1</span>
+        <img
+          v-if="getParticipantAvatar(raceLeader)"
+          :src="getParticipantAvatar(raceLeader)"
+          :alt="raceLeader.name"
+        />
+        <div class="live-return-chart__leader-copy">
+          <small>현재 선두</small>
+          <strong>{{ raceLeader.name }}</strong>
+        </div>
+        <div class="live-return-chart__leader-score">
+          <strong>{{ formatSignedPercent(raceLeader.point[1]) }}</strong>
+          <span>{{ raceLeaderGapLabel }}</span>
+        </div>
       </div>
 
-      <div ref="chartElement" class="live-return-chart__plot"></div>
+      <div
+        class="live-return-chart__progress"
+        role="progressbar"
+        aria-label="시뮬레이션 진행률"
+        :aria-valuenow="Math.round(progress)"
+        aria-valuemin="0"
+        aria-valuemax="100"
+      >
+        <span>진행률</span>
+        <div><i :style="{ width: `${progress}%` }"></i></div>
+        <strong class="live-return-chart__percent">{{ Math.round(progress) }}%</strong>
+      </div>
+
+      <div class="live-return-chart__event-slot" aria-live="polite">
+        <button
+          v-if="latestVisibleTrade && latestVisibleTradeParticipant"
+          :key="latestVisibleTrade.simulatedTradeId"
+          type="button"
+          class="live-return-chart__event-strip"
+          :class="`is-${getTradeDirection(latestVisibleTrade.tradeSide).toLowerCase()}`"
+          @click="
+            openTradeView(
+              latestVisibleTrade.simulationVariantId,
+              latestVisibleTrade.simulatedTradeId,
+            )
+          "
+        >
+          <img
+            :src="getParticipantAvatar(latestVisibleTradeParticipant)"
+            :alt="chartDisplayName(latestVisibleTradeParticipant)"
+          />
+          <span class="live-return-chart__event-copy">
+            <small>
+              최근 거래 · {{ chartDisplayName(latestVisibleTradeParticipant) }} ·
+              {{ getTradeSideLabel(latestVisibleTrade.tradeSide) }}
+            </small>
+            <strong>
+              {{ getSecurityDisplayName(latestVisibleTrade) }}
+              {{ latestVisibleTrade.quantity }}주
+              <em>{{
+                formatCurrency(latestVisibleTrade.unitPrice * latestVisibleTrade.quantity)
+              }}</em>
+            </strong>
+          </span>
+          <b>누적 {{ visibleTradeEventCount }}건</b>
+          <AppIcon name="chevron-right" :size="14" />
+        </button>
+
+        <div v-else class="live-return-chart__event-strip is-waiting">
+          <span class="live-return-chart__event-icon">
+            <AppIcon name="activity" :size="15" />
+          </span>
+          <span class="live-return-chart__event-copy">
+            <small>최근 거래</small>
+            <strong>첫 거래 신호를 기다리고 있어요</strong>
+          </span>
+          <b>누적 0건</b>
+        </div>
+      </div>
+
+      <div class="live-return-chart__plot-stage">
+        <div ref="chartElement" class="live-return-chart__plot"></div>
+      </div>
 
       <TransitionGroup
         tag="div"
@@ -1037,33 +1171,52 @@ onBeforeUnmount(() => {
     </div>
 
     <div v-if="selectedContentView === 'trades'" class="live-return-chart__trades">
-      <div class="trade-participants" aria-label="거래 참가자 선택">
-        <button
-          v-for="option in transactionParticipants"
-          :key="option.id"
-          type="button"
-          :class="{ 'is-active': selectedTradeParticipantId === option.id }"
-          :aria-pressed="selectedTradeParticipantId === option.id"
-          @click="selectedTradeParticipantId = option.id"
-        >
-          <img v-if="option.avatar" :src="option.avatar" :alt="option.name" />
-          <AppIcon v-else :name="option.icon" :size="18" />
-          <span>{{ option.shortLabel }}</span>
-        </button>
-      </div>
-
-      <dl class="trade-summary" aria-label="선택 참가자 거래 요약">
-        <div>
-          <dt>현재 수익률</dt>
-          <dd
+      <section v-if="selectedTradeParticipant" class="trade-overview" aria-live="polite">
+        <img
+          v-if="selectedTradeParticipant.avatar"
+          :src="selectedTradeParticipant.avatar"
+          :alt="selectedTradeParticipant.name"
+        />
+        <div class="trade-overview__copy">
+          <small>선택한 참가자</small>
+          <strong>{{ selectedTradeParticipant.name }}</strong>
+          <span>거래 시점과 판단 근거를 함께 확인해보세요.</span>
+        </div>
+        <div class="trade-overview__return">
+          <small>현재 수익률</small>
+          <strong
             :class="{
               positive: transactionSummary.returnPercent > 0,
               negative: transactionSummary.returnPercent < 0,
             }"
           >
             {{ formatSignedPercent(transactionSummary.returnPercent) }}
-          </dd>
+          </strong>
         </div>
+      </section>
+
+      <div class="trade-participant-picker">
+        <div class="trade-section-heading">
+          <strong>참가자 선택</strong>
+          <span>비교할 참가자를 골라보세요</span>
+        </div>
+        <div class="trade-participants" aria-label="거래 참가자 선택">
+          <button
+            v-for="option in transactionParticipants"
+            :key="option.id"
+            type="button"
+            :class="{ 'is-active': selectedTradeParticipantId === option.id }"
+            :aria-pressed="selectedTradeParticipantId === option.id"
+            @click="selectedTradeParticipantId = option.id"
+          >
+            <img v-if="option.avatar" :src="option.avatar" :alt="option.name" />
+            <AppIcon v-else :name="option.icon" :size="18" />
+            <span>{{ option.shortLabel }}</span>
+          </button>
+        </div>
+      </div>
+
+      <dl class="trade-summary" aria-label="선택 참가자 거래 요약">
         <div>
           <dt>거래 횟수</dt>
           <dd>{{ transactionSummary.tradeCount }}회</dd>
@@ -1101,6 +1254,23 @@ onBeforeUnmount(() => {
           종목 현황
           <b>{{ currentHoldings.length }}</b>
         </button>
+      </div>
+
+      <div class="trade-panel-heading">
+        <div>
+          <strong>{{ selectedTradeTab === 'history' ? '최근 거래' : '현재 보유 종목' }}</strong>
+          <span>
+            {{
+              selectedTradeTab === 'history'
+                ? '거래를 누르면 판단 근거가 펼쳐져요'
+                : '평가금액과 보유 비중을 확인해보세요'
+            }}
+          </span>
+        </div>
+        <b>
+          {{ selectedTradeTab === 'history' ? visibleTransactions.length : currentHoldings.length
+          }}{{ selectedTradeTab === 'history' ? '건' : '개' }}
+        </b>
       </div>
 
       <div v-if="selectedTradeTab === 'history'" class="trade-timeline" role="tabpanel">
@@ -1185,16 +1355,19 @@ onBeforeUnmount(() => {
 .live-return-chart {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  border: 1px solid #314c55;
-  border-radius: var(--radius-2xl);
-  background: #263f48;
-  box-shadow: 0 14px 30px rgb(25 48 56 / 14%);
+  gap: 14px;
+  padding: 16px 14px 14px;
+  overflow: hidden;
+  border: 1px solid rgb(132 182 190 / 18%);
+  border-radius: 20px;
+  background: radial-gradient(circle at 78% 2%, rgb(20 184 179 / 11%), transparent 34%), #17313b;
+  box-shadow: 0 18px 38px rgb(5 26 33 / 24%);
 }
 
 .live-return-chart--trades {
+  padding: 16px;
   border-color: #dce5e8;
+  border-radius: 20px;
   background: #fff;
   box-shadow: 0 10px 24px rgb(30 58 67 / 8%);
 }
@@ -1218,6 +1391,7 @@ onBeforeUnmount(() => {
   border-radius: 999px;
   background: #0ea5a6;
   box-shadow: 0 0 0 7px rgb(14 165 166 / 13%);
+  animation: live-pulse 1.8s ease-out infinite;
 }
 
 .live-return-chart__session div {
@@ -1234,11 +1408,11 @@ onBeforeUnmount(() => {
 }
 
 .live-return-chart__session small {
-  color: #078f90;
+  color: #73d8d6;
   font-family: var(--font-mono);
   font-size: var(--font-size-caption);
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
 }
 
 .live-return-chart__session span {
@@ -1320,17 +1494,90 @@ onBeforeUnmount(() => {
 .live-return-chart__view-controls {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 5px;
-  padding: 4px;
-  border: 1px solid #45616b;
-  border-radius: 12px;
-  background: #314b55;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid rgb(141 174 183 / 15%);
+  border-radius: 13px;
+  background: rgb(9 34 42 / 48%);
 }
 
 .live-return-chart__graph-content {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+}
+
+.live-return-chart__leader {
+  display: grid;
+  grid-template-columns: 24px 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 11px;
+  border: 1px solid rgb(115 216 214 / 18%);
+  border-radius: 14px;
+  background: rgb(20 184 179 / 9%);
+}
+
+.live-return-chart__leader-rank {
+  display: inline-grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 8px;
+  background: #73d8d6;
+  color: #06272e;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-caption);
+  font-weight: 800;
+}
+
+.live-return-chart__leader > img {
+  width: 34px;
+  height: 34px;
+  border: 2px solid rgb(255 255 255 / 18%);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.live-return-chart__leader-copy,
+.live-return-chart__leader-score {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.live-return-chart__leader-copy small,
+.live-return-chart__leader-score span {
+  color: #91a8b2;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.live-return-chart__leader-copy strong {
+  overflow: hidden;
+  color: #f7fafb;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.live-return-chart__leader-score {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.live-return-chart__leader-score strong {
+  color: #ff7b80;
+  font-family: var(--font-mono);
+  font-size: 18px;
+}
+
+.live-return-chart__plot-stage {
+  position: relative;
+  margin: 0 -4px;
+  border-radius: 14px;
+  background: rgb(9 34 42 / 24%);
 }
 
 .live-return-chart__view-controls button {
@@ -1340,7 +1587,7 @@ onBeforeUnmount(() => {
   min-width: 0;
   flex-direction: column;
   gap: 3px;
-  min-height: 48px;
+  min-height: 44px;
   padding: 5px 2px;
   border: 0;
   border-radius: 8px;
@@ -1422,7 +1669,128 @@ onBeforeUnmount(() => {
 
 .live-return-chart__plot {
   width: 100%;
-  height: 236px;
+  height: 240px;
+}
+
+.live-return-chart__event-slot {
+  min-height: 58px;
+}
+
+.live-return-chart__event-strip {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto 14px;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  min-height: 58px;
+  padding: 8px 10px;
+  border: 1px solid rgb(240 79 85 / 28%);
+  border-radius: 13px;
+  background: #102a34;
+  color: #fff;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 7px 16px rgb(4 20 26 / 18%);
+  animation: trade-event-in 0.34s ease-out;
+}
+
+.live-return-chart__event-strip:hover {
+  background: #15343e;
+}
+
+.live-return-chart__event-strip:focus-visible {
+  outline: 2px solid #73d8d6;
+  outline-offset: 2px;
+}
+
+.live-return-chart__event-strip.is-sell {
+  border-color: rgb(52 120 212 / 36%);
+}
+
+.live-return-chart__event-strip > img {
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.live-return-chart__event-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.live-return-chart__event-copy small {
+  overflow: hidden;
+  color: #ffb0b4;
+  font-size: 10px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.live-return-chart__event-strip.is-sell small {
+  color: #a9cdf8;
+}
+
+.live-return-chart__event-copy strong {
+  overflow: hidden;
+  color: #f7fafb;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.live-return-chart__event-copy em {
+  margin-left: 5px;
+  color: #91a8b2;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.live-return-chart__event-strip > b {
+  padding: 5px 7px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 7%);
+  color: #b8c7cc;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.live-return-chart__event-strip > .app-icon {
+  color: #91a8b2;
+}
+
+.live-return-chart__event-strip.is-waiting {
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  border-color: rgb(145 168 178 / 15%);
+  color: #91a8b2;
+  cursor: default;
+  animation: none;
+}
+
+.live-return-chart__event-strip.is-waiting:hover {
+  background: #102a34;
+}
+
+.live-return-chart__event-strip.is-waiting small {
+  color: #829ca4;
+}
+
+.live-return-chart__event-icon {
+  display: inline-grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(20 184 179 / 12%);
+  color: #73d8d6;
 }
 
 .live-return-chart__progress {
@@ -1447,7 +1815,8 @@ onBeforeUnmount(() => {
   transition: width 0.1s linear;
 }
 
-.live-return-chart__progress strong {
+.live-return-chart__percent {
+  flex: 0 0 auto;
   color: #73d8d6;
   font-family: var(--font-mono);
   font-size: var(--font-size-caption);
@@ -1464,8 +1833,95 @@ onBeforeUnmount(() => {
 .live-return-chart__trades {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   color: #263a43;
+}
+
+.trade-overview {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 13px;
+  border: 1px solid #cceae8;
+  border-radius: 15px;
+  background: #f1fbfa;
+}
+
+.trade-overview > img {
+  width: 38px;
+  height: 38px;
+  border: 2px solid #d8f1ef;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.trade-overview__copy,
+.trade-overview__return {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.trade-overview__copy small,
+.trade-overview__return small {
+  color: #749097;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.trade-overview__copy strong {
+  overflow: hidden;
+  color: #18323b;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trade-overview__copy span {
+  overflow: hidden;
+  color: #789097;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trade-overview__return {
+  align-items: flex-end;
+  padding-left: 8px;
+  text-align: right;
+}
+
+.trade-overview__return strong {
+  font-family: var(--font-mono);
+  font-size: 18px;
+}
+
+.trade-participant-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.trade-section-heading,
+.trade-panel-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.trade-section-heading strong,
+.trade-panel-heading strong {
+  color: #263a43;
+  font-size: 13px;
+}
+
+.trade-section-heading span,
+.trade-panel-heading span {
+  color: #91a0a6;
+  font-size: 10px;
 }
 
 .trade-participants {
@@ -1477,15 +1933,15 @@ onBeforeUnmount(() => {
 .trade-participants button {
   display: flex;
   min-width: 0;
-  min-height: 58px;
+  min-height: 52px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  padding: 7px 3px;
+  gap: 4px;
+  padding: 6px 3px;
   border: 1px solid #dfe7ea;
-  border-radius: 11px;
-  background: #f7f9fa;
+  border-radius: 12px;
+  background: #f6f9f9;
   color: #5e7179;
   font: inherit;
   font-size: var(--font-size-caption);
@@ -1503,16 +1959,22 @@ onBeforeUnmount(() => {
 }
 
 .trade-participants button.is-active {
-  border-color: #263f48;
-  background: #263f48;
-  color: #fff;
+  border-color: #8bd8d5;
+  background: #e8f7f6;
+  color: #087f7c;
+  box-shadow: inset 0 0 0 1px rgb(11 143 139 / 8%);
 }
 
 .trade-participants img {
-  width: 24px;
-  height: 24px;
+  width: 25px;
+  height: 25px;
+  border: 1px solid transparent;
   border-radius: 50%;
   object-fit: cover;
+}
+
+.trade-participants button.is-active img {
+  border-color: #74cfcc;
 }
 
 .trade-participants span {
@@ -1524,12 +1986,12 @@ onBeforeUnmount(() => {
 
 .trade-summary {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   margin: 0;
   overflow: hidden;
   border: 1px solid #dce5e8;
-  border-radius: 11px;
-  background: #f7fafb;
+  border-radius: 14px;
+  background: #f5f8f9;
 }
 
 .trade-summary > div {
@@ -1537,8 +1999,8 @@ onBeforeUnmount(() => {
   min-width: 0;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
-  padding: 10px 3px;
+  gap: 4px;
+  padding: 11px 4px;
   border-right: 1px solid #dce5e8;
 }
 
@@ -1556,7 +2018,7 @@ onBeforeUnmount(() => {
   margin: 0;
   color: #263a43;
   font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -1572,14 +2034,14 @@ onBeforeUnmount(() => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4px;
-  padding: 3px;
-  border-radius: 10px;
+  padding: 4px;
+  border-radius: 12px;
   background: #f0f4f5;
 }
 
 .trade-detail-tabs button {
   display: inline-flex;
-  min-height: 32px;
+  min-height: 38px;
   align-items: center;
   justify-content: center;
   gap: 5px;
@@ -1595,7 +2057,7 @@ onBeforeUnmount(() => {
 
 .trade-detail-tabs button.is-active {
   background: #fff;
-  color: #263a43;
+  color: #087f7c;
   box-shadow: 0 2px 8px rgb(38 63 72 / 10%);
 }
 
@@ -1612,11 +2074,36 @@ onBeforeUnmount(() => {
   font-size: var(--font-size-caption);
 }
 
+.trade-panel-heading {
+  align-items: center;
+  padding-top: 2px;
+}
+
+.trade-panel-heading > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.trade-panel-heading > b {
+  display: inline-grid;
+  min-width: 32px;
+  height: 25px;
+  place-items: center;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #e8f7f6;
+  color: #087f7c;
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
 .trade-timeline {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .trade-timeline::before {
@@ -1625,7 +2112,7 @@ onBeforeUnmount(() => {
   bottom: 20px;
   left: 43px;
   width: 1px;
-  background: #cbd9dd;
+  background: #d6e2e4;
   content: '';
 }
 
@@ -1637,20 +2124,28 @@ onBeforeUnmount(() => {
   width: 100%;
   align-items: start;
   gap: 7px;
-  padding: 10px 8px 10px 0;
-  border: 0;
-  border-radius: 10px;
-  background: transparent;
+  padding: 11px 9px 11px 4px;
+  border: 1px solid #e4eaec;
+  border-radius: 13px;
+  background: #fbfcfc;
   color: #263a43;
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .trade-timeline__item:hover,
 .trade-timeline__item.is-expanded {
-  background: #f3f8f8;
+  border-color: #b9dfdd;
+  background: #f4faf9;
+}
+
+.trade-timeline__item:hover {
+  transform: translateY(-1px);
 }
 
 .trade-timeline__item > time {
@@ -1665,7 +2160,7 @@ onBeforeUnmount(() => {
   width: 8px;
   height: 8px;
   margin-top: 3px;
-  border: 2px solid #fff;
+  border: 2px solid #fbfcfc;
   border-radius: 50%;
   background: #e95b62;
   box-shadow: 0 0 0 1px #e95b62;
@@ -1700,7 +2195,7 @@ onBeforeUnmount(() => {
 .trade-timeline__title strong {
   overflow: hidden;
   color: #181817;
-  font-size: var(--font-size-caption);
+  font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1749,6 +2244,10 @@ onBeforeUnmount(() => {
 }
 
 .trade-timeline__item.is-expanded .trade-timeline__reason {
+  margin-top: 8px;
+  padding: 8px 9px;
+  border-radius: 8px;
+  background: #eaf6f5;
   -webkit-line-clamp: unset;
 }
 
@@ -1765,10 +2264,10 @@ onBeforeUnmount(() => {
 }
 
 .holding-card {
-  padding: 12px;
+  padding: 13px;
   border: 1px solid #dfe7ea;
-  border-radius: 11px;
-  background: #f9fbfb;
+  border-radius: 13px;
+  background: #fbfcfc;
 }
 
 .holding-card__top {
@@ -1867,6 +2366,214 @@ onBeforeUnmount(() => {
   text-align: center;
 }
 
+/* 거래 보기에서도 레이스 화면의 어두운 무대를 이어가되,
+   데이터 의미 색상은 매수/상승(빨강), 매도/하락(파랑)으로 유지한다. */
+.live-return-chart.live-return-chart--trades {
+  border-color: rgb(132 182 190 / 18%);
+  background: radial-gradient(circle at 78% 2%, rgb(20 184 179 / 10%), transparent 34%), #17313b;
+  box-shadow: 0 18px 38px rgb(5 26 33 / 24%);
+}
+
+.live-return-chart--trades .live-return-chart__session strong {
+  color: #f7fafb;
+}
+
+.live-return-chart--trades .live-return-chart__content-toggle {
+  background: #102a34;
+}
+
+.live-return-chart--trades .live-return-chart__content-toggle button {
+  color: #91a8b2;
+}
+
+.live-return-chart--trades .live-return-chart__content-toggle button.is-active {
+  background: #14b8b3;
+  color: #06272e;
+  box-shadow: 0 4px 12px rgb(7 83 82 / 34%);
+}
+
+.live-return-chart--trades .live-return-chart__trades {
+  color: #dce7ea;
+}
+
+.live-return-chart--trades .trade-overview {
+  border-color: rgb(115 216 214 / 20%);
+  background: rgb(20 184 179 / 9%);
+}
+
+.live-return-chart--trades .trade-overview > img {
+  border-color: rgb(115 216 214 / 24%);
+}
+
+.live-return-chart--trades .trade-overview__copy small,
+.live-return-chart--trades .trade-overview__return small,
+.live-return-chart--trades .trade-overview__copy span {
+  color: #91a8b2;
+}
+
+.live-return-chart--trades .trade-overview__copy strong,
+.live-return-chart--trades .trade-section-heading strong,
+.live-return-chart--trades .trade-panel-heading strong {
+  color: #f4f8f9;
+}
+
+.live-return-chart--trades .trade-section-heading span,
+.live-return-chart--trades .trade-panel-heading span {
+  color: #829ca4;
+}
+
+.live-return-chart--trades .trade-participants button {
+  border-color: rgb(145 168 178 / 16%);
+  background: #1e3a44;
+  color: #9fb5bc;
+}
+
+.live-return-chart--trades .trade-participants button:hover {
+  border-color: rgb(115 216 214 / 30%);
+  color: #dce9eb;
+}
+
+.live-return-chart--trades .trade-participants button.is-active {
+  border-color: #2bc2bd;
+  background: #0d6f6c;
+  color: #ffffff;
+  box-shadow: 0 5px 14px rgb(4 45 48 / 28%);
+}
+
+.live-return-chart--trades .trade-participants button.is-active img {
+  border-color: #73d8d6;
+}
+
+.live-return-chart--trades .trade-summary {
+  border-color: rgb(145 168 178 / 16%);
+  background: #1e3a44;
+}
+
+.live-return-chart--trades .trade-summary > div {
+  border-right-color: rgb(145 168 178 / 16%);
+}
+
+.live-return-chart--trades .trade-summary dt {
+  color: #829ca4;
+}
+
+.live-return-chart--trades .trade-summary dd {
+  color: #eef5f6;
+}
+
+.live-return-chart--trades .positive {
+  color: #ff858a !important;
+}
+
+.live-return-chart--trades .negative {
+  color: #79b6ff !important;
+}
+
+.live-return-chart--trades .trade-detail-tabs {
+  background: #102a34;
+}
+
+.live-return-chart--trades .trade-detail-tabs button {
+  color: #8ba3aa;
+}
+
+.live-return-chart--trades .trade-detail-tabs button.is-active {
+  background: #294852;
+  color: #73d8d6;
+  box-shadow: 0 3px 10px rgb(4 23 29 / 24%);
+}
+
+.live-return-chart--trades .trade-detail-tabs button:focus-visible,
+.live-return-chart--trades .trade-participants button:focus-visible {
+  outline: 2px solid #73d8d6;
+  outline-offset: 2px;
+}
+
+.live-return-chart--trades .trade-detail-tabs b,
+.live-return-chart--trades .trade-panel-heading > b {
+  background: rgb(20 184 179 / 14%);
+  color: #73d8d6;
+}
+
+.live-return-chart--trades .trade-timeline::before {
+  background: #3b5962;
+}
+
+.live-return-chart--trades .trade-timeline__item,
+.live-return-chart--trades .holding-card {
+  border-color: rgb(145 168 178 / 15%);
+  background: #1d3943;
+  color: #dce7ea;
+}
+
+.live-return-chart--trades .trade-timeline__item:hover,
+.live-return-chart--trades .trade-timeline__item.is-expanded {
+  border-color: rgb(115 216 214 / 30%);
+  background: #21434c;
+}
+
+.live-return-chart--trades .trade-timeline__item:focus-visible {
+  outline: 2px solid #73d8d6;
+  outline-offset: 2px;
+}
+
+.live-return-chart--trades .trade-timeline__item > time,
+.live-return-chart--trades .trade-timeline__item > svg,
+.live-return-chart--trades .trade-timeline__numbers,
+.live-return-chart--trades .holding-card__top span,
+.live-return-chart--trades .holding-card dt {
+  color: #829ca4;
+}
+
+.live-return-chart--trades .trade-timeline__item > i {
+  border-color: #1d3943;
+}
+
+.live-return-chart--trades .trade-timeline__title strong,
+.live-return-chart--trades .holding-card__top strong,
+.live-return-chart--trades .holding-card dd {
+  color: #eef5f6;
+}
+
+.live-return-chart--trades .trade-timeline__title em {
+  color: #c6d6da;
+}
+
+.live-return-chart--trades .trade-timeline__title span {
+  background: rgb(240 79 85 / 16%);
+  color: #ff969b;
+}
+
+.live-return-chart--trades .is-sell .trade-timeline__title span {
+  background: rgb(52 120 212 / 18%);
+  color: #89bdff;
+}
+
+.live-return-chart--trades .trade-timeline__reason {
+  color: #a5b8bd;
+}
+
+.live-return-chart--trades .trade-timeline__item.is-expanded .trade-timeline__reason {
+  background: rgb(20 184 179 / 10%);
+}
+
+.live-return-chart--trades .trade-timeline__reason b {
+  color: #73d8d6;
+}
+
+.live-return-chart--trades .holding-card__bar {
+  background: #324f58;
+}
+
+.live-return-chart--trades .holding-card dl > div {
+  border-right-color: rgb(145 168 178 / 16%);
+}
+
+.live-return-chart--trades .trade-empty {
+  background: #1d3943;
+  color: #829ca4;
+}
+
 .live-return-chart__legend {
   display: flex;
   flex-wrap: wrap;
@@ -1924,6 +2631,34 @@ onBeforeUnmount(() => {
 @media (prefers-reduced-motion: reduce) {
   .view-option-move {
     transition: none;
+  }
+
+  .live-return-chart__session > i,
+  .live-return-chart__event-strip {
+    animation: none;
+  }
+}
+
+@keyframes live-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(14 165 166 / 34%);
+  }
+
+  70%,
+  100% {
+    box-shadow: 0 0 0 8px rgb(14 165 166 / 0%);
+  }
+}
+
+@keyframes trade-event-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 </style>

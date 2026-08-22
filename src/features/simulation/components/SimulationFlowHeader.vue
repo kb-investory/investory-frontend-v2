@@ -10,13 +10,18 @@ defineProps({
     type: String,
     default: '',
   },
+  // 라이브 화면은 그래프와 같은 짙은 배경을 쓰므로 헤더도 함께 어두워져야 한다.
+  tone: {
+    type: String,
+    default: 'light',
+  },
 })
 
 defineEmits(['back'])
 </script>
 
 <template>
-  <header class="simulation-flow-header">
+  <header class="simulation-flow-header" :class="`simulation-flow-header--${tone}`">
     <button
       type="button"
       class="simulation-flow-header__back"
@@ -45,6 +50,29 @@ defineEmits(['back'])
   align-items: center;
   padding: 0 16px;
   background: #ffffff;
+}
+
+.simulation-flow-header--dark {
+  background: #1b333d;
+}
+
+.simulation-flow-header--dark .simulation-flow-header__back {
+  border-color: rgb(255 255 255 / 14%) !important;
+  color: #e8f1f2;
+  background: rgb(255 255 255 / 7%) !important;
+}
+
+.simulation-flow-header--dark .simulation-flow-header__back:hover {
+  background: rgb(255 255 255 / 13%) !important;
+}
+
+.simulation-flow-header--dark h1 {
+  color: #f2f7f8;
+}
+
+.simulation-flow-header--dark .simulation-flow-header__step {
+  color: #1b333d;
+  background: #7fd8d6;
 }
 
 .simulation-flow-header__back {

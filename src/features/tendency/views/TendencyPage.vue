@@ -105,27 +105,24 @@ function formatHistoryChange(change) {
   return `${dimension} → ${change.currentType}`
 }
 
-function getLocalDateKey(date = new Date()) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
 // 추천 기반 원칙은 어떤 투자성향에서 나왔는지가 핵심 정보라 성향명을 노출한다.
 // 원칙 편집 화면(PrincipleEditPage.getSourceLabel)과 같은 우선순위를 쓴다.
 function getPrincipleSourceLabel(principle) {
   return principle.recommendationSource?.tendency?.name ?? principle.title ?? '투자성향'
 }
 
+function isUserWrittenPrinciple(principle) {
+  return (
+    principle.isUserModified ||
+    principle.recommendationSource?.type === 'USER_CREATED' ||
+    (!principle.recommendationId && principle.recommendationSource?.type !== 'TENDENCY_ANALYSIS')
+  )
+}
+
 function formatPrincipleMeta(principle) {
-  const isUserPrinciple =
-    principle.isUserModified || principle.recommendationSource?.type === 'USER_CREATED'
+  if (!isUserWrittenPrinciple(principle)) return `${getPrincipleSourceLabel(principle)} 기반`
 
-  if (!isUserPrinciple) return `${getPrincipleSourceLabel(principle)} 기반`
-
-  const date = principle.modifiedDate || principle.appliedDate
-  return `${formatDate(date || getLocalDateKey())} · 사용자 입력`
+  return '직접 작성한 원칙'
 }
 
 function openHistoryDetail(historyItem) {
@@ -534,29 +531,29 @@ onBeforeUnmount(() => {
 
       <section v-if="tendencyStore.principles.length" class="my-principles">
         <header>
-          <h2>나의 투자원칙</h2>
-          <p>선택한 원칙은 일지와 회고에 적용돼요.</p>
+          <h2>내가 정한 투자원칙</h2>
+          <p>내 기준을 한눈에 확인하고 아래에서 한 번에 편집할 수 있어요.</p>
         </header>
 
         <div class="principle-list" aria-label="적용 중인 투자 원칙">
-          <button
+          <article
             v-for="(principle, index) in tendencyStore.principles"
             :key="principle.principleId"
-            type="button"
             class="principle-card"
-            @click="openPrincipleEdit"
           >
-            <span class="principle-card__index" aria-hidden="true">
-              {{ String(index + 1).padStart(2, '0') }}
-            </span>
-            <div>
-              <strong>{{ principle.content }}</strong>
-              <p>{{ formatPrincipleMeta(principle) }}</p>
+            <div class="principle-card__tabs">
+              <span class="principle-card__index">원칙 {{ index + 1 }}</span>
+              <span
+                class="principle-card__origin"
+                :class="{ 'is-user-written': isUserWrittenPrinciple(principle) }"
+              >
+                {{ formatPrincipleMeta(principle) }}
+              </span>
             </div>
-            <span class="principle-card__actions" aria-hidden="true">
-              <AppIcon name="chevron-right" :size="16" />
-            </span>
-          </button>
+            <div class="principle-card__content">
+              <strong>{{ principle.content }}</strong>
+            </div>
+          </article>
         </div>
       </section>
 
@@ -567,7 +564,7 @@ onBeforeUnmount(() => {
         @click="openPrincipleEdit"
       >
         <AppIcon name="pencil" :size="16" />
-        수정하기
+        원칙 전체 편집
       </button>
 
       <section v-else class="principles-empty-visual">
@@ -1758,72 +1755,104 @@ onBeforeUnmount(() => {
 
 .principle-list {
   display: grid;
-  gap: 8px;
+  gap: 40px;
+  padding-top: 26px;
 }
 
 .principle-card {
-  display: grid;
+  position: relative;
+  display: flex;
   width: 100%;
-  grid-template-columns: 34px minmax(0, 1fr) auto;
+  min-height: 84px;
   align-items: center;
-  gap: 10px;
-  min-height: 78px;
-  padding: 12px;
-  border: 1px solid #dfe7e7;
-  border-radius: 15px;
-  background: #ffffff;
-  box-shadow: 0 3px 10px rgba(38, 58, 67, 0.025);
+  padding: 16px 18px;
+  border: 1px solid #d6e4e3;
+  border-radius: 0 16px 16px 16px;
+  background: linear-gradient(145deg, #ffffff 0%, #f7fbfa 100%);
+  box-shadow:
+    0 2px 3px rgba(27, 73, 77, 0.06),
+    0 10px 22px rgba(27, 73, 77, 0.11),
+    0 20px 36px rgba(27, 73, 77, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
   color: inherit;
-  cursor: pointer;
-  font: inherit;
   text-align: left;
 }
 
-.principle-card__index {
-  display: inline-flex;
-  width: 34px;
-  height: 34px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: #0f9f9b;
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+.principle-card__tabs {
+  position: absolute;
+  top: -26px;
+  left: -1px;
+  display: flex;
+  max-width: calc(100% + 2px);
+  align-items: flex-end;
+  gap: 0;
 }
 
-.principle-card > div {
-  display: grid;
-  gap: 5px;
+.principle-card__index,
+.principle-card__origin {
+  display: inline-flex;
+  height: 26px;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.principle-card__index {
+  position: relative;
+  z-index: 2;
+  width: 80px;
+  flex: 0 0 80px;
+  border: 1px solid hsl(176deg 20% 72%);
+  border-bottom: 0;
+  background: linear-gradient(180deg, hsl(176deg 18% 90%) 0%, hsl(176deg 18% 84%) 100%);
+  color: hsl(176deg 55% 32%);
+  box-shadow:
+    0 -3px 8px rgba(31, 83, 81, 0.09),
+    3px 2px 7px rgba(31, 83, 81, 0.1);
+}
+
+.principle-card__origin {
+  position: relative;
+  z-index: 1;
+  max-width: calc(100% - 72px);
+  padding: 0 11px 0 18px;
+  border: 1px solid hsl(205deg 20% 72%);
+  border-bottom: 0;
+  border-radius: 7px 10px 0 0;
+  margin-left: -8px;
+  background: linear-gradient(180deg, hsl(205deg 18% 90%) 0%, hsl(205deg 18% 84%) 100%);
+  color: hsl(205deg 55% 32%);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.principle-card__origin.is-user-written {
+  border-color: hsl(356deg 20% 72%);
+  background: linear-gradient(180deg, hsl(356deg 18% 90%) 0%, hsl(356deg 18% 84%) 100%);
+  color: hsl(356deg 55% 32%);
+}
+
+.principle-card__content {
+  display: block;
+  min-width: 0;
+  flex: 1;
 }
 
 .principle-card strong {
+  display: block;
   color: #273a3f;
-  font-size: var(--font-size-body);
-  line-height: 1.4;
-}
-
-.principle-card p {
-  margin: 0;
-  color: #9aa2a4;
-  font-size: var(--font-size-caption);
-  line-height: 1.4;
-}
-
-.principle-card__actions {
-  display: inline-flex;
-  width: auto !important;
-  height: auto !important;
-  align-items: center;
-  gap: 4px;
-  border-radius: 0 !important;
-  background: transparent !important;
-  color: #0b8f8b;
-}
-
-.principle-card__actions :last-child {
-  color: #93a0a2;
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.5;
+  overflow-wrap: break-word;
+  word-break: keep-all;
 }
 
 .principle-edit-button {

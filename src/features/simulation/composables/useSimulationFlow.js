@@ -6,7 +6,6 @@ import { ROUTE_NAMES } from '@/app/router/route-names'
 const ROUTE_BY_STEP = Object.freeze({
   home: ROUTE_NAMES.SIMULATION_DASHBOARD,
   comparator_select: ROUTE_NAMES.SIMULATION_COMPARATORS,
-  condition_setup: ROUTE_NAMES.SIMULATION_SETUP,
   live: ROUTE_NAMES.SIMULATION_LIVE,
   result: ROUTE_NAMES.SIMULATION_RESULT,
 })
@@ -16,8 +15,7 @@ const STEP_BY_ROUTE = Object.freeze(
 )
 
 const FLOW_HEADERS = Object.freeze({
-  comparator_select: { title: '비교 봇 선택', step: '1 / 2' },
-  condition_setup: { title: '시뮬레이션 준비', step: '2 / 2' },
+  comparator_select: { title: '시뮬레이션 준비', step: '' },
   live: { title: '라이브 시뮬레이션', step: '' },
   result: { title: '시뮬레이션 결과', step: '' },
 })
@@ -87,11 +85,6 @@ export function useSimulationFlow(simulationStore, pageRoot) {
     return navigateToStep('comparator_select')
   }
 
-  function handleConfirmComparators(botTypes) {
-    simulationStore.setSelectedComparators(botTypes)
-    return navigateToStep('condition_setup')
-  }
-
   async function startLiveSimulation(conditions) {
     simulationStore.setSimulationConditions(conditions)
     await simulationStore.executeSimulation(conditions)
@@ -110,8 +103,7 @@ export function useSimulationFlow(simulationStore, pageRoot) {
   function goBack() {
     const previousStep = {
       comparator_select: 'home',
-      condition_setup: 'comparator_select',
-      live: 'condition_setup',
+      live: 'comparator_select',
       result: 'home',
     }[currentStep.value]
 
@@ -123,7 +115,6 @@ export function useSimulationFlow(simulationStore, pageRoot) {
     effectiveMode,
     flowHeader,
     startBotCreation,
-    handleConfirmComparators,
     startLiveSimulation,
     finishLiveSimulation,
     restartFlow,

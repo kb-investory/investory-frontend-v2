@@ -1,9 +1,7 @@
 <script setup>
-import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 
 import SimulationComparatorSelect from '@/features/simulation/components/SimulationComparatorSelect.vue'
-import SimulationConditionSetup from '@/features/simulation/components/SimulationConditionSetup.vue'
 import SimulationDashboard from '@/features/simulation/components/SimulationDashboard.vue'
 import SimulationFlowHeader from '@/features/simulation/components/SimulationFlowHeader.vue'
 import SimulationLiveRunner from '@/features/simulation/components/SimulationLiveRunner.vue'
@@ -14,7 +12,6 @@ import { useSimulationStore } from '@/features/simulation/stores/simulationStore
 import AppIcon from '@/shared/components/AppIcon.vue'
 
 const simulationStore = useSimulationStore()
-const { selectedComparatorTypes: selectedComparators } = storeToRefs(simulationStore)
 const pageRoot = ref(null)
 
 const {
@@ -22,7 +19,6 @@ const {
   effectiveMode,
   flowHeader,
   startBotCreation,
-  handleConfirmComparators,
   startLiveSimulation,
   finishLiveSimulation,
   restartFlow,
@@ -31,11 +27,12 @@ const {
 </script>
 
 <template>
-  <div ref="pageRoot" class="mobile-page">
+  <div ref="pageRoot" class="mobile-page" :class="{ 'mobile-page--live': currentStep === 'live' }">
     <SimulationFlowHeader
       v-if="currentStep !== 'home'"
       :title="flowHeader.title"
       :step="flowHeader.step"
+      :tone="currentStep === 'live' ? 'dark' : 'light'"
       @back="goBack"
     />
 
@@ -58,7 +55,10 @@ const {
       <div
         v-else
         class="flow-container"
-        :class="{ 'flow-container--subflow': currentStep !== 'home' }"
+        :class="{
+          'flow-container--subflow': currentStep !== 'home',
+          'flow-container--live': currentStep === 'live',
+        }"
       >
         <!-- Step 0 (Default Entry): Screen 1 (원칙 중심) -->
         <SimulationDashboard
@@ -69,20 +69,12 @@ const {
           @start-simulation="startBotCreation"
         />
 
-        <!-- Step 1C-2: Comparator Bot Selection -->
+        <!-- Step 1C-2: Comparator Bot Selection + Condition Setup (merged) -->
         <SimulationComparatorSelect
           v-else-if="currentStep === 'comparator_select'"
-          @confirm="handleConfirmComparators"
-        />
-
-        <!-- Step 1D: Simulation Condition Setup -->
-        <SimulationConditionSetup
-          v-else-if="currentStep === 'condition_setup'"
           :period-start="simulationStore.overview?.eligiblePeriod?.startDate"
           :period-end="simulationStore.overview?.eligiblePeriod?.endDate"
-          :total-days="simulationStore.overview?.eligiblePeriod?.totalDays"
           :account-id="simulationStore.simulationAccountId"
-          :selected-bot-types="selectedComparators"
           :is-pending="simulationStore.loading"
           @start="startLiveSimulation"
         />
@@ -132,6 +124,11 @@ const {
   min-height: 100%;
 }
 
+/* 라이브 화면은 그래프와 한 덩어리로 보이도록 전체를 짙은 배경으로 쓴다. */
+.mobile-page--live {
+  background: radial-gradient(circle at 50% 8%, rgb(20 184 179 / 8%), transparent 26%), #1b333d;
+}
+
 .mobile-page__content {
   display: flex;
   flex-direction: column;
@@ -169,5 +166,9 @@ const {
 
 .flow-container--subflow {
   padding: 20px 20px 32px;
+}
+
+.flow-container--live {
+  padding-top: 10px;
 }
 </style>
