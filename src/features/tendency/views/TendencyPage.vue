@@ -19,6 +19,26 @@ import SegmentedControl from '@/shared/components/navigation/SegmentedControl.vu
 const RECOMMENDATION_NOTICE_COLLAPSED_KEY = 'investory:recommendation-notice-collapsed:v4'
 const REANALYSIS_NOTICE_COLLAPSED_KEY = 'investory:reanalysis-notice-collapsed:v8'
 const FLOATING_POSITION_KEY = 'investory:tendency-floating-position:v2'
+const PRINCIPLE_ICONS = Object.freeze({
+  RISK_MANAGEMENT: 'shield-check',
+  PORTFOLIO_RISK_ALLOCATION: 'chart-pie',
+  BUY_STRATEGY: 'chart-pie',
+  BUY_JUDGMENT_BASIS: 'search',
+  INVESTMENT_HORIZON: 'calendar-range',
+  LOSS_RESPONSE: 'shield-check',
+  PROFIT_RESPONSE: 'trending-up',
+  PRINCIPLE_FULFILLMENT: 'refresh-cw',
+  PSYCHOLOGY: 'compass',
+})
+const PRINCIPLE_TENDENCY_ICONS = Object.freeze({
+  '손실 대응형': 'shield-check',
+  '고변동 집중형': 'chart-pie',
+  차익실현형: 'trending-up',
+  기업분석형: 'search',
+  장기투자형: 'calendar-range',
+  원칙일치형: 'refresh-cw',
+  보유형: 'shield-check',
+})
 
 const route = useRoute()
 const router = useRouter()
@@ -122,10 +142,22 @@ function isUserWrittenPrinciple(principle) {
   )
 }
 
-function formatPrincipleMeta(principle) {
-  if (!isUserWrittenPrinciple(principle)) return `${getPrincipleSourceLabel(principle)} 기반`
+function getPrincipleHeaderLabel(principle) {
+  if (isUserWrittenPrinciple(principle)) return '직접 작성'
 
-  return '직접 작성한 원칙'
+  return getPrincipleSourceLabel(principle).replace(/형$/, '')
+}
+
+function getPrincipleIcon(principle) {
+  if (isUserWrittenPrinciple(principle)) return 'pencil'
+
+  const tendency = principle.recommendationSource?.tendency
+  return (
+    PRINCIPLE_ICONS[principle.category] ||
+    PRINCIPLE_ICONS[tendency?.code] ||
+    PRINCIPLE_TENDENCY_ICONS[tendency?.name] ||
+    'sparkles'
+  )
 }
 
 function openHistoryDetail(historyItem) {
@@ -526,30 +558,39 @@ onBeforeUnmount(() => {
       </section>
 
       <section v-if="tendencyStore.principles.length" class="my-principles">
-        <header>
-          <h2>내가 정한 투자원칙</h2>
-          <p>내 기준을 한눈에 확인하고 아래에서 한 번에 편집할 수 있어요.</p>
-        </header>
-
-        <div class="principle-list" aria-label="적용 중인 투자 원칙">
-          <article
-            v-for="(principle, index) in tendencyStore.principles"
-            :key="principle.principleId"
-            class="principle-card"
-          >
-            <div class="principle-card__tabs">
-              <span class="principle-card__index">원칙 {{ index + 1 }}</span>
-              <span
-                class="principle-card__origin"
-                :class="{ 'is-user-written': isUserWrittenPrinciple(principle) }"
-              >
-                {{ formatPrincipleMeta(principle) }}
-              </span>
-            </div>
-            <div class="principle-card__content">
-              <strong>{{ principle.content }}</strong>
-            </div>
-          </article>
+        <div class="principle-paper">
+          <div class="principle-list" aria-label="적용 중인 투자 원칙">
+            <article
+              v-for="(principle, index) in tendencyStore.principles"
+              :key="principle.principleId"
+              class="principle-card"
+            >
+              <header class="principle-card__header">
+                <span
+                  class="principle-card__icon"
+                  :class="{ 'is-user-written': isUserWrittenPrinciple(principle) }"
+                  aria-hidden="true"
+                >
+                  <AppIcon :name="getPrincipleIcon(principle)" :size="14" />
+                </span>
+                <div class="principle-card__meta">
+                  <span class="principle-card__index">
+                    원칙 {{ String(index + 1).padStart(2, '0') }}
+                  </span>
+                  <span class="principle-card__separator" aria-hidden="true">·</span>
+                  <span
+                    class="principle-card__origin"
+                    :class="{ 'is-user-written': isUserWrittenPrinciple(principle) }"
+                  >
+                    {{ getPrincipleHeaderLabel(principle) }}
+                  </span>
+                </div>
+              </header>
+              <div class="principle-card__content">
+                <strong>{{ principle.content }}</strong>
+              </div>
+            </article>
+          </div>
         </div>
       </section>
 
@@ -1746,106 +1787,119 @@ onBeforeUnmount(() => {
   font-size: var(--font-size-caption);
 }
 
+.principle-paper {
+  padding: 0;
+}
+
 .principle-list {
   display: grid;
-  gap: 40px;
-  padding-top: 26px;
+  gap: 8px;
 }
 
 .principle-card {
-  position: relative;
   display: flex;
-  width: 100%;
-  min-height: 84px;
-  align-items: center;
-  padding: 16px 18px;
-  border: 1px solid #d6e4e3;
-  border-radius: 0 16px 16px 16px;
-  background: linear-gradient(145deg, #ffffff 0%, #f7fbfa 100%);
+  min-height: 94px;
+  flex-direction: column;
+  gap: 6px;
+  padding: 11px 14px 10px;
+  border: 1px solid #dce8e7;
+  border-radius: 15px;
+  background: #fff;
   box-shadow:
-    0 2px 3px rgba(27, 73, 77, 0.06),
-    0 10px 22px rgba(27, 73, 77, 0.11),
-    0 20px 36px rgba(27, 73, 77, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    0 2px 3px rgba(27, 73, 77, 0.03),
+    0 10px 24px rgba(27, 73, 77, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
   color: inherit;
   text-align: left;
 }
 
-.principle-card__tabs {
-  position: absolute;
-  top: -26px;
-  left: -1px;
+.principle-card__header {
   display: flex;
-  max-width: calc(100% + 2px);
-  align-items: flex-end;
-  gap: 0;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
 }
 
-.principle-card__index,
-.principle-card__origin {
+.principle-card__icon {
   display: inline-flex;
+  width: 26px;
   height: 26px;
+  flex: 0 0 26px;
   align-items: center;
   justify-content: center;
-  border-bottom: 0;
-  border-radius: 10px 10px 0 0;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  white-space: nowrap;
+  border: 1px solid #cfe6e4;
+  border-radius: 8px;
+  background: #edf8f7;
+  color: #187f80;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.principle-card__icon.is-user-written {
+  border-color: #ded7e9;
+  background: #f3eff7;
+  color: #746487;
 }
 
 .principle-card__index {
-  position: relative;
-  z-index: 2;
-  width: 80px;
-  flex: 0 0 80px;
-  border: 1px solid hsl(176deg 20% 72%);
-  border-bottom: 0;
-  background: linear-gradient(180deg, hsl(176deg 18% 90%) 0%, hsl(176deg 18% 84%) 100%);
-  color: hsl(176deg 55% 32%);
-  box-shadow:
-    0 -3px 8px rgba(31, 83, 81, 0.09),
-    3px 2px 7px rgba(31, 83, 81, 0.1);
+  display: block;
+  color: #347f7a;
+  font-family: var(--font-heading);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
-.principle-card__origin {
-  position: relative;
-  z-index: 1;
-  max-width: calc(100% - 72px);
-  padding: 0 11px 0 18px;
-  border: 1px solid hsl(205deg 20% 72%);
-  border-bottom: 0;
-  border-radius: 7px 10px 0 0;
-  margin-left: -8px;
-  background: linear-gradient(180deg, hsl(205deg 18% 90%) 0%, hsl(205deg 18% 84%) 100%);
-  color: hsl(205deg 55% 32%);
+.principle-card__meta {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 5px;
   overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.principle-card__origin.is-user-written {
-  border-color: hsl(356deg 20% 72%);
-  background: linear-gradient(180deg, hsl(356deg 18% 90%) 0%, hsl(356deg 18% 84%) 100%);
-  color: hsl(356deg 55% 32%);
 }
 
 .principle-card__content {
-  display: block;
   min-width: 0;
-  flex: 1;
 }
 
 .principle-card strong {
-  display: block;
+  display: -webkit-box;
   color: #273a3f;
   font-family: var(--font-heading);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.025em;
-  line-height: 1.5;
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
   overflow-wrap: break-word;
   word-break: keep-all;
+}
+
+.principle-card__separator {
+  color: #9aa8a9;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.principle-card__origin {
+  min-width: 0;
+  color: #356f6b;
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.principle-card__origin.is-user-written {
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: #f1edf6;
+  color: #746487;
 }
 
 .principle-edit-button {
