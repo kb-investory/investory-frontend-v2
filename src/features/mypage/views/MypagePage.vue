@@ -109,8 +109,8 @@ function goToSimulation() {
   router.push(
     simulationId
       ? {
-          name: ROUTE_NAMES.MYPAGE_SIMULATION_DETAIL,
-          params: { simulationId },
+          name: ROUTE_NAMES.SIMULATION_RESULT,
+          query: { runId: String(simulationId) },
         }
       : { name: ROUTE_NAMES.SIMULATION },
   )
