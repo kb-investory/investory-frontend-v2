@@ -155,7 +155,7 @@ onBeforeUnmount(() => {
           <div class="current-result__divider" />
 
           <h4>판단 근거 데이터</h4>
-          <dl class="evidence-list">
+          <dl v-if="result.type.rationale.items.length" class="evidence-list">
             <div
               v-for="item in result.type.rationale.items"
               :key="item.label"
@@ -168,6 +168,9 @@ onBeforeUnmount(() => {
               <dd>{{ item.value }}{{ item.unit }}</dd>
             </div>
           </dl>
+          <p v-else class="evidence-list__empty">
+            이 결과는 예전 방식으로 계산됐어요. 다시 분석하면 최신 근거를 볼 수 있어요.
+          </p>
         </section>
 
         <footer v-if="isCurrentOptionSelected" class="detail-modal__source">
@@ -493,6 +496,12 @@ onBeforeUnmount(() => {
   color: #263537;
   font-size: var(--font-size-body);
   font-weight: 800;
+}
+
+.evidence-list__empty {
+  margin: 15px 0 0;
+  color: #9aa2a4;
+  font-size: var(--font-size-caption);
 }
 
 .detail-modal__source {

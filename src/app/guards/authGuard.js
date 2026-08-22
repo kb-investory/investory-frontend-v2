@@ -2,7 +2,12 @@ import { ROUTE_NAMES } from '@/app/router/route-names'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { useBrokerConnectionStore } from '@/features/mypage/stores/brokerConnectionStore'
 
-const PUBLIC_ROUTE_NAMES = new Set([ROUTE_NAMES.LOGIN, ROUTE_NAMES.UI_KIT, ROUTE_NAMES.NOT_FOUND])
+const PUBLIC_ROUTE_NAMES = new Set([
+  ROUTE_NAMES.WELCOME,
+  ROUTE_NAMES.LOGIN,
+  ROUTE_NAMES.UI_KIT,
+  ROUTE_NAMES.NOT_FOUND,
+])
 
 export function setupRouterGuards(router) {
   router.beforeEach(async (to) => {

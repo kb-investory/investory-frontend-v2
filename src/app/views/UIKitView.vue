@@ -7,7 +7,9 @@ import IconButton from '@/shared/components/buttons/IconButton.vue'
 import QuoteCard from '@/shared/components/cards/QuoteCard.vue'
 import StockCard from '@/shared/components/cards/StockCard.vue'
 import TendencyCard from '@/shared/components/cards/TendencyCard.vue'
+import CharacterSpinner from '@/shared/components/feedback/CharacterSpinner.vue'
 import InfoBanner from '@/shared/components/feedback/InfoBanner.vue'
+import PageLoading from '@/shared/components/feedback/PageLoading.vue'
 import TimerProgressBar from '@/shared/components/feedback/TimerProgressBar.vue'
 import BaseTextarea from '@/shared/components/inputs/BaseTextarea.vue'
 import BaseToggle from '@/shared/components/inputs/BaseToggle.vue'
@@ -22,6 +24,25 @@ const search = ref('')
 const textarea = ref('')
 const notifyToggle = ref(true)
 const segmentedTab = ref('투자성향')
+const pageLoadingActive = ref(false)
+
+function demoPageLoading() {
+  pageLoadingActive.value = true
+  setTimeout(() => {
+    pageLoadingActive.value = false
+  }, 2500)
+}
+
+const cardSpinnerActive = ref(false)
+const cardSpinnerRunId = ref(0)
+
+function demoCardSpinner() {
+  cardSpinnerRunId.value += 1
+  cardSpinnerActive.value = true
+  setTimeout(() => {
+    cardSpinnerActive.value = false
+  }, 1500)
+}
 
 const navTabs = [
   { label: '홈', icon: 'house', active: true },
@@ -155,6 +176,63 @@ const navTabs = [
               <TimerProgressBar label="오늘 일지 마감까지" timer-text="03:42:18" :percentage="45" />
             </div>
           </article>
+
+          <!-- 05 / PAGE LOADING -->
+          <article class="ui-kit__card">
+            <header class="ui-kit__card-header">
+              <span class="ui-kit__section-category">05 / PAGE LOADING</span>
+              <h2 class="ui-kit__section-title">페이지 전환 시 로딩 (원숭이)</h2>
+            </header>
+
+            <div class="ui-kit__card-body">
+              <BaseButton variant="ghost" :disabled="pageLoadingActive" @click="demoPageLoading">
+                {{
+                  pageLoadingActive ? '2.5초간 전체 화면을 덮습니다...' : '페이지 로딩 데모 보기'
+                }}
+              </BaseButton>
+
+              <PageLoading :active="pageLoadingActive" />
+            </div>
+          </article>
+
+          <!-- 06 / CARD LOADING -->
+          <article class="ui-kit__card">
+            <header class="ui-kit__card-header">
+              <span class="ui-kit__section-category">06 / CARD LOADING</span>
+              <h2 class="ui-kit__section-title">카드 데이터 영역 로딩 (랜덤 캐릭터)</h2>
+            </header>
+
+            <div class="ui-kit__card-body">
+              <BaseButton variant="ghost" :disabled="cardSpinnerActive" @click="demoCardSpinner">
+                {{ cardSpinnerActive ? '1.5초간 로딩 중...' : '카드 로딩 데모 보기 (캐릭터 랜덤)' }}
+              </BaseButton>
+
+              <div class="ui-kit__spinner-row">
+                <div class="ui-kit__spinner-card ui-kit__spinner-card--light">
+                  <CharacterSpinner
+                    :key="cardSpinnerRunId"
+                    :active="cardSpinnerActive"
+                    tone="light"
+                  />
+                </div>
+                <div class="ui-kit__spinner-card ui-kit__spinner-card--dark">
+                  <CharacterSpinner
+                    :key="cardSpinnerRunId"
+                    :active="cardSpinnerActive"
+                    tone="dark"
+                  />
+                </div>
+                <div class="ui-kit__spinner-card ui-kit__spinner-card--light">
+                  <CharacterSpinner
+                    :key="cardSpinnerRunId"
+                    :active="cardSpinnerActive"
+                    tone="accent"
+                    text="투자 성과를 불러오고 있어요"
+                  />
+                </div>
+              </div>
+            </div>
+          </article>
         </div>
       </div>
     </section>
@@ -283,6 +361,31 @@ const navTabs = [
   height: 90px;
   border-radius: 12px;
   background: #f9faf9;
+}
+
+.ui-kit__spinner-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ui-kit__spinner-card {
+  display: flex;
+  min-width: 120px;
+  min-height: 140px;
+  flex: 1 1 120px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+}
+
+.ui-kit__spinner-card--light {
+  border: 1px solid #e1eceb;
+  background: #f8fcfb;
+}
+
+.ui-kit__spinner-card--dark {
+  background: var(--teal-deep);
 }
 
 @media (max-width: 768px) {

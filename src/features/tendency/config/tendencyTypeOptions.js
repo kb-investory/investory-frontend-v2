@@ -111,6 +111,50 @@ export const TENDENCY_TYPE_CONFIG = {
   },
 }
 
+const TENDENCY_CARD_SUMMARIES = {
+  PORTFOLIO_RISK_ALLOCATION: {
+    LOW_VOLATILITY_DIVERSIFIED: '안정성과 분산을 함께 챙기는 방어적인 포트폴리오예요.',
+    LOW_VOLATILITY_CONCENTRATED: '검증된 안정 종목에 선택과 집중을 하는 포트폴리오예요.',
+    HIGH_VOLATILITY_DIVERSIFIED: '성장 기회를 넓게 담아 변동 위험을 나누는 편이에요.',
+    HIGH_VOLATILITY_CONCENTRATED: '확신이 큰 성장 종목에 과감히 비중을 실어요.',
+    BALANCED_ALLOCATION: '안정과 성장 사이에서 균형점을 찾아가는 포트폴리오예요.',
+  },
+  BUY_JUDGMENT_BASIS: {
+    COMPANY_ANALYSIS: '숫자와 사업의 힘을 확인한 뒤 움직이는 투자자예요.',
+    PRICE_FLOW: '시장 흐름에서 매매 타이밍을 포착하는 투자자예요.',
+    EVENT_RESPONSE: '새로운 정보가 만드는 기회를 빠르게 포착해요.',
+    INTUITION_SOCIAL_SIGNAL: '경험과 시장의 분위기를 판단에 적극 활용해요.',
+    COMPOSITE_JUDGMENT: '여러 신호를 교차 확인한 뒤 결정을 내려요.',
+  },
+  LOSS_RESPONSE: {
+    STOP_LOSS: '손실을 제한해 다음 기회를 지키는 데 익숙해요.',
+    ADDITIONAL_PURCHASE: '하락을 더 좋은 가격의 기회로 활용하는 편이에요.',
+    HOLD: '처음의 투자 논리가 살아 있다면 기다릴 줄 알아요.',
+    MIXED_RESPONSE: '손실 원인에 맞춰 대응 전략을 유연하게 바꿔요.',
+  },
+  PROFIT_RESPONSE: {
+    PROFIT_REALIZATION: '계획한 수익을 실제 성과로 확정하는 편이에요.',
+    ADDITIONAL_PURCHASE: '잘 가는 종목의 흐름에 힘을 더 싣는 편이에요.',
+    HOLD: '눈앞의 수익보다 더 큰 성장 가능성을 기다려요.',
+    MIXED_RESPONSE: '수익을 지키면서 추가 상승 가능성도 열어둬요.',
+  },
+  INVESTMENT_HORIZON: {
+    SHORT_TERM_ROTATION: '빠른 판단과 회전으로 짧은 기회를 연결해요.',
+    MID_TERM_HOLDING: '몇 달의 변화와 성과를 확인하며 기다리는 편이에요.',
+    LONG_TERM_INVESTMENT: '시간을 기업 성장의 동력으로 활용하는 투자자예요.',
+    MIXED_HORIZON: '목표에 따라 투자 시간을 유연하게 설계해요.',
+  },
+  PRINCIPLE_FULFILLMENT: {
+    PRINCIPLE_MATCHED: '세운 계획을 실제 매매까지 일관되게 이어가요.',
+    SELECTIVE_COMPLIANCE: '핵심 원칙은 지키고 나머지는 상황에 맞게 조정해요.',
+    REPEATED_DEVIATION: '계획과 행동의 차이를 줄이는 과정이 필요해요.',
+    DIFFICULT_TO_ASSESS: '기록을 더 쌓으면 나만의 패턴이 선명해질 거예요.',
+  },
+}
+
+export const getTendencyCardSummary = (dimensionCode, option) =>
+  TENDENCY_CARD_SUMMARIES[dimensionCode]?.[option?.code] ?? option?.description ?? ''
+
 const TENDENCY_TRAITS = {
   PORTFOLIO_RISK_ALLOCATION: {
     LOW_VOLATILITY_DIVERSIFIED: [

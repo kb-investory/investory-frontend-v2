@@ -1,9 +1,19 @@
 import { ROUTE_NAMES } from './route-names'
 
+import { hasSeenWelcome } from '@/features/auth/services/welcomePreference'
+
 export const routes = [
   {
     path: '/',
-    redirect: '/login',
+    redirect: () => ({
+      name: hasSeenWelcome() ? ROUTE_NAMES.HOME : ROUTE_NAMES.WELCOME,
+    }),
+  },
+  {
+    path: '/welcome',
+    name: ROUTE_NAMES.WELCOME,
+    component: () => import('@/features/auth/views/WelcomePage.vue'),
+    meta: { title: 'Investory 시작하기', layout: 'blank' },
   },
   {
     path: '/home',

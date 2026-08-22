@@ -22,7 +22,7 @@ const DIMENSION_META = Object.freeze({
     group: 'SELECTION',
     tone: 'amber',
   },
-  BUY_DECISION_BASIS: {
+  PURCHASE_RATIONALE: {
     code: 'BUY_JUDGMENT_BASIS',
     description: '투자일지에 기록한 매수 판단 근거를 분석해요.',
     group: 'SELECTION',
@@ -65,13 +65,13 @@ const TYPE_CODE_MAP = Object.freeze({
   SHORT_TERM: 'SHORT_TERM_ROTATION',
   MEDIUM_TERM: 'MID_TERM_HOLDING',
   LONG_TERM: 'LONG_TERM_INVESTMENT',
-  PRINCIPLE_ALIGNED: 'PRINCIPLE_MATCHED',
+  ALIGNED: 'PRINCIPLE_MATCHED',
   INDETERMINATE: 'DIFFICULT_TO_ASSESS',
 })
 
 const TYPE_PREFIX_BY_DIMENSION = Object.freeze({
   PORTFOLIO_RISK_ALLOCATION: 'RISK_',
-  BUY_DECISION_BASIS: 'BUY_',
+  PURCHASE_RATIONALE: 'BUY_',
   LOSS_RESPONSE: 'LOSS_',
   PROFIT_RESPONSE: 'PROFIT_',
   HOLDING_PERIOD: 'PERIOD_',
@@ -96,6 +96,8 @@ function formatEvidenceValue(value) {
 }
 
 function evidenceItem(label, value, unit, description) {
+  if (value === undefined || value === null || value === '') return null
+
   return {
     type: unit === '%' ? 'PERCENT' : 'COUNT',
     label,
@@ -122,7 +124,7 @@ function mapEvidenceItems(dimensionCode, evidence) {
           '보유 비중을 반영한 일간 가격 변동성이에요.',
         ),
       ]
-    case 'BUY_DECISION_BASIS':
+    case 'PURCHASE_RATIONALE':
       return [
         evidenceItem(
           '기업 분석 근거',
@@ -137,30 +139,53 @@ function mapEvidenceItems(dimensionCode, evidence) {
           '차트와 가격 흐름을 근거로 남긴 비율이에요.',
         ),
         evidenceItem('이벤트 근거', evidence.event, '%', '뉴스와 공시를 근거로 남긴 비율이에요.'),
+        evidenceItem(
+          '직관·사회신호 근거',
+          evidence.intuition,
+          '%',
+          '직관 또는 주변 신호를 근거로 남긴 비율이에요.',
+        ),
       ]
     case 'LOSS_RESPONSE':
-    case 'PROFIT_RESPONSE':
+    case 'PROFIT_RESPONSE': {
+      const isLoss = dimensionCode === 'LOSS_RESPONSE'
       return [
         evidenceItem(
-          '분석 일수',
-          evidence.totalDays,
-          '일',
-          '최근 분석 기간 중 해당 손익 구간이었던 일수예요.',
+          '분석 종목',
+          evidence.securityCount,
+          '종목',
+          '종목별 대응 성향을 판정할 수 있었던 전체 종목 수예요.',
         ),
         evidenceItem(
-          '순매도 일수',
-          evidence.netSellDays,
-          '일',
-          '해당 손익 구간에서 순매도한 일수예요.',
+          isLoss ? '손절형 종목' : '차익실현형 종목',
+          evidence.netSellSecurityCount,
+          '종목',
+          isLoss
+            ? '손실 구간에서 순매도 또는 손절형 대응으로 판정된 종목 수예요.'
+            : '수익 구간에서 차익실현형 대응으로 판정된 종목 수예요.',
         ),
         evidenceItem(
-          '순매수 일수',
-          evidence.netBuyDays,
-          '일',
-          '해당 손익 구간에서 순매수한 일수예요.',
+          '추가매수형 종목',
+          evidence.netBuySecurityCount,
+          '종목',
+          isLoss
+            ? '손실 구간에서 추가매수형 대응으로 판정된 종목 수예요.'
+            : '수익 구간에서 추가매수형 대응으로 판정된 종목 수예요.',
         ),
-        evidenceItem('보유 일수', evidence.holdDays, '일', '추가 거래 없이 보유한 일수예요.'),
+        evidenceItem(
+          '보유형 종목',
+          evidence.holdSecurityCount,
+          '종목',
+          '추가 거래 없이 보유형 대응으로 판정된 종목 수예요.',
+        ),
+        evidenceItem(
+          '혼합대응형 종목',
+          evidence.mixedSecurityCount,
+          '종목',
+          '한 가지 행동으로 구분하기 어려운 종목 수예요.',
+        ),
       ]
+    }
     case 'HOLDING_PERIOD':
       return [
         evidenceItem(
@@ -250,9 +275,7 @@ function normalizeAnalysisItem(item) {
       description: item.typeDescription,
       rationale: {
         summary: item.typeDescription,
-        items: mapEvidenceItems(item.dimensionCode, evidence).filter(
-          (evidenceValue) => evidenceValue.value !== 'undefined',
-        ),
+        items: mapEvidenceItems(item.dimensionCode, evidence).filter(Boolean),
       },
     },
   }
