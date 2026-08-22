@@ -174,7 +174,9 @@ const navTabs = [
 
             <div class="ui-kit__card-body">
               <BaseButton variant="ghost" :disabled="pageLoadingActive" @click="demoPageLoading">
-                {{ pageLoadingActive ? '2.5초간 전체 화면을 덮습니다...' : '페이지 로딩 데모 보기' }}
+                {{
+                  pageLoadingActive ? '2.5초간 전체 화면을 덮습니다...' : '페이지 로딩 데모 보기'
+                }}
               </BaseButton>
 
               <PageLoading :active="pageLoadingActive" />
