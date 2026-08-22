@@ -25,6 +25,13 @@ const notifyToggle = ref(true)
 const segmentedTab = ref('투자성향')
 const pageLoadingActive = ref(false)
 
+function demoPageLoading() {
+  pageLoadingActive.value = true
+  setTimeout(() => {
+    pageLoadingActive.value = false
+  }, 2500)
+}
+
 const navTabs = [
   { label: '홈', icon: 'house', active: true },
   { label: '일지', icon: 'book-open' },
@@ -166,8 +173,8 @@ const navTabs = [
             </header>
 
             <div class="ui-kit__card-body">
-              <BaseButton variant="ghost" @click="pageLoadingActive = !pageLoadingActive">
-                {{ pageLoadingActive ? '로딩 끄기' : '페이지 로딩 데모 보기' }}
+              <BaseButton variant="ghost" :disabled="pageLoadingActive" @click="demoPageLoading">
+                {{ pageLoadingActive ? '2.5초간 전체 화면을 덮습니다...' : '페이지 로딩 데모 보기' }}
               </BaseButton>
 
               <PageLoading :active="pageLoadingActive" />
