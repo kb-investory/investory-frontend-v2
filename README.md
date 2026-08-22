@@ -238,26 +238,17 @@ View / Component → Pinia Store → API 모듈 → Mock 데이터 또는 실제
 
 공용 컴포넌트 확인은 개발 서버 실행 후 `/ui-kit` 경로에서 확인할 수 있습니다.
 
-## CI/CD
+## CI
 
-`main` 브랜치 대상 PR 및 push 시 다음 검사를 자동으로 수행합니다.
+`main` 브랜치 대상 PR 및 push 시 GitHub Actions에서 ESLint(`npm run lint`)와 Prettier 포맷(`npm run format:check`) 검사를 자동으로 수행합니다. 빌드·배포는 포함하지 않습니다.
 
-1. 의존성 설치 (`npm ci`)
-2. ESLint 검사 (`npm run lint`)
-3. Prettier 포맷 검사 (`npm run format:check`)
-4. 프로덕션 빌드 (`npm run build`)
+## 배포
 
-`main` 브랜치에 push되면 빌드 결과물을 GitHub Actions artifact로 생성하고, rsync를 통해 설정된 VM으로 배포합니다.
+Vercel Git 연동을 통해 자동 배포됩니다. `main` 브랜치에 push되면 프로덕션으로, 그 외 브랜치/PR은 프리뷰로 배포됩니다.
 
-### 배포 관련 GitHub Secrets
-
-| Secret           | 설명                              |
-| ---------------- | --------------------------------- |
-| `DEPLOY_SSH_KEY` | 배포 서버 SSH 개인 키             |
-| `DEPLOY_HOST`    | 배포 서버 호스트                  |
-| `DEPLOY_USER`    | 배포 서버 사용자 이름             |
-| `DEPLOY_PATH`    | 배포 서버 내 대상 경로            |
-| `DEPLOY_PORT`    | 배포 서버 SSH 포트 (기본값: `22`) |
+- 빌드 명령: `npm run build` (Vercel이 자동으로 `npm ci` 후 실행)
+- SPA 라우팅: Vue Router가 `createWebHistory` 모드를 사용하므로 [vercel.json](./vercel.json)에서 모든 경로를 `/index.html`로 rewrite합니다.
+- 환경 변수(`VITE_API_BASE_URL` 등)는 Vercel 프로젝트 설정의 Environment Variables에서 관리합니다.
 
 ## 테스트 (추후 도입)
 
