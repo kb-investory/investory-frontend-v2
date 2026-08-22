@@ -421,19 +421,6 @@ const SCENARIOS = Object.freeze({
   },
 })
 
-function createEvidence(ranking, summary) {
-  const topReturn = ranking[0]?.cumulativeReturnPercent ?? 0
-  const actual = ranking.find((participant) => participant.variantType === 'ACTUAL_USER')
-
-  return {
-    rankingConfidence: ranking.length >= 4 ? 'HIGH' : 'MEDIUM',
-    topReturnPercent: topReturn,
-    actualUserReturnPercent: actual?.cumulativeReturnPercent ?? null,
-    assessedTradeCount: summary.assessedTradeCount,
-    totalTradeCount: summary.totalTradeCount,
-  }
-}
-
 export const SIMULATION_RESULT_MOCK_SCENARIOS = Object.freeze(
   Object.entries(SCENARIOS).map(([id, scenario]) => ({
     id,
@@ -460,18 +447,9 @@ export function buildSimulationResultMock(mockId) {
       persistenceStatus: 'COMPLETED',
     },
     report: {
-      reportVersion: 'MOCK_SCENARIO_V1',
-      periodStart: PERIOD_START,
-      periodEnd: PERIOD_END,
       outcome: {
         branch: scenario.branch,
-        headline: scenario.label,
-        detail: scenario.label,
-        focusSection: scenario.branch,
         winnerVariantType: scenario.winnerVariantType,
-        ranking,
-        evidence: createEvidence(ranking, summary),
-        judgmentSource: 'MOCK_SCENARIO',
       },
       principleReviewSummary: summary,
       principleEvaluations: scenario.evaluations ?? [],
@@ -480,10 +458,6 @@ export function buildSimulationResultMock(mockId) {
       referenceReview: scenario.referenceReview ?? null,
       performanceContext: {
         luckCheck: scenario.luckCheck ?? null,
-      },
-      generationMetadata: {
-        source: 'LOCAL_MOCK',
-        scenarioId: String(mockId),
       },
     },
   }

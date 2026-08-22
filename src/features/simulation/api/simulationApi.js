@@ -51,9 +51,6 @@ function getLiveReport(fixtures) {
   return {
     ...clone(fixtures.reportSnapshot ?? {}),
     ...clone(liveReport),
-    referencePrinciples:
-      liveReport.referencePrinciples ?? clone(fixtures.reportSnapshot?.referencePrinciples ?? []),
-    simulationRunId: liveReport.simulationRunId ?? fixtures.run.runId,
   }
 }
 
@@ -150,54 +147,23 @@ async function enrichSecurityDetails(items) {
   )
 }
 
-async function normalizeSimulationReport(data) {
+function normalizeSimulationReport(data) {
   if (!data) return data
-
-  const report =
-    data.report && typeof data.report === 'object'
-      ? {
-          ...data.report,
-          simulationRunId:
-            data.report.simulationRunId ?? data.simulationRunId ?? data.runId ?? data.simulationId,
-        }
-      : data
-
-  const rawKeyTradeReviews = report.keyTradeReviews ?? report.decisionReviews ?? []
-  const [keyTradeReviews, decisionReviews, evidenceReviews, securityEvidenceReviews] =
-    await Promise.all([
-      enrichSecurityDetails(rawKeyTradeReviews),
-      enrichSecurityDetails(report.decisionReviews),
-      enrichSecurityDetails(report.evidenceReviews),
-      enrichSecurityDetails(report.securityEvidenceReviews),
-    ])
+  const report = data
 
   return {
-    ...report,
-    keyTradeReviews,
-    decisionReviews: decisionReviews?.length ? decisionReviews : keyTradeReviews,
-    evidenceReviews,
-    securityEvidenceReviews,
+    outcome: report.outcome ?? null,
+    principleReviewSummary: report.principleReviewSummary ?? null,
+    principleEvaluations: Array.isArray(report.principleEvaluations)
+      ? report.principleEvaluations
+      : [],
+    decisionReviews: Array.isArray(report.decisionReviews) ? report.decisionReviews : [],
+    divergenceReview: report.divergenceReview ?? null,
+    referenceReview: report.referenceReview ?? null,
+    performanceContext: {
+      luckCheck: report.performanceContext?.luckCheck ?? null,
+    },
   }
-}
-
-export function isSimulationReportEnrichmentPending(report) {
-  if (!report) return false
-
-  const metadata = report.generationMetadata ?? {}
-  if (metadata.narrativeStatus === 'PENDING') return true
-  if ((report.evidenceReviews ?? []).some((review) => review.webVerdict === 'PENDING')) return true
-
-  const terminalThesisStatuses = new Set(['NOT_CONFIGURED', 'COMPLETED', 'PARTIAL', 'FAILED'])
-  if (terminalThesisStatuses.has(metadata.thesisVerificationStatus)) return false
-
-  const reviews = report.keyTradeReviews ?? report.decisionReviews ?? []
-  return reviews.some((review) => {
-    const thesis = review.thesisOutcome
-    return (
-      !thesis ||
-      (thesis.verdict === 'UNCONFIRMED' && thesis.verificationStatus === 'WEB_SEARCH_NOT_RUN')
-    )
-  })
 }
 
 function normalizeSnapshot(snapshot) {
@@ -273,7 +239,7 @@ function normalizePositionSnapshot(snapshot) {
 async function normalizeSimulationResult(data) {
   if (!data) return data
 
-  const embeddedReport = data.report ? await normalizeSimulationReport(data.report) : null
+  const embeddedReport = data.report ? normalizeSimulationReport(data.report) : null
 
   const dailyPerformance = normalizeDailyPerformanceArray(
     data.dailyPerformance || data.dailySnapshots,
@@ -467,22 +433,10 @@ export async function getSimulationReport(simulationId) {
       getLiveReport(liveFixtures) ??
       simulationReportData.reports?.[String(simulationId)] ??
       simulationReportData.reports?.['101']
-    return await normalizeSimulationReport({
-      ...clone(report),
-      reportVersion: report?.reportVersion ?? 'DETERMINISTIC_V13',
-      generationMetadata: {
-        judgmentSource: 'DETERMINISTIC_RULE_ENGINE',
-        narrativeStatus: 'COMPLETED',
-        narrativeSource: 'TEMPLATE_FALLBACK',
-        thesisVerificationStatus: 'NOT_CONFIGURED',
-        thesisVerificationSource: 'NONE',
-        proposalSource: 'MOCK_DATA',
-        ...clone(report?.generationMetadata ?? {}),
-      },
-    })
+    return normalizeSimulationReport(clone(report))
   }
   const response = await request(`/simulation/${simulationId}/report`)
-  return await normalizeSimulationReport(response)
+  return normalizeSimulationReport(response)
 }
 
 export async function getSimulationMessages() {

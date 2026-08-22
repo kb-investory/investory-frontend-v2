@@ -1,537 +1,76 @@
 {
   "reports": {
     "101": {
-      "simulationId": 101,
-      "reportVersion": "DETERMINISTIC_V13",
-      "generatedAt": "2026-07-29T18:00:00",
+      "outcome": {
+        "branch": "PERSONAL_BOT_AHEAD",
+        "winnerVariantType": "PERSONAL_BOT"
+      },
       "principleReviewSummary": {
-        "followedCount": 1,
+        "followedCount": 2,
         "violatedCount": 1,
-        "decisionDifferenceCount": 1,
-        "unassessedCount": 1,
-        "assessedTradeCount": 2,
+        "assessedTradeCount": 3,
         "totalTradeCount": 4
-      },
-      "decisionReviews": [
-        {
-          "tradeId": 2101,
-          "tradedAt": "2026-04-18T09:10:00",
-          "securityId": 101,
-          "securityCode": "000660",
-          "securityName": "SK하이닉스",
-          "action": "BUY",
-          "decisionReason": "HBM 수요 증가와 실적 개선이 이어질 것으로 판단해 추가 매수했다.",
-          "trade": {
-            "quantity": 4,
-            "unitPrice": 183500,
-            "notionalAmount": 734000,
-            "transactionCostAmount": 110
-          },
-          "principleJudgment": "VIOLATED",
-          "matchedPrinciple": {
-            "title": "한 종목 최대 비중 제한",
-            "principleText": "한 종목의 투자 비중은 전체 자산의 20%를 넘지 않는다.",
-            "source": "USER_PRINCIPLE",
-            "executionRule": {
-              "targetRule": "portfolio.max_single_position_weight",
-              "operator": "LTE",
-              "value": 0.2
-            },
-            "expectedAction": "추가 매수하지 않고 기존 보유분을 유지"
-          },
-          "judgmentReason": "추가 매수 시 SK하이닉스 비중이 20%를 넘어 명시적인 보유 한도 원칙을 위반합니다.",
-          "principleBotAction": "HOLD",
-          "marketOutcome": {
-            "fiveTradingDays": {
-              "evaluationDate": "2026-04-25",
-              "returnPercent": 7.54,
-              "summary": "매수 후 5거래일 수익률 +7.54%",
-              "favorable": true
-            },
-            "twentyTradingDays": {
-              "evaluationDate": "2026-05-17",
-              "returnPercent": 12.3,
-              "summary": "매수 후 20거래일 수익률 +12.30%",
-              "favorable": true
-            }
-          },
-          "reviewCase": "BAD_PROCESS_LUCKY_OUTCOME",
-          "emotionTag": "CONCENTRATED_BUY",
-          "emotionLabel": "집중 매수"
-        },
-        {
-          "tradeId": 2102,
-          "tradedAt": "2026-05-22T10:25:00",
-          "securityId": 303,
-          "securityCode": "005930",
-          "securityName": "삼성전자",
-          "action": "SELL",
-          "decisionReason": "투자 가설이 약해지고 미리 정한 손절 기준에 도달해 일부 매도했다.",
-          "trade": {
-            "quantity": 8,
-            "unitPrice": 75500,
-            "notionalAmount": 604000,
-            "transactionCostAmount": 91
-          },
-          "principleJudgment": "FOLLOWED",
-          "matchedPrinciple": {
-            "title": "손절 기준 준수",
-            "principleText": "매수가 대비 -5% 도달 시 투자 근거를 확인하고 50% 분할 손절한다.",
-            "source": "USER_PRINCIPLE",
-            "executionRule": {
-              "targetRule": "exit.stop_loss_rate",
-              "operator": "LTE",
-              "value": -0.05
-            },
-            "expectedAction": "보유 수량의 50% 매도"
-          },
-          "judgmentReason": "손절 기준 도달 후 투자 근거를 재확인하고 계획한 수량만큼 매도했습니다.",
-          "principleBotAction": "REDUCE",
-          "marketOutcome": {
-            "fiveTradingDays": {
-              "evaluationDate": "2026-05-29",
-              "returnPercent": -4.2,
-              "summary": "매도 후 5거래일 동안 가격이 -4.20% 하락",
-              "favorable": true
-            },
-            "twentyTradingDays": {
-              "evaluationDate": "2026-06-19",
-              "returnPercent": -6.8,
-              "summary": "매도 후 20거래일 동안 가격이 -6.80% 하락",
-              "favorable": true
-            }
-          },
-          "reviewCase": "GOOD_PROCESS_GOOD_OUTCOME",
-          "emotionTag": "RULE_ALIGNED",
-          "emotionLabel": "계획 매도"
-        },
-        {
-          "tradeId": 2103,
-          "tradedAt": "2026-06-11T14:05:00",
-          "securityId": 202,
-          "securityCode": "035420",
-          "securityName": "NAVER",
-          "action": "BUY",
-          "decisionReason": "AI 서비스 성장과 광고 매출 회복이 이어질 것으로 기대했다.",
-          "trade": {
-            "quantity": 5,
-            "unitPrice": 201000,
-            "notionalAmount": 1005000,
-            "transactionCostAmount": 151
-          },
-          "principleJudgment": "DECISION_DIFFERENCE",
-          "matchedPrinciple": null,
-          "judgmentReason": "원칙봇은 관망했지만 명시적인 사용자 원칙이나 실행 규칙 위반은 확인되지 않았습니다.",
-          "principleBotAction": "HOLD",
-          "marketOutcome": {
-            "fiveTradingDays": {
-              "evaluationDate": "2026-06-18",
-              "returnPercent": 2.6,
-              "summary": "매수 후 5거래일 수익률 +2.60%",
-              "favorable": true
-            },
-            "twentyTradingDays": {
-              "evaluationDate": "2026-07-09",
-              "returnPercent": -1.1,
-              "summary": "매수 후 20거래일 수익률 -1.10%",
-              "favorable": false
-            }
-          },
-          "reviewCase": "UNASSESSED",
-          "emotionTag": "RULE_DIVERGENCE",
-          "emotionLabel": "원칙봇과 다른 결정"
-        },
-        {
-          "tradeId": 2104,
-          "tradedAt": "2026-07-08T09:30:00",
-          "securityId": 505,
-          "securityCode": "068270",
-          "securityName": "셀트리온",
-          "action": "REDUCE",
-          "decisionReason": "단기 변동성이 커질 가능성에 대비해 비중을 줄였다.",
-          "trade": {
-            "quantity": 3,
-            "unitPrice": 186000,
-            "notionalAmount": 558000,
-            "transactionCostAmount": 84
-          },
-          "principleJudgment": "INSUFFICIENT_DATA",
-          "matchedPrinciple": null,
-          "judgmentReason": "해당 시점에 적용할 수 있는 명시적 원칙과 실행 규칙 데이터가 부족합니다.",
-          "principleBotAction": "NOT_COMPARED",
-          "marketOutcome": {
-            "fiveTradingDays": {
-              "evaluationDate": "2026-07-15",
-              "returnPercent": null,
-              "summary": "5거래일 가격 데이터가 부족합니다.",
-              "favorable": null
-            },
-            "twentyTradingDays": null
-          },
-          "reviewCase": "UNASSESSED",
-          "emotionTag": "UNASSESSED",
-          "emotionLabel": "판정 자료 부족"
-        }
-      ],
-      "evidenceReviews": [
-        {
-          "tradeId": 2101,
-          "tradedAt": "2026-04-18T09:10:00",
-          "securityId": 101,
-          "securityCode": "000660",
-          "securityName": "SK하이닉스",
-          "action": "BUY",
-          "basis": "HBM 수요 증가와 실적 개선이 이어질 것으로 판단했다.",
-          "databaseBasisType": "FUNDAMENTAL",
-          "basisType": "FUNDAMENTAL",
-          "basisTypeSource": "DATABASE",
-          "verifiability": "VERIFIABLE",
-          "webVerdict": "CONFIRMED",
-          "webSummary": "주요 고객사의 HBM 수요 확대와 관련 실적 개선 자료가 확인됐습니다.",
-          "sources": [
-            {
-              "title": "HBM 수요 증가에 따른 실적 전망",
-              "publisher": "예시 경제신문",
-              "publishedAt": "2026-04-23",
-              "url": "https://example.com/hbm-outlook"
-            }
-          ],
-          "marketOutcome": {
-            "fiveTradingDays": {
-              "returnPercent": 7.54,
-              "summary": "매수 후 5거래일 수익률 +7.54%"
-            },
-            "twentyTradingDays": {
-              "returnPercent": 12.3,
-              "summary": "매수 후 20거래일 수익률 +12.30%"
-            }
-          }
-        },
-        {
-          "tradeId": 2102,
-          "tradedAt": "2026-05-22T10:25:00",
-          "securityId": 303,
-          "securityCode": "005930",
-          "securityName": "삼성전자",
-          "action": "SELL",
-          "basis": "투자 가설이 약해지고 미리 정한 손절 기준에 도달했다.",
-          "databaseBasisType": "RULE",
-          "basisType": "OTHER",
-          "basisTypeSource": "DATABASE",
-          "verifiability": "AMBIGUOUS",
-          "webVerdict": "NOT_SELECTED",
-          "webSummary": "핵심 검색 대상 3건에 포함되지 않아 웹 검증을 수행하지 않았습니다.",
-          "sources": [],
-          "marketOutcome": {
-            "fiveTradingDays": {
-              "returnPercent": -4.2,
-              "summary": "매도 후 5거래일 동안 가격이 -4.20% 하락"
-            },
-            "twentyTradingDays": {
-              "returnPercent": -6.8,
-              "summary": "매도 후 20거래일 동안 가격이 -6.80% 하락"
-            }
-          }
-        },
-        {
-          "tradeId": 2103,
-          "tradedAt": "2026-06-11T14:05:00",
-          "securityId": 202,
-          "securityCode": "035420",
-          "securityName": "NAVER",
-          "action": "BUY",
-          "basis": "AI 서비스 성장과 광고 매출 회복이 이어질 것으로 기대했다.",
-          "databaseBasisType": "UNCLASSIFIED",
-          "basisType": "FUNDAMENTAL",
-          "basisTypeSource": "DETERMINISTIC_KEYWORD_FALLBACK",
-          "verifiability": "VERIFIABLE",
-          "webVerdict": "PARTIAL",
-          "webSummary": "AI 서비스 확대는 확인됐지만 광고 매출 회복은 일부 지표에서만 확인됐습니다.",
-          "sources": [
-            {
-              "title": "AI 서비스 사업 업데이트",
-              "publisher": "예시 테크미디어",
-              "publishedAt": "2026-06-20",
-              "url": "https://example.com/ai-service"
-            }
-          ],
-          "marketOutcome": {
-            "fiveTradingDays": {
-              "returnPercent": 2.6,
-              "summary": "매수 후 5거래일 수익률 +2.60%"
-            },
-            "twentyTradingDays": {
-              "returnPercent": -1.1,
-              "summary": "매수 후 20거래일 수익률 -1.10%"
-            }
-          }
-        },
-        {
-          "tradeId": 2104,
-          "tradedAt": "2026-07-08T09:30:00",
-          "securityId": 505,
-          "securityCode": "068270",
-          "securityName": "셀트리온",
-          "action": "REDUCE",
-          "basis": "단기 변동성이 커질 가능성에 대비했다.",
-          "databaseBasisType": "UNCLASSIFIED",
-          "basisType": "UNKNOWN",
-          "basisTypeSource": "NOT_CLASSIFIED",
-          "verifiability": "UNVERIFIABLE",
-          "webVerdict": "UNCONFIRMED",
-          "webSummary": "구체적인 확인 대상과 기간이 없어 사실 여부를 판정하기 어렵습니다.",
-          "sources": [],
-          "marketOutcome": {
-            "fiveTradingDays": null,
-            "twentyTradingDays": null
-          }
-        }
-      ],
-      "securityEvidenceReviews": [
-        {
-          "securityId": 101,
-          "securityCode": "000660",
-          "securityName": "SK하이닉스",
-          "priceSeries": [
-            { "date": "2026-04-14", "closePrice": 176000 },
-            { "date": "2026-04-18", "closePrice": 183500 },
-            { "date": "2026-04-25", "closePrice": 197300 },
-            { "date": "2026-05-02", "closePrice": 192000 },
-            { "date": "2026-05-17", "closePrice": 206100 }
-          ],
-          "evidenceReviews": [2101],
-          "chartAnnotations": [
-            { "type": "BUY", "date": "2026-04-18", "tradeId": 2101, "label": "4주 매수" },
-            {
-              "type": "EVIDENCE_EVENT",
-              "date": "2026-04-23",
-              "tradeId": 2101,
-              "label": "HBM 수요 전망 자료"
-            },
-            {
-              "type": "OUTCOME_CHECKPOINT",
-              "date": "2026-04-25",
-              "tradeId": 2101,
-              "label": "5일 +7.54%"
-            },
-            {
-              "type": "OUTCOME_CHECKPOINT",
-              "date": "2026-05-17",
-              "tradeId": 2101,
-              "label": "20일 +12.30%"
-            }
-          ]
-        },
-        {
-          "securityId": 202,
-          "securityCode": "035420",
-          "securityName": "NAVER",
-          "priceSeries": [
-            { "date": "2026-06-06", "closePrice": 196000 },
-            { "date": "2026-06-11", "closePrice": 201000 },
-            { "date": "2026-06-18", "closePrice": 206200 },
-            { "date": "2026-06-20", "closePrice": 204000 },
-            { "date": "2026-07-09", "closePrice": 198800 }
-          ],
-          "evidenceReviews": [2103],
-          "chartAnnotations": [
-            { "type": "BUY", "date": "2026-06-11", "tradeId": 2103, "label": "5주 매수" },
-            {
-              "type": "OUTCOME_CHECKPOINT",
-              "date": "2026-06-18",
-              "tradeId": 2103,
-              "label": "5일 +2.60%"
-            },
-            {
-              "type": "EVIDENCE_EVENT",
-              "date": "2026-06-20",
-              "tradeId": 2103,
-              "label": "AI 서비스 사업 자료"
-            },
-            {
-              "type": "OUTCOME_CHECKPOINT",
-              "date": "2026-07-09",
-              "tradeId": 2103,
-              "label": "20일 -1.10%"
-            }
-          ]
-        }
-      ],
-      "learningInsights": {
-        "primaryMistakePattern": "수익이 난 결정에서도 원칙 위반은 별도로 복기해야 합니다.",
-        "emotionalTradeCount": 1,
-        "underperformedTradeCount": 1,
-        "actualReturnPercent": 5,
-        "principleReturnPercent": 17,
-        "returnImprovementPercentPoint": 12,
-        "narrative": "결과가 좋았던 집중 매수도 과정상 원칙 위반이었습니다. 반대로 원칙을 지킨 매도는 이후 하락 위험을 줄였습니다.",
-        "narrativeSource": "DETERMINISTIC_TEMPLATE"
-      },
-      "principleEvaluationSummary": {
-        "totalCount": 3,
-        "keepCount": 0,
-        "strengthenCount": 1,
-        "reviseCount": 1,
-        "reviewCount": 0,
-        "insufficientDataCount": 1
       },
       "principleEvaluations": [
         {
-          "evaluationId": "PE_9_entry_max_5day_return",
+          "evaluationId": "PE_9",
           "principleSetItemId": 9,
-          "principleText": "급등주를 추격매수하지 않는다",
-          "targetRule": "entry.max_5day_return",
+          "principleText": "급등주를 추격매수하지 않는다.",
           "verdict": "STRENGTHEN",
-          "evaluationReason": "적용 거래 5건 중 3건에서 원칙을 지키지 않아 실행 기준 강화가 필요합니다.",
+          "evaluationReason": "급등 직후 추가 매수한 거래에서 원칙 위반이 확인됐습니다.",
           "statistics": {
-            "applicableCount": 5,
-            "followedCount": 2,
-            "violatedCount": 3,
-            "violationRatePercent": 60,
-            "unassessedCount": 0
+            "followedCount": 1,
+            "violatedCount": 1
           },
-          "outcomes": {
-            "calculationBasis": "DIRECTION_ADJUSTED_POST_TRADE_RETURN",
-            "followed5dAveragePercent": 1.2,
-            "followed20dAveragePercent": 3.4,
-            "violated5dAveragePercent": -2.1,
-            "violated20dAveragePercent": -1
-          },
-          "evidenceTradeIds": [2101, 2102, 2103, 2104, 2105],
           "suggestion": {
-            "recommendationId": 4001,
-            "proposalType": "REINFORCEMENT",
-            "principleSetItemId": 9,
-            "sourcePrincipleText": "급등주를 추격매수하지 않는다",
-            "description": "최근 5거래일 동안 10% 이상 상승한 종목은 신규 매수를 보류합니다.",
-            "targetRule": "entry.max_5day_return",
-            "currentValue": 0.15,
-            "proposedValue": 0.1,
-            "ruleJson": { "entry": { "max_5day_return": 0.1 } }
+            "description": "최근 5거래일 동안 10% 이상 상승한 종목은 신규 매수를 보류합니다."
           }
         },
         {
-          "evaluationId": "PE_10_exit_stop_loss_rate",
+          "evaluationId": "PE_10",
           "principleSetItemId": 10,
-          "principleText": "손실이 8%를 넘으면 미루지 않고 정리한다",
-          "targetRule": "exit.stop_loss_rate",
-          "verdict": "REVISE",
-          "evaluationReason": "원칙을 지킨 거래에서도 5일·20일 뒤 불리한 결과가 반복되어 현재 손절 기준을 다시 검토할 필요가 있습니다.",
+          "principleText": "손실이 8%를 넘으면 미루지 않고 정리한다.",
+          "verdict": "KEEP",
+          "evaluationReason": "확인 가능한 거래에서는 손실 제한 기준을 지켰습니다.",
           "statistics": {
-            "applicableCount": 3,
-            "followedCount": 3,
-            "violatedCount": 0,
-            "violationRatePercent": 0,
-            "unassessedCount": 0
-          },
-          "outcomes": {
-            "calculationBasis": "DIRECTION_ADJUSTED_POST_TRADE_RETURN",
-            "followed5dAveragePercent": -2.6,
-            "followed20dAveragePercent": -4.1,
-            "violated5dAveragePercent": null,
-            "violated20dAveragePercent": null
-          },
-          "evidenceTradeIds": [2102, 2103, 2104],
-          "suggestion": null
-        },
-        {
-          "evaluationId": "PE_11_portfolio_max_weight",
-          "principleSetItemId": 11,
-          "principleText": "한 종목에 자산의 20% 이상 투자하지 않는다",
-          "targetRule": "portfolio.max_single_position_weight",
-          "verdict": "INSUFFICIENT_DATA",
-          "evaluationReason": "이 원칙을 평가할 수 있는 거래가 1건뿐이라 유지하거나 바꿀지 판단하기 어렵습니다.",
-          "statistics": {
-            "applicableCount": 1,
             "followedCount": 1,
-            "violatedCount": 0,
-            "violationRatePercent": 0,
-            "unassessedCount": 0
+            "violatedCount": 0
           },
-          "outcomes": {
-            "calculationBasis": "DIRECTION_ADJUSTED_POST_TRADE_RETURN",
-            "followed5dAveragePercent": 0.8,
-            "followed20dAveragePercent": null,
-            "violated5dAveragePercent": null,
-            "violated20dAveragePercent": null
-          },
-          "evidenceTradeIds": [2101],
           "suggestion": null
         }
       ],
-      "principleDiscoveries": [],
-      "principleReinforcements": [
+      "decisionReviews": [
         {
-          "recommendationId": 4001,
-          "proposalType": "REINFORCEMENT",
-          "principleSetItemId": 9,
-          "sourcePrincipleText": "급등주를 추격매수하지 않는다",
-          "description": "최근 5거래일 동안 10% 이상 상승한 종목은 신규 매수를 보류합니다.",
-          "targetRule": "entry.max_5day_return",
-          "currentValue": 0.15,
-          "proposedValue": 0.1,
-          "ruleJson": { "entry": { "max_5day_return": 0.1 } }
+          "tradeId": 2101,
+          "tradedAt": "2026-04-18T09:10:00+09:00",
+          "securityCode": "000660",
+          "securityName": "SK하이닉스",
+          "principleJudgment": "VIOLATED",
+          "matchedPrinciple": {
+            "principleSetItemId": 9,
+            "principleText": "급등주를 추격매수하지 않는다."
+          },
+          "judgmentReason": "급등 직후 추가 매수해 진입 원칙을 지키지 않았습니다."
         }
       ],
-      "recommendedPrinciples": [
-        {
-          "recommendationId": 4001,
-          "proposalType": "REINFORCEMENT",
-          "principleSetItemId": 9,
-          "sourcePrincipleText": "급등주를 추격매수하지 않는다",
-          "description": "최근 5거래일 동안 10% 이상 상승한 종목은 신규 매수를 보류합니다.",
-          "targetRule": "entry.max_5day_return",
-          "currentValue": 0.15,
-          "proposedValue": 0.1,
-          "ruleJson": { "entry": { "max_5day_return": 0.1 } }
-        }
-      ],
-      "improvementActions": [],
-      "referencePrinciples": [
-        {
-          "referenceId": "REF_VALUE_QUALITY_SELECTION",
-          "sourceBot": {
-            "variantId": 3,
-            "variantType": "FAMOUS_STRATEGY",
-            "strategyName": "우량 가치·품질 퀀트 전략",
-            "source": "SYSTEM_STRATEGY_CONFIG"
-          },
-          "recommendationOrigin": {
-            "originType": "COMPARATOR_STRATEGY",
-            "originLabel": "비교 전략 참고",
-            "botName": "우량 가치·품질 퀀트 봇",
-            "strategyName": "우량 가치·품질 퀀트 전략",
-            "ruleSource": "SYSTEM_STRATEGY_CONFIG",
-            "ruleSourceLabel": "서비스에 설정된 고정 비교 전략",
-            "reason": "현재 사용자 원칙에 같은 실행 규칙이 없어 비교 전략의 기준을 참고용으로 제시했습니다."
-          },
-          "title": "가치와 품질을 함께 확인하기",
-          "description": "가치와 품질을 각각 40% 반영하고 종목 평가 점수가 75점 이상일 때만 진입 후보로 검토합니다.",
-          "targetRules": ["selection.factor_weights", "selection.min_passing_score"],
-          "ruleJson": {
-            "selection": {
-              "factor_weights": { "value": 0.4, "quality": 0.4, "growth": 0.2 },
-              "min_passing_score": 75
-            }
-          },
-          "comparisonEvidence": {
-            "userHasSimilarPrinciple": false,
-            "botAppliedTradeCount": 4,
-            "tradeIds": [31, 32, 33, 34],
-            "simulationReturnPercent": 8.5,
-            "performanceUsedForSelection": false
-          },
-          "adoptionMode": "REVIEW_ONLY",
-          "disclaimer": "비교 전략의 시뮬레이션 수익률만으로 이 원칙의 우수성이 입증되는 것은 아닙니다."
-        }
-      ],
-      "generationMetadata": {
-        "judgmentSource": "DETERMINISTIC_RULE_ENGINE",
-        "narrativeStatus": "COMPLETED",
-        "narrativeSource": "TEMPLATE_FALLBACK",
-        "thesisVerificationStatus": "COMPLETED",
-        "thesisVerificationSource": "OPENAI_WEB_SEARCH",
-        "proposalSource": "DETERMINISTIC_V13"
+      "divergenceReview": {
+        "momentCount": 1,
+        "moments": [
+          {
+            "betterSide": "PERSONAL_BOT",
+            "violatedPrinciples": [
+              {
+                "principleSetItemId": 9,
+                "principleText": "급등주를 추격매수하지 않는다.",
+                "reason": "원칙 봇은 관망했지만 실제 거래에서는 추가 매수했습니다."
+              }
+            ]
+          }
+        ]
+      },
+      "referenceReview": null,
+      "performanceContext": {
+        "luckCheck": null
       }
     }
   }

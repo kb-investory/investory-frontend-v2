@@ -279,10 +279,7 @@ const missedPrinciples = computed(() => {
   })
 
   outcome.value.violationDecisions.forEach((decision) => {
-    const key =
-      decision.matchedPrinciple?.principleSetItemId ??
-      decision.principleReview?.principleSetItemId ??
-      decision.principleText
+    const key = decision.matchedPrinciple?.principleSetItemId ?? decision.principleText
     if (!byId.has(key)) {
       byId.set(key, {
         principleSetItemId: key,
@@ -687,7 +684,7 @@ function handleSecondaryAction() {
 
         <div class="reference-list">
           <article
-            v-for="(reference, index) in outcome.referencePrinciples.slice(0, 3)"
+            v-for="(reference, index) in outcome.referenceReview?.references?.slice(0, 3) ?? []"
             :key="reference.referenceId ?? index"
             class="reference-card"
           >

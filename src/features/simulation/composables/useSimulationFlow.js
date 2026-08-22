@@ -60,9 +60,7 @@ export function useSimulationFlow(simulationStore, pageRoot) {
       if (selectedSimulationId) {
         await simulationStore.fetchSimulationDetail(selectedSimulationId)
       }
-      void simulationStore.startSimulationReportRefresh(selectedSimulationId)
-    } else {
-      simulationStore.stopSimulationReportRefresh()
+      void simulationStore.fetchSimulationReport(selectedSimulationId, { force: true })
     }
   }
 
@@ -73,7 +71,6 @@ export function useSimulationFlow(simulationStore, pageRoot) {
 
   onBeforeUnmount(() => {
     simulationStore.cancelBotCompilation()
-    simulationStore.stopSimulationReportRefresh()
   })
 
   watch([currentStep, () => route.query.runId], async ([step]) => {

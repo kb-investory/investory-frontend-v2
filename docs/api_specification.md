@@ -8,21 +8,21 @@
 
 ## 📌 API 요약
 
-| 순번 | Category   | Method | Endpoint URI                                   | 주요 기능                                                     |
-| :--- | :--------- | :----- | :--------------------------------------------- | :------------------------------------------------------------ |
-| 1    | Simulation | `GET`  | `/api/v1/simulations/overview`                 | 시뮬레이션 진입 조건 및 추천 자본금 조회                      |
-| 2    | Simulation | `GET`  | `/api/v1/simulations/initial-capital`          | 계좌 잔고 기반 초기 자본금 산출                               |
-| 3    | Simulation | `POST` | `/api/v1/simulation-bots/compile`              | 원칙 문장 & 6축 성향 기반 AI 원칙 봇 생성                     |
-| 4    | Simulation | `GET`  | `/api/v1/simulation-bots/compile-jobs/{jobId}` | 원칙 봇 생성 상태 비동기 폴링                                 |
-| 5    | Simulation | `GET`  | `/api/v1/simulation-bots/comparators`          | 4개 대조군 봇 목록 및 메타 정보 조회                          |
-| 6    | Simulation | `POST` | `/api/v1/simulations/run`                      | 4개 봇 백테스트 실행 연산 (수익률·변동성·MDD 포함)            |
-| 7    | Simulation | `GET`  | `/api/v1/simulations/{simulationId}/status`    | 시뮬레이션 연산 비동기 진행률 폴링                            |
-| 8    | Simulation | `GET`  | `/api/v1/simulations/latest`                   | 가장 최근 실행된 시뮬레이션 성과 대시보드 조회                |
-| 9    | Simulation | `GET`  | `/api/v1/simulations/{simulationId}`           | 특정 시뮬레이션 세션 상세 결과 및 체결일지 조회               |
-| 10   | Simulation | `GET`  | `/api/v1/simulations/{simulationId}/report`    | **[신규]** AI 감정 복기, 근거 검증, 학습 인사이트 리포트 조회 |
-| 11   | Principles | `GET`  | `/api/v1/principles/recommendations`           | **[신규]** 성향 및 결과 복기 기반 추천 원칙 목록 조회         |
-| 12   | Principles | `POST` | `/api/v1/principles`                           | **[신규]** 선택된 추천 원칙을 사용자의 원칙으로 저장/적용     |
-| 13   | Simulation | `GET`  | `/api/v1/simulations/history`                  | **[신규]** 시뮬레이션 과거 실행 기록 목록 조회                |
+| 순번 | Category   | Method | Endpoint URI                                   | 주요 기능                                                 |
+| :--- | :--------- | :----- | :--------------------------------------------- | :-------------------------------------------------------- |
+| 1    | Simulation | `GET`  | `/api/v1/simulations/overview`                 | 시뮬레이션 진입 조건 및 추천 자본금 조회                  |
+| 2    | Simulation | `GET`  | `/api/v1/simulations/initial-capital`          | 계좌 잔고 기반 초기 자본금 산출                           |
+| 3    | Simulation | `POST` | `/api/v1/simulation-bots/compile`              | 원칙 문장 & 6축 성향 기반 AI 원칙 봇 생성                 |
+| 4    | Simulation | `GET`  | `/api/v1/simulation-bots/compile-jobs/{jobId}` | 원칙 봇 생성 상태 비동기 폴링                             |
+| 5    | Simulation | `GET`  | `/api/v1/simulation-bots/comparators`          | 4개 대조군 봇 목록 및 메타 정보 조회                      |
+| 6    | Simulation | `POST` | `/api/v1/simulations/run`                      | 4개 봇 백테스트 실행 연산 (수익률·변동성·MDD 포함)        |
+| 7    | Simulation | `GET`  | `/api/v1/simulations/{simulationId}/status`    | 시뮬레이션 연산 비동기 진행률 폴링                        |
+| 8    | Simulation | `GET`  | `/api/v1/simulations/latest`                   | 가장 최근 실행된 시뮬레이션 성과 대시보드 조회            |
+| 9    | Simulation | `GET`  | `/api/v1/simulations/{simulationId}`           | 특정 시뮬레이션 세션 상세 결과 및 체결일지 조회           |
+| 10   | Simulation | `GET`  | `/api/simulation/{simulationId}/report`        | 결과 화면용 최소 리포트 조회                              |
+| 11   | Principles | `GET`  | `/api/v1/principles/recommendations`           | **[신규]** 성향 및 결과 복기 기반 추천 원칙 목록 조회     |
+| 12   | Principles | `POST` | `/api/v1/principles`                           | **[신규]** 선택된 추천 원칙을 사용자의 원칙으로 저장/적용 |
+| 13   | Simulation | `GET`  | `/api/v1/simulations/history`                  | **[신규]** 시뮬레이션 과거 실행 기록 목록 조회            |
 
 ---
 
@@ -264,64 +264,12 @@
 
 ---
 
-### 1-7. AI 시뮬레이션 복기 결과 리포트 조회
+### 1-7. 시뮬레이션 복기 결과 리포트 조회
 
-- **`GET /api/v1/simulations/{simulationId}/report`**
-- **Response (200 OK)**:
-
-```json
-{
-  "decisionReviews": [
-    {
-      "tradeId": 101,
-      "tradedAt": "2026-04-18T09:00:00",
-      "securityName": "SK하이닉스",
-      "action": "SELL",
-      "actionSummary": "30% 매도",
-      "emotionTag": "FEAR_SELL",
-      "emotionLabel": "공포 매도",
-      "subsequentReturnPercent": 11.4,
-      "principleBotAction": "HOLD",
-      "principleFeedback": "실적 전망이 유지됐으므로 단기 시장 등락에 동요하지 않고 보유했어야 합니다."
-    }
-  ],
-  "evidenceReviews": [
-    {
-      "tradeId": 101,
-      "action": "SK하이닉스 분할 매도",
-      "basis": "시장 하락 우려 및 매도 욕구",
-      "basisType": "EMOTION",
-      "result": "기회비용 -11.4%",
-      "confidenceScore": 46,
-      "confidenceLabel": "근거 부족"
-    }
-  ],
-  "learningInsights": {
-    "primaryMistakePattern": "상승 뒤에는 쫓아 사고, 하락 때는 너무 빨리 매도합니다.",
-    "emotionalTradeCount": 5,
-    "underperformedTradeCount": 4,
-    "actualReturnPercent": 5.0,
-    "principleReturnPercent": 17.0,
-    "returnImprovementPercentPoint": 12.0
-  },
-  "recommendedPrinciples": [
-    {
-      "recommendationId": 1,
-      "principleType": "LONG_TERM",
-      "title": "장기 투자 유지",
-      "description": "투자 가설이 유효하면 단기 등락에 반응하지 않고 90일 이상 최소 보유 기간을 준수하기",
-      "ruleJson": { "holding": { "minimumDays": 90 } }
-    }
-  ],
-  "improvementActions": [
-    {
-      "category": "EMOTIONAL_TRADING",
-      "title": "감정적 매매 줄이기",
-      "action": "주가 급락 시 감정적 매도 버튼 누름 대신 24시간 냉각기 도입하기"
-    }
-  ]
-}
-```
+- **`GET /api/simulation/{simulationId}/report`**
+- 결과 화면에서 사용하는 최소 필드만 반환합니다.
+- 상세 필드와 시나리오별 규칙은 [`simulation/report-api.md`](./simulation/report-api.md)를
+  단일 기준으로 사용합니다.
 
 ---
 
