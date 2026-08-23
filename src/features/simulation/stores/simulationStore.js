@@ -49,24 +49,13 @@ export const useSimulationStore = defineStore('simulation', () => {
   let compileRequestId = 0
   let initialCapitalRequestId = 0
 
-  // Minimum required record days for simulation qualification
-  const MIN_REQUIRED_DAYS = 90
-
-  // 시뮬레이션 적격 기간은 일지를 작성한 날짜 수가 아니라 실제 시세가 존재하는
-  // 거래일 수를 기준으로 판단한다. 초기 스냅샷 존재 여부는 API의 isReady가 검증한다.
-  const eligibleDays = computed(
-    () =>
-      overview.value?.priceDataRange?.tradingDayCount ??
-      overview.value?.eligiblePeriod?.totalDays ??
-      0,
-  )
   const simulationAccountId = computed(
     () => overview.value?.initialCapitalBreakdown?.accountId ?? overview.value?.accountId ?? null,
   )
 
   const isReady = computed(() => {
     if (!overview.value) return false
-    return overview.value.isReady && eligibleDays.value >= MIN_REQUIRED_DAYS
+    return overview.value.isReady
   })
 
   const actualParticipant = computed(
@@ -485,19 +474,6 @@ export const useSimulationStore = defineStore('simulation', () => {
     }
   }
 
-  // Toggle state helper for demo/testing insufficient data state vs ready state
-  function setMockDataDays(days) {
-    if (!overview.value) return
-    overview.value = {
-      ...overview.value,
-      isReady: days >= MIN_REQUIRED_DAYS,
-      eligiblePeriod: {
-        ...overview.value.eligiblePeriod,
-        totalDays: days,
-      },
-    }
-  }
-
   function reset() {
     cancelBotCompilation()
     overview.value = null
@@ -545,7 +521,6 @@ export const useSimulationStore = defineStore('simulation', () => {
     botCompileJobId,
     personalBotId,
     botCompileError,
-    eligibleDays,
     simulationAccountId,
     isReady,
     actualParticipant,
@@ -556,7 +531,6 @@ export const useSimulationStore = defineStore('simulation', () => {
     isBotCompiling,
     isBotCompileComplete,
     isBotCompileFailed,
-    MIN_REQUIRED_DAYS,
     fetchOverview,
     fetchSimulationDetail,
     fetchComparators,
@@ -572,7 +546,6 @@ export const useSimulationStore = defineStore('simulation', () => {
     completeSimulation,
     fetchMessages,
     sendMessage,
-    setMockDataDays,
     reset,
   }
 })

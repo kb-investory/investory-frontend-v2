@@ -107,8 +107,6 @@ const isComparatorPending = computed(() => simulationStore.loading || livePrepar
 
     <SimulationDataNotice
       v-if="showDataNotice"
-      :eligible-days="simulationStore.eligibleDays"
-      :min-required-days="simulationStore.MIN_REQUIRED_DAYS"
       :data-error="simulationStore.overview?.dataError"
       @close="closeDataNotice"
     />
