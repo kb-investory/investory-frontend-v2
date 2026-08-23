@@ -127,7 +127,6 @@ function goNext() {
 .onboarding-shell {
   width: 100%;
   height: 100%;
-  max-height: 844px;
   overflow: hidden;
   background: #ffffff;
 }
