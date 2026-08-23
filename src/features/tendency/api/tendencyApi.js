@@ -440,7 +440,8 @@ async function pollAnalysisRunUntilFinished(analysisRunId) {
 
   if (detail.run?.runStatus === 'FAILED') {
     throw new ApiError(422, {
-      message: detail.run?.errorMessage || '투자성향 분석에 실패했어요. 잠시 후 다시 시도해 주세요.',
+      message:
+        detail.run?.errorMessage || '투자성향 분석에 실패했어요. 잠시 후 다시 시도해 주세요.',
       errorCode: 'ANALYSIS_FAILED',
     })
   }
