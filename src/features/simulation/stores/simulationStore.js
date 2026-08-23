@@ -146,12 +146,25 @@ export const useSimulationStore = defineStore('simulation', () => {
       const response = await queryClient.fetchQuery({
         queryKey: queryKeys.simulation.overview(),
         queryFn: async () => {
-          const [overviewData, latestData, historyData] = await Promise.all([
+          const [overviewOutcome, latestOutcome, historyOutcome] = await Promise.allSettled([
             getSimulationOverview(),
             getLatestSimulationResult(),
             getSimulationHistory(),
           ])
-          return { overview: overviewData, latest: latestData, history: historyData || [] }
+
+          if (overviewOutcome.status === 'rejected') throw overviewOutcome.reason
+          if (latestOutcome.status === 'rejected') {
+            console.error('Failed to fetch latest simulation result:', latestOutcome.reason)
+          }
+          if (historyOutcome.status === 'rejected') {
+            console.error('Failed to fetch simulation history:', historyOutcome.reason)
+          }
+
+          return {
+            overview: overviewOutcome.value,
+            latest: latestOutcome.status === 'fulfilled' ? latestOutcome.value : null,
+            history: historyOutcome.status === 'fulfilled' ? historyOutcome.value || [] : [],
+          }
         },
         staleTime: SIMULATION_STALE_TIME,
       })
