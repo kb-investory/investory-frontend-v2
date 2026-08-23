@@ -806,6 +806,28 @@ function handleSecondaryAction() {
       </section>
     </template>
 
+    <!-- 승자 유형이 위 5개 시나리오 중 어디에도 명확히 안 잡히는 경우 —
+         이전에는 이 케이스에 대한 분기가 없어서 순위 다음이 곧바로
+         closing-card로 넘어가며 빈 공간처럼 보였다. -->
+    <template v-else>
+      <section class="result-section evidence-section" aria-labelledby="unknown-title">
+        <div class="section-heading">
+          <span class="section-icon"><AppIcon name="bar-chart" :size="21" /></span>
+          <div>
+            <span class="section-heading__kicker">참고 사항</span>
+            <h2 id="unknown-title">뚜렷한 패턴은 안 보여요</h2>
+          </div>
+        </div>
+        <div class="empty-evidence">
+          <AppIcon name="bar-chart" :size="24" />
+          <div>
+            <strong>위 순위와 수치를 참고해서 다음 원칙을 정리해보세요</strong>
+            <p>이번 회차는 특정 시나리오 하나로 딱 떨어지진 않았어요. 결과 자체는 유효하니 참가자별 수익률을 비교해보시면 좋아요.</p>
+          </div>
+        </div>
+      </section>
+    </template>
+
     <section class="closing-card">
       <span class="closing-card__icon"><AppIcon name="flag" :size="20" /></span>
       <div>
@@ -842,7 +864,7 @@ function handleSecondaryAction() {
   flex-direction: column;
   gap: 16px;
   width: 100%;
-  padding-bottom: 132px;
+  padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px));
   color: var(--result-ink);
 }
 
@@ -1802,7 +1824,7 @@ function handleSecondaryAction() {
 .result-actions {
   position: fixed;
   z-index: 90;
-  bottom: max(12px, env(safe-area-inset-bottom));
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   display: flex;
   width: min(350px, calc(100vw - 24px));
@@ -1853,7 +1875,7 @@ function handleSecondaryAction() {
 
 @media (max-width: 380px) {
   .result-actions {
-    bottom: max(8px, env(safe-area-inset-bottom));
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
     width: calc(100vw - 16px);
     padding: 10px;
     border-radius: 18px;
