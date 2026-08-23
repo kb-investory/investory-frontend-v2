@@ -4,14 +4,6 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import AppIcon from '@/shared/components/AppIcon.vue'
 
 const props = defineProps({
-  eligibleDays: {
-    type: Number,
-    default: 0,
-  },
-  minRequiredDays: {
-    type: Number,
-    default: 90,
-  },
   dataError: {
     type: Object,
     default: null,
@@ -21,18 +13,11 @@ const props = defineProps({
 const emit = defineEmits(['close'])
 const confirmButton = ref(null)
 
-const hasEnoughDays = computed(() => props.eligibleDays >= props.minRequiredDays)
-const noticeMessage = computed(() => {
-  if (!hasEnoughDays.value) {
-    return `시뮬레이션에는 최소 ${props.minRequiredDays}일의 실제 투자 데이터가 필요해요. 현재 ${props.eligibleDays}일이 준비됐어요.`
-  }
-
-  if (props.dataError) {
-    return '시작 시점의 보유 종목과 평가금액을 아직 확인할 수 없어요. 계좌 데이터를 동기화한 뒤 다시 시도해주세요.'
-  }
-
-  return '시뮬레이션에 필요한 계좌 데이터가 아직 준비되지 않았어요. 잠시 후 다시 시도해주세요.'
-})
+const noticeMessage = computed(
+  () =>
+    props.dataError?.message ??
+    '시뮬레이션에 필요한 계좌 데이터가 아직 준비되지 않았어요. 잠시 후 다시 시도해주세요.',
+)
 
 function closeNotice() {
   emit('close')
@@ -64,7 +49,7 @@ onBeforeUnmount(() => {
         aria-describedby="simulation-data-notice-description"
       >
         <span class="simulation-data-notice__icon" aria-hidden="true">
-          <AppIcon :name="dataError ? 'triangle-alert' : 'calendar-range'" :size="24" />
+          <AppIcon name="triangle-alert" :size="24" />
         </span>
 
         <h2 id="simulation-data-notice-title">아직 시뮬레이션을 시작할 수 없어요</h2>
