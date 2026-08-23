@@ -46,3 +46,23 @@ export function resolveParticipantName(participant, comparators = []) {
     '참가자'
   )
 }
+
+const EXCLUSION_REASON_KO = Object.freeze({
+  PERSONAL_BOT_NOT_COMPILED: '아직 투자봇이 생성되지 않아 제외됐어요',
+})
+
+/**
+ * POST /run 응답의 excludedParticipants를 사람이 읽을 수 있는 문장으로 바꾼다.
+ * 알려지지 않은 reason이 와도 화면이 깨지지 않도록 기본 문구로 대체한다.
+ */
+export function describeExcludedParticipants(excludedParticipants, comparators = []) {
+  if (!Array.isArray(excludedParticipants) || !excludedParticipants.length) return ''
+
+  return excludedParticipants
+    .map((entry) => {
+      const name = resolveParticipantName({ variantType: entry?.variantType }, comparators)
+      const reason = EXCLUSION_REASON_KO[entry?.reason] ?? '데이터가 준비되지 않아 제외됐어요'
+      return `${name}: ${reason}`
+    })
+    .join(' · ')
+}

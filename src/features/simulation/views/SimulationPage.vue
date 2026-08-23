@@ -78,6 +78,7 @@ const isComparatorPending = computed(() => simulationStore.loading || livePrepar
           :simulated-trades="simulationStore.liveSimulationResult?.simulatedTrades"
           :daily-performance="simulationStore.liveSimulationResult?.dailyPerformance"
           :position-snapshots="simulationStore.liveSimulationResult?.positionSnapshots"
+          :excluded-participants="simulationStore.liveSimulationResult?.excludedParticipants"
           :period-start="
             simulationStore.simulationConditions?.periodStart ??
             simulationStore.latestResult?.periodStart

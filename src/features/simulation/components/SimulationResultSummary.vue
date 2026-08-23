@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import SimulationParticipantAvatar from '@/features/simulation/components/SimulationParticipantAvatar.vue'
+import { describeExcludedParticipants } from '@/features/simulation/utils/participantName'
 import {
   buildSimulationOutcomeModel,
   SIMULATION_OUTCOME_SCENARIOS,
@@ -10,6 +11,7 @@ import {
 import { buildSimulationResultMock } from '@/features/simulation/utils/simulationResultMocks'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import BaseButton from '@/shared/components/buttons/BaseButton.vue'
+import InfoBanner from '@/shared/components/feedback/InfoBanner.vue'
 import StockLogo from '@/shared/components/StockLogo.vue'
 
 const props = defineProps({
@@ -42,6 +44,9 @@ const mockScenario = computed(() => buildSimulationResultMock(mockScenarioId.val
 const isMockPreview = computed(() => Boolean(mockScenario.value))
 const displayedLatestResult = computed(() => mockScenario.value?.latestResult ?? props.latestResult)
 const displayedReport = computed(() => mockScenario.value?.report ?? props.report)
+const exclusionNotice = computed(() =>
+  describeExcludedParticipants(displayedLatestResult.value?.excludedParticipants),
+)
 
 onBeforeUnmount(() => {
   if (copyFeedbackTimer) window.clearTimeout(copyFeedbackTimer)
@@ -437,6 +442,12 @@ function handleSecondaryAction() {
         </div>
       </div>
     </section>
+
+    <InfoBanner
+      v-if="exclusionNotice"
+      title="일부 참가자가 이번엔 빠졌어요"
+      :description="exclusionNotice"
+    />
 
     <div v-if="reportLoading && !isMockPreview" class="report-status" role="status">
       <AppIcon name="loader-circle" :size="18" class="spin" />
