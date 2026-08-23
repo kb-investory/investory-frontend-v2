@@ -22,6 +22,11 @@ import { queryKeys } from '@/shared/api/queryKeys'
 const SIMULATION_STALE_TIME = 60 * 1000
 const COMPARATOR_STALE_TIME = 10 * 60 * 1000
 const MIN_PERSONAL_BOT_COMPILE_MS = 3000
+// 백엔드 컴파일은 리즈닝 모델 호출 특성상 최대 120초까지 정상적으로 걸릴 수 있다
+// (REASONING_LLM_TIMEOUT). 그보다 짧게 잡으면 실제로는 진행 중인 job을 실패로
+// 오판하게 되므로 여유를 두고 맞춘다.
+const BOT_COMPILE_POLL_TIMEOUT_MS = 150 * 1000
+const BOT_COMPILE_POLL_INTERVAL_MS = 1000
 
 export const useSimulationStore = defineStore('simulation', () => {
   const overview = ref(null)
@@ -326,12 +331,9 @@ export const useSimulationStore = defineStore('simulation', () => {
         : (job.status ?? 'RUNNING')
       botCompileProgress.value = job.progressPercent ?? 0
 
-      for (
-        let attempt = 0;
-        attempt < 20 && !['COMPLETED', 'FAILED'].includes(job.status);
-        attempt += 1
-      ) {
-        await new Promise((resolve) => setTimeout(resolve, 500))
+      const pollDeadline = Date.now() + BOT_COMPILE_POLL_TIMEOUT_MS
+      while (!['COMPLETED', 'FAILED'].includes(job.status) && Date.now() < pollDeadline) {
+        await new Promise((resolve) => setTimeout(resolve, BOT_COMPILE_POLL_INTERVAL_MS))
         if (requestId !== compileRequestId) return
         job = await getSimulationBotCompileJob(job.jobId)
         if (requestId !== compileRequestId) return
@@ -345,8 +347,13 @@ export const useSimulationStore = defineStore('simulation', () => {
         botCompileStatus.value = job.status ?? 'RUNNING'
       }
 
-      if (job.status !== 'COMPLETED') {
+      if (job.status === 'FAILED') {
         throw new Error('투자봇 생성이 완료되지 않았습니다.')
+      }
+      if (job.status !== 'COMPLETED') {
+        // 백엔드가 FAILED를 반환한 게 아니라 응답을 기다리다 지친 것뿐이므로,
+        // 완료된 작업을 실패로 오판하지 않도록 별도 메시지로 구분한다.
+        throw new Error('투자봇 생성이 예상보다 오래 걸리고 있어요. 잠시 후 다시 시도해주세요.')
       }
 
       // 컴파일이 빠르게 끝나도 카드의 로더와 버튼 잠금 상태를 최소 3초 유지한다.
