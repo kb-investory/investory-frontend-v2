@@ -44,30 +44,30 @@ export function normalizeSimulationParticipants(latestResult, report) {
   const reportRanking = report?.outcome?.ranking ?? []
   const source = reportRanking.length ? reportRanking : (latestResult?.participantSummary ?? [])
 
-  return source
-    .map((participant, index) => {
-      const variantType = inferVariantType(participant)
-      const meta = PARTICIPANT_META[variantType] ?? PARTICIPANT_META.ACTUAL_USER
-      const fullName = participant.variantName ?? participant.name ?? meta.shortName
+  return (
+    source
+      .map((participant, index) => {
+        const variantType = inferVariantType(participant)
+        const meta = PARTICIPANT_META[variantType] ?? PARTICIPANT_META.ACTUAL_USER
+        const fullName = participant.variantName ?? participant.name ?? meta.shortName
 
-      return {
-        ...participant,
-        ...meta,
-        variantType,
-        variantId:
-          participant.variantId ?? participant.simulationVariantId ?? `${variantType}-${index}`,
-        rank: participant.rank ?? index + 1,
-        fullName,
-        cumulativeReturnPercent: normalizeReturn(participant),
-        mddPercent: participant.mddPercent ?? participant.mdd_percent ?? null,
-        tradeCount: participant.tradeCount ?? participant.totalTradesCount ?? 0,
-      }
-    })
-    .sort((a, b) => {
-      if (a.rank !== b.rank) return a.rank - b.rank
-      return b.cumulativeReturnPercent - a.cumulativeReturnPercent
-    })
-    .map((participant, index) => ({ ...participant, rank: index + 1 }))
+        return {
+          ...participant,
+          ...meta,
+          variantType,
+          variantId:
+            participant.variantId ?? participant.simulationVariantId ?? `${variantType}-${index}`,
+          fullName,
+          cumulativeReturnPercent: normalizeReturn(participant),
+          mddPercent: participant.mddPercent ?? participant.mdd_percent ?? null,
+          tradeCount: participant.tradeCount ?? participant.totalTradesCount ?? 0,
+        }
+      })
+      // participantSummary 폴백에는 백엔드가 매긴 rank가 없어서(요청 순서 그대로 옴),
+      // 들어온 rank는 신뢰하지 않고 항상 수익률 기준으로 다시 정렬한다.
+      .sort((a, b) => b.cumulativeReturnPercent - a.cumulativeReturnPercent)
+      .map((participant, index) => ({ ...participant, rank: index + 1 }))
+  )
 }
 
 function getPrincipleReviewSummary(report) {
