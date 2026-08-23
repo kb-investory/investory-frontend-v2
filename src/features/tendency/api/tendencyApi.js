@@ -3,9 +3,15 @@ import tendencyData from '@/mocks/data/tendency.json'
 
 const MINIMUM_RECORD_DAYS = 90
 const USE_MOCK_TENDENCY = import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_TENDENCY === 'true'
+const ANALYSIS_POLL_INTERVAL_MS = 2000
+const ANALYSIS_POLL_TIMEOUT_MS = 150 * 1000
 
 function clone(value) {
   return structuredClone(value)
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 let mockPrinciples = null
@@ -416,9 +422,44 @@ export async function getLatestTendencyAnalysis() {
   return attachHistory(await getAllAnalyses())
 }
 
+async function fetchAnalysisRun(analysisRunId) {
+  return request(`/tendency/analyses/${analysisRunId}`, { skipGlobalLoading: true })
+}
+
+// analysisRunId가 SUCCESS/FAILED로 끝날 때까지 폴링한다. 분석 진행 상태는
+// analyzeTendencies()의 analyzing 플래그(=이 함수의 await)가 그대로 나타내므로
+// 별도 상태값 없이 여기서 완료를 기다리는 것만으로 스피너/에러 화면이 연결된다.
+async function pollAnalysisRunUntilFinished(analysisRunId) {
+  const pollDeadline = Date.now() + ANALYSIS_POLL_TIMEOUT_MS
+  let detail = await fetchAnalysisRun(analysisRunId)
+
+  while (!['SUCCESS', 'FAILED'].includes(detail.run?.runStatus) && Date.now() < pollDeadline) {
+    await wait(ANALYSIS_POLL_INTERVAL_MS)
+    detail = await fetchAnalysisRun(analysisRunId)
+  }
+
+  if (detail.run?.runStatus === 'FAILED') {
+    throw new ApiError(422, {
+      message: detail.run?.errorMessage || '투자성향 분석에 실패했어요. 잠시 후 다시 시도해 주세요.',
+      errorCode: 'ANALYSIS_FAILED',
+    })
+  }
+
+  if (detail.run?.runStatus !== 'SUCCESS') {
+    throw new ApiError(408, {
+      message: '투자성향 분석이 예상보다 오래 걸리고 있어요. 잠시 후 다시 시도해 주세요.',
+      errorCode: 'ANALYSIS_POLL_TIMEOUT',
+    })
+  }
+}
+
 export async function runTendencyAnalysis() {
   if (USE_MOCK_TENDENCY) return clone(tendencyData)
-  await request('/tendency/analyses', { method: 'POST' })
+  const { analysisRunId } = await request('/tendency/analyses', {
+    method: 'POST',
+    skipGlobalLoading: true,
+  })
+  await pollAnalysisRunUntilFinished(analysisRunId)
   return getLatestTendencyAnalysis()
 }
 
