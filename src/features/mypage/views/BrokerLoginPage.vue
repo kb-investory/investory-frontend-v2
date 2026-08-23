@@ -129,14 +129,19 @@ function goToHoldings() {
 <style scoped>
 .onboarding-page {
   display: grid;
-  min-height: 100svh;
+  width: 100%;
+  height: 100dvh;
+  min-height: 0;
   place-items: center;
+  overflow: hidden;
+  overscroll-behavior: none;
   background: var(--color-border-subtle);
 }
 
 .onboarding-shell {
   width: 100%;
-  height: min(844px, 100svh);
+  height: 100%;
+  max-height: 844px;
   overflow: hidden;
   background: #ffffff;
 }
@@ -147,6 +152,7 @@ function goToHoldings() {
   flex-direction: column;
   gap: 16px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 18px 20px 14px;
 }
 
