@@ -431,4 +431,30 @@ function formatCurrency(value) {
   font-size: var(--font-size-caption);
   font-weight: 500;
 }
+
+@media (min-width: 768px) {
+  .today-record__intro {
+    padding-right: 36px;
+    padding-left: 36px;
+  }
+
+  .today-record__heading {
+    max-width: 420px;
+  }
+
+  .today-record__title {
+    font-size: 30px;
+  }
+
+  .today-record__graph {
+    right: 24px;
+    width: 300px;
+  }
+
+  .today-record__metrics,
+  .today-record__deadline-card {
+    margin-right: 28px;
+    margin-left: 28px;
+  }
+}
 </style>

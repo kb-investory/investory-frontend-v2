@@ -65,11 +65,14 @@ const tabItems = [
 }
 
 .mobile-viewport-shell {
+  --app-frame-inline-size: min(390px, 100vw);
+  --app-content-inline-size: var(--app-frame-inline-size);
+
   display: flex;
   min-height: 100dvh;
   align-items: center;
   justify-content: center;
-  padding: 16px 0;
+  padding: 16px;
   background: #eef2f3;
 }
 
@@ -78,9 +81,8 @@ const tabItems = [
 
   position: relative;
   display: flex;
-  width: 100%;
-  max-width: 390px;
-  height: 100dvh;
+  width: var(--app-frame-inline-size);
+  height: calc(100dvh - 32px);
   max-height: var(--mobile-frame-max-height);
   flex-direction: column;
   overflow: hidden;
@@ -123,6 +125,9 @@ const tabItems = [
 
 @media (max-width: 440px) {
   .mobile-viewport-shell {
+    --app-frame-inline-size: 100vw;
+    --app-content-inline-size: 100vw;
+
     padding: 0;
     background: var(--bg-primary, #f6f4ef);
   }
@@ -130,12 +135,61 @@ const tabItems = [
   .mobile-frame {
     --mobile-frame-edge-offset: 0px;
 
-    max-width: 100%;
+    width: 100%;
     height: 100dvh;
     max-height: 100dvh;
     border: none;
     border-radius: 0;
     box-shadow: none;
+  }
+}
+
+@media (min-width: 441px) and (max-width: 767px) {
+  .mobile-viewport-shell {
+    --app-frame-inline-size: min(560px, calc(100vw - 32px));
+    --app-content-inline-size: var(--app-frame-inline-size);
+  }
+}
+
+@media (min-width: 768px) {
+  .mobile-viewport-shell {
+    --app-frame-inline-size: min(720px, calc(100vw - 48px));
+    --app-content-inline-size: var(--app-frame-inline-size);
+
+    padding: 24px;
+  }
+
+  .mobile-frame {
+    --mobile-frame-edge-offset: 24px;
+
+    height: calc(100dvh - 48px);
+    max-height: none;
+    border-radius: 28px;
+  }
+
+  .mobile-main:not(.mobile-main--full-bleed) {
+    padding-right: 28px;
+    padding-left: 28px;
+  }
+
+  .mobile-footer {
+    padding-right: 24px;
+    padding-left: 24px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .mobile-viewport-shell {
+    --app-frame-inline-size: min(1040px, calc(100vw - 64px));
+    --app-content-inline-size: min(840px, calc(100vw - 96px));
+
+    padding: 32px;
+  }
+
+  .mobile-frame {
+    --mobile-frame-edge-offset: 32px;
+
+    height: calc(100dvh - 64px);
   }
 }
 </style>

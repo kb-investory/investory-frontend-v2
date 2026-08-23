@@ -928,7 +928,7 @@ onBeforeUnmount(() => {
   z-index: 30;
   bottom: var(--mobile-frame-edge-offset, 0px);
   left: 50%;
-  width: min(100%, 390px);
+  width: min(100%, var(--app-content-inline-size, 390px));
   padding: 10px 20px 20px;
   border-top: 1px solid #e0e7e7;
   background: rgba(255, 255, 255, 0.97);

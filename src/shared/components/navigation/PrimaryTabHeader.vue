@@ -226,4 +226,21 @@ defineProps({
   border-radius: 999px;
   background: linear-gradient(90deg, #16c9c4 0 76%, rgb(22 201 196 / 28%) 76%);
 }
+
+@media (min-width: 768px) {
+  .primary-tab-header__app-bar {
+    padding-right: 32px;
+    padding-left: 32px;
+  }
+
+  .primary-tab-header__title {
+    padding-right: 38px;
+    padding-left: 38px;
+  }
+
+  .primary-tab-header__chart {
+    right: 28px;
+    transform: scale(1);
+  }
+}
 </style>

@@ -299,4 +299,31 @@ function getAriaLabel(cell) {
 .journal-calendar__legend-dot {
   margin-left: 5px;
 }
+
+@media (min-width: 768px) {
+  .journal-calendar {
+    height: 462px;
+    padding: 10px 12px;
+  }
+
+  .journal-calendar__weekdays {
+    height: 34px;
+    font-size: 13px;
+  }
+
+  .journal-calendar__grid {
+    height: 372px;
+    grid-template-rows: repeat(6, 62px);
+  }
+
+  .journal-calendar__day {
+    padding: 14px 0 0 12px;
+    font-size: 14px;
+  }
+
+  .journal-calendar__legend {
+    height: 34px;
+    font-size: 13px;
+  }
+}
 </style>

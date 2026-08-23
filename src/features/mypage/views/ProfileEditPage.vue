@@ -377,7 +377,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', handleBeforeUnl
   z-index: 40;
   bottom: var(--mobile-frame-edge-offset, 0px);
   left: 50%;
-  width: min(100%, 390px);
+  width: min(100%, var(--app-content-inline-size, 390px));
   padding: 10px 18px 18px;
   background: rgba(255, 255, 255, 0.97);
   transform: translateX(-50%);

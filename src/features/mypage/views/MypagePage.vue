@@ -579,6 +579,34 @@ onMounted(async () => {
   align-items: stretch;
   gap: 9px;
 }
+
+@media (max-width: 359px) {
+  .mypage-highlights {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .profile-summary {
+    grid-template-columns: 44px minmax(0, 1fr) 34px;
+    gap: 8px;
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .profile-summary__avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 15px;
+  }
+
+  .profile-summary__copy > div {
+    flex-wrap: wrap;
+  }
+
+  .profile-summary h2 {
+    font-size: 18px;
+    white-space: nowrap;
+  }
+}
 .tendency-summary-card,
 .simulation-summary-card {
   display: flex;

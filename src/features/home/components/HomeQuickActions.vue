@@ -138,4 +138,10 @@ defineProps({
   outline: 2px solid #0b8f8b;
   outline-offset: 2px;
 }
+
+@media (max-width: 359px) {
+  .quick-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 </style>
