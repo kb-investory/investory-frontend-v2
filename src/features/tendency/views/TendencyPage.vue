@@ -294,7 +294,7 @@ onBeforeUnmount(() => {
     <section v-else-if="tendencyStore.error" class="error-state" role="alert">
       <AppIcon name="rotate-ccw" :size="22" />
       <strong>투자성향을 불러오지 못했어요</strong>
-      <p>잠시 후 다시 시도해 주세요.</p>
+      <p>{{ tendencyStore.error?.message || '잠시 후 다시 시도해 주세요.' }}</p>
       <BaseButton variant="secondary" @click="tendencyStore.fetchTendencies({ force: true })">
         다시 불러오기
       </BaseButton>
