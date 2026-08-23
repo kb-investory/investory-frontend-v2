@@ -822,7 +822,10 @@ function handleSecondaryAction() {
           <AppIcon name="bar-chart" :size="24" />
           <div>
             <strong>위 순위와 수치를 참고해서 다음 원칙을 정리해보세요</strong>
-            <p>이번 회차는 특정 시나리오 하나로 딱 떨어지진 않았어요. 결과 자체는 유효하니 참가자별 수익률을 비교해보시면 좋아요.</p>
+            <p>
+              이번 회차는 특정 시나리오 하나로 딱 떨어지진 않았어요. 결과 자체는 유효하니 참가자별
+              수익률을 비교해보시면 좋아요.
+            </p>
           </div>
         </div>
       </section>
