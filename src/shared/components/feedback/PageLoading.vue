@@ -82,14 +82,14 @@ onBeforeUnmount(clearTimers)
 .page-loading {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 300;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 24px;
   padding: 40px 20px;
-  background: var(--color-background);
+  background: var(--color-background, #ffffff);
 }
 
 .page-loading__track {

@@ -30,21 +30,7 @@ export function useSimulationFlow(simulationStore, pageRoot) {
     () => FLOW_HEADERS[currentStep.value] ?? { title: '시뮬레이션', step: '' },
   )
   const livePreparationPending = ref(false)
-  const effectiveMode = computed(() => {
-    if (route.name === ROUTE_NAMES.SIMULATION_WYSMI || route.query.state === 'wysmi') {
-      return 'wysmi'
-    }
-
-    if (
-      route.name === ROUTE_NAMES.SIMULATION_DASHBOARD ||
-      currentStep.value !== 'home' ||
-      route.query.state === 'dashboard'
-    ) {
-      return 'dashboard'
-    }
-
-    return simulationStore.isReady ? 'dashboard' : 'wysmi'
-  })
+  const showDataNotice = ref(false)
 
   async function prepareStep(step) {
     if (step === 'comparator_select') {
@@ -84,8 +70,17 @@ export function useSimulationFlow(simulationStore, pageRoot) {
   }
 
   function startBotCreation() {
+    if (!simulationStore.isReady) {
+      showDataNotice.value = true
+      return
+    }
+
     simulationStore.resetBotCompilation()
     return navigateToStep('comparator_select')
+  }
+
+  function closeDataNotice() {
+    showDataNotice.value = false
   }
 
   function openSimulationRecord(record) {
@@ -134,9 +129,10 @@ export function useSimulationFlow(simulationStore, pageRoot) {
 
   return {
     currentStep,
-    effectiveMode,
     flowHeader,
     livePreparationPending,
+    showDataNotice,
+    closeDataNotice,
     openSimulationRecord,
     startBotCreation,
     startLiveSimulation,

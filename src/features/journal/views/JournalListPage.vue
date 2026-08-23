@@ -44,7 +44,7 @@ async function selectMonth({ year, month }) {
   await loadMonth()
 }
 
-function openSearch() {
+function openStocks() {
   router.push({ name: ROUTE_NAMES.JOURNAL_SEARCH })
 }
 
@@ -78,12 +78,12 @@ function writeTodayJournal() {
     <PrimaryTabHeader title="투자 일지" flat-bottom>
       <template #right>
         <button
-          class="journal-calendar-page__search"
+          class="journal-calendar-page__stocks"
           type="button"
-          aria-label="종목별 투자 일지 검색"
-          @click="openSearch"
+          aria-label="내 종목별 투자 일지 보기"
+          @click="openStocks"
         >
-          <AppIcon name="search" :size="20" />
+          <AppIcon name="briefcase-business" :size="20" />
         </button>
       </template>
     </PrimaryTabHeader>
@@ -148,7 +148,11 @@ function writeTodayJournal() {
   padding: 0 20px 10px;
 }
 
-.journal-calendar-page__search {
+.journal-calendar-page__stocks {
+  width: 44px !important;
+  min-width: 44px;
+  border-radius: 50% !important;
+  padding: 0 !important;
   border-color: rgb(67 222 217 / 34%) !important;
   background: rgb(5 45 56 / 76%) !important;
   color: #ffffff !important;
@@ -158,14 +162,14 @@ function writeTodayJournal() {
     box-shadow 160ms ease;
 }
 
-.journal-calendar-page__search:hover {
+.journal-calendar-page__stocks:hover {
   border-color: rgb(86 235 229 / 72%) !important;
   background: #075863 !important;
   color: #ffffff !important;
   box-shadow: 0 0 20px rgb(22 201 196 / 22%) !important;
 }
 
-.journal-calendar-page__search:focus-visible {
+.journal-calendar-page__stocks:focus-visible {
   outline: 2px solid var(--brand-teal-deep, #087f7c);
   outline-offset: 2px;
 }

@@ -1,7 +1,14 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 
-const INSTALL_PROMPT_KEY = 'investory:pwa-install-prompt-seen:v1'
+const props = defineProps({
+  enabled: {
+    type: Boolean,
+    default: false,
+  },
+})
+
+const INSTALL_PROMPT_KEY = 'investory:pwa-install-prompt-seen:v2'
 const PROMPT_DELAY_MS = 900
 
 const installPromptEvent = shallowRef(null)
@@ -43,13 +50,22 @@ function rememberPrompt() {
 }
 
 function schedulePrompt() {
-  if (showPrompt.value || promptTimer || hasSeenPrompt() || isStandalone()) return
+  if (!props.enabled || showPrompt.value || promptTimer || hasSeenPrompt() || isStandalone()) return
 
   promptTimer = window.setTimeout(() => {
     promptTimer = null
+    if (!props.enabled) return
+
     rememberPrompt()
     showPrompt.value = true
   }, PROMPT_DELAY_MS)
+}
+
+function cancelScheduledPrompt() {
+  if (!promptTimer) return
+
+  window.clearTimeout(promptTimer)
+  promptTimer = null
 }
 
 function handleBeforeInstallPrompt(event) {
@@ -100,6 +116,19 @@ watch(showPrompt, async (isVisible) => {
   primaryButton.value?.focus()
 })
 
+watch(
+  () => props.enabled,
+  (isEnabled) => {
+    if (isEnabled) {
+      schedulePrompt()
+      return
+    }
+
+    cancelScheduledPrompt()
+    showPrompt.value = false
+  },
+)
+
 onMounted(() => {
   window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
   window.addEventListener('appinstalled', handleAppInstalled)
@@ -112,7 +141,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
   window.removeEventListener('appinstalled', handleAppInstalled)
   window.removeEventListener('keydown', handleKeydown)
-  if (promptTimer) window.clearTimeout(promptTimer)
+  cancelScheduledPrompt()
 })
 </script>
 

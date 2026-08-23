@@ -243,15 +243,7 @@ export const routes = [
   },
   {
     path: '/simulation/wysmi',
-    name: ROUTE_NAMES.SIMULATION_WYSMI,
-    component: () => import('@/features/simulation/views/SimulationPage.vue'),
-    meta: {
-      title: '시뮬레이션 - 데이터 준비 중',
-      layout: 'full-bleed',
-      hideBottomNav: true,
-      frameHeight: 980,
-      mainBottomPadding: 84,
-    },
+    redirect: { name: ROUTE_NAMES.SIMULATION },
   },
   {
     path: '/mypage',
