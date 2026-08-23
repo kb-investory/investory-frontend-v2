@@ -261,12 +261,7 @@ async function handleSocialLogin(provider) {
       rgb(0 24 34 / 26%) 84%,
       #001822 100%
     ),
-    linear-gradient(
-      to right,
-      rgb(0 24 34 / 48%) 0%,
-      transparent 17% 83%,
-      rgb(0 24 34 / 48%) 100%
-    );
+    linear-gradient(to right, rgb(0 24 34 / 48%) 0%, transparent 17% 83%, rgb(0 24 34 / 48%) 100%);
 }
 
 .welcome-features {
@@ -455,5 +450,4 @@ async function handleSocialLogin(provider) {
     box-shadow: 0 24px 72px rgb(0 24 32 / 22%);
   }
 }
-
 </style>
