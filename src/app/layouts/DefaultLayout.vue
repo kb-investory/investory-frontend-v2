@@ -31,7 +31,7 @@ const tabItems = [
     <RouterView />
   </div>
 
-  <div v-else-if="isBlankLayout" class="full-view-layout">
+  <div v-else-if="isBlankLayout" class="full-view-layout full-view-layout--blank">
     <RouterView />
   </div>
 
@@ -64,14 +64,23 @@ const tabItems = [
   min-height: 100dvh;
 }
 
+.full-view-layout--blank {
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 .mobile-viewport-shell {
   --app-frame-inline-size: min(390px, 100vw);
   --app-content-inline-size: var(--app-frame-inline-size);
 
   display: flex;
+  height: 100dvh;
   min-height: 100dvh;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   padding: 16px;
   background: #eef2f3;
 }
@@ -101,6 +110,7 @@ const tabItems = [
   flex: 1 1 0;
   padding: 20px 20px 84px 20px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   scrollbar-width: thin;
 }
 

@@ -84,15 +84,20 @@ async function goHome() {
 <style scoped>
 .complete-page {
   display: grid;
-  min-height: 100svh;
+  width: 100%;
+  height: 100dvh;
+  min-height: 0;
   place-items: center;
+  overflow: hidden;
+  overscroll-behavior: none;
   background: var(--color-border-subtle);
 }
 
 .complete-shell {
   position: relative;
   width: 100%;
-  height: min(844px, 100svh);
+  height: 100%;
+  max-height: 844px;
   overflow: hidden;
   background:
     radial-gradient(circle at 50% 30%, rgb(15 143 140 / 24%), transparent 32%),
