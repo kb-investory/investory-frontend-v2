@@ -29,7 +29,7 @@ function goBack() {
     return
   }
 
-  router.push({ name: ROUTE_NAMES.LOGIN })
+  router.push({ name: ROUTE_NAMES.WELCOME })
 }
 
 function goToLogin() {
@@ -122,7 +122,7 @@ watch(
 }
 
 .onboarding-shell {
-  width: min(100%, 390px);
+  width: 100%;
   height: min(844px, 100svh);
   overflow: hidden;
   background: #ffffff;
