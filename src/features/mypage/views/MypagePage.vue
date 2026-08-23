@@ -7,7 +7,6 @@ import { useMypageStore } from '@/features/mypage/stores/mypageStore'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import SimulationParticipantAvatar from '@/features/simulation/components/SimulationParticipantAvatar.vue'
 import AppIcon from '@/shared/components/AppIcon.vue'
-import PageLoading from '@/shared/components/feedback/PageLoading.vue'
 import PrimaryTabHeader from '@/shared/components/navigation/PrimaryTabHeader.vue'
 
 const router = useRouter()
@@ -172,11 +171,6 @@ onMounted(async () => {
         </button>
       </template>
     </PrimaryTabHeader>
-
-    <PageLoading
-      :active="mypageStore.loading && !mypageStore.profile"
-      text="마이페이지를 준비하고 있어요"
-    />
 
     <main v-if="mypageStore.profile" class="mypage-content">
       <section class="profile-summary">

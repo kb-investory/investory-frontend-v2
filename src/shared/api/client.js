@@ -1,3 +1,5 @@
+import { beginGlobalLoading } from '@/shared/services/globalLoading'
+
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '')
 
 let currentAccessToken = null
@@ -100,31 +102,41 @@ export function refreshAccessToken() {
 }
 
 export async function request(endpoint, options = {}) {
-  const { skipAuthRetry, ...fetchOptions } = options
-  const response = await performFetch(endpoint, fetchOptions)
-
-  if (response.status === 401 && !skipAuthRetry) {
-    try {
-      await refreshAccessToken()
-    } catch (refreshError) {
-      setAccessToken(null)
-      onAuthExpired?.()
-      throw refreshError
-    }
-    return request(endpoint, { ...fetchOptions, skipAuthRetry: true })
-  }
+  const { skipAuthRetry, skipGlobalLoading, ...fetchOptions } = options
+  const finishLoading = skipGlobalLoading ? null : beginGlobalLoading()
 
   try {
-    return await parseResponse(response)
-  } catch (error) {
-    if (
-      error instanceof ApiError &&
-      error.status === 403 &&
-      error.errorCode === WITHDRAWN_ACCOUNT_ERROR_CODE
-    ) {
-      setAccessToken(null)
-      onAuthExpired?.()
+    const response = await performFetch(endpoint, fetchOptions)
+
+    if (response.status === 401 && !skipAuthRetry) {
+      try {
+        await refreshAccessToken()
+      } catch (refreshError) {
+        setAccessToken(null)
+        onAuthExpired?.()
+        throw refreshError
+      }
+      return request(endpoint, {
+        ...fetchOptions,
+        skipAuthRetry: true,
+        skipGlobalLoading: true,
+      })
     }
-    throw error
+
+    try {
+      return await parseResponse(response)
+    } catch (error) {
+      if (
+        error instanceof ApiError &&
+        error.status === 403 &&
+        error.errorCode === WITHDRAWN_ACCOUNT_ERROR_CODE
+      ) {
+        setAccessToken(null)
+        onAuthExpired?.()
+      }
+      throw error
+    }
+  } finally {
+    finishLoading?.()
   }
 }

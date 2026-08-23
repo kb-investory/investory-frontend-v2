@@ -28,8 +28,12 @@ const returnRate = computed(() => {
     @click="$emit('select', stock)"
   >
     <StockLogo :stock="stock" :size="32" />
-    <strong>{{ stock.securityName }}</strong>
-    <span>{{ holdingQuantity }}주 보유</span>
+
+    <span class="holding-shortcut__identity">
+      <strong>{{ stock.securityName }}</strong>
+      <small class="holding-shortcut__quantity">{{ holdingQuantity }}주 보유</small>
+    </span>
+
     <span class="holding-shortcut__return">
       <small>수익률</small>
       <b :class="{ 'holding-shortcut__return--loss': returnRate < 0 }">
@@ -42,15 +46,13 @@ const returnRate = computed(() => {
 <style scoped>
 .holding-shortcut {
   display: flex;
-  min-width: 104px;
-  min-height: 120px;
-  flex: 1 0 104px;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 5px;
-  padding: 10px;
+  width: 100%;
+  min-height: 72px;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 13px;
   border: 1px solid #e5e7eb;
-  border-radius: 12px;
+  border-radius: 14px;
   color: #181817;
   background: #eef4ff;
   text-align: left;
@@ -66,7 +68,7 @@ const returnRate = computed(() => {
 }
 
 .holding-shortcut:hover {
-  transform: translateY(-1px);
+  transform: translateX(2px);
 }
 
 .holding-shortcut:focus-visible {
@@ -74,35 +76,46 @@ const returnRate = computed(() => {
   outline-offset: 2px;
 }
 
-.holding-shortcut strong,
-.holding-shortcut > span {
+.holding-shortcut__identity {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.holding-shortcut__identity strong {
   max-width: 100%;
   overflow: hidden;
   font-family: var(--font-sans);
-  font-size: var(--font-size-caption);
+  font-size: var(--font-size-body);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.holding-shortcut > span {
+.holding-shortcut__identity .holding-shortcut__quantity {
   color: #3976d9;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-caption);
   font-weight: 600;
 }
 
-.holding-shortcut--naver > span {
+.holding-shortcut--naver .holding-shortcut__quantity {
   color: #23855a;
 }
 
-.holding-shortcut--kakao > span {
+.holding-shortcut--kakao .holding-shortcut__quantity {
   color: #a86a00;
 }
 
 .holding-shortcut__return {
   display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: auto;
+  min-width: 58px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  margin-left: auto;
 }
 
 .holding-shortcut__return small {
