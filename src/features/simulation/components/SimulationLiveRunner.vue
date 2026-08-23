@@ -5,8 +5,12 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import SimulationLiveReturnChart from '@/features/simulation/components/SimulationLiveReturnChart.vue'
 import SimulationParticipantAvatar from '@/features/simulation/components/SimulationParticipantAvatar.vue'
-import { resolveParticipantName } from '@/features/simulation/utils/participantName'
+import {
+  describeExcludedParticipants,
+  resolveParticipantName,
+} from '@/features/simulation/utils/participantName'
 import { useSimulationStore } from '@/features/simulation/stores/simulationStore'
+import InfoBanner from '@/shared/components/feedback/InfoBanner.vue'
 
 const props = defineProps({
   participants: {
@@ -83,6 +87,10 @@ const props = defineProps({
     type: Number,
     default: 5000000,
   },
+  excludedParticipants: {
+    type: Array,
+    default: () => [],
+  },
 })
 
 const emit = defineEmits(['complete'])
@@ -94,6 +102,10 @@ const { comparators } = storeToRefs(simulationStore)
 function displayName(participant) {
   return resolveParticipantName(participant, comparators.value)
 }
+
+const exclusionNotice = computed(() =>
+  describeExcludedParticipants(props.excludedParticipants, comparators.value),
+)
 
 const progress = ref(0)
 const speed = ref(1)
@@ -332,6 +344,12 @@ function formatPeriodDate(date) {
         </div>
       </div>
     </section>
+
+    <InfoBanner
+      v-if="exclusionNotice"
+      title="일부 참가자가 이번엔 빠졌어요"
+      :description="exclusionNotice"
+    />
 
     <!-- Live Participant Rankings -->
 
