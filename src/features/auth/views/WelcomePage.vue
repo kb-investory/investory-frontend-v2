@@ -131,7 +131,7 @@ async function handleSocialLogin(provider) {
   position: absolute;
   z-index: 2;
 
-  top: 20%;
+  top: 18%;
   left: 8%;
   width: 30%;
   height: 5%;
@@ -151,7 +151,7 @@ async function handleSocialLogin(provider) {
 
 .welcome-artboard {
   position: relative;
-  width: min(92vw, 360px);
+  width: min(100%, 390px);
   height: min(100svh, 844px);
   min-height: 620px;
   overflow: hidden;
@@ -161,7 +161,7 @@ async function handleSocialLogin(provider) {
 .welcome-copy {
   position: absolute;
   z-index: 3;
-  top: 4.7%;
+  top: 2.5%;
   right: 7.4%;
   left: 7.4%;
   color: #fff;
