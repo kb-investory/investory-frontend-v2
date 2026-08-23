@@ -77,10 +77,9 @@ const tradeSummary = computed(() => {
       } else {
         summary.buy += amount
       }
-      summary.net = summary.sell - summary.buy
       return summary
     },
-    { buy: 0, sell: 0, net: 0 },
+    { buy: 0, sell: 0 },
   )
 })
 
@@ -142,15 +141,8 @@ function formatCurrency(value, { signed = false } = {}) {
         <dd class="journal-digest__value--sell">{{ formatCurrency(tradeSummary.sell) }}</dd>
       </div>
       <div>
-        <dt>순현금</dt>
-        <dd
-          :class="{
-            'journal-digest__value--positive': tradeSummary.net >= 0,
-            'journal-digest__value--negative': tradeSummary.net < 0,
-          }"
-        >
-          {{ formatCurrency(tradeSummary.net, { signed: true }) }}
-        </dd>
+        <dt>거래 건수</dt>
+        <dd class="journal-digest__value--count">{{ trades.length }}건</dd>
       </div>
     </dl>
 
@@ -376,8 +368,7 @@ function formatCurrency(value, { signed = false } = {}) {
   white-space: nowrap;
 }
 
-.journal-digest__value--buy,
-.journal-digest__value--negative {
+.journal-digest__value--buy {
   color: #e34b4b;
 }
 
@@ -385,8 +376,8 @@ function formatCurrency(value, { signed = false } = {}) {
   color: #3976d9;
 }
 
-.journal-digest__value--positive {
-  color: #23855a;
+.journal-digest__value--count {
+  color: var(--slate-strong, #263a43);
 }
 
 .journal-digest__trades {
