@@ -169,6 +169,7 @@ function goNext() {
 
 .holdings-list {
   display: grid;
+  align-content: start;
   gap: 0;
   flex: 1;
 }
