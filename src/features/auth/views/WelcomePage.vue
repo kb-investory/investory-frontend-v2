@@ -143,17 +143,20 @@ async function handleSocialLogin(provider) {
 }
 .welcome-page {
   display: grid;
-  min-height: 100svh;
+  width: 100%;
+  height: 100dvh;
+  min-height: 0;
   place-items: center;
   overflow: hidden;
+  overscroll-behavior: none;
   background: #031720;
 }
 
 .welcome-artboard {
   position: relative;
-  width: min(100%, 390px);
-  height: min(100svh, 844px);
-  min-height: 620px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
   overflow: hidden;
   background: #001822;
 }
