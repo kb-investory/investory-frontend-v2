@@ -91,7 +91,7 @@ async function goHome() {
 
 .complete-shell {
   position: relative;
-  width: min(100%, 390px);
+  width: 100%;
   height: min(844px, 100svh);
   overflow: hidden;
   background:

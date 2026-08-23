@@ -52,7 +52,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   // 공용 API 클라이언트가 401 응답 후 토큰 갱신까지 실패했을 때(리프레시 토큰 만료)
-  // 인증 상태를 초기화할 수 있도록 콜백을 등록해둔다. 다음 라우터 이동 시 authGuard가 로그인으로 보낸다.
+  // 인증 상태를 초기화할 수 있도록 콜백을 등록해둔다. 다음 라우터 이동 시 authGuard가 웰컴으로 보낸다.
   setAuthExpiredHandler(resetAuthState)
 
   async function fetchUser({ force = false } = {}) {

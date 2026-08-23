@@ -46,9 +46,7 @@ export const routes = [
   },
   {
     path: '/login',
-    name: ROUTE_NAMES.LOGIN,
-    component: () => import('@/features/auth/views/LoginPage.vue'),
-    meta: { title: '로그인', layout: 'blank' },
+    redirect: { name: ROUTE_NAMES.WELCOME },
   },
   {
     path: '/broker-connect',

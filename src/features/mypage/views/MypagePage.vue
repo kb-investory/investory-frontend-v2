@@ -121,7 +121,7 @@ async function confirmLogout() {
   actionError.value = ''
   try {
     await authStore.signOut()
-    await router.replace({ name: ROUTE_NAMES.LOGIN })
+    await router.replace({ name: ROUTE_NAMES.WELCOME })
   } catch {
     actionError.value = '로그아웃하지 못했어요. 다시 시도해주세요.'
   } finally {
@@ -136,7 +136,7 @@ async function confirmWithdrawal() {
 
   try {
     await authStore.withdrawAccount()
-    await router.replace({ name: ROUTE_NAMES.LOGIN })
+    await router.replace({ name: ROUTE_NAMES.WELCOME })
   } catch {
     actionError.value = '회원 탈퇴를 처리하지 못했어요. 다시 시도해주세요.'
   } finally {
