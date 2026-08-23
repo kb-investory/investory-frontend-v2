@@ -348,7 +348,7 @@ export const useSimulationStore = defineStore('simulation', () => {
       }
 
       if (job.status === 'FAILED') {
-        throw new Error('투자봇 생성이 완료되지 않았습니다.')
+        throw new Error(job.error?.message ?? '투자봇 생성이 완료되지 않았습니다.')
       }
       if (job.status !== 'COMPLETED') {
         // 백엔드가 FAILED를 반환한 게 아니라 응답을 기다리다 지친 것뿐이므로,
