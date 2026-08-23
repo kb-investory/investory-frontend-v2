@@ -115,4 +115,11 @@ defineProps({
   outline: 2px solid var(--brand-teal-deep);
   outline-offset: 2px;
 }
+
+@media (min-width: 768px) {
+  .primary-app-header {
+    padding-right: 32px;
+    padding-left: 32px;
+  }
+}
 </style>

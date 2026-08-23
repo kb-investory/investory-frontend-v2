@@ -1,4 +1,5 @@
 import '@/shared/styles/main.css'
+import '@/shared/styles/responsive.css'
 
 import { VueQueryPlugin } from '@tanstack/vue-query'
 import { createApp } from 'vue'

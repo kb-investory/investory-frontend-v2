@@ -171,14 +171,15 @@ onBeforeUnmount(() => {
       </div>
 
       <HomeQuickActions
+        class="home-page__quick-actions"
         :journal-to="journalRoute"
         :principle-to="principleRoute"
         :journal-status="homeStore.dashboard.quickActions.journalStatus"
       />
 
-      <HomeSimulationCard :to="simulationRoute" />
+      <HomeSimulationCard class="home-page__simulation-card" :to="simulationRoute" />
 
-      <WeeklyRecordRhythm :weekly="homeStore.dashboard.weekly" />
+      <WeeklyRecordRhythm class="home-page__weekly-rhythm" :weekly="homeStore.dashboard.weekly" />
     </div>
 
     <div v-else-if="homeStore.loading" class="home-page__loading">
@@ -270,13 +271,13 @@ onBeforeUnmount(() => {
 
 .home-page__reanalysis-floating--top-left,
 .home-page__reanalysis-floating--bottom-left {
-  left: max(16px, calc((100vw - 390px) / 2 + 16px));
+  left: max(16px, calc((100vw - var(--app-frame-inline-size, 390px)) / 2 + 16px));
   align-items: flex-start;
 }
 
 .home-page__reanalysis-floating--top-right,
 .home-page__reanalysis-floating--bottom-right {
-  right: max(16px, calc((100vw - 390px) / 2 + 16px));
+  right: max(16px, calc((100vw - var(--app-frame-inline-size, 390px)) / 2 + 16px));
   align-items: flex-end;
 }
 
@@ -292,5 +293,35 @@ onBeforeUnmount(() => {
 
 .home-page__reanalysis-floating :deep(.recommendation-floating--collapsed) {
   align-self: auto;
+}
+
+@media (min-width: 1200px) {
+  .home-page__content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 16px;
+    padding: 0 24px 32px;
+  }
+
+  .home-page__hero {
+    width: calc(100% + 48px);
+    grid-column: 1 / -1;
+    margin: 0 -24px;
+  }
+
+  .home-page__quick-actions {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .home-page__simulation-card {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .home-page__weekly-rhythm {
+    grid-column: 2;
+    grid-row: 2 / span 2;
+  }
 }
 </style>

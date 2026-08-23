@@ -49,6 +49,7 @@ defineProps({
 .bottom-tab-bar {
   display: flex;
   width: 100%;
+  max-width: 640px;
   height: 56px;
   align-items: center;
   gap: 2px;
@@ -58,6 +59,7 @@ defineProps({
   background: rgba(255, 255, 255, 0.95);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   backdrop-filter: blur(12px);
+  margin: 0 auto;
   pointer-events: auto;
 }
 
@@ -127,5 +129,11 @@ defineProps({
 .bottom-tab-bar__item--active .bottom-tab-bar__label,
 .bottom-tab-bar__item.router-link-active .bottom-tab-bar__label {
   font-weight: 700;
+}
+
+@media (max-width: 359px) {
+  .bottom-tab-bar__label {
+    font-size: 10px;
+  }
 }
 </style>

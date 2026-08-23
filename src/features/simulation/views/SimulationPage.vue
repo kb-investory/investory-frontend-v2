@@ -147,4 +147,21 @@ const isComparatorPending = computed(() => simulationStore.loading || livePrepar
 .flow-container--live {
   padding-top: 10px;
 }
+
+@media (min-width: 768px) {
+  .mobile-page__content {
+    width: min(100%, var(--app-content-inline-size, 840px));
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  .mobile-page--live .mobile-page__content {
+    width: 100%;
+  }
+
+  .flow-container--subflow {
+    padding-right: 28px;
+    padding-left: 28px;
+  }
+}
 </style>

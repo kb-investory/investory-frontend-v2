@@ -545,7 +545,7 @@ onBeforeUnmount(() => {
 .apply-bar {
   position: fixed;
   z-index: 160;
-  right: max(16px, calc((100vw - 390px) / 2 + 16px));
+  right: max(16px, calc((100vw - var(--app-frame-inline-size, 390px)) / 2 + 16px));
   bottom: calc(var(--mobile-frame-edge-offset, 0px) + 84px);
   display: grid;
   width: min(calc(100% - 32px), 358px);
@@ -630,7 +630,7 @@ onBeforeUnmount(() => {
     position: fixed;
     top: var(--mobile-frame-edge-offset, 0px);
     left: 50%;
-    width: min(100%, 390px);
+    width: min(100%, var(--app-frame-inline-size, 390px));
     margin: 0;
     transform: translateX(-50%);
   }

@@ -1,0 +1,42 @@
+/*
+ * Full-bleed pages keep their visual headers at the frame edge while the
+ * reading and form areas stay comfortably sized on tablets and desktops.
+ */
+@media (min-width: 768px) {
+  :is(
+    .journal-calendar-page__content,
+    .journal-calendar-page__cta,
+    .stock-search-page__content,
+    .stock-journal-page__content,
+    .stock-journal-page__state,
+    .journal-date-page__content,
+    .journal-create-page__content,
+    .notification-page__content,
+    .mypage-content
+  ) {
+    width: min(100%, var(--app-content-inline-size, 840px));
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  :is(
+      .notification-settings-page,
+      .history-detail-page,
+      .recommendation-page,
+      .principle-edit-page,
+      .accounts-page,
+      .account-detail-page,
+      .profile-edit-page,
+      .placeholder-page
+    )
+    > :is(main, section:not(.primary-tab-header), form) {
+    width: min(100%, var(--app-content-inline-size, 840px));
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  .tendency-page > :not(.tendency-hero):not(.tendency-floating-stack) {
+    width: min(100%, var(--app-content-inline-size, 840px));
+    align-self: center;
+  }
+}

@@ -760,14 +760,14 @@ onBeforeUnmount(() => {
 .tendency-floating-stack--bottom-left {
   --floating-content-shift: -18px;
 
-  left: max(16px, calc((100vw - 390px) / 2 + 16px));
+  left: max(16px, calc((100vw - var(--app-frame-inline-size, 390px)) / 2 + 16px));
 }
 
 .tendency-floating-stack--top-right,
 .tendency-floating-stack--bottom-right {
   --floating-content-shift: 18px;
 
-  right: max(16px, calc((100vw - 390px) / 2 + 16px));
+  right: max(16px, calc((100vw - var(--app-frame-inline-size, 390px)) / 2 + 16px));
 }
 
 .tendency-floating-stack--top-left,
