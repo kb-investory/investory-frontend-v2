@@ -15,9 +15,12 @@ const route = useRoute()
 const authStore = useAuthStore()
 const fetchingCount = useIsFetching()
 const mutatingCount = useIsMutating()
+const isSimulationRoute = computed(() => route.path.startsWith('/simulation'))
 
 const isAppLoading = computed(
-  () => isGlobalLoading.value || fetchingCount.value > 0 || mutatingCount.value > 0,
+  () =>
+    !isSimulationRoute.value &&
+    (isGlobalLoading.value || fetchingCount.value > 0 || mutatingCount.value > 0),
 )
 
 const canShowPwaInstallPrompt = computed(
