@@ -97,7 +97,6 @@ async function goHome() {
   position: relative;
   width: 100%;
   height: 100%;
-  max-height: 844px;
   overflow: hidden;
   background:
     radial-gradient(circle at 50% 30%, rgb(15 143 140 / 24%), transparent 32%),
