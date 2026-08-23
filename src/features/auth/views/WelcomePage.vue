@@ -1,19 +1,37 @@
 <script setup>
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
+import LoginForm from '@/features/auth/components/LoginForm.vue'
 import { markWelcomeSeen } from '@/features/auth/services/welcomePreference'
+import { useAuthStore } from '@/features/auth/stores/authStore'
 
 const router = useRouter()
+const authStore = useAuthStore()
+const isLoginStep = ref(false)
 
-function startInvestory() {
+function showSocialLogin() {
+  isLoginStep.value = true
+}
+
+function showIntroduction() {
+  if (authStore.loading) return
+
+  isLoginStep.value = false
+}
+
+async function handleSocialLogin(provider) {
   markWelcomeSeen()
-  router.push({ name: ROUTE_NAMES.LOGIN })
+  const response = await authStore.startOauthLogin(provider)
+  if (!response?.testMode) return
+
+  await router.replace({ name: ROUTE_NAMES.BROKER_CONNECT })
 }
 </script>
 
 <template>
-  <section class="welcome-page">
+  <section class="welcome-page" :class="{ 'welcome-page--login': isLoginStep }">
     <main class="welcome-artboard">
       <img
         class="welcome-artwork"
@@ -36,11 +54,32 @@ function startInvestory() {
       </div>
 
       <button
+        v-if="!isLoginStep"
         class="welcome-start-button"
         type="button"
         aria-label="Investory 시작하기"
-        @click="startInvestory"
+        @click="showSocialLogin"
       />
+
+      <button
+        v-else
+        class="welcome-background-return"
+        type="button"
+        aria-label="소개 화면 보기"
+        :disabled="authStore.loading"
+        @click="showIntroduction"
+      />
+
+      <Transition name="login-panel">
+        <section v-if="isLoginStep" class="welcome-login-panel" aria-label="소셜 계정 로그인">
+          <LoginForm
+            :active-provider="authStore.activeProvider"
+            :status="authStore.oauthStatus"
+            :disabled="authStore.loading"
+            @select="handleSocialLogin"
+          />
+        </section>
+      </Transition>
     </main>
   </section>
 </template>
@@ -74,7 +113,7 @@ function startInvestory() {
 
 .welcome-motion-scene {
   position: absolute;
-  z-index: 1;
+  z-index: 2;
   top: 37%;
   right: 0;
   left: 0;
@@ -119,14 +158,81 @@ function startInvestory() {
   cursor: pointer;
 }
 
+.welcome-start-button:disabled {
+  cursor: default;
+}
+
 .welcome-start-button:focus-visible {
   outline: 3px solid #ffffff;
   outline-offset: 4px;
 }
 
+.welcome-background-return {
+  position: absolute;
+  z-index: 4;
+  inset: 0 0 28% 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.welcome-background-return:disabled {
+  cursor: default;
+}
+
+.welcome-background-return:focus-visible {
+  outline: 2px solid rgb(73 226 214 / 72%);
+  outline-offset: -4px;
+}
+
+.welcome-login-panel {
+  position: absolute;
+  z-index: 5;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  min-height: 28%;
+  align-content: center;
+  padding: 8px 7% 20px;
+  background:
+    linear-gradient(to bottom, rgb(3 23 32 / 0%) 0%, rgb(3 23 32 / 96%) 5%, #031720 12%),
+    radial-gradient(circle at 50% 58%, rgb(24 190 181 / 14%), transparent 58%);
+  backdrop-filter: blur(5px);
+}
+
+.welcome-login-panel :deep(.login-form) {
+  gap: 8px;
+}
+
+.welcome-login-panel :deep(.social-button) {
+  min-height: 52px;
+  box-shadow:
+    0 12px 24px rgb(0 0 0 / 24%),
+    0 0 20px rgb(55 225 216 / 7%);
+}
+
+.login-panel-enter-active,
+.login-panel-leave-active {
+  transition:
+    opacity 260ms ease,
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.login-panel-enter-from,
+.login-panel-leave-to {
+  opacity: 0;
+  transform: translateY(28px);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .welcome-motion-video {
     display: none;
+  }
+
+  .login-panel-enter-active,
+  .login-panel-leave-active {
+    transition: none;
   }
 }
 
