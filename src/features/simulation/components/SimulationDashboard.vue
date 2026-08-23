@@ -24,42 +24,7 @@ const emit = defineEmits(['startSimulation', 'selectRecord'])
 const showHelpModal = ref(false)
 const isHistoryExpanded = ref(false)
 
-const DEFAULT_HISTORY_RECORDS = [
-  {
-    simulationRunId: 101,
-    version: 'v3',
-    date: '2026.07.27',
-    period: '2026.03.01 ~ 2026.07.29',
-    returnPercent: 17.0,
-  },
-  {
-    simulationRunId: 102,
-    version: 'v2',
-    date: '2026.06.18',
-    period: '2026.03.01 ~ 2026.06.17',
-    returnPercent: 11.4,
-  },
-  {
-    simulationRunId: 103,
-    version: 'v2',
-    date: '2026.05.02',
-    period: '2026.03.01 ~ 2026.05.01',
-    returnPercent: 9.8,
-  },
-  {
-    simulationRunId: 104,
-    version: 'v1',
-    date: '2026.03.21',
-    period: '2026.03.01 ~ 2026.03.20',
-    returnPercent: 6.2,
-  },
-]
-
-const displayRecords = computed(() =>
-  props.historyRecords && props.historyRecords.length > 0
-    ? props.historyRecords
-    : DEFAULT_HISTORY_RECORDS,
-)
+const displayRecords = computed(() => props.historyRecords ?? [])
 
 const visibleHistoryRecords = computed(() =>
   isHistoryExpanded.value ? displayRecords.value : displayRecords.value.slice(0, 1),
@@ -86,7 +51,7 @@ const latestSummary = computed(() => {
       periodStart && periodEnd
         ? `${formatDateLabel(periodStart)} ~ ${formatDateLabel(periodEnd)}`
         : (latestRecord?.period ?? ''),
-    winnerLabel: getParticipantLabel(winner),
+    winnerHeadline: formatWinnerHeadline(winner),
     winnerReturn: winner?.cumulativeReturnPercent ?? latestRecord?.returnPercent,
     actualReturn: actual?.cumulativeReturnPercent,
   }
@@ -112,6 +77,26 @@ function getParticipantLabel(participant) {
   }
 
   return labels[participant?.variantType] ?? participant?.variantName ?? '비교 전략'
+}
+
+function hasFinalConsonant(value) {
+  const lastCharacter = String(value).trim().at(-1)
+  if (!lastCharacter) return false
+
+  const characterCode = lastCharacter.charCodeAt(0)
+  const hangulStart = 0xac00
+  const hangulEnd = 0xd7a3
+
+  if (characterCode < hangulStart || characterCode > hangulEnd) return false
+  return (characterCode - hangulStart) % 28 !== 0
+}
+
+function formatWinnerHeadline(participant) {
+  if (participant?.variantType === 'ACTUAL_USER') return '내가 1위였어요'
+
+  const label = getParticipantLabel(participant)
+  const subjectParticle = hasFinalConsonant(label) ? '이' : '가'
+  return `${label}${subjectParticle} 1위였어요`
 }
 
 function toggleHistory() {
@@ -203,7 +188,7 @@ function toggleHistory() {
       <div class="latest-result-card__main">
         <div class="latest-result-card__winner">
           <span>{{ latestSummary.date }} 결과</span>
-          <strong>{{ latestSummary.winnerLabel }}가 1위였어요</strong>
+          <strong>{{ latestSummary.winnerHeadline }}</strong>
           <small>{{ latestSummary.period }}</small>
         </div>
         <strong
@@ -233,7 +218,11 @@ function toggleHistory() {
         </button>
       </div>
 
-      <div class="history-list" :class="{ 'history-list--expanded': isHistoryExpanded }">
+      <div
+        v-if="displayRecords.length"
+        class="history-list"
+        :class="{ 'history-list--expanded': isHistoryExpanded }"
+      >
         <div
           v-for="(rec, idx) in visibleHistoryRecords"
           :key="rec.simulationRunId || idx"
@@ -255,6 +244,10 @@ function toggleHistory() {
           </div>
         </div>
       </div>
+
+      <p v-if="!displayRecords.length" class="history-empty">
+        시뮬레이션을 실행하면 결과가 여기에 쌓여요.
+      </p>
 
       <button
         v-if="hasMoreHistory && !isHistoryExpanded"
@@ -596,6 +589,17 @@ function toggleHistory() {
   border: 1px solid #e4ebeb;
   border-radius: 15px;
   background: #ffffff;
+}
+
+.history-empty {
+  margin: 0;
+  padding: 18px 14px;
+  border: 1px dashed #dce6e9;
+  border-radius: 15px;
+  color: #839298;
+  background: #fbfcfc;
+  font-size: var(--font-size-caption);
+  text-align: center;
 }
 
 .history-item {

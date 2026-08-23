@@ -307,13 +307,8 @@ async function openStockJournal(stock) {
 
 .stock-search-page__holding-list {
   display: flex;
+  flex-direction: column;
   gap: 8px;
   padding-bottom: 2px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.stock-search-page__holding-list::-webkit-scrollbar {
-  display: none;
 }
 </style>

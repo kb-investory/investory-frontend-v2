@@ -2,21 +2,19 @@
 import { computed, ref } from 'vue'
 
 import SimulationComparatorSelect from '@/features/simulation/components/SimulationComparatorSelect.vue'
+import SimulationDataNotice from '@/features/simulation/components/SimulationDataNotice.vue'
 import SimulationDashboard from '@/features/simulation/components/SimulationDashboard.vue'
 import SimulationFlowHeader from '@/features/simulation/components/SimulationFlowHeader.vue'
 import SimulationLiveRunner from '@/features/simulation/components/SimulationLiveRunner.vue'
 import SimulationResultSummary from '@/features/simulation/components/SimulationResultSummary.vue'
-import SimulationWysmiGuide from '@/features/simulation/components/SimulationWysmiGuide.vue'
 import { useSimulationFlow } from '@/features/simulation/composables/useSimulationFlow'
 import { useSimulationStore } from '@/features/simulation/stores/simulationStore'
-import PageLoading from '@/shared/components/feedback/PageLoading.vue'
 
 const simulationStore = useSimulationStore()
 const pageRoot = ref(null)
 
 const {
   currentStep,
-  effectiveMode,
   flowHeader,
   startBotCreation,
   startLiveSimulation,
@@ -25,6 +23,8 @@ const {
   goBack,
   openSimulationRecord,
   livePreparationPending,
+  showDataNotice,
+  closeDataNotice,
 } = useSimulationFlow(simulationStore, pageRoot)
 
 const isInitialLoading = computed(() => simulationStore.loading && !simulationStore.overview)
@@ -42,20 +42,9 @@ const isComparatorPending = computed(() => simulationStore.loading || livePrepar
     />
 
     <div class="mobile-page__content">
-      <!-- Loading State -->
-      <PageLoading :active="isInitialLoading" />
-
-      <!-- Screen 1A: Insufficient Data Guidance State (/simulation/wysmi) -->
-      <SimulationWysmiGuide
-        v-if="!isInitialLoading && effectiveMode === 'wysmi'"
-        :eligible-days="simulationStore.eligibleDays"
-        :min-required-days="simulationStore.MIN_REQUIRED_DAYS"
-        :data-error="simulationStore.overview?.dataError"
-      />
-
       <!-- Screen 1: Ready State / Main Entry Screen (/simulation/dashboard) & Interactive Flow -->
       <div
-        v-else-if="!isInitialLoading"
+        v-if="!isInitialLoading"
         class="flow-container"
         :class="{
           'flow-container--subflow': currentStep !== 'home',
@@ -89,6 +78,7 @@ const isComparatorPending = computed(() => simulationStore.loading || livePrepar
           :simulated-trades="simulationStore.liveSimulationResult?.simulatedTrades"
           :daily-performance="simulationStore.liveSimulationResult?.dailyPerformance"
           :position-snapshots="simulationStore.liveSimulationResult?.positionSnapshots"
+          :excluded-participants="simulationStore.liveSimulationResult?.excludedParticipants"
           :period-start="
             simulationStore.simulationConditions?.periodStart ??
             simulationStore.latestResult?.periodStart
@@ -115,6 +105,12 @@ const isComparatorPending = computed(() => simulationStore.loading || livePrepar
         />
       </div>
     </div>
+
+    <SimulationDataNotice
+      v-if="showDataNotice"
+      :data-error="simulationStore.overview?.dataError"
+      @close="closeDataNotice"
+    />
   </div>
 </template>
 

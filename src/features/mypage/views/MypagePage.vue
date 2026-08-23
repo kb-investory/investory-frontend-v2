@@ -7,7 +7,6 @@ import { useMypageStore } from '@/features/mypage/stores/mypageStore'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import SimulationParticipantAvatar from '@/features/simulation/components/SimulationParticipantAvatar.vue'
 import AppIcon from '@/shared/components/AppIcon.vue'
-import BaseLoading from '@/shared/components/feedback/BaseLoading.vue'
 import PrimaryTabHeader from '@/shared/components/navigation/PrimaryTabHeader.vue'
 
 const router = useRouter()
@@ -173,9 +172,7 @@ onMounted(async () => {
       </template>
     </PrimaryTabHeader>
 
-    <BaseLoading v-if="mypageStore.loading && !mypageStore.profile" class="mypage-loading" />
-
-    <main v-else-if="mypageStore.profile" class="mypage-content">
+    <main v-if="mypageStore.profile" class="mypage-content">
       <section class="profile-summary">
         <img
           class="profile-summary__avatar"
@@ -482,9 +479,6 @@ onMounted(async () => {
   letter-spacing: -0.04em;
 }
 
-.mypage-loading {
-  min-height: 520px;
-}
 .mypage-content {
   position: relative;
   z-index: 4;

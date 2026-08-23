@@ -157,12 +157,12 @@ watch(
         </div>
 
         <button
-          class="journal-date-page__search"
+          class="journal-date-page__stocks"
           type="button"
-          aria-label="종목별 투자 일지 검색"
+          aria-label="내 종목별 투자 일지 보기"
           @click="openSearch"
         >
-          <AppIcon name="search" :size="20" />
+          <AppIcon name="briefcase-business" :size="20" />
         </button>
       </header>
 
@@ -243,34 +243,39 @@ watch(
 }
 
 .journal-date-page__back,
-.journal-date-page__search {
-  display: grid;
-  width: 44px;
+.journal-date-page__stocks {
   height: 44px;
-  place-items: center;
-  padding: 0;
   color: var(--text-primary, #181817);
   background: #ffffff;
   cursor: pointer;
 }
 
 .journal-date-page__back {
+  display: grid;
+  width: 44px;
+  place-items: center;
   border: 0;
   border-radius: 12px;
+  padding: 0;
 }
 
-.journal-date-page__search {
+.journal-date-page__stocks {
+  display: inline-flex;
+  width: 44px;
+  align-items: center;
+  justify-content: center;
   border: 1px solid #dce6e9;
   border-radius: 50%;
+  padding: 0;
 }
 
 .journal-date-page__back:hover,
-.journal-date-page__search:hover {
+.journal-date-page__stocks:hover {
   background: var(--brand-mist, #f5fbfb);
 }
 
 .journal-date-page__back:focus-visible,
-.journal-date-page__search:focus-visible {
+.journal-date-page__stocks:focus-visible {
   outline: 2px solid var(--brand-teal-deep, #087f7c);
   outline-offset: 2px;
 }

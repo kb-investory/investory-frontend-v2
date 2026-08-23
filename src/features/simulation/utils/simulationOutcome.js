@@ -71,24 +71,14 @@ export function normalizeSimulationParticipants(latestResult, report) {
 }
 
 function getPrincipleReviewSummary(report) {
-  if (report?.principleReviewSummary) return report.principleReviewSummary
-
-  const summary = (report?.decisionReviews ?? []).reduce(
-    (result, decision) => {
-      const judgment = decision.principleJudgment
-      if (judgment === 'FOLLOWED') result.followedCount += 1
-      else if (judgment === 'VIOLATED') result.violatedCount += 1
-      else result.unassessedCount += 1
-      return result
-    },
-    { followedCount: 0, violatedCount: 0, unassessedCount: 0 },
+  return (
+    report?.principleReviewSummary ?? {
+      followedCount: 0,
+      violatedCount: 0,
+      assessedTradeCount: 0,
+      totalTradeCount: 0,
+    }
   )
-
-  return {
-    ...summary,
-    assessedTradeCount: summary.followedCount + summary.violatedCount,
-    totalTradeCount: report?.decisionReviews?.length ?? 0,
-  }
 }
 
 function getScenario({ branch, winnerVariantType, reviewSummary }) {
@@ -117,31 +107,12 @@ function getScenario({ branch, winnerVariantType, reviewSummary }) {
 
 function getViolationDecisions(report) {
   return (report?.decisionReviews ?? [])
-    .filter(
-      (decision) =>
-        decision.principleJudgment === 'VIOLATED' ||
-        decision.principleReview?.status === 'VIOLATION_PATTERN_DETECTED',
-    )
-    .map((decision) => {
-      const violatedMatch = decision.principleMatches?.find(
-        (match) => match.judgment === 'VIOLATED',
-      )
-      return {
-        ...decision,
-        principleText:
-          decision.matchedPrinciple?.principleText ??
-          decision.matchedPrinciple?.title ??
-          violatedMatch?.principleText ??
-          decision.principleReview?.violatedPrinciple ??
-          '지키지 못한 원칙',
-        reason:
-          decision.judgmentReason ??
-          decision.principleReview?.violationReason ??
-          violatedMatch?.reason ??
-          decision.principleFeedback ??
-          '이 거래에서 원칙 위반이 확인됐어요.',
-      }
-    })
+    .filter((decision) => decision.principleJudgment === 'VIOLATED')
+    .map((decision) => ({
+      ...decision,
+      principleText: decision.matchedPrinciple?.principleText ?? '지키지 못한 원칙',
+      reason: decision.judgmentReason ?? '이 거래에서 원칙 위반이 확인됐어요.',
+    }))
 }
 
 function getImprovementPrinciples(report) {
@@ -226,21 +197,11 @@ function getPrincipleImpacts(report, divergenceMoments) {
     })
 
   ;(report?.decisionReviews ?? [])
-    .filter(
-      (decision) =>
-        decision.principleJudgment === 'VIOLATED' ||
-        decision.principleReview?.status === 'VIOLATION_PATTERN_DETECTED',
-    )
+    .filter((decision) => decision.principleJudgment === 'VIOLATED')
     .forEach((decision) => {
-      const violatedMatch = decision.principleMatches?.find(
-        (match) => match.judgment === 'VIOLATED',
-      )
-      addImpact(decision.matchedPrinciple ?? violatedMatch ?? decision.principleReview, {
+      addImpact(decision.matchedPrinciple, {
         violationCount: 1,
-        reason:
-          decision.judgmentReason ??
-          decision.principleReview?.violationReason ??
-          violatedMatch?.reason,
+        reason: decision.judgmentReason,
       })
     })
 
@@ -300,7 +261,6 @@ export function buildSimulationOutcomeModel({ latestResult, report }) {
     divergenceReview: report?.divergenceReview ?? null,
     divergenceMoments,
     referenceReview: report?.referenceReview ?? null,
-    referencePrinciples: report?.referenceReview?.references ?? report?.referencePrinciples ?? [],
     marketLuck: report?.performanceContext?.luckCheck ?? null,
     reportOutcome: report?.outcome ?? null,
   }

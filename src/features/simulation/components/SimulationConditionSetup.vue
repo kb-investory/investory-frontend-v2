@@ -84,26 +84,28 @@ const {
   getConditions,
 } = useSimulationConditions(conditionSource, simulationStore.fetchInitialCapital)
 
+// 개인봇 컴파일이 실패해도 나머지 참가자만으로 진행할 수 있다 — 백엔드가
+// personalBotId 없이 온 /run 요청에서 PERSONAL_BOT을 자동 제외하고
+// excludedParticipants로 이유를 알려준다 (investory-simulation-api#20).
+// 그래서 시작 가능 여부는 "컴파일 완료"가 아니라 "컴파일이 끝난 상태
+// (완료든 실패든)"만 있으면 된다.
 const canStart = computed(
   () =>
     !props.isPending &&
     !isBotCompiling.value &&
-    isBotCompileComplete.value &&
+    (isBotCompileComplete.value || isBotCompileFailed.value) &&
     !capitalLoading.value &&
     !capitalError.value &&
     currentInitialCapital.value !== null,
 )
 
 function handlePrimaryAction() {
-  // 봇 생성이 실패한 상태에서는 같은 버튼이 재시도 역할을 한다.
-  if (isBotCompileFailed.value) {
-    void simulationStore.compilePersonalBot()
-    return
-  }
-
   if (!canStart.value) return
-
   emit('start', getConditions())
+}
+
+function handleRetryCompile() {
+  void simulationStore.compilePersonalBot()
 }
 
 function formatDateKey(value) {
@@ -194,16 +196,21 @@ function formatDateKey(value) {
     </section>
 
     <div class="setup-action">
+      <p v-if="isBotCompileFailed" class="setup-action__notice" role="status">
+        <AppIcon name="triangle-alert" :size="13" />
+        <span>투자봇 생성에 실패했어요. 제외하고 진행하거나 다시 생성해보세요.</span>
+      </p>
+
       <BaseButton
         variant="primary"
         full-width
         aria-live="polite"
-        :disabled="!canStart && !isBotCompileFailed"
+        :disabled="!canStart"
         @click="handlePrimaryAction"
       >
         <template v-if="isBotCompileFailed">
-          <AppIcon name="refresh-cw" :size="17" />
-          <span>투자봇 다시 생성하기</span>
+          <span>투자봇 제외하고 진행하기</span>
+          <AppIcon name="rocket" :size="17" />
         </template>
         <template v-else-if="!isBotCompileComplete">
           <AppIcon name="loader-circle" :size="17" class="pending-spinner" />
@@ -221,6 +228,11 @@ function formatDateKey(value) {
           <span>{{ participantCount }}명으로 시뮬레이션 시작</span>
           <AppIcon name="rocket" :size="17" />
         </template>
+      </BaseButton>
+
+      <BaseButton v-if="isBotCompileFailed" variant="ghost" full-width @click="handleRetryCompile">
+        <AppIcon name="refresh-cw" :size="15" />
+        <span>투자봇 다시 생성하기</span>
       </BaseButton>
     </div>
 
@@ -276,7 +288,9 @@ function formatDateKey(value) {
   width: 100%;
   flex-direction: column;
   gap: 14px;
-  padding-bottom: 76px;
+  /* 컴파일 실패 시 하단 액션 바가 경고문구 + 버튼 2개로 늘어나므로,
+     그 경우에도 위 콘텐츠(초기자금 카드 등)가 안 가려지도록 여유를 둔다. */
+  padding-bottom: calc(168px + env(safe-area-inset-bottom, 0px));
 }
 
 .pending-spinner {
@@ -719,10 +733,28 @@ function formatDateKey(value) {
 .setup-action {
   position: fixed;
   z-index: 30;
-  bottom: 16px;
+  /* 세이프에어리어가 없는 기기/브라우저에서도 화면 끝에 딱 붙어 보이지
+     않도록 최소 여백을 고정으로 보장하고, 노치/홈 인디케이터가 있으면
+     그 위에 추가로 띄운다. */
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   left: 50%;
+  display: flex;
   width: min(calc(100% - 40px), 350px);
+  flex-direction: column;
+  gap: 8px;
   transform: translateX(-50%);
+}
+
+.setup-action__notice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 2px;
+  color: #c35050;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  word-break: keep-all;
 }
 
 @media (prefers-reduced-motion: reduce) {
