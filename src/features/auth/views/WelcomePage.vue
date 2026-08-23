@@ -132,13 +132,13 @@ async function handleSocialLogin(provider) {
   z-index: 2;
 
   top: 20%;
-  left: 9%;
-  width: 20%;
+  left: 8%;
+  width: 30%;
   height: 5%;
 
   background: #000a0e;
 
-  box-shadow: 0 0 12px 12px #000f15;
+  box-shadow: 0 0 12px 12px #000a0e;
   pointer-events: none;
 }
 .welcome-page {
