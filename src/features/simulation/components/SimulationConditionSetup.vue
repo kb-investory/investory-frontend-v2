@@ -288,7 +288,9 @@ function formatDateKey(value) {
   width: 100%;
   flex-direction: column;
   gap: 14px;
-  padding-bottom: 76px;
+  /* 컴파일 실패 시 하단 액션 바가 경고문구 + 버튼 2개로 늘어나므로,
+     그 경우에도 위 콘텐츠(초기자금 카드 등)가 안 가려지도록 여유를 둔다. */
+  padding-bottom: calc(168px + env(safe-area-inset-bottom, 0px));
 }
 
 .pending-spinner {
@@ -731,7 +733,10 @@ function formatDateKey(value) {
 .setup-action {
   position: fixed;
   z-index: 30;
-  bottom: 16px;
+  /* 세이프에어리어가 없는 기기/브라우저에서도 화면 끝에 딱 붙어 보이지
+     않도록 최소 여백을 고정으로 보장하고, 노치/홈 인디케이터가 있으면
+     그 위에 추가로 띄운다. */
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   display: flex;
   width: min(calc(100% - 40px), 350px);
