@@ -323,7 +323,7 @@ function writeSelectedJournal() {
           </div>
 
           <JournalDayDigest
-            v-else-if="selectedDailyEntry?.journal || selectedDailyEntry?.trades?.length"
+            v-else-if="selectedDailyEntry?.journal"
             class="journal-selected-panel__digest"
             :entry="selectedDailyEntry"
             @edit="writeSelectedJournal"
