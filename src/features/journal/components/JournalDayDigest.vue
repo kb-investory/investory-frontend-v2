@@ -152,7 +152,9 @@ function formatCurrency(value, { signed = false } = {}) {
       </header>
 
       <div v-if="trades.length" class="journal-digest__trade-list">
-        <JournalTradeDetailCard v-for="trade in trades" :key="trade.tradeId" :trade="trade" />
+        <div v-for="trade in trades" :key="trade.tradeId" class="journal-digest__trade-item">
+          <JournalTradeDetailCard :trade="trade" />
+        </div>
       </div>
 
       <div v-else class="journal-digest__empty-trades">
@@ -399,8 +401,18 @@ function formatCurrency(value, { signed = false } = {}) {
 }
 
 .journal-digest__trade-list {
-  display: grid;
-  gap: 6px;
+  display: flex;
+  flex-direction: column;
+}
+
+.journal-digest__trade-item {
+  min-width: 0;
+}
+
+.journal-digest__trade-item + .journal-digest__trade-item {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #dfe7e7;
 }
 
 .journal-digest__empty-trades {

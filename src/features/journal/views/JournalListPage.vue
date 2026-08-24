@@ -586,8 +586,9 @@ function writeSelectedJournal() {
 }
 
 .journal-month-card__handle small {
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
+  line-height: 1.3;
 }
 
 .journal-selected-panel {
@@ -713,17 +714,21 @@ function writeSelectedJournal() {
 
 .journal-selected-panel__record--empty strong {
   color: #253140;
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 900;
+  line-height: 1.3;
 }
 
 .journal-selected-panel__record--empty small {
   color: #7c8793;
-  font-size: 9px;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .journal-selected-panel__action {
   color: #087f7c !important;
+  font-size: 13px;
+  font-weight: 800;
   white-space: nowrap;
 }
 

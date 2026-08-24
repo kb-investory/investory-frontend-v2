@@ -2,6 +2,8 @@
 import { Lightbulb } from '@lucide/vue'
 import { computed } from 'vue'
 
+import StockLogo from '@/shared/components/StockLogo.vue'
+
 const props = defineProps({
   trade: {
     type: Object,
@@ -41,23 +43,16 @@ function formatCurrency(value) {
 
 <template>
   <article class="trade-detail-card">
-    <div class="trade-detail-card__rationale">
-      <div class="trade-detail-card__rationale-label">
-        <Lightbulb :size="12" :stroke-width="1.8" aria-hidden="true" />
-        <span>투자 근거</span>
-      </div>
-      <p>{{ rationale }}</p>
-    </div>
-
     <div class="trade-detail-card__info">
       <div class="trade-detail-card__identity">
         <div class="trade-detail-card__stock">
-          <span
-            class="trade-detail-card__dot"
-            :class="{ 'trade-detail-card__dot--sell': !isBuy }"
-            aria-hidden="true"
-          />
-          <strong>{{ trade.securityName }}</strong>
+          <StockLogo :stock="trade" :size="32" />
+          <div class="trade-detail-card__stock-copy">
+            <strong>{{ trade.securityName }}</strong>
+            <span v-if="trade.securityCode" class="trade-detail-card__code">
+              {{ trade.securityCode }}
+            </span>
+          </div>
           <span
             class="trade-detail-card__side"
             :class="{ 'trade-detail-card__side--sell': !isBuy }"
@@ -83,6 +78,14 @@ function formatCurrency(value) {
         </div>
       </dl>
     </div>
+
+    <div class="trade-detail-card__rationale">
+      <div class="trade-detail-card__rationale-label">
+        <Lightbulb :size="12" :stroke-width="1.8" aria-hidden="true" />
+        <span>투자 근거</span>
+      </div>
+      <p>{{ rationale }}</p>
+    </div>
   </article>
 </template>
 
@@ -102,10 +105,11 @@ function formatCurrency(value) {
   display: flex;
   min-height: 48px;
   flex-direction: column;
-  justify-content: center;
-  gap: 3px;
-  padding: 6px 9px;
-  border-radius: 6px;
+  justify-content: flex-start;
+  gap: 5px;
+  padding: 9px 10px;
+  border-left: 3px solid var(--brand-teal, #0b8f8b);
+  border-radius: 8px;
   background: var(--brand-mist, #f5fbfb);
 }
 
@@ -115,61 +119,67 @@ function formatCurrency(value) {
   gap: 5px;
   color: var(--brand-teal-deep, #087f7c);
   font-family: var(--font-heading);
-  font-size: var(--font-size-caption);
+  font-size: 11px;
   font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
 }
 
 .trade-detail-card__rationale p {
   margin: 0;
-  color: var(--text-primary, #181817);
+  color: var(--slate-strong, #263a43);
   font-family: var(--font-sans);
-  font-size: var(--font-size-caption);
-  font-weight: 700;
-  line-height: 1.4;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .trade-detail-card__info {
-  display: grid;
+  display: flex;
   min-width: 0;
-  grid-template-columns: 105px minmax(0, 1fr);
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .trade-detail-card__identity {
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
 }
 
 .trade-detail-card__stock {
   display: flex;
   min-width: 0;
-  align-items: center;
-  gap: 5px;
+  align-items: flex-start;
+  gap: 7px;
+}
+
+.trade-detail-card__stock-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .trade-detail-card__stock strong {
-  overflow: hidden;
+  min-width: 0;
   color: var(--text-primary, #181817);
   font-family: var(--font-sans);
-  font-size: var(--font-size-caption);
+  font-size: 13px;
   font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
 }
 
-.trade-detail-card__dot {
-  width: 7px;
-  height: 7px;
-  flex: 0 0 7px;
-  border-radius: 50%;
-  background: #e34b4b;
-}
-
-.trade-detail-card__dot--sell {
-  background: #3976d9;
+.trade-detail-card__code {
+  color: var(--text-tertiary, #94948e);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.2;
 }
 
 .trade-detail-card__side {
@@ -177,17 +187,27 @@ function formatCurrency(value) {
   font-family: var(--font-sans);
   font-size: var(--font-size-caption);
   font-weight: 700;
+  flex: 0 0 auto;
+  padding: 3px 6px;
+  border-radius: 6px;
+  background: var(--brand-red-soft, #fff0f2);
+  line-height: 1.2;
+  white-space: nowrap;
+  writing-mode: horizontal-tb;
 }
 
 .trade-detail-card__side--sell {
   color: #3976d9;
+  background: var(--brand-blue-soft, #edf5ff);
 }
 
 .trade-detail-card__identity time {
+  margin-left: 14px;
   color: var(--text-tertiary, #94948e);
   font-family: var(--font-mono);
-  font-size: var(--font-size-caption);
+  font-size: 11px;
   font-weight: 600;
+  line-height: 1.2;
 }
 
 .trade-detail-card__metrics {
@@ -196,6 +216,8 @@ function formatCurrency(value) {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 4px;
   margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid #edf1f1;
 }
 
 .trade-detail-card__metrics div {
@@ -206,8 +228,8 @@ function formatCurrency(value) {
   margin-bottom: 3px;
   color: var(--text-tertiary, #94948e);
   font-family: var(--font-heading);
-  font-size: var(--font-size-caption);
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 600;
   white-space: nowrap;
 }
 
