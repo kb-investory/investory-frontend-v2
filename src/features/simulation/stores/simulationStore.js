@@ -12,10 +12,11 @@ import {
   getSimulationHistory,
   getSimulationOverview,
   getSimulationReport,
+  getSimulationRunStatus,
   getSimulationSessions,
-  runSimulation as runSimulationApi,
   saveLatestCompletedSimulationResult,
   sendSimulationPrompt,
+  submitSimulationRun,
 } from '@/features/simulation/api/simulationApi'
 import { queryKeys } from '@/shared/api/queryKeys'
 
@@ -27,6 +28,10 @@ const MIN_PERSONAL_BOT_COMPILE_MS = 3000
 // 오판하게 되므로 여유를 두고 맞춘다.
 const BOT_COMPILE_POLL_TIMEOUT_MS = 150 * 1000
 const BOT_COMPILE_POLL_INTERVAL_MS = 1000
+// 워커 풀 크기가 아직 실측 전이라(investory-simulation-api#34) 넉넉하게 잡는다.
+// 백엔드가 숫자를 확정하면 맞춰서 줄인다.
+const SIMULATION_RUN_POLL_TIMEOUT_MS = 90 * 1000
+const SIMULATION_RUN_POLL_INTERVAL_MS = 1500
 
 export const useSimulationStore = defineStore('simulation', () => {
   const overview = ref(null)
@@ -420,17 +425,41 @@ export const useSimulationStore = defineStore('simulation', () => {
     simulationConditions.value = { ...conditions }
   }
 
+  // POST /run은 이제 결과가 아니라 잡 상태만 반환한다(#34) — RUNNING이면
+  // /status를 완료될 때까지 폴링한다. 캐시 히트로 곧바로 COMPLETED가 와도
+  // 결과 자체는 안 실려 있으므로 아래에서 항상 getSimulationDetail()을 부른다.
+  async function pollSimulationRunUntilSettled(submitted) {
+    let current = submitted
+    const deadline = Date.now() + SIMULATION_RUN_POLL_TIMEOUT_MS
+
+    while (!['COMPLETED', 'FAILED'].includes(current.status) && Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, SIMULATION_RUN_POLL_INTERVAL_MS))
+      current = await getSimulationRunStatus(submitted.simulationRunId)
+    }
+
+    if (current.status === 'FAILED') {
+      throw new Error(current.message ?? '시뮬레이션 실행에 실패했습니다.')
+    }
+    if (current.status !== 'COMPLETED') {
+      throw new Error('시뮬레이션이 예상보다 오래 걸리고 있어요. 잠시 후 다시 시도해주세요.')
+    }
+    return current
+  }
+
   async function executeSimulation(conditions) {
     loading.value = true
     try {
       const activeConditions = conditions || simulationConditions.value
-      const result = await runSimulationApi({
+      const submitted = await submitSimulationRun({
         periodStart: activeConditions?.periodStart,
         periodEnd: activeConditions?.periodEnd,
         participantTypes: activeParticipantTypes.value,
         personalBotId: personalBotId.value,
         accountId: simulationAccountId.value,
       })
+      const settled = await pollSimulationRunUntilSettled(submitted)
+      const result = await getSimulationDetail(settled.simulationRunId)
+
       latestResult.value = filterResultBySelectedParticipants(result)
       simulationReport.value = latestResult.value?.report ?? null
       simulationReportError.value = null
