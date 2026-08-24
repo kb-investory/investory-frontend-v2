@@ -33,6 +33,9 @@ const typeTrack = ref(null)
 const cardProximity = ref([])
 const canScrollTypesLeft = ref(false)
 const canScrollTypesRight = ref(false)
+const SWIPE_DISTANCE_THRESHOLD = 42
+const SWIPE_AXIS_RATIO = 1.15
+let summaryTouchStart = null
 
 const activeResult = computed(() => props.results[activeIndex.value] ?? null)
 const activeConfig = computed(() =>
@@ -165,6 +168,46 @@ function moveTo(index) {
   })
 }
 
+function startSummarySwipe(event) {
+  const touch = event.touches?.[0]
+  if (!touch) return
+
+  summaryTouchStart = {
+    x: touch.clientX,
+    y: touch.clientY,
+    index: activeIndex.value,
+  }
+}
+
+function finishSummarySwipe(event) {
+  const start = summaryTouchStart
+  const touch = event.changedTouches?.[0]
+  summaryTouchStart = null
+
+  if (!start || !touch) return
+
+  const deltaX = touch.clientX - start.x
+  const deltaY = touch.clientY - start.y
+  const horizontalDistance = Math.abs(deltaX)
+  const verticalDistance = Math.abs(deltaY)
+
+  if (
+    horizontalDistance < SWIPE_DISTANCE_THRESHOLD ||
+    horizontalDistance <= verticalDistance * SWIPE_AXIS_RATIO
+  ) {
+    return
+  }
+
+  const direction = deltaX < 0 ? 1 : -1
+  const nextIndex = Math.min(props.results.length - 1, Math.max(0, start.index + direction))
+
+  if (nextIndex !== start.index) moveTo(nextIndex)
+}
+
+function cancelSummarySwipe() {
+  summaryTouchStart = null
+}
+
 function updateTypeScrollState() {
   const track = typeTrack.value
   if (!track) {
@@ -211,6 +254,9 @@ onMounted(() =>
       class="result-carousel__track"
       aria-label="성향 카드를 좌우로 밀어 이동"
       @scroll.passive="updateCardProximity"
+      @touchstart.passive="startSummarySwipe"
+      @touchend.passive="finishSummarySwipe"
+      @touchcancel.passive="cancelSummarySwipe"
     >
       <article
         v-for="(result, index) in results"
@@ -385,10 +431,12 @@ onMounted(() =>
   overflow-x: auto;
   padding: 6px 9%;
   cursor: grab;
+  overscroll-behavior-inline: contain;
   scroll-padding-inline: 9%;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
-  touch-action: pan-y;
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 
 .result-carousel__track::-webkit-scrollbar {
