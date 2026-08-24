@@ -35,10 +35,7 @@ function isJournalRecord(value) {
     value &&
     typeof value === 'object' &&
     !Array.isArray(value) &&
-    (value.journalId != null ||
-      value.journalDate != null ||
-      value.marketMood != null ||
-      value.marketThought != null),
+    (value.journalId != null || value.marketMood != null || value.marketThought != null),
   )
 }
 

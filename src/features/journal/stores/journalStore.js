@@ -18,7 +18,7 @@ const JOURNAL_STALE_TIME = 30 * 1000
 
 function getEntryJournal(entry) {
   if (!entry || typeof entry !== 'object') return null
-  return entry.journal ?? entry
+  return entry.journal ?? (entry.journalId != null ? entry : null)
 }
 
 function getEntryDate(entry) {
