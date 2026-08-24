@@ -101,7 +101,7 @@ function formatCurrency(value, { signed = false } = {}) {
       </div>
 
       <button
-        v-if="journal.isEditable !== false"
+        v-if="journal && journal.isEditable !== false"
         class="journal-digest__edit"
         type="button"
         @click="emit('edit')"
@@ -111,7 +111,7 @@ function formatCurrency(value, { signed = false } = {}) {
       </button>
     </header>
 
-    <section class="journal-digest__reflection" aria-label="선택 날짜 판단 기록">
+    <section v-if="journal" class="journal-digest__reflection" aria-label="선택 날짜 판단 기록">
       <div class="journal-digest__reflection-meta">
         <span>오늘의 판단 기록</span>
       </div>
@@ -126,7 +126,7 @@ function formatCurrency(value, { signed = false } = {}) {
       <p>{{ journal.marketThought }}</p>
     </section>
 
-    <div class="journal-digest__divider">
+    <div v-if="journal" class="journal-digest__divider">
       <span>오늘의 거래와 판단 근거</span>
       <AppIcon name="chevron-down" :size="14" />
     </div>

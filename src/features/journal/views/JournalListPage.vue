@@ -1,9 +1,10 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { ROUTE_NAMES } from '@/app/router/route-names'
 import { getDefaultJournalDate } from '@/features/journal/api/journalApi'
+import JournalDayDigest from '@/features/journal/components/JournalDayDigest.vue'
 import { useJournalStore } from '@/features/journal/stores/journalStore'
 import AppIcon from '@/shared/components/AppIcon.vue'
 import PrimaryTabHeader from '@/shared/components/navigation/PrimaryTabHeader.vue'
@@ -16,13 +17,20 @@ const [todayYear, todayMonth] = todayDate.split('-').map(Number)
 const selectedDate = ref(todayDate)
 const currentYear = ref(todayYear)
 const currentMonth = ref(todayMonth)
-const isCalendarExpanded = ref(false)
+const isWeekView = ref(false)
+const hasSelectedDate = ref(false)
+const isDailyLoading = ref(false)
+const dailyLoadError = ref('')
 const swipeStart = ref(null)
+let dailyLoadRequestId = 0
 
 const monthLabel = computed(() => `${currentYear.value}년 ${currentMonth.value}월`)
 
 const journalByDate = computed(
-  () => new Map(journalStore.entries.map((entry) => [entry.journalDate, entry])),
+  () =>
+    new Map(
+      journalStore.entries.map((entry) => [entry.journalDate ?? entry.journal?.journalDate, entry]),
+    ),
 )
 const activityByDate = computed(
   () =>
@@ -50,39 +58,53 @@ const calendarCells = computed(() => {
       isToday: dateKey === todayDate,
       journal,
       tradeCount,
-      detailText: journal?.marketThought || (journal ? '투자 일지' : `${tradeCount}건 거래`),
     }
   })
 })
 
-const selectedJournal = computed(() =>
-  journalStore.entries.find((entry) => entry.journalDate === selectedDate.value),
+const weekCells = computed(() => {
+  const selected = new Date(`${selectedDate.value}T00:00:00`)
+  const weekStart = new Date(selected)
+  weekStart.setDate(selected.getDate() - selected.getDay())
+
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(weekStart)
+    date.setDate(weekStart.getDate() + index)
+    const dateKey = formatDateKey(date)
+    const journal = journalByDate.value.get(dateKey)
+    const activity = activityByDate.value.get(dateKey)
+
+    return {
+      date,
+      dateKey,
+      day: date.getDate(),
+      inCurrentMonth: date.getMonth() + 1 === currentMonth.value,
+      isSelected: dateKey === selectedDate.value,
+      isToday: dateKey === todayDate,
+      journal,
+      tradeCount: Number(journal?.tradeCount ?? activity?.tradeCount ?? 0),
+    }
+  })
+})
+
+const displayedCalendarCells = computed(() =>
+  isWeekView.value ? weekCells.value : calendarCells.value,
 )
-const selectedActivity = computed(() =>
-  journalStore.calendarActivities.find((activity) => activity.activityDate === selectedDate.value),
-)
-const selectedTradeCount = computed(() =>
-  Number(selectedJournal.value?.tradeCount ?? selectedActivity.value?.tradeCount ?? 0),
-)
+
 const selectedDateLabel = computed(() => {
   const date = new Date(`${selectedDate.value}T00:00:00`)
   const weekday = new Intl.DateTimeFormat('ko-KR', { weekday: 'long' }).format(date)
   return `${date.getMonth() + 1}월 ${date.getDate()}일 ${weekday}`
 })
 
-const moodLabels = {
-  ANXIOUS: '불안',
-  CAUTIOUS: '경계',
-  CALM: '차분',
-  CONFIDENT: '확신',
-}
-
-const selectedMoodLabel = computed(
-  () => moodLabels[selectedJournal.value?.marketMood] ?? '투자 기록',
-)
+const selectedDailyEntry = computed(() => {
+  if (journalStore.dailyEntry?.journalDate !== selectedDate.value) return null
+  return journalStore.dailyEntry
+})
 
 const selectedJournalTime = computed(() => {
-  const value = selectedJournal.value?.createdAt ?? selectedJournal.value?.updatedAt
+  const journal = selectedDailyEntry.value?.journal
+  const value = journal?.createdAt ?? journal?.updatedAt
   if (!value) return ''
 
   const date = new Date(value)
@@ -95,6 +117,45 @@ const selectedJournalTime = computed(() => {
 })
 
 onMounted(() => journalStore.fetchMonthlyCalendar(currentYear.value, currentMonth.value))
+
+watch(isWeekView, (showWeek) => {
+  if (showWeek) loadSelectedDate(selectedDate.value)
+})
+
+async function loadSelectedDate(dateKey = selectedDate.value) {
+  const requestId = ++dailyLoadRequestId
+  const summaryEntry = journalByDate.value.get(dateKey)
+  const activity = activityByDate.value.get(dateKey)
+  const summaryJournal = summaryEntry?.journal ?? summaryEntry
+  const hasSummaryJournal = Boolean(summaryJournal?.journalId ?? summaryJournal?.marketMood)
+
+  if (hasSummaryJournal) {
+    journalStore.dailyEntry = {
+      journalDate: dateKey,
+      canCreate: false,
+      journal: summaryJournal,
+      trades: summaryEntry?.trades?.length ? summaryEntry.trades : (activity?.trades ?? []),
+    }
+  } else {
+    journalStore.dailyEntry = null
+  }
+
+  // 월 목록에 작성된 일지가 있으면 먼저 즉시 표시하고 상세 데이터만 뒤에서 갱신한다.
+  isDailyLoading.value = !hasSummaryJournal
+  dailyLoadError.value = ''
+
+  try {
+    await journalStore.fetchDailyEntry(dateKey, { preferCalendarTrades: true })
+  } catch {
+    if (requestId === dailyLoadRequestId && !hasSummaryJournal) {
+      dailyLoadError.value = '선택한 날짜의 기록을 불러오지 못했어요.'
+    }
+  } finally {
+    if (requestId === dailyLoadRequestId) {
+      isDailyLoading.value = false
+    }
+  }
+}
 
 function formatDateKey(date) {
   return [
@@ -110,12 +171,15 @@ function openStocks() {
 
 async function selectCalendarDate(cell) {
   selectedDate.value = cell.dateKey
+  hasSelectedDate.value = true
 
   if (!cell.inCurrentMonth) {
     currentYear.value = cell.date.getFullYear()
     currentMonth.value = cell.date.getMonth() + 1
     await journalStore.fetchMonthlyCalendar(currentYear.value, currentMonth.value)
   }
+
+  await loadSelectedDate(cell.dateKey)
 }
 
 function onSwipeStart(event) {
@@ -134,7 +198,7 @@ function onSwipeEnd(event) {
   const deltaY = point.clientY - start.y
   if (Math.abs(deltaY) < 44 || Math.abs(deltaY) <= Math.abs(deltaX)) return
 
-  isCalendarExpanded.value = deltaY > 0
+  isWeekView.value = deltaY < 0
 }
 
 async function moveMonth(offset) {
@@ -143,33 +207,6 @@ async function moveMonth(offset) {
   currentMonth.value = nextMonth.getMonth() + 1
   selectedDate.value = formatDateKey(nextMonth)
   await journalStore.fetchMonthlyCalendar(currentYear.value, currentMonth.value)
-}
-
-async function moveSelectedDay(offset) {
-  const nextDate = new Date(`${selectedDate.value}T00:00:00`)
-  nextDate.setDate(nextDate.getDate() + offset)
-
-  const nextYear = nextDate.getFullYear()
-  const nextMonth = nextDate.getMonth() + 1
-  selectedDate.value = formatDateKey(nextDate)
-
-  if (nextYear !== currentYear.value || nextMonth !== currentMonth.value) {
-    currentYear.value = nextYear
-    currentMonth.value = nextMonth
-    await journalStore.fetchMonthlyCalendar(nextYear, nextMonth)
-  }
-}
-
-function openSelectedJournal() {
-  if (selectedJournal.value) {
-    router.push({
-      name: ROUTE_NAMES.JOURNAL_DATE,
-      params: { date: selectedDate.value },
-    })
-    return
-  }
-
-  writeSelectedJournal()
 }
 
 function writeSelectedJournal() {
@@ -210,8 +247,8 @@ function writeSelectedJournal() {
     <main class="journal-calendar-page__content">
       <section
         class="journal-month-card"
-        :class="{ 'journal-month-card--expanded': isCalendarExpanded }"
-        aria-label="월간 투자 일지 달력"
+        :class="{ 'journal-month-card--week': isWeekView }"
+        :aria-label="isWeekView ? '주간 투자 일지 달력' : '월간 투자 일지 달력'"
         @touchstart.passive="onSwipeStart"
         @touchend.passive="onSwipeEnd"
       >
@@ -227,7 +264,7 @@ function writeSelectedJournal() {
 
         <div class="journal-month-card__grid" role="grid" :aria-label="monthLabel">
           <button
-            v-for="(cell, index) in calendarCells"
+            v-for="(cell, index) in displayedCalendarCells"
             :key="cell.dateKey"
             type="button"
             role="gridcell"
@@ -250,74 +287,66 @@ function writeSelectedJournal() {
               class="journal-month-card__trade-mark"
               aria-hidden="true"
             />
-            <span
-              v-if="isCalendarExpanded && (cell.journal || cell.tradeCount)"
-              class="journal-month-card__detail"
-              :class="{ 'journal-month-card__detail--trade': !cell.journal }"
-            >
-              {{ cell.detailText }}
-            </span>
           </button>
         </div>
 
         <button
           type="button"
           class="journal-month-card__handle"
-          :aria-expanded="isCalendarExpanded"
-          :aria-label="isCalendarExpanded ? '달력 간단히 보기' : '달력 자세히 보기'"
-          @click="isCalendarExpanded = !isCalendarExpanded"
+          :aria-expanded="isWeekView"
+          :aria-label="isWeekView ? '월간 달력로 펼치기' : '주간 달력으로 접기'"
+          @click="isWeekView = !isWeekView"
         >
           <span aria-hidden="true" />
-          <small>{{
-            isCalendarExpanded ? '위로 밀어 간단히 보기' : '아래로 밀어 자세히 보기'
-          }}</small>
+          <small>{{ isWeekView ? '아래로 밀어 월간 보기' : '위로 밀어 기록 보기' }}</small>
         </button>
 
         <section
-          v-if="!isCalendarExpanded"
+          v-if="isWeekView || hasSelectedDate"
           class="journal-selected-panel"
-          aria-label="선택한 날짜의 투자 일지"
+          aria-label="선택한 날짜의 기록"
         >
           <header class="journal-selected-panel__header">
-            <button type="button" aria-label="이전 날짜" @click="moveSelectedDay(-1)">
-              <AppIcon name="chevron-left" :size="17" />
-            </button>
             <div>
               <strong>{{ selectedDateLabel }}</strong>
               <span v-if="selectedJournalTime">{{ selectedJournalTime }} 기록</span>
             </div>
-            <button type="button" aria-label="다음 날짜" @click="moveSelectedDay(1)">
-              <AppIcon name="chevron-right" :size="17" />
-            </button>
           </header>
 
+          <div v-if="isDailyLoading" class="journal-selected-panel__state">
+            선택한 날짜의 기록을 불러오고 있어요.
+          </div>
+
+          <div v-else-if="dailyLoadError" class="journal-selected-panel__state" role="alert">
+            <span>{{ dailyLoadError }}</span>
+            <button type="button" @click="loadSelectedDate()">다시 시도</button>
+          </div>
+
+          <JournalDayDigest
+            v-else-if="selectedDailyEntry?.journal || selectedDailyEntry?.trades?.length"
+            class="journal-selected-panel__digest"
+            :entry="selectedDailyEntry"
+            @edit="writeSelectedJournal"
+          />
+
           <button
+            v-else
             type="button"
             class="journal-selected-panel__record"
-            :class="{ 'journal-selected-panel__record--empty': !selectedJournal }"
-            @click="openSelectedJournal"
+            :class="{ 'journal-selected-panel__record--empty': true }"
+            @click="writeSelectedJournal"
           >
-            <template v-if="selectedJournal">
-              <span class="journal-selected-panel__mood">{{ selectedMoodLabel }}</span>
-              <strong>{{ selectedJournal.marketThought || '이날의 판단을 기록했어요.' }}</strong>
-              <span>
-                거래 {{ selectedTradeCount }}건 · 기록 보기
-                <AppIcon name="chevron-right" :size="16" />
-              </span>
-            </template>
-            <template v-else>
-              <span class="journal-selected-panel__empty-icon" aria-hidden="true">
-                <AppIcon name="book-open" :size="21" />
-              </span>
-              <span>
-                <strong>아직 작성한 투자 일지가 없어요</strong>
-                <small>이 날짜의 판단과 근거를 남겨보세요.</small>
-              </span>
-              <span class="journal-selected-panel__action">
-                기록하기
-                <AppIcon name="chevron-right" :size="16" />
-              </span>
-            </template>
+            <span class="journal-selected-panel__empty-icon" aria-hidden="true">
+              <AppIcon name="book-open" :size="21" />
+            </span>
+            <span>
+              <strong>아직 작성한 투자 일지가 없어요</strong>
+              <small>이 날짜의 판단과 근거를 남겨보세요.</small>
+            </span>
+            <span class="journal-selected-panel__action">
+              투자 일지 작성
+              <AppIcon name="chevron-right" :size="16" />
+            </span>
           </button>
         </section>
       </section>
@@ -406,7 +435,7 @@ function writeSelectedJournal() {
   border-radius: 30px;
   background: #ffffff;
   box-shadow: 0 20px 44px rgb(42 68 80 / 12%);
-  touch-action: pan-x;
+  touch-action: pan-y;
 }
 
 .journal-month-card__weekdays,
@@ -522,44 +551,16 @@ function writeSelectedJournal() {
   background: #e99a2f;
 }
 
-.journal-month-card--expanded .journal-month-card__day {
-  height: clamp(82px, 13.5vw, 112px);
-  align-items: flex-start;
-  padding: 8px 5px;
-  border-radius: 0;
-  border-bottom: 1px solid #edf1f2;
+.journal-month-card--week .journal-month-card__weekdays {
+  padding-top: 12px;
 }
 
-.journal-month-card--expanded .journal-month-card__number {
-  width: 25px;
-  height: 25px;
-  flex-basis: 25px;
+.journal-month-card--week .journal-month-card__grid {
+  padding-bottom: 5px;
 }
 
-.journal-month-card--expanded .journal-month-card__journal-mark,
-.journal-month-card--expanded .journal-month-card__trade-mark {
-  display: none;
-}
-
-.journal-month-card__detail {
-  display: block;
-  width: 100%;
-  overflow: hidden;
-  padding: 3px 4px 3px 6px;
-  border-left: 3px solid #35c8a1;
-  border-radius: 3px;
-  color: #42515c;
-  background: #f0faf7;
-  font-size: 8px;
-  font-weight: 700;
-  text-align: left;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.journal-month-card__detail--trade {
-  border-left-color: #e99a2f;
-  background: #fff8ed;
+.journal-month-card--week .journal-month-card__day {
+  height: 54px;
 }
 
 .journal-month-card__handle {
@@ -572,7 +573,6 @@ function writeSelectedJournal() {
   gap: 3px;
   padding: 5px;
   border: 0;
-  border-top: 1px solid #e5eaec;
   color: #7b8790;
   background: #ffffff;
   cursor: pointer;
@@ -595,32 +595,44 @@ function writeSelectedJournal() {
   background: #ffffff;
 }
 
-.journal-selected-panel__header {
-  display: grid;
-  grid-template-columns: 38px minmax(0, 1fr) 38px;
+.journal-selected-panel__state {
+  display: flex;
+  min-height: 90px;
   align-items: center;
+  justify-content: center;
   gap: 10px;
+  padding: 16px;
+  color: #74808a;
+  font-size: 11px;
+  font-weight: 700;
 }
 
-.journal-selected-panel__header > button {
-  display: grid;
-  width: 38px;
-  height: 38px;
-  place-items: center;
-  padding: 0;
+.journal-selected-panel__state button {
+  padding: 7px 10px;
   border: 0;
-  border-radius: 14px;
-  color: #087f7c;
-  background: #e7f7f6;
-  cursor: pointer;
+  border-radius: 10px;
+  color: #ffffff;
+  background: #087f7c;
+}
+
+.journal-selected-panel__digest {
+  margin-top: 10px;
+}
+
+.journal-selected-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-inline: 12px;
 }
 
 .journal-selected-panel__header > div {
   display: flex;
   min-width: 0;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 2px;
+  text-align: left;
 }
 
 .journal-selected-panel__header strong {
@@ -650,15 +662,6 @@ function writeSelectedJournal() {
   text-align: left;
   background: linear-gradient(135deg, #075863, #087f7c);
   cursor: pointer;
-}
-
-.journal-selected-panel__mood {
-  padding: 3px 8px;
-  border-radius: 999px;
-  color: #075863;
-  background: #dff7f4;
-  font-size: 9px;
-  font-weight: 900;
 }
 
 .journal-selected-panel__record > strong {

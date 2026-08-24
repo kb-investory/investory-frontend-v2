@@ -8,6 +8,7 @@ export async function getLedgerTrades({
   to,
   page = 0,
   size = 20,
+  skipGlobalLoading = false,
 } = {}) {
   const searchParams = new URLSearchParams()
   if (accountId) searchParams.set('accountId', accountId)
@@ -18,7 +19,7 @@ export async function getLedgerTrades({
   searchParams.set('page', page)
   searchParams.set('size', size)
 
-  return await request(`/ledger/trades?${searchParams.toString()}`)
+  return await request(`/ledger/trades?${searchParams.toString()}`, { skipGlobalLoading })
 }
 
 export async function getLedgerTradeDetail(tradeId) {

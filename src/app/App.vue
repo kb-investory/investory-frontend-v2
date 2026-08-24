@@ -1,5 +1,5 @@
 <script setup>
-import { useIsFetching, useIsMutating } from '@tanstack/vue-query'
+import { useIsMutating } from '@tanstack/vue-query'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -13,14 +13,13 @@ import { isGlobalLoading } from '@/shared/services/globalLoading'
 
 const route = useRoute()
 const authStore = useAuthStore()
-const fetchingCount = useIsFetching()
 const mutatingCount = useIsMutating()
 const isSimulationRoute = computed(() => route.path.startsWith('/simulation'))
 
 const isAppLoading = computed(
   () =>
     !isSimulationRoute.value &&
-    (isGlobalLoading.value || fetchingCount.value > 0 || mutatingCount.value > 0),
+    (isGlobalLoading.value || mutatingCount.value > 0),
 )
 
 const canShowPwaInstallPrompt = computed(

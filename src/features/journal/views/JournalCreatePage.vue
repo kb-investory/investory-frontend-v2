@@ -609,15 +609,15 @@ onBeforeUnmount(() => window.clearTimeout(autoSaveTimer))
   flex: 0 0 auto;
   place-items: center;
   border-radius: 8px;
-  background: var(--brand-teal-deep);
-  color: #ffffff;
+  background: #e7f7f5;
+  color: var(--brand-teal-deep);
   font-family: var(--font-mono);
   font-size: var(--font-size-caption);
   font-weight: 800;
 }
 
 .journal-create-page__step-number--dark {
-  background: #24364a;
+  background: #e7f7f5;
 }
 
 .journal-create-page__counter {
