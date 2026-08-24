@@ -19,34 +19,34 @@ export async function getSecurityDetailById(securityId) {
   return await request(`/market/securities/${securityId}`)
 }
 
-export async function getSecurityMasterByStockCode(stockCode) {
-  return await request(`/markets/securities/${encodeURIComponent(stockCode)}`)
+export async function getSecurityMasterBySecurityCode(securityCode) {
+  return await request(`/market/securities/code/${encodeURIComponent(securityCode)}`)
 }
 
-export async function getSecurityPriceByDate(stockCode, date) {
+export async function getSecurityPriceByDate(securityCode, date) {
   const searchParams = new URLSearchParams()
   if (date) searchParams.set('date', date)
 
   const query = searchParams.toString()
   return await request(
-    `/markets/securities/${encodeURIComponent(stockCode)}/prices${query ? `?${query}` : ''}`,
+    `/market/securities/code/${encodeURIComponent(securityCode)}/prices${query ? `?${query}` : ''}`,
   )
 }
 
-export async function syncSecurityInfo(stockCode) {
-  return await request(`/markets/securities/${encodeURIComponent(stockCode)}/sync-info`, {
+export async function syncSecurityInfo(securityCode) {
+  return await request(`/market/securities/code/${encodeURIComponent(securityCode)}/sync-info`, {
     method: 'POST',
   })
 }
 
-export async function syncSecurityPrice(stockCode) {
-  return await request(`/markets/securities/${encodeURIComponent(stockCode)}/sync-price`, {
+export async function syncSecurityPrice(securityCode) {
+  return await request(`/market/securities/code/${encodeURIComponent(securityCode)}/sync-price`, {
     method: 'POST',
   })
 }
 
-export async function syncSecurityAll(stockCode) {
-  return await request(`/markets/securities/${encodeURIComponent(stockCode)}/sync`, {
+export async function syncSecurityAll(securityCode) {
+  return await request(`/market/securities/code/${encodeURIComponent(securityCode)}/sync`, {
     method: 'POST',
   })
 }
