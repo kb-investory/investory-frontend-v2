@@ -257,9 +257,23 @@ async function normalizeSimulationResult(data) {
     enrichSecurityDetails(normalizedPositionSnapshots),
   ])
 
+  // GET /simulation/{id}(비동기 실행 흐름에서 결과를 가져오는 경로, #34)는
+  // simulationRunId/periodStart/periodEnd/initialCapital을 simulationRun
+  // 객체 안에 중첩해서 준다. 구(v1) POST /run 응답은 이 필드들이 최상위에
+  // 바로 있었으므로, 두 shape을 모두 받아도 항상 최상위에서 읽을 수 있게
+  // 여기서 한 번에 풀어준다.
+  const runMeta = data.simulationRun ?? {}
+
   return {
     ...data,
-    simulationRunId: data.simulationRunId ?? data.runId ?? embeddedReport?.simulationRunId,
+    simulationRunId:
+      runMeta.simulationRunId ??
+      data.simulationRunId ??
+      data.runId ??
+      embeddedReport?.simulationRunId,
+    periodStart: runMeta.periodStart ?? data.periodStart,
+    periodEnd: runMeta.periodEnd ?? data.periodEnd,
+    initialCapital: runMeta.initialCapital ?? data.initialCapital,
     report: embeddedReport ?? data.report,
     dailyPerformance,
     dailySnapshots: dailyPerformance,
@@ -388,7 +402,11 @@ export async function getSimulationComparators() {
   return await request('/simulation/bots/comparators')
 }
 
-export async function runSimulation(payload = {}) {
+// 시뮬레이션 실행을 "제출"만 한다 — 결과가 아니라 잡 상태를 반환한다
+// (#34: v1의 동기 응답을 /bots/compile과 동일한 202+job 폴링 패턴으로 전환).
+// status가 이미 COMPLETED/FAILED여도(캐시 히트) 결과 자체는 항상
+// getSimulationDetail()로 별도 조회해야 한다 — 이 응답엔 결과가 안 실려 있다.
+export async function submitSimulationRun(payload = {}) {
   const requestBody = {
     periodStart: payload.periodStart,
     periodEnd: payload.periodEnd,
@@ -399,20 +417,32 @@ export async function runSimulation(payload = {}) {
   if (USE_MOCK_SIMULATION) {
     const liveFixtures = await getLiveSimulationFixtures()
     const mockResult = withMockSecurityNames(simulationData.run)
-    return await normalizeSimulationResult({
-      ...mockResult,
-      simulationRunId: liveFixtures?.run?.runId ?? mockResult.simulationRunId,
-      report: getLiveReport(liveFixtures),
-      periodStart: payload.periodStart ?? mockResult.periodStart,
-      periodEnd: payload.periodEnd ?? mockResult.periodEnd,
-      persistenceStatus: 'COMPLETED',
-    })
+    return {
+      simulationRunId: liveFixtures?.run?.runId ?? mockResult.simulationRunId ?? 1,
+      status: 'COMPLETED',
+      progressPercent: 100,
+      message: '이미 완료된 시뮬레이션입니다.',
+    }
   }
-  const response = await request('/simulation/run', {
+  return await request('/simulation/run', {
     method: 'POST',
     body: JSON.stringify(requestBody),
   })
-  return await normalizeSimulationResult(response)
+}
+
+// GET /simulation/{id}/status — 값은 항상 { simulationRunId, status,
+// progressPercent, message } 모양. status가 COMPLETED/FAILED가 아니면
+// 전부 "진행 중"으로 취급한다 (백엔드가 향후 세분화할 수 있어서 방어적으로).
+export async function getSimulationRunStatus(simulationId) {
+  if (USE_MOCK_SIMULATION) {
+    return {
+      simulationRunId: simulationId,
+      status: 'COMPLETED',
+      progressPercent: 100,
+      message: '시뮬레이션 백테스트 연산이 완료되었습니다.',
+    }
+  }
+  return await request(`/simulation/${simulationId}/status`)
 }
 
 export async function getSimulationDetail(simulationId) {
