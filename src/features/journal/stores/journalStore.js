@@ -173,9 +173,7 @@ export const useJournalStore = defineStore('journal', () => {
       if (!response?.journal) {
         const summaryEntry = entries.value.find((entry) => getEntryDate(entry) === journalDate)
         const summaryJournal = getEntryJournal(summaryEntry)
-        const preservedTrades = response?.trades?.length
-          ? response.trades
-          : (calendarTrades ?? [])
+        const preservedTrades = response?.trades?.length ? response.trades : (calendarTrades ?? [])
 
         if (summaryJournal?.journalId != null) {
           try {

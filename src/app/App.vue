@@ -17,9 +17,7 @@ const mutatingCount = useIsMutating()
 const isSimulationRoute = computed(() => route.path.startsWith('/simulation'))
 
 const isAppLoading = computed(
-  () =>
-    !isSimulationRoute.value &&
-    (isGlobalLoading.value || mutatingCount.value > 0),
+  () => !isSimulationRoute.value && (isGlobalLoading.value || mutatingCount.value > 0),
 )
 
 const canShowPwaInstallPrompt = computed(

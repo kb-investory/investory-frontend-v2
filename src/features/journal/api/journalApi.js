@@ -167,10 +167,7 @@ async function getLedgerTradesForJournalRange(startDate, endDate) {
     ),
   )
 
-  return [
-    ...firstTrades,
-    ...remainingResults.flatMap((result) => normalizeTradeList(result)),
-  ]
+  return [...firstTrades, ...remainingResults.flatMap((result) => normalizeTradeList(result))]
     .map(normalizeLedgerTrade)
     .filter(
       (trade) =>
@@ -298,9 +295,7 @@ export async function getJournalById(journalId) {
   return normalizeDailyEntryResponse(response, journalDate)
 }
 
-export async function getJournalEntryOnDate(
-  journalDate = getDefaultJournalDate(),
-) {
+export async function getJournalEntryOnDate(journalDate = getDefaultJournalDate()) {
   if (USE_MOCK_JOURNAL) {
     const entry = findMockDailyEntry(journalDate) || {
       journalDate,
