@@ -223,7 +223,8 @@ export const routes = [
       layout: 'full-bleed',
       hideBottomNav: true,
       frameHeight: 980,
-      mainBottomPadding: 84,
+      mainBottomPadding: 0,
+      frameBackground: '#1b333d',
     },
   },
   {

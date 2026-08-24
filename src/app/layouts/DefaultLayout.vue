@@ -15,6 +15,7 @@ const hideBottomNav = computed(() => route.meta.hideBottomNav === true)
 const frameStyle = computed(() => ({
   '--mobile-frame-max-height': `${route.meta.frameHeight ?? 844}px`,
   '--mobile-main-bottom-padding': `${route.meta.mainBottomPadding ?? 84}px`,
+  '--mobile-frame-background': route.meta.frameBackground ?? '#ffffff',
 }))
 
 const tabItems = [
@@ -102,7 +103,7 @@ const tabItems = [
 }
 
 .mobile-frame--full-bleed {
-  background: #ffffff;
+  background: var(--mobile-frame-background, #ffffff);
 }
 
 .mobile-main {
