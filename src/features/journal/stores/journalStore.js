@@ -16,6 +16,16 @@ import { queryKeys } from '@/shared/api/queryKeys'
 
 const JOURNAL_STALE_TIME = 30 * 1000
 
+function getEntryJournal(entry) {
+  if (!entry || typeof entry !== 'object') return null
+  return entry.journal ?? entry
+}
+
+function getEntryDate(entry) {
+  const journal = getEntryJournal(entry)
+  return entry?.journalDate ?? journal?.journalDate ?? null
+}
+
 async function invalidateJournalWriteQueries() {
   await Promise.all([
     queryClient.invalidateQueries({ queryKey: queryKeys.journal.all }),
@@ -125,17 +135,81 @@ export const useJournalStore = defineStore('journal', () => {
     }
   }
 
-  async function fetchDailyEntry(journalDate) {
+  async function fetchDailyEntry(journalDate, { preferCalendarTrades = false } = {}) {
     const requestId = ++latestDailyEntryRequestId
 
     loading.value = true
     error.value = ''
     try {
-      const response = await queryClient.fetchQuery({
-        queryKey: queryKeys.journal.daily(journalDate),
-        queryFn: () => getJournalEntryOnDate(journalDate),
-        staleTime: JOURNAL_STALE_TIME,
-      })
+      let response = null
+      let dailyRequestError = null
+
+      try {
+        response = await queryClient.fetchQuery({
+          queryKey: queryKeys.journal.daily(journalDate),
+          queryFn: () => getJournalEntryOnDate(journalDate),
+          // 사용자가 달력에서 날짜를 직접 선택한 경우에는 이전의 "일지 없음"
+          // 캐시보다 방금 저장된 서버 데이터를 우선해 상세 화면을 갱신한다.
+          staleTime: 0,
+        })
+      } catch (requestError) {
+        // 일자별 API가 일시적으로 실패하더라도 월 목록에 이미 존재하는 일지는
+        // journalId로 상세 재조회해 사용자가 작성한 내용을 계속 볼 수 있게 한다.
+        dailyRequestError = requestError
+      }
+
+      const calendarTrades = calendarActivities.value.find(
+        (activity) => activity.activityDate === journalDate,
+      )?.trades
+
+      if (preferCalendarTrades && calendarTrades?.length && !response?.trades?.length) {
+        response = {
+          ...response,
+          journalDate: response?.journalDate ?? journalDate,
+          trades: calendarTrades,
+        }
+      }
+
+      if (!response?.journal) {
+        const summaryEntry = entries.value.find((entry) => getEntryDate(entry) === journalDate)
+        const summaryJournal = getEntryJournal(summaryEntry)
+        const preservedTrades = response?.trades?.length ? response.trades : (calendarTrades ?? [])
+
+        if (summaryJournal?.journalId != null) {
+          try {
+            const detail = await queryClient.fetchQuery({
+              queryKey: queryKeys.journal.detail(summaryJournal.journalId),
+              queryFn: () => getJournalDetail(summaryJournal.journalId),
+              staleTime: 0,
+            })
+            response = detail?.journal
+              ? {
+                  ...detail,
+                  journalDate: detail.journalDate ?? journalDate,
+                  trades: detail.trades?.length ? detail.trades : preservedTrades,
+                }
+              : {
+                  ...response,
+                  journalDate,
+                  canCreate: false,
+                  journal: summaryJournal,
+                  trades: preservedTrades,
+                }
+          } catch {
+            response = {
+              ...response,
+              journalDate,
+              canCreate: false,
+              journal: summaryJournal,
+              trades: preservedTrades,
+            }
+          }
+        }
+      }
+
+      if (!response?.journal && dailyRequestError) {
+        throw dailyRequestError
+      }
 
       if (requestId === latestDailyEntryRequestId) {
         dailyEntry.value = response

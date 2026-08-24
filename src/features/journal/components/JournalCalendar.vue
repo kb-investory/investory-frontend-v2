@@ -22,6 +22,10 @@ const props = defineProps({
     type: String,
     default: null,
   },
+  compact: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const emit = defineEmits(['select'])
@@ -92,7 +96,11 @@ function getAriaLabel(cell) {
 </script>
 
 <template>
-  <section class="journal-calendar" aria-label="월간 투자 일지 캘린더">
+  <section
+    class="journal-calendar"
+    :class="{ 'journal-calendar--compact': compact }"
+    aria-label="월간 투자 일지 캘린더"
+  >
     <div class="journal-calendar__weekdays" aria-hidden="true">
       <span
         v-for="(weekDay, index) in weekDays"
@@ -154,6 +162,7 @@ function getAriaLabel(cell) {
   border-radius: 16px;
   background: #ffffff;
   box-shadow: 0 4px 14px rgba(38, 58, 67, 0.07);
+  transition: height 260ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .journal-calendar__weekdays {
@@ -183,6 +192,7 @@ function getAriaLabel(cell) {
   height: 348px;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   grid-template-rows: repeat(6, 58px);
+  transition: height 260ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .journal-calendar__day {
@@ -244,9 +254,20 @@ function getAriaLabel(cell) {
 
 .journal-calendar__day--today {
   color: var(--brand-teal-deep, #087f7c);
+  font-weight: 800;
+}
+
+.journal-calendar__date {
+  display: block;
+}
+
+.journal-calendar__day--today .journal-calendar__date {
+  font-weight: 800;
+}
+
+.journal-calendar__day--today {
   background: #e5f7f5;
   box-shadow: inset 0 0 0 1px #b9e6e2;
-  font-weight: 800;
 }
 
 .journal-calendar__day--selected {
@@ -300,6 +321,31 @@ function getAriaLabel(cell) {
   margin-left: 5px;
 }
 
+.journal-calendar--compact {
+  height: 256px;
+}
+
+.journal-calendar--compact .journal-calendar__grid {
+  height: 186px;
+  grid-template-rows: repeat(6, 31px);
+}
+
+.journal-calendar--compact .journal-calendar__day {
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.journal-calendar--compact .journal-calendar__markers {
+  position: absolute;
+  bottom: 1px;
+  margin-top: 0;
+}
+
+.journal-calendar--compact .journal-calendar__legend {
+  height: 30px;
+}
+
 @media (min-width: 768px) {
   .journal-calendar {
     height: 462px;
@@ -324,6 +370,19 @@ function getAriaLabel(cell) {
   .journal-calendar__legend {
     height: 34px;
     font-size: 13px;
+  }
+
+  .journal-calendar--compact {
+    height: 286px;
+  }
+
+  .journal-calendar--compact .journal-calendar__grid {
+    height: 210px;
+    grid-template-rows: repeat(6, 35px);
+  }
+
+  .journal-calendar--compact .journal-calendar__day {
+    padding: 0;
   }
 }
 </style>
