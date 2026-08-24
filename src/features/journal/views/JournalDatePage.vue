@@ -151,10 +151,7 @@ watch(
           <AppIcon name="chevron-left" :size="20" />
         </button>
 
-        <div class="journal-date-page__heading">
-          <h1>투자 일지</h1>
-          <p>선택한 주의 기록과 판단 근거를 확인하세요</p>
-        </div>
+        <h1 class="journal-date-page__title">투자 일지</h1>
 
         <button
           class="journal-date-page__stocks"
@@ -221,25 +218,14 @@ watch(
   gap: 6px;
 }
 
-.journal-date-page__heading {
-  min-width: 0;
-}
-
-.journal-date-page__header h1 {
+.journal-date-page__title {
   margin: 0;
   font-family: var(--font-heading);
   font-size: var(--font-size-title-md);
   font-weight: 700;
   letter-spacing: -0.5px;
   line-height: 1.2;
-}
-
-.journal-date-page__header p {
-  margin: 3px 0 0;
-  color: var(--text-tertiary, #94948e);
-  font-family: var(--font-sans);
-  font-size: var(--font-size-caption);
-  line-height: 1.4;
+  text-align: center;
 }
 
 .journal-date-page__back,
