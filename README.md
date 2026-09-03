@@ -44,15 +44,15 @@ flowchart LR
 
 ## Core Features
 
-| 기능 | 설명 |
-| --- | --- |
-| **Auth** | 로그인과 사용자 세션을 관리하고 서비스의 인증 흐름을 제공합니다. |
-| **Home** | 연결된 계좌와 자산 정보를 바탕으로 사용자 투자 현황을 요약합니다. |
-| **Journal** | 투자 판단의 이유와 매수·매도 기록을 함께 남기고 과거 의사결정을 복기합니다. |
-| **Tendency** | 보유 기간, 매매 빈도, 손절, 분산, 추세 추종, 감정 개입도 등 6개 축으로 투자 성향을 분석합니다. |
-| **Principle** | 투자 기록과 성향을 기반으로 반복해서 참고할 수 있는 개인 투자 원칙을 제공합니다. |
+| 기능           | 설명                                                                                             |
+| -------------- | ------------------------------------------------------------------------------------------------ |
+| **Auth**       | 로그인과 사용자 세션을 관리하고 서비스의 인증 흐름을 제공합니다.                                 |
+| **Home**       | 연결된 계좌와 자산 정보를 바탕으로 사용자 투자 현황을 요약합니다.                                |
+| **Journal**    | 투자 판단의 이유와 매수·매도 기록을 함께 남기고 과거 의사결정을 복기합니다.                      |
+| **Tendency**   | 보유 기간, 매매 빈도, 손절, 분산, 추세 추종, 감정 개입도 등 6개 축으로 투자 성향을 분석합니다.   |
+| **Principle**  | 투자 기록과 성향을 기반으로 반복해서 참고할 수 있는 개인 투자 원칙을 제공합니다.                 |
 | **Simulation** | 개인 원칙을 투자 전략으로 변환하고 실제 투자 결과와 비교 전략을 과거 시장 데이터에서 검증합니다. |
-| **Mypage** | 사용자 정보, 계좌 및 서비스 설정을 관리합니다. |
+| **Mypage**     | 사용자 정보, 계좌 및 서비스 설정을 관리합니다.                                                   |
 
 ---
 
@@ -78,12 +78,12 @@ flowchart LR
 
 ### Repository Responsibilities
 
-| Repository | Responsibility |
-| --- | --- |
-| [`investory-frontend-v2`](https://github.com/kb-investory/investory-frontend-v2) | 사용자 화면, 도메인별 상태 관리, API 연동 |
-| [`investory-backend`](https://github.com/kb-investory/investory-backend) | 인증, 사용자, 계좌, 투자 일지, 투자 성향 등 Core API |
-| [`investory-simulation-api`](https://github.com/kb-investory/investory-simulation-api) | 개인 투자봇 생성, 백테스트, 분석, 시뮬레이션 리포트 |
-| [`investory-mock-broker`](https://github.com/kb-investory/investory-mock-broker) | 실제 증권사 연동을 대체하는 가상 계좌·거래 API |
+| Repository                                                                             | Responsibility                                       |
+| -------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| [`investory-frontend-v2`](https://github.com/kb-investory/investory-frontend-v2)       | 사용자 화면, 도메인별 상태 관리, API 연동            |
+| [`investory-backend`](https://github.com/kb-investory/investory-backend)               | 인증, 사용자, 계좌, 투자 일지, 투자 성향 등 Core API |
+| [`investory-simulation-api`](https://github.com/kb-investory/investory-simulation-api) | 개인 투자봇 생성, 백테스트, 분석, 시뮬레이션 리포트  |
+| [`investory-mock-broker`](https://github.com/kb-investory/investory-mock-broker)       | 실제 증권사 연동을 대체하는 가상 계좌·거래 API       |
 
 각 저장소는 기술 스택을 나누기 위한 목적보다 **서로 다른 책임과 변경 주기, 부하 특성을 분리하기 위해** 구성했습니다.
 
@@ -276,21 +276,21 @@ Investory는 모바일 사용 환경을 고려해 SPA를 PWA 형태로 구성했
 
 ## Tech Stack
 
-| Category | Technology |
-| --- | --- |
-| Framework | Vue `3.5` |
-| Build | Vite `8.0` |
-| State | Pinia `3.0` |
-| Server State | TanStack Vue Query `5.101` |
-| Routing | Vue Router `5.1` |
-| Visualization | Apache ECharts `6.1` |
-| UI | Lucide Vue, Custom Core Components |
-| PWA | vite-plugin-pwa, Workbox |
-| Quality | ESLint, Prettier |
-| Core Backend | Java 17, Spring, MyBatis |
-| Simulation Backend | Python, FastAPI, pandas |
-| Database | MySQL |
-| Infra | Docker, CI/CD |
+| Category           | Technology                         |
+| ------------------ | ---------------------------------- |
+| Framework          | Vue `3.5`                          |
+| Build              | Vite `8.0`                         |
+| State              | Pinia `3.0`                        |
+| Server State       | TanStack Vue Query `5.101`         |
+| Routing            | Vue Router `5.1`                   |
+| Visualization      | Apache ECharts `6.1`               |
+| UI                 | Lucide Vue, Custom Core Components |
+| PWA                | vite-plugin-pwa, Workbox           |
+| Quality            | ESLint, Prettier                   |
+| Core Backend       | Java 17, Spring, MyBatis           |
+| Simulation Backend | Python, FastAPI, pandas            |
+| Database           | MySQL                              |
+| Infra              | Docker, CI/CD                      |
 
 ---
 
@@ -336,14 +336,14 @@ src/
 
 Investory는 **Frontend 3명 + Backend 3명**, 총 6명이 함께 개발한 팀 프로젝트입니다.
 
-| 팀원 | 역할 | 주요 담당 |
-| --- | --- | --- |
+| 팀원       | 역할                            | 주요 담당                                                    |
+| ---------- | ------------------------------- | ------------------------------------------------------------ |
 | **홍상우** | Team Lead · Planning · Frontend | Simulation UI/UX, Simulation Frontend, Python Simulation API |
-| **한은솔** | Design · Frontend | Mypage, Tendency |
-| **최동호** | Frontend | Auth, Home, Journal |
-| **도윤혁** | Backend · Infra / CI/CD | Core Backend, Infra |
-| **공서연** | Backend | Core Backend |
-| **김태수** | Backend | Core Backend |
+| **한은솔** | Design · Frontend               | Mypage, Tendency                                             |
+| **최동호** | Frontend                        | Auth, Home, Journal                                          |
+| **도윤혁** | Backend · Infra / CI/CD         | Core Backend, Infra                                          |
+| **공서연** | Backend                         | Core Backend                                                 |
+| **김태수** | Backend                         | Core Backend                                                 |
 
 ### Frontend Feature Ownership
 
