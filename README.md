@@ -445,21 +445,16 @@ npm run build
 - [Design QA](./design-qa.md)
 
 ---
+# Related Repositories
 
-## Current Stage & Next Steps
-
-현재 저장소에는 실제 Backend 연동과 함께 도메인별 Mock mode도 유지해 UI 개발과 통합 테스트를 분리할 수 있도록 구성되어 있습니다.
-
-다음 단계에서 보강할 부분은 다음과 같습니다.
-
-- Vitest 기반 Store / API normalization 단위 테스트
-- Playwright 기반 로그인 → 일지 → 성향 → 시뮬레이션 핵심 E2E
-- Simulation polling 상태에 대한 테스트 케이스 확장
-- ECharts 렌더링과 대용량 daily performance 데이터 성능 측정
-- CI에 단위 테스트 및 E2E 조건 추가
+| Repository | Responsibility |
+| --- | --- |
+| [`investory-frontend-v2`](https://github.com/kb-investory/investory-frontend-v2) | Vue 기반 서비스 Frontend |
+| [`investory-backend`](https://github.com/kb-investory/investory-backend) | 인증 · 계좌 · 투자 일지 · 투자 성향 Core API |
+| [`investory-simulation-api`](https://github.com/kb-investory/investory-simulation-api) | Personal Bot / Backtest / Analytics / Report |
+| [`investory-mock-broker`](https://github.com/kb-investory/investory-mock-broker) | 금융투자 규격 기반 가상 증권사 |
 
 ---
-
 <div align="center">
 
 ### 모든 투자에는 이유와 이야기가 있다.
